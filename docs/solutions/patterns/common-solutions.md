@@ -4492,6 +4492,119 @@ await page.context().storageState({ path: authFile });
 
 **Recurrence:** 1 P1 (PR #161, 12 failures). POMs written from design docs used exact strings ("Creator Dashboard", "Total Views") but rendered UI used different casing ("Dashboard", "VIEWS"). All 12 failures were case or text mismatches.
 
+---
+
+## 129. CI Bootstrap Must Mirror Testcontainers Supabase Setup
+
+**Recurrence:** 1 P1 (PR #164). DB Migration Validation failed with `role "authenticated" does not exist` because CI bootstrap created auth schema/functions but forgot the three Supabase roles.
+
+### Root Cause
+
+Two separate files create Supabase-compatible PostgreSQL environments:
+
+- **CI:** `.github/workflows/ci.yml` — DB Migration Validation bootstrap
+- **Tests:** `packages/backend/src/__tests__/setup/testcontainers-global-setup.ts`
+
+When CI bootstrap was added, it copied auth schema and functions from testcontainers but missed the role creation block.
+
+### Standard Pattern
+
+Both files must create these Supabase stubs:
+
+1. `auth` schema
+2. `auth.uid()` function
+3. `auth.role()` function
+4. `anon`, `authenticated`, `service_role` roles
+5. `supabase_realtime` publication
+
+### Checklist
+
+- [ ] When modifying either file, check the other for parity
+- [ ] Search for `CREATE ROLE` in both files after any Supabase migration change
+- [ ] Use testcontainers setup as the source of truth
+
+**Full doc:** `docs/solutions/remediation/ci-production-readiness-audit-2026-03-17.md`
+
+---
+
+## 130. RLS Policies Must Verify Column Types — Never Assume from Comments
+
+**Recurrence:** 1 P1 (PR #164, 4 tables affected). Security-hardener agent wrote `auth.uid()::text` for UUID columns, causing `operator does not exist: uuid = text`.
+
+### Root Cause
+
+Agent assumed `creator_id` was TEXT on all tables because one table (`platform_connections`) uses TEXT. The migration file comments reinforced this by saying "creator_id is TEXT" for that table, and the agent applied the same cast everywhere.
+
+### Standard Pattern
+
+```sql
+-- UUID column (most tables): NO cast
+CREATE POLICY "table_select_own" ON table_name
+  FOR SELECT USING (creator_id = auth.uid());
+
+-- TEXT column (platform_connections, cross_posts, etc.): cast to text
+CREATE POLICY "table_select_own" ON table_name
+  FOR SELECT USING (creator_id = auth.uid()::text);
+```
+
+### Detection
+
+Integration tests with testcontainers catch type mismatches at parse time — always run before pushing RLS migrations.
+
+### Checklist
+
+- [ ] Before writing RLS policy, check actual `CREATE TABLE` migration for column type
+- [ ] UUID columns: use `auth.uid()` (no cast)
+- [ ] TEXT columns: use `auth.uid()::text`
+- [ ] Never infer column types from comments or similar tables
+- [ ] Agent briefs for RLS work must include: "ALWAYS check column type in CREATE TABLE migration"
+
+**Full doc:** `docs/solutions/remediation/ci-production-readiness-audit-2026-03-17.md`
+
+---
+
+## 131. Stale Nested Lockfile Entries Require Full Regeneration
+
+**Recurrence:** 1 P1 (PR #164). Trivy found `undici 5.29.0` from `testcontainers@10.28.0` despite root `overrides`. Four fix attempts failed before lockfile regeneration worked.
+
+### Root Cause
+
+npm lockfile preserves per-workspace dependency resolutions even when root `overrides` should force a different version. Nested entries at `packages/backend/node_modules/testcontainers@10.28.0` persisted despite:
+
+- `npm audit fix`
+- `npm update`
+- `npm audit fix --force`
+- Manual lockfile editing
+
+### Standard Pattern
+
+```bash
+# 1. Update the source dependency in the workspace package.json
+# e.g., "testcontainers": "^10.28.0" → "^11.12.0"
+
+# 2. Delete lockfile entirely
+rm package-lock.json
+
+# 3. Regenerate
+npm install
+
+# 4. Verify
+npm audit && npx trivy fs . --scanners vuln
+```
+
+### Detection
+
+Run both `npm audit` AND `npx trivy fs .` — npm audit misses transitive dev dependencies that Trivy catches.
+
+### Checklist
+
+- [ ] If `npm audit fix` doesn't resolve a vulnerability, check for stale nested entries: `grep -r "vulnerable-package" package-lock.json`
+- [ ] Update the workspace `package.json` dependency, not just the lockfile
+- [ ] Delete and regenerate `package-lock.json` when overrides aren't working
+- [ ] Always run Trivy in addition to npm audit
+
+**Full doc:** `docs/solutions/remediation/ci-production-readiness-audit-2026-03-17.md`
+
 ### Root Cause
 
 POMs authored speculatively from specs/mockups, not from actual rendered UI. When the app renders differently (case, abbreviations, word changes), exact-string locators fail silently.
@@ -4685,3 +4798,6 @@ CONTEXT TO LOAD:
 | Auth spec fails — redirected to /login           | 126       | common-solutions.md  |
 | page.reload() wipes auth token before persist    | 127       | common-solutions.md  |
 | POM exact-string locator fails on case mismatch  | 128       | common-solutions.md  |
+| CI bootstrap missing Supabase roles              | 129       | common-solutions.md  |
+| RLS policy uses wrong cast for column type       | 130       | common-solutions.md  |
+| Stale nested lockfile ignores root overrides     | 131       | common-solutions.md  |

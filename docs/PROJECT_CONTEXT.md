@@ -179,6 +179,9 @@ Migrations: `supabase/migrations/` (baseline + incremental)
 | 122 | Route files must not create DB clients directly     | Backend    |
 | 123 | Bootstrap production guards on placeholder services | Backend    |
 | 125 | Domain-grouped agents = zero merge conflicts        | Process    |
+| 129 | CI bootstrap must mirror testcontainers setup       | CI/CD      |
+| 130 | RLS policy column type verification                 | Database   |
+| 131 | Stale nested lockfile → full regeneration           | Deps       |
 
 ---
 

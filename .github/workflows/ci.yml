@@ -571,6 +571,9 @@ jobs:
             type=sha,prefix={{branch}}-
             type=raw,value=latest,enable={{is_default_branch}}
 
+      - name: Copy root lockfile into backend context
+        run: cp package-lock.json packages/backend/package-lock.json
+
       - name: Build and push backend image
         id: build
         uses: docker/build-push-action@v6
@@ -626,7 +629,22 @@ jobs:
           name: frontend-dist
           path: packages/frontend/dist
 
+      - name: Check Vercel secrets
+        id: vercel-check
+        run: |
+          if [ -n "$VERCEL_TOKEN" ] && [ -n "$VERCEL_ORG_ID" ] && [ -n "$VERCEL_PROJECT_ID" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::Vercel secrets not configured — skipping frontend deploy"
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
       - name: Deploy frontend to Vercel (staging)
+        if: steps.vercel-check.outputs.available == 'true'
         uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
@@ -636,6 +654,7 @@ jobs:
           alias-domains: staging.sovren.dev
 
       - name: Health check staging
+        if: steps.vercel-check.outputs.available == 'true'
         run: |
           for i in 1 2 3 4 5; do
             sleep 10
@@ -669,7 +688,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check SSH secrets
+        id: ssh-check
+        run: |
+          if [ -n "$SSH_HOST" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::SSH deployment secrets not configured — skipping backend deploy"
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          SSH_HOST: ${{ secrets.STAGING_SSH_HOST }}
+
       - name: Deploy backend image to staging host
+        if: steps.ssh-check.outputs.available == 'true'
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.STAGING_SSH_HOST }}
@@ -715,6 +747,7 @@ jobs:
             exit 1
 
       - name: Verify backend API health (external)
+        if: steps.ssh-check.outputs.available == 'true'
         run: |
           for i in 1 2 3 4 5; do
             sleep 5
@@ -749,7 +782,22 @@ jobs:
           name: frontend-dist
           path: packages/frontend/dist
 
+      - name: Check Vercel secrets (production)
+        id: vercel-check-prod
+        run: |
+          if [ -n "$VERCEL_TOKEN" ] && [ -n "$VERCEL_ORG_ID" ] && [ -n "$VERCEL_PROJECT_ID" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::Vercel secrets not configured — skipping production frontend deploy"
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
       - name: Deploy frontend to Vercel (production)
+        if: steps.vercel-check-prod.outputs.available == 'true'
         id: deploy
         uses: amondnet/vercel-action@v25
         with:
@@ -760,6 +808,7 @@ jobs:
           vercel-args: '--prod'
 
       - name: Health check production
+        if: steps.vercel-check-prod.outputs.available == 'true'
         run: |
           sleep 30
           for i in 1 2 3 4 5; do
@@ -806,7 +855,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check SSH secrets (production)
+        id: ssh-check-prod
+        run: |
+          if [ -n "$SSH_HOST" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::Production SSH secrets not configured — skipping backend deploy"
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          SSH_HOST: ${{ secrets.PROD_SSH_HOST }}
+
       - name: Deploy backend image to production host
+        if: steps.ssh-check-prod.outputs.available == 'true'
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.PROD_SSH_HOST }}
@@ -846,6 +908,7 @@ jobs:
             exit 1
 
       - name: Verify production backend API health (external)
+        if: steps.ssh-check-prod.outputs.available == 'true'
         run: |
           for i in 1 2 3 4 5; do
             sleep 5
