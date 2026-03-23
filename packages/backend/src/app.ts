@@ -1,3 +1,4 @@
+import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express, { Express, NextFunction, Request, Response } from 'express';
@@ -51,6 +52,9 @@ export function createApp(): Express {
 
   // Correlation ID middleware (must be first - before all other middleware)
   app.use(correlationIdMiddleware);
+
+  // Response compression — gzip/brotli for all API responses >1KB
+  app.use(compression({ threshold: 1024 }));
 
   // 🔒 Security Middleware Stack
   // WHY: Defense in depth - multiple layers protect against common attacks
@@ -294,15 +298,17 @@ export const AppConfig = {
   isProduction: process.env.NODE_ENV === 'production',
 
   // Security
-  jwtSecret:
-    process.env.JWT_SECRET ||
-    (() => {
-      if (process.env.NODE_ENV === 'production') {
-        throw new Error('JWT_SECRET environment variable is required in production');
+  jwtSecret: (() => {
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging') {
+        throw new Error('JWT_SECRET environment variable is required in production/staging');
       }
-      logger.warn('Using default JWT_SECRET - not suitable for production');
-      return 'development-only-secret-key';
-    })(),
+      logger.warn('JWT_SECRET not set — using insecure default for local development only');
+      return 'development-only-secret-key-not-for-production';
+    }
+    return secret;
+  })(),
 
   // API limits
   rateLimitWindow: 15 * 60 * 1000, // 15 minutes

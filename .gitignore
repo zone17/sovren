@@ -17,6 +17,11 @@ build/
 .env.development.local
 .env.test.local
 .env.production.local
+**/.env.development
+**/.env.test
+**/.env.production
+packages/backend/.env
+packages/frontend/.env
 
 # Testing
 coverage/

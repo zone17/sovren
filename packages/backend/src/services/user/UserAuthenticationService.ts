@@ -57,8 +57,20 @@ export class UserAuthenticationService implements IUserAuthenticationService {
   private readonly PASSWORD_REQUIRE_SPECIAL = true;
 
   // JWT configuration
-  private readonly JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
-  private readonly JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'dev-refresh-secret';
+  private readonly JWT_SECRET = (() => {
+    const secret = process.env.JWT_SECRET;
+    if (!secret && (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging')) {
+      throw new Error('JWT_SECRET environment variable is required in production/staging');
+    }
+    return secret || 'development-only-secret-key-not-for-production';
+  })();
+  private readonly JWT_REFRESH_SECRET = (() => {
+    const secret = process.env.JWT_REFRESH_SECRET;
+    if (!secret && (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging')) {
+      throw new Error('JWT_REFRESH_SECRET environment variable is required in production/staging');
+    }
+    return secret || 'development-only-refresh-secret-key-not-for-production';
+  })();
 
   constructor(
     @inject(TYPES.Database) private readonly db: IDatabase,

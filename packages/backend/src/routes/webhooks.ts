@@ -42,8 +42,11 @@ const supabase =
 // Initialize Payment State Machine (only if Supabase available)
 const paymentStateMachine = supabase ? new PaymentStateMachine({ supabase }) : null;
 
-// Webhook secrets for signature verification
+// Webhook secrets for signature verification — require in production
 const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || '';
+if (!WEBHOOK_SECRET && process.env.NODE_ENV === 'production') {
+  throw new Error('WEBHOOK_SECRET environment variable is required in production');
+}
 const WEBHOOK_SECRET_ROTATION = process.env.WEBHOOK_SECRET_ROTATION || '';
 const WEBHOOK_TIMESTAMP_TOLERANCE = 300; // 5 minutes in seconds
 
@@ -97,6 +100,11 @@ function rateLimitWebhook(req: Request, res: Response, next: NextFunction) {
 /**
  * Verify HMAC signature with support for secret rotation
  */
+function timingSafeCompare(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(a, 'utf8'), Buffer.from(b, 'utf8'));
+}
+
 function verifySignature(payload: string, signature: string): boolean {
   // Try primary secret
   const primarySignature = crypto
@@ -104,7 +112,7 @@ function verifySignature(payload: string, signature: string): boolean {
     .update(payload)
     .digest('hex');
 
-  if (signature === primarySignature) {
+  if (timingSafeCompare(signature, primarySignature)) {
     return true;
   }
 
@@ -115,7 +123,7 @@ function verifySignature(payload: string, signature: string): boolean {
       .update(payload)
       .digest('hex');
 
-    if (signature === rotationSignature) {
+    if (timingSafeCompare(signature, rotationSignature)) {
       console.info('[WEBHOOK] Request verified with rotation secret');
       return true;
     }

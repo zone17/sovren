@@ -146,6 +146,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov', 'html', 'json'],
+      all: true, // Include uncovered files in report
       include: ['packages/*/src/**/*.{ts,tsx}'],
       exclude: [
         '**/*.d.ts',
@@ -156,6 +157,11 @@ export default defineConfig({
         '**/stories/**',
         '**/test-utils/**',
       ],
+      thresholds: {
+        // Baseline — ratchet up after Phase 4 test recovery
+        lines: 10,
+        branches: 5,
+      },
     },
     // Reporter
     reporters: ['default'],

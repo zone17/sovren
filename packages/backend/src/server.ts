@@ -336,11 +336,23 @@ process.on('uncaughtException', (error: Error) => {
     error: error.message,
     stack: error.stack,
   });
+  try {
+    const Sentry = require('@sentry/node');
+    Sentry.captureException(error);
+  } catch (_) {
+    // Sentry not available — already logged above
+  }
   process.exit(1);
 });
 
 process.on('unhandledRejection', (reason: any) => {
   logger.error('Unhandled promise rejection', { reason });
+  try {
+    const Sentry = require('@sentry/node');
+    Sentry.captureException(reason instanceof Error ? reason : new Error(String(reason)));
+  } catch (_) {
+    // Sentry not available — already logged above
+  }
 
   if (AppConfig.isProduction) {
     logger.error('Exiting due to unhandled rejection in production');
