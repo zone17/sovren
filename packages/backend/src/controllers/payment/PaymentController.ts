@@ -41,7 +41,16 @@ export class PaymentController {
   public getInvoice = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const startTime = Date.now();
     const invoiceId = req.params.id;
+    const userId = (req as any).user?.nostr_pubkey;
     const invoice = await this.invoiceService.getInvoice(invoiceId);
+
+    // Ownership check: only the invoice creator or recipient can view it
+    if (invoice && invoice.creator_id !== userId && invoice.recipient_id !== userId) {
+      res
+        .status(403)
+        .json({ success: false, error: 'Forbidden: you can only access your own invoices' });
+      return;
+    }
 
     res.status(200).json(createApiResponse(req, invoice, startTime));
   });
@@ -106,7 +115,12 @@ export class PaymentController {
 
   public getPaymentAnalytics = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const startTime = Date.now();
-    const userId = req.query.userId as string;
+    // Always use authenticated user's pubkey — never accept userId from query params
+    const userId = (req as any).user?.nostr_pubkey;
+    if (!userId) {
+      res.status(401).json({ success: false, error: 'Authentication required' });
+      return;
+    }
     const analytics = await this.analyticsService.getAnalytics(userId, {
       startDate: req.query.start ? new Date(req.query.start as string) : undefined,
       endDate: req.query.end ? new Date(req.query.end as string) : undefined,
@@ -134,7 +148,20 @@ export class PaymentController {
   public getSubscription = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const startTime = Date.now();
     const subscriptionId = req.params.id;
+    const userId = (req as any).user?.nostr_pubkey;
     const subscription = await this.subscriptionService.getSubscription(subscriptionId);
+
+    // Ownership check: only the subscriber can view their subscription
+    if (
+      subscription &&
+      subscription.subscriber_id !== userId &&
+      subscription.creator_id !== userId
+    ) {
+      res
+        .status(403)
+        .json({ success: false, error: 'Forbidden: you can only access your own subscriptions' });
+      return;
+    }
 
     res.status(200).json(createApiResponse(req, subscription, startTime));
   });
@@ -144,7 +171,12 @@ export class PaymentController {
   public getTransactionHistory = asyncHandler(
     async (req: Request, res: Response): Promise<void> => {
       const startTime = Date.now();
-      const userId = req.user?.nostr_pubkey || (req.query.userId as string);
+      // Always use authenticated user's pubkey — never accept userId from query params
+      const userId = (req as any).user?.nostr_pubkey;
+      if (!userId) {
+        res.status(401).json({ success: false, error: 'Authentication required' });
+        return;
+      }
       const result = await this.analyticsService.getAnalytics(userId, {
         startDate: req.query.start ? new Date(req.query.start as string) : undefined,
         endDate: req.query.end ? new Date(req.query.end as string) : undefined,
@@ -156,7 +188,12 @@ export class PaymentController {
 
   public getBalance = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const startTime = Date.now();
-    const userId = req.user?.nostr_pubkey || (req.query.userId as string);
+    // Always use authenticated user's pubkey — never accept userId from query params
+    const userId = (req as any).user?.nostr_pubkey;
+    if (!userId) {
+      res.status(401).json({ success: false, error: 'Authentication required' });
+      return;
+    }
     const analytics = await this.analyticsService.getAnalytics(userId, {});
 
     res.status(200).json(createApiResponse(req, { userId, balance: analytics }, startTime));
@@ -190,6 +227,17 @@ export class PaymentController {
   public retryInvoice = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const startTime = Date.now();
     const invoiceId = req.params.id;
+    const userId = (req as any).user?.nostr_pubkey;
+
+    // Verify the invoice belongs to the authenticated user before retrying
+    const invoice = await this.invoiceService.getInvoice(invoiceId);
+    if (invoice && invoice.creator_id !== userId && invoice.recipient_id !== userId) {
+      res
+        .status(403)
+        .json({ success: false, error: 'Forbidden: you can only retry your own invoices' });
+      return;
+    }
+
     const result = await this.paymentService.processPayment(invoiceId, { retry: true });
 
     res.status(200).json(createApiResponse(req, result, startTime));
