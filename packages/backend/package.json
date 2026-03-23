@@ -52,6 +52,7 @@
     "argon2": "^0.41.0",
     "bcryptjs": "^2.4.3",
     "bullmq": "^5.69.3",
+    "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "csv-writer": "^1.6.0",

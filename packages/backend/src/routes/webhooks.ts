@@ -44,8 +44,11 @@ const paymentStateMachine = supabase ? new PaymentStateMachine({ supabase }) : n
 
 // Webhook secrets for signature verification — require in production
 const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || '';
-if (!WEBHOOK_SECRET && process.env.NODE_ENV === 'production') {
-  throw new Error('WEBHOOK_SECRET environment variable is required in production');
+if (
+  !WEBHOOK_SECRET &&
+  (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging')
+) {
+  throw new Error('WEBHOOK_SECRET environment variable is required in production/staging');
 }
 const WEBHOOK_SECRET_ROTATION = process.env.WEBHOOK_SECRET_ROTATION || '';
 const WEBHOOK_TIMESTAMP_TOLERANCE = 300; // 5 minutes in seconds
@@ -101,8 +104,12 @@ function rateLimitWebhook(req: Request, res: Response, next: NextFunction) {
  * Verify HMAC signature with support for secret rotation
  */
 function timingSafeCompare(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  return crypto.timingSafeEqual(Buffer.from(a, 'utf8'), Buffer.from(b, 'utf8'));
+  // Hash both to fixed-length digests to eliminate length oracle leak.
+  // Direct length comparison would leak whether the attacker's signature
+  // matched the expected byte count via timing differences.
+  const aBuf = crypto.createHash('sha256').update(a).digest();
+  const bBuf = crypto.createHash('sha256').update(b).digest();
+  return crypto.timingSafeEqual(aBuf, bBuf);
 }
 
 function verifySignature(payload: string, signature: string): boolean {
