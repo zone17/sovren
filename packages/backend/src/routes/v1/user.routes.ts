@@ -16,6 +16,22 @@ import { UserValidators } from '../../validators/user';
 const router = Router();
 
 /**
+ * Ownership guard: verifies the authenticated user's nostr_pubkey matches :id.
+ * Use on routes where :id refers to the requesting user's own resource.
+ */
+function requireOwnership(req: Request, res: Response, next: NextFunction): void {
+  const user = (req as any).user;
+  if (!user || user.nostr_pubkey !== req.params.id) {
+    res.status(403).json({
+      success: false,
+      error: 'Forbidden: you can only access your own resources',
+    });
+    return;
+  }
+  next();
+}
+
+/**
  * Lazily resolve the UserController from the DI container.
  */
 import type { UserController } from '../../controllers/user/UserController';
@@ -83,6 +99,7 @@ router.get(
 router.put(
   '/profile/:id',
   authenticate,
+  requireOwnership,
   rateLimiters.user.updateProfile,
   validate({ params: UserValidators.userIdParam, body: UserValidators.updateUserProfile }),
   (req: Request, res: Response, next: NextFunction) => getController().updateProfile(req, res, next)
@@ -109,6 +126,7 @@ router.put(
 router.get(
   '/preferences/:id',
   authenticate,
+  requireOwnership,
   rateLimiters.user.read,
   validate({ params: UserValidators.userIdParam }),
   (req: Request, res: Response, next: NextFunction) =>
@@ -142,6 +160,7 @@ router.get(
 router.put(
   '/preferences/:id',
   authenticate,
+  requireOwnership,
   rateLimiters.user.updatePreferences,
   validate({ params: UserValidators.userIdParam, body: UserValidators.updateUserPreferences }),
   (req: Request, res: Response, next: NextFunction) =>
@@ -169,6 +188,7 @@ router.put(
 router.get(
   '/activity/:id',
   authenticate,
+  requireOwnership,
   rateLimiters.user.read,
   validate({ params: UserValidators.userIdParam }),
   (req: Request, res: Response, next: NextFunction) => getController().getActivity(req, res, next)
@@ -249,6 +269,7 @@ router.delete(
 router.get(
   '/analytics/:id',
   authenticate,
+  requireOwnership,
   rateLimiters.user.analytics,
   validate({ params: UserValidators.userIdParam }),
   (req: Request, res: Response, next: NextFunction) =>
@@ -430,6 +451,7 @@ router.get(
 router.get(
   '/:id/blocked',
   authenticate,
+  requireOwnership,
   rateLimiters.user.read,
   validate({ params: UserValidators.userIdParam }),
   (req: Request, res: Response, next: NextFunction) =>
@@ -563,6 +585,7 @@ router.get(
 router.get(
   '/:id/relationships/export',
   authenticate,
+  requireOwnership,
   rateLimiters.user.read,
   validate({ params: UserValidators.userIdParam }),
   (req: Request, res: Response, next: NextFunction) =>
@@ -590,6 +613,7 @@ router.get(
 router.post(
   '/:id/follows/import',
   authenticate,
+  requireOwnership,
   rateLimiters.user.follow,
   validate({ params: UserValidators.userIdParam }),
   (req: Request, res: Response, next: NextFunction) => getController().importFollows(req, res, next)
@@ -616,6 +640,7 @@ router.post(
 router.put(
   '/:id/privacy-settings',
   authenticate,
+  requireOwnership,
   rateLimiters.user.updateProfile,
   validate({ params: UserValidators.userIdParam }),
   (req: Request, res: Response, next: NextFunction) =>
