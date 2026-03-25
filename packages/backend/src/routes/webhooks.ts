@@ -43,13 +43,14 @@ const supabase =
 // Initialize Payment State Machine (only if Supabase available)
 const paymentStateMachine = supabase ? new PaymentStateMachine({ supabase }) : null;
 
-// Startup validation — empty secret in production is a critical misconfiguration
-if (process.env.NODE_ENV === 'production' && !process.env.WEBHOOK_SECRET) {
-  throw new Error('WEBHOOK_SECRET must be set in production');
-}
-
-// Webhook secrets for signature verification
+// Webhook secrets for signature verification — require in production/staging
 const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || '';
+if (
+  !WEBHOOK_SECRET &&
+  (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging')
+) {
+  throw new Error('WEBHOOK_SECRET environment variable is required in production/staging');
+}
 const WEBHOOK_SECRET_ROTATION = process.env.WEBHOOK_SECRET_ROTATION || '';
 const WEBHOOK_TIMESTAMP_TOLERANCE = 300; // 5 minutes in seconds
 
@@ -104,17 +105,19 @@ function rateLimitWebhook(req: Request, res: Response, next: NextFunction) {
  * Timing-safe HMAC comparison to prevent timing attacks.
  * Returns true if the signature matches the expected HMAC.
  */
+/**
+ * Timing-safe HMAC comparison. Hashes both the provided signature and the
+ * expected HMAC to fixed-length SHA-256 digests before comparing, eliminating
+ * any length oracle leak.
+ */
 function timingSafeHmacCompare(signature: string, secret: string, payload: string): boolean {
   const expected = crypto.createHmac('sha256', secret).update(payload).digest('hex');
-  const sigBuffer = Buffer.from(signature, 'hex');
-  const expectedBuffer = Buffer.from(expected, 'hex');
-  if (sigBuffer.length !== expectedBuffer.length) return false;
-  return crypto.timingSafeEqual(sigBuffer, expectedBuffer);
+  // Hash both to fixed 32-byte digests — no length leak possible
+  const aBuf = crypto.createHash('sha256').update(signature).digest();
+  const bBuf = crypto.createHash('sha256').update(expected).digest();
+  return crypto.timingSafeEqual(aBuf, bBuf);
 }
 
-/**
- * Verify HMAC signature with support for secret rotation
- */
 function verifySignature(payload: string, signature: string): boolean {
   // Try primary secret
   if (timingSafeHmacCompare(signature, WEBHOOK_SECRET, payload)) {

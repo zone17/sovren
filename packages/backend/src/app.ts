@@ -1,3 +1,4 @@
+import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express, { Express, NextFunction, Request, Response } from 'express';
@@ -51,6 +52,9 @@ export function createApp(): Express {
 
   // Correlation ID middleware (must be first - before all other middleware)
   app.use(correlationIdMiddleware);
+
+  // Response compression — gzip/brotli for all API responses >1KB
+  app.use(compression({ threshold: 1024 }));
 
   // 🔒 Security Middleware Stack
   // WHY: Defense in depth - multiple layers protect against common attacks

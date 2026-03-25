@@ -4,6 +4,7 @@ import os from 'os';
 import { getRedisClient, isRedisAvailable } from '../lib/redis';
 import { container } from '../container';
 import { TYPES } from '../container/types';
+import { authenticate, authorize } from '../middleware/auth';
 import { supabase } from '../config/supabase';
 
 const router = Router();
@@ -125,51 +126,56 @@ router.get('/live', (req: Request, res: Response) => {
   });
 });
 
-// Comprehensive health check with detailed diagnostics
-router.get('/health/detailed', async (req: Request, res: Response) => {
-  try {
-    const healthResult: HealthCheckResult = {
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      version: process.env.npm_package_version || '1.0.0',
-      environment: process.env.NODE_ENV || 'unknown',
-      services: {
-        database: await checkDatabase(),
-        redis: await checkRedis(),
-        lightning: await checkLightning(),
-        nostr: await checkNostr(),
-        queues: await checkQueues(),
-      },
-      metrics: getSystemMetrics(),
-      dependencies: {
-        node: process.version,
-        npm: process.env.npm_config_user_agent || 'unknown',
-      },
-    };
+// Comprehensive health check with detailed diagnostics — admin only
+router.get(
+  '/health/detailed',
+  authenticate,
+  authorize(['admin']),
+  async (req: Request, res: Response) => {
+    try {
+      const healthResult: HealthCheckResult = {
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        version: process.env.npm_package_version || '1.0.0',
+        environment: process.env.NODE_ENV || 'unknown',
+        services: {
+          database: await checkDatabase(),
+          redis: await checkRedis(),
+          lightning: await checkLightning(),
+          nostr: await checkNostr(),
+          queues: await checkQueues(),
+        },
+        metrics: getSystemMetrics(),
+        dependencies: {
+          node: process.version,
+          npm: process.env.npm_config_user_agent || 'unknown',
+        },
+      };
 
-    // Determine overall health status
-    const serviceStatuses = Object.values(healthResult.services).map((s) => s.status);
+      // Determine overall health status
+      const serviceStatuses = Object.values(healthResult.services).map((s) => s.status);
 
-    if (serviceStatuses.includes('unhealthy')) {
-      healthResult.status = 'unhealthy';
-    } else if (serviceStatuses.includes('degraded')) {
-      healthResult.status = 'degraded';
+      if (serviceStatuses.includes('unhealthy')) {
+        healthResult.status = 'unhealthy';
+      } else if (serviceStatuses.includes('degraded')) {
+        healthResult.status = 'degraded';
+      }
+
+      const statusCode =
+        healthResult.status === 'healthy' ? 200 : healthResult.status === 'degraded' ? 200 : 503;
+
+      res.status(statusCode).json(healthResult);
+    } catch (error) {
+      res.status(503).json({
+        status: 'unhealthy',
+        timestamp: new Date().toISOString(),
+        error: error instanceof Error ? error.message : 'Unknown error',
+        uptime: process.uptime(),
+      });
     }
-
-    const statusCode =
-      healthResult.status === 'healthy' ? 200 : healthResult.status === 'degraded' ? 200 : 503;
-
-    res.status(statusCode).json(healthResult);
-  } catch (error) {
-    res.status(503).json({
-      status: 'unhealthy',
-      timestamp: new Date().toISOString(),
-      error: error instanceof Error ? error.message : 'Unknown error',
-      uptime: process.uptime(),
-    });
   }
-});
+);
 
 // Readiness probe for Kubernetes
 // Same degradation logic: Redis down = degraded (200), DB down = not-ready (503)

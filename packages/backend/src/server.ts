@@ -7,6 +7,7 @@ import { initializeContainer, container } from './container';
 import { TYPES } from './container/types';
 import type { QueueService } from './services/queue/QueueService';
 import logger from './lib/logger';
+import { Sentry } from './lib/sentry';
 
 // Load environment variables
 dotenv.config();
@@ -345,19 +346,23 @@ async function gracefulShutdown(signal: string): Promise<void> {
  * 🔥 Error Handlers
  * WHY: Prevent the process from crashing and log critical errors
  */
-process.on('uncaughtException', (error: Error) => {
+process.on('uncaughtException', async (error: Error) => {
   logger.error('Uncaught exception — process will exit', {
     error: error.message,
     stack: error.stack,
   });
+  Sentry.captureException(error);
+  await Sentry.flush(2000).catch(() => {});
   process.exit(1);
 });
 
-process.on('unhandledRejection', (reason: any) => {
+process.on('unhandledRejection', async (reason: any) => {
   logger.error('Unhandled promise rejection', { reason });
+  Sentry.captureException(reason instanceof Error ? reason : new Error(String(reason)));
 
   if (AppConfig.isProduction) {
     logger.error('Exiting due to unhandled rejection in production');
+    await Sentry.flush(2000).catch(() => {});
     process.exit(1);
   }
 });
