@@ -1,7 +1,7 @@
 ---
 title: 'Production Readiness Remediation — Waves 1+2'
 type: fix
-status: active
+status: completed
 date: 2026-03-23
 origin: docs/audits/production-readiness-2026-03-23.md
 ---
