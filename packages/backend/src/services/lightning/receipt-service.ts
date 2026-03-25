@@ -15,6 +15,7 @@ import { EventEmitter } from 'events';
 import { existsSync, mkdirSync, readFileSync, renameSync, copyFileSync } from 'fs';
 import * as fs from 'fs/promises';
 import { open as fsOpen } from 'fs/promises';
+import { uploadReceipt } from '../storage/StorageService';
 import * as nodemailer from 'nodemailer';
 import * as path from 'path';
 import * as puppeteer from 'puppeteer';
@@ -842,10 +843,9 @@ export class LightningReceiptService extends EventEmitter {
 
   private async storePdfReceipt(receipt: PaymentReceipt, pdfBuffer: Buffer): Promise<string> {
     const fileName = `receipt-${receipt.receiptNumber}.pdf`;
-    const storagePath = path.join(this.config.storage.basePath, fileName);
-    await fs.mkdir(path.dirname(storagePath), { recursive: true });
-    await fs.writeFile(storagePath, pdfBuffer);
-    return `/receipts/${fileName}`;
+    // Upload to object storage (Supabase Storage in prod, local fallback in dev)
+    const result = await uploadReceipt(fileName, pdfBuffer);
+    return result.url;
   }
 
   private async loadPdfReceipt(pdfPath: string): Promise<Buffer> {

@@ -491,13 +491,32 @@ jobs:
           severity: 'CRITICAL'
 
   # ===========================================
+  # Stage 5b: Database Migration (main branch only)
+  # ===========================================
+  migrate:
+    name: Database Migration
+    needs: [build, test-gate]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Push migrations
+        run: supabase db push --linked
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+
+  # ===========================================
   # Stage 6: Deploy Staging (main branch only)
   # ===========================================
   deploy-staging:
     name: Deploy Staging
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: [build, e2e]
+    needs: [build, e2e, migrate]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     environment:
       name: staging
@@ -534,6 +553,26 @@ jobs:
           done
           echo "Staging health check failed after 5 attempts"
           exit 1
+
+      - name: Backend health check staging
+        run: |
+          for i in 1 2 3 4 5; do
+            sleep 10
+            status=$(curl -s -o /dev/null -w "%{http_code}" "https://api-staging.sovren.dev/health" || echo "000")
+            if [ "$status" = "200" ]; then
+              echo "Staging API health check passed"
+              exit 0
+            fi
+            echo "Attempt $i: API HTTP $status"
+          done
+          echo "Staging API health check failed after 5 attempts"
+          exit 1
+
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          echo "::error::Health check failed — initiating rollback"
+          npx vercel rollback --token ${{ secrets.VERCEL_TOKEN }} --yes 2>/dev/null || echo "Vercel rollback skipped (no token or no previous deployment)"
 
   # ===========================================
   # Stage 7: Deploy Production (manual approval)
@@ -581,6 +620,12 @@ jobs:
           done
           echo "Production health check failed"
           exit 1
+
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          echo "::error::Health check failed — initiating rollback"
+          npx vercel rollback --token ${{ secrets.VERCEL_TOKEN }} --yes 2>/dev/null || echo "Vercel rollback skipped (no token or no previous deployment)"
 
       - name: Notify deployment
         if: always()

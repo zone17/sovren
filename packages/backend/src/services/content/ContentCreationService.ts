@@ -20,6 +20,7 @@ import slugify from 'slugify';
 import { v4 as uuidv4 } from 'uuid';
 import sharp from 'sharp';
 import { promises as fs } from 'fs';
+import { uploadMedia } from '../storage/StorageService';
 import path from 'path';
 
 /**
@@ -205,10 +206,9 @@ export class ContentCreationService implements IContentCreationService {
         thumbnailPath = await this.generateThumbnail(file.buffer, assetId);
       }
 
-      // Save to storage
-      const uploadPath = path.join(process.cwd(), 'public', storagePath);
-      await fs.mkdir(path.dirname(uploadPath), { recursive: true });
-      await fs.writeFile(uploadPath, processedFile);
+      // Save to object storage (Supabase Storage in prod, local fallback in dev)
+      const uploadResult = await uploadMedia(storagePath, processedFile, file.mimetype);
+      storagePath = uploadResult.url;
 
       // Create media asset record
       const mediaAsset: MediaAsset = {
@@ -632,13 +632,10 @@ export class ContentCreationService implements IContentCreationService {
       .jpeg({ quality: 75 })
       .toBuffer();
 
-    const thumbnailPath = `/uploads/thumbnails/${assetId}.jpg`;
-    const fullPath = path.join(process.cwd(), 'public', thumbnailPath);
+    const thumbnailStoragePath = `thumbnails/${assetId}.jpg`;
+    const result = await uploadMedia(thumbnailStoragePath, thumbnail, 'image/jpeg');
 
-    await fs.mkdir(path.dirname(fullPath), { recursive: true });
-    await fs.writeFile(fullPath, thumbnail);
-
-    return thumbnailPath;
+    return result.url;
   }
 
   /**
