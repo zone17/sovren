@@ -19,7 +19,6 @@ import * as Joi from 'joi';
 import slugify from 'slugify';
 import { v4 as uuidv4 } from 'uuid';
 import sharp from 'sharp';
-import { promises as fs } from 'fs';
 import { uploadMedia } from '../storage/StorageService';
 import path from 'path';
 
@@ -192,7 +191,7 @@ export class ContentCreationService implements IContentCreationService {
       // Generate unique filename
       const assetId = uuidv4();
       const fileExt = path.extname(file.filename);
-      const storagePath = `/uploads/${assetId}${fileExt}`;
+      let storagePath = `/uploads/${assetId}${fileExt}`;
 
       // Process image if applicable
       let processedFile: Buffer = file.buffer;
