@@ -2,7 +2,7 @@
 id: 429
 severity: P2
 status: complete
-title: "test-environment.ts: resetTestEnvironment calls jest.clearAllMocks instead of vi.clearAllMocks"
+title: 'test-environment.ts: resetTestEnvironment calls jest.clearAllMocks instead of vi.clearAllMocks'
 file: packages/frontend/src/test-utils/test-environment.ts
 found_in: PR #89
 reviewer: review-testing
@@ -17,7 +17,7 @@ The `resetTestEnvironment()` function at line 273 calls `jest.clearAllMocks()`, 
 ```typescript
 // Line 273 - BROKEN
 export function resetTestEnvironment(): void {
-  jest.clearAllMocks();  // Should be vi.clearAllMocks()
+  jest.clearAllMocks(); // Should be vi.clearAllMocks()
   setupTestEnvironment();
 }
 ```

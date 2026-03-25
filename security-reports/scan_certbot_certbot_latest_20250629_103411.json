@@ -23,9 +23,7 @@
       "sha256:c36cc8abde5ec080abc8648d8f79113ee12f69cfe7b982c63965e03ee911fd11",
       "sha256:3afa4b5eb8c8fdc6161da44e7381e73f789a4a4ba466ee51ac5347f29a439ff1"
     ],
-    "RepoTags": [
-      "certbot/certbot:latest"
-    ],
+    "RepoTags": ["certbot/certbot:latest"],
     "RepoDigests": [
       "certbot/certbot@sha256:263fe7ee9dde6440bf8baa957c0a8eb0118fc05ef86cf743c4cc84ca84303a21"
     ],
@@ -173,9 +171,7 @@
         ]
       },
       "config": {
-        "Entrypoint": [
-          "certbot"
-        ],
+        "Entrypoint": ["certbot"],
         "Env": [
           "PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
           "LANG=C.UTF-8",

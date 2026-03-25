@@ -59,6 +59,20 @@ async function startServer(): Promise<void> {
     // Initialize DI container before routes are registered
     try {
       await initializeContainer();
+
+      // Eager initialization (#702/#728): resolve NotificationPersistenceService at startup
+      // and call subscribeToEvents() exactly ONCE so subscriptions activate immediately.
+      // The factory no longer calls subscribeToEvents() to avoid double-registration.
+      try {
+        const notificationService = container.resolve(
+          TYPES.NotificationPersistenceService
+        ) as unknown as { subscribeToEvents(): void };
+        notificationService.subscribeToEvents();
+      } catch {
+        logger.warn(
+          'NotificationPersistenceService eager init failed — events will activate on first request'
+        );
+      }
     } catch (err) {
       logger.warn('DI container initialization failed — continuing without DI', {
         error: (err as Error).message,

@@ -43,6 +43,7 @@ export function useComments(contentId: string, { page = 1 }: { page?: number } =
 export function useReplies(commentId: string, { enabled = false }: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: commentKeys.replies(commentId),
+    // TODO #632: Hardcoded limit covers 99%+ of use cases at launch. Add "Load more replies" pagination when needed.
     queryFn: () => commentsApi.listReplies(commentId, { page: 1, limit: 50 }),
     enabled: Boolean(commentId) && enabled,
     staleTime: STALE_TIME,

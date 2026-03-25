@@ -27,9 +27,9 @@ function getStatusColor(status: Deployment['status']): string {
     case 'rolled_back':
       return 'text-orange-600 bg-orange-50 border-orange-200';
     case 'cancelled':
-      return 'text-gray-600 bg-gray-50 border-gray-200';
+      return 'text-muted-foreground bg-muted border-border';
     default:
-      return 'text-gray-600 bg-gray-50 border-gray-200';
+      return 'text-muted-foreground bg-muted border-border';
   }
 }
 
@@ -74,12 +74,12 @@ export const DeploymentStatusPanel: React.FC<DeploymentStatusPanelProps> = ({
 }) => {
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg shadow p-6 animate-pulse">
-        <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
+      <div className="bg-card rounded-lg shadow p-6 animate-pulse">
+        <div className="h-6 bg-muted rounded w-1/3 mb-4"></div>
         <div className="space-y-3">
-          <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+          <div className="h-4 bg-muted rounded w-2/3"></div>
+          <div className="h-4 bg-muted rounded w-1/2"></div>
+          <div className="h-4 bg-muted rounded w-3/4"></div>
         </div>
       </div>
     );
@@ -87,8 +87,8 @@ export const DeploymentStatusPanel: React.FC<DeploymentStatusPanelProps> = ({
 
   if (!deployment) {
     return (
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="text-center text-gray-500">
+      <div className="bg-card rounded-lg shadow p-6">
+        <div className="text-center text-muted-foreground">
           <p className="text-lg font-medium">No Active Deployment</p>
           <p className="text-sm mt-2">There are no deployments currently in progress.</p>
         </div>
@@ -105,11 +105,11 @@ export const DeploymentStatusPanel: React.FC<DeploymentStatusPanelProps> = ({
       : 0;
 
   return (
-    <div className="bg-white rounded-lg shadow">
+    <div className="bg-card rounded-lg shadow">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200">
+      <div className="px-6 py-4 border-b border-border">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-gray-900">Current Deployment</h2>
+          <h2 className="text-xl font-semibold text-foreground">Current Deployment</h2>
           <span className={`px-3 py-1 rounded-full text-sm font-medium border ${statusColor}`}>
             {deployment.status.replace('_', ' ').toUpperCase()}
           </span>
@@ -121,26 +121,26 @@ export const DeploymentStatusPanel: React.FC<DeploymentStatusPanelProps> = ({
         {/* Deployment Info */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <p className="text-sm text-gray-500">Environment</p>
-            <p className="text-base font-medium text-gray-900 capitalize">
+            <p className="text-sm text-muted-foreground">Environment</p>
+            <p className="text-base font-medium text-foreground capitalize">
               {deployment.environment}
             </p>
           </div>
           <div>
-            <p className="text-sm text-gray-500">Duration</p>
-            <p className="text-base font-medium text-gray-900">
+            <p className="text-sm text-muted-foreground">Duration</p>
+            <p className="text-base font-medium text-foreground">
               {deployment.duration ? formatDuration(deployment.duration) : 'In progress...'}
             </p>
           </div>
           <div>
-            <p className="text-sm text-gray-500">Commit</p>
-            <p className="text-base font-mono text-gray-900">
+            <p className="text-sm text-muted-foreground">Commit</p>
+            <p className="text-base font-mono text-foreground">
               {deployment.commitSha.substring(0, 7)}
             </p>
           </div>
           <div>
-            <p className="text-sm text-gray-500">Author</p>
-            <p className="text-base font-medium text-gray-900">{deployment.author}</p>
+            <p className="text-sm text-muted-foreground">Author</p>
+            <p className="text-base font-medium text-foreground">{deployment.author}</p>
           </div>
         </div>
 
@@ -148,10 +148,10 @@ export const DeploymentStatusPanel: React.FC<DeploymentStatusPanelProps> = ({
         {deployment.status === 'in_progress' && (
           <div>
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-gray-500">Progress</p>
-              <p className="text-sm font-medium text-gray-900">{Math.round(progress)}%</p>
+              <p className="text-sm text-muted-foreground">Progress</p>
+              <p className="text-sm font-medium text-foreground">{Math.round(progress)}%</p>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="w-full bg-muted rounded-full h-2">
               <div
                 className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                 style={{ width: `${progress}%` }}
@@ -162,29 +162,31 @@ export const DeploymentStatusPanel: React.FC<DeploymentStatusPanelProps> = ({
 
         {/* Commit Message */}
         <div>
-          <p className="text-sm text-gray-500 mb-1">Commit Message</p>
-          <p className="text-sm text-gray-900">{deployment.commitMessage}</p>
+          <p className="text-sm text-muted-foreground mb-1">Commit Message</p>
+          <p className="text-sm text-foreground">{deployment.commitMessage}</p>
         </div>
 
         {/* Stages */}
         {deployment.stages.length > 0 && (
           <div>
-            <p className="text-sm text-gray-500 mb-3">Deployment Stages</p>
+            <p className="text-sm text-muted-foreground mb-3">Deployment Stages</p>
             <div className="space-y-2">
               {deployment.stages.map((stage, index) => (
                 <div
                   key={stage.id}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  className="flex items-center justify-between p-3 bg-muted rounded-lg"
                 >
                   <div className="flex items-center space-x-3">
                     <span className="text-2xl">{getStageStatusIcon(stage.status)}</span>
                     <div>
-                      <p className="text-sm font-medium text-gray-900">{stage.name}</p>
-                      <p className="text-xs text-gray-500">{stage.description}</p>
+                      <p className="text-sm font-medium text-foreground">{stage.name}</p>
+                      <p className="text-xs text-muted-foreground">{stage.description}</p>
                     </div>
                   </div>
                   {stage.duration && (
-                    <span className="text-xs text-gray-500">{formatDuration(stage.duration)}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {formatDuration(stage.duration)}
+                    </span>
                   )}
                 </div>
               ))}
@@ -194,24 +196,24 @@ export const DeploymentStatusPanel: React.FC<DeploymentStatusPanelProps> = ({
 
         {/* Metrics Summary */}
         {(deployment.status === 'success' || deployment.status === 'failed') && (
-          <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-200">
+          <div className="grid grid-cols-3 gap-4 pt-4 border-t border-border">
             <div className="text-center">
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-2xl font-bold text-foreground">
                 {deployment.metrics.healthCheckSuccessRate.toFixed(0)}%
               </p>
-              <p className="text-xs text-gray-500">Health Checks</p>
+              <p className="text-xs text-muted-foreground">Health Checks</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-2xl font-bold text-foreground">
                 {deployment.metrics.passedSmokeTests}/{deployment.metrics.totalSmokeTests}
               </p>
-              <p className="text-xs text-gray-500">Smoke Tests</p>
+              <p className="text-xs text-muted-foreground">Smoke Tests</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-2xl font-bold text-foreground">
                 {deployment.metrics.responseTimeP95.toFixed(0)}ms
               </p>
-              <p className="text-xs text-gray-500">Response P95</p>
+              <p className="text-xs text-muted-foreground">Response P95</p>
             </div>
           </div>
         )}

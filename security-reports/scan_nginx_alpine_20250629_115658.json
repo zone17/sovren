@@ -20,9 +20,7 @@
       "sha256:bd66bdd2f47fe79516d2b2af823745b8c31ee3de775f210e6a3f196248445284",
       "sha256:640e06e412a990ebeb0f48103529c16fff8f33a9595a268ad84bbe45adf28649"
     ],
-    "RepoTags": [
-      "nginx:alpine"
-    ],
+    "RepoTags": ["nginx:alpine"],
     "RepoDigests": [
       "nginx@sha256:b2e814d28359e77bd0aa5fed1939620075e4ffa0eb20423cc557b375bd5c14ad"
     ],
@@ -152,14 +150,8 @@
         ]
       },
       "config": {
-        "Cmd": [
-          "nginx",
-          "-g",
-          "daemon off;"
-        ],
-        "Entrypoint": [
-          "/docker-entrypoint.sh"
-        ],
+        "Cmd": ["nginx", "-g", "daemon off;"],
+        "Entrypoint": ["/docker-entrypoint.sh"],
         "Env": [
           "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
           "NGINX_VERSION=1.29.0",

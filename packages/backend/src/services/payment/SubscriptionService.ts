@@ -13,6 +13,7 @@ import type { IPaymentProcessingService } from '../../interfaces/payment/IPaymen
 import type { ICurrencyService } from '../../interfaces/payment/ICurrencyService';
 import type { IAuditLogService } from '../../interfaces/shared/IAuditLogService';
 import type { IEventBus } from '../../interfaces/shared/IEventBus';
+import { DomainEventBuilder, DomainEventType } from '../../interfaces/shared/IEventBus';
 import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { ICacheService } from '../../interfaces/shared/ICacheService';
 import type {
@@ -1656,8 +1657,17 @@ export class SubscriptionService implements ISubscriptionService {
       timestamp: new Date(),
     };
 
-    // Emit to event bus
-    await this.eventBus.emit(eventType, event);
+    // Publish to event bus (aligned with IEventBus.publish interface)
+    const domainEvent = new DomainEventBuilder()
+      .withType(eventType as DomainEventType)
+      .withAggregateId(subscription.id)
+      .withAggregateType('subscription')
+      .withPayload(event)
+      .withUserId(subscription.userId)
+      .withCorrelationId(event.id)
+      .withSource('SubscriptionService')
+      .build();
+    await this.eventBus.publish(domainEvent);
 
     // Call registered callbacks
     for (const callback of this.eventSubscriptions.values()) {

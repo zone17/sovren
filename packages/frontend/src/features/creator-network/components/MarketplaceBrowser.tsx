@@ -58,8 +58,8 @@ const MarketplaceBrowser: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-gray-900">Creator Marketplace</h2>
-        <p className="text-sm text-gray-500">
+        <h2 className="text-lg font-semibold text-foreground">Creator Marketplace</h2>
+        <p className="text-sm text-muted-foreground">
           Hire creators for editing, writing, design, and more
         </p>
       </div>
@@ -72,7 +72,7 @@ const MarketplaceBrowser: React.FC = () => {
             setServiceTypeFilter(e.target.value as ServiceType | '');
             setPage(1);
           }}
-          className="rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+          className="rounded-md border border-border px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
           aria-label="Filter by service type"
         >
           <option value="">All services</option>
@@ -88,27 +88,31 @@ const MarketplaceBrowser: React.FC = () => {
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-pulse">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="rounded-lg border bg-white p-4 h-32" />
+            <div key={i} className="rounded-lg border bg-card p-4 h-32" />
           ))}
         </div>
       ) : listings.length === 0 ? (
-        <p className="text-sm text-gray-500 text-center py-8">No listings match your filters.</p>
+        <p className="text-sm text-muted-foreground text-center py-8">
+          No listings match your filters.
+        </p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {listings.map((listing) => (
             <article
               key={listing.id}
-              className="rounded-lg border bg-white p-4 flex flex-col justify-between gap-3"
+              className="rounded-lg border bg-card p-4 flex flex-col justify-between gap-3"
             >
               <div>
                 <div className="flex items-start justify-between gap-2">
-                  <h3 className="font-medium text-gray-900">{listing.title}</h3>
+                  <h3 className="font-medium text-foreground">{listing.title}</h3>
                   <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-xs text-indigo-700 shrink-0">
                     {SERVICE_TYPE_LABELS[listing.serviceType] ?? listing.serviceType}
                   </span>
                 </div>
                 {listing.description && (
-                  <p className="mt-1 text-sm text-gray-500 line-clamp-2">{listing.description}</p>
+                  <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
+                    {listing.description}
+                  </p>
                 )}
                 {listing.portfolioUrls.length > 0 && (
                   <div className="mt-2 flex flex-wrap gap-1">
@@ -127,7 +131,7 @@ const MarketplaceBrowser: React.FC = () => {
                 )}
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-gray-900">
+                <span className="text-sm font-semibold text-foreground">
                   {listing.priceSats.toLocaleString()} sats
                 </span>
                 <button
@@ -148,7 +152,7 @@ const MarketplaceBrowser: React.FC = () => {
 
       {/* Pagination */}
       {pagination && pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between text-sm text-gray-500">
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span>
             Page {pagination.page} of {pagination.totalPages}
           </span>

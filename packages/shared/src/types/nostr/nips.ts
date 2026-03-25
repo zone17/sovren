@@ -22,7 +22,7 @@ export const NostrDirectMessageSchema = z.object({
   id: z.string().length(64),
   from: z.string().length(64),
   to: z.string().length(64),
-  content: z.string(),         // Encrypted content
+  content: z.string(), // Encrypted content
   timestamp: z.number().positive(),
   decrypted: z.string().optional(), // Decrypted content (client-side only)
 });
@@ -33,7 +33,7 @@ export type NostrDirectMessage = z.infer<typeof NostrDirectMessageSchema>;
  * DM Encryption Options
  */
 export interface DMEncryptionOptions {
-  algorithm?: 'aes-256-cbc';   // Default encryption algorithm
+  algorithm?: 'aes-256-cbc'; // Default encryption algorithm
   encoding?: 'base64' | 'hex'; // Encoding for encrypted data
 }
 
@@ -44,11 +44,11 @@ export interface DMEncryptionOptions {
 export interface ReadReceiptEvent extends NostrEvent {
   kind: 1515;
   tags: Array<
-    | ['e', string]           // Message event ID being acknowledged
-    | ['p', string]           // Sender of original message
+    | ['e', string] // Message event ID being acknowledged
+    | ['p', string] // Sender of original message
     | string[]
   >;
-  content: string;            // Empty or timestamp
+  content: string; // Empty or timestamp
 }
 
 /**
@@ -68,7 +68,7 @@ export interface ReadReceiptStatus {
 export interface TypingIndicatorEvent extends NostrEvent {
   kind: 20004;
   tags: Array<
-    | ['p', string]           // Recipient pubkey
+    | ['p', string] // Recipient pubkey
     | string[]
   >;
   content: 'typing' | 'stopped';
@@ -80,8 +80,8 @@ export interface TypingIndicatorEvent extends NostrEvent {
 export interface MessageHistoryRequest {
   conversationWith: string;
   limit?: number;
-  before?: number;            // Timestamp
-  after?: number;             // Timestamp
+  before?: number; // Timestamp
+  after?: number; // Timestamp
   offset?: number;
 }
 
@@ -106,9 +106,9 @@ export interface SpamProtectionConfig {
     maxMessagesPerHour: number;
   };
   requirePoW: boolean;
-  powDifficulty: number;      // Leading zeros required
-  blockList: Set<string>;     // Blocked pubkeys
-  allowList: Set<string>;     // Always allowed pubkeys
+  powDifficulty: number; // Leading zeros required
+  blockList: Set<string>; // Blocked pubkeys
+  allowList: Set<string>; // Always allowed pubkeys
 }
 
 // ========================================
@@ -120,7 +120,7 @@ export interface SpamProtectionConfig {
  */
 export interface NIP05VerificationResult {
   verified: boolean;
-  identifier: string;          // name@domain.com
+  identifier: string; // name@domain.com
   pubkey: string;
   relays?: string[];
   error?: string;
@@ -130,9 +130,9 @@ export interface NIP05VerificationResult {
  * NIP-05 Verification Options
  */
 export interface NIP05VerificationOptions {
-  timeout?: number;            // Verification timeout (ms)
-  allowHttp?: boolean;         // Allow HTTP (not recommended)
-  cacheDuration?: number;      // Cache duration (ms)
+  timeout?: number; // Verification timeout (ms)
+  allowHttp?: boolean; // Allow HTTP (not recommended)
+  cacheDuration?: number; // Cache duration (ms)
 }
 
 // ========================================
@@ -143,13 +143,13 @@ export interface NIP05VerificationOptions {
  * NIP-19 Entity Types
  */
 export enum NIP19EntityType {
-  NPUB = 'npub',               // Public key
-  NSEC = 'nsec',               // Private key (secret)
-  NOTE = 'note',               // Event ID
-  NPROFILE = 'nprofile',       // Profile with relays
-  NEVENT = 'nevent',           // Event with relays
-  NRELAY = 'nrelay',           // Relay URL
-  NADDR = 'naddr',             // Parameterized replaceable event
+  NPUB = 'npub', // Public key
+  NSEC = 'nsec', // Private key (secret)
+  NOTE = 'note', // Event ID
+  NPROFILE = 'nprofile', // Profile with relays
+  NEVENT = 'nevent', // Event with relays
+  NRELAY = 'nrelay', // Relay URL
+  NADDR = 'naddr', // Parameterized replaceable event
 }
 
 /**
@@ -157,7 +157,7 @@ export enum NIP19EntityType {
  */
 export interface DecodedKey {
   type: NIP19EntityType.NPUB | NIP19EntityType.NSEC;
-  data: string;                // Hex public or private key
+  data: string; // Hex public or private key
 }
 
 /**
@@ -165,7 +165,7 @@ export interface DecodedKey {
  */
 export interface DecodedNote {
   type: NIP19EntityType.NOTE;
-  data: string;                // Hex event ID
+  data: string; // Hex event ID
 }
 
 /**
@@ -223,19 +223,19 @@ export type DecodedNIP19 =
  * Delegation Token (NIP-26)
  */
 export interface DelegationToken {
-  delegator: string;           // Delegator's pubkey
-  delegatee: string;           // Delegatee's pubkey
-  conditions: string;          // Delegation conditions
-  signature: string;           // Delegator's signature
+  delegator: string; // Delegator's pubkey
+  delegatee: string; // Delegatee's pubkey
+  conditions: string; // Delegation conditions
+  signature: string; // Delegator's signature
 }
 
 /**
  * Delegation Conditions
  */
 export interface DelegationConditions {
-  kind?: number;               // Allowed event kind
-  created_at_after?: number;   // Min timestamp
-  created_at_before?: number;  // Max timestamp
+  kind?: number; // Allowed event kind
+  created_at_after?: number; // Min timestamp
+  created_at_before?: number; // Max timestamp
 }
 
 /**
@@ -287,12 +287,12 @@ export interface RelayMetadata {
 export interface RelayListEvent extends NostrEvent {
   kind: 10002;
   tags: Array<
-    | ['r', string]                // read + write
-    | ['r', string, 'read']        // read-only
-    | ['r', string, 'write']       // write-only
+    | ['r', string] // read + write
+    | ['r', string, 'read'] // read-only
+    | ['r', string, 'write'] // write-only
     | string[]
   >;
-  content: string;                 // Should be empty string
+  content: string; // Should be empty string
 }
 
 /**
@@ -346,12 +346,12 @@ export interface LongFormContentMetadata {
 export interface LongFormContentEvent extends NostrEvent {
   kind: 30023;
   tags: Array<
-    | ['d', string]           // Unique identifier
+    | ['d', string] // Unique identifier
     | ['title', string]
     | ['image', string]
     | ['summary', string]
     | ['published_at', string]
-    | ['t', string]           // Hashtags
+    | ['t', string] // Hashtags
     | string[]
   >;
 }
@@ -378,11 +378,11 @@ export enum ReactionType {
  */
 export interface ReactionEvent extends NostrEvent {
   kind: 7;
-  content: string;             // Reaction emoji or +/-
+  content: string; // Reaction emoji or +/-
   tags: Array<
-    | ['e', string]           // Event being reacted to
-    | ['p', string]           // Event author
-    | ['k', string]           // Event kind
+    | ['e', string] // Event being reacted to
+    | ['p', string] // Event author
+    | ['k', string] // Event kind
     | string[]
   >;
 }
@@ -405,7 +405,7 @@ export interface ChannelMetadata {
  */
 export interface ChannelCreateEvent extends NostrEvent {
   kind: 40;
-  content: string;             // JSON stringified ChannelMetadata
+  content: string; // JSON stringified ChannelMetadata
 }
 
 /**
@@ -415,10 +415,10 @@ export interface ChannelMessageEvent extends NostrEvent {
   kind: 42;
   content: string;
   tags: Array<
-    | ['e', string, string, string]  // Channel ID or message being replied to (relay, marker)
-    | ['e', string, string]          // Channel ID with relay hint
-    | ['e', string]                  // Channel ID only
-    | ['p', string]                  // Mentioned pubkeys
+    | ['e', string, string, string] // Channel ID or message being replied to (relay, marker)
+    | ['e', string, string] // Channel ID with relay hint
+    | ['e', string] // Channel ID only
+    | ['p', string] // Mentioned pubkeys
     | string[]
   >;
 }
@@ -431,7 +431,7 @@ export interface ChannelMessageEvent extends NostrEvent {
  * Parameterized Replaceable Event
  */
 export interface ParameterizedReplaceableEvent extends NostrEvent {
-  kind: number;                // 30000-39999
+  kind: number; // 30000-39999
   tags: Array<['d', string] | string[]>; // Must include 'd' tag
 }
 
@@ -441,7 +441,7 @@ export interface ParameterizedReplaceableEvent extends NostrEvent {
 export interface EventCoordinate {
   kind: number;
   pubkey: string;
-  identifier: string;          // 'd' tag value
+  identifier: string; // 'd' tag value
 }
 
 // ========================================
@@ -514,9 +514,9 @@ export enum ReportType {
 export interface ReportEvent extends NostrEvent {
   kind: 1984;
   tags: Array<
-    | ['e', string]           // Event being reported
-    | ['p', string]           // Pubkey being reported
-    | ['report', string]      // Report type
+    | ['e', string] // Event being reported
+    | ['p', string] // Pubkey being reported
+    | ['report', string] // Report type
     | string[]
   >;
 }
@@ -534,8 +534,8 @@ export interface ZapRequest extends NostrEvent {
     | ['relays', ...string[]]
     | ['amount', string]
     | ['lnurl', string]
-    | ['p', string]           // Recipient pubkey
-    | ['e', string]           // Event being zapped
+    | ['p', string] // Recipient pubkey
+    | ['e', string] // Event being zapped
     | string[]
   >;
 }
@@ -546,10 +546,10 @@ export interface ZapRequest extends NostrEvent {
 export interface ZapReceipt extends NostrEvent {
   kind: 9735;
   tags: Array<
-    | ['bolt11', string]      // Lightning invoice
+    | ['bolt11', string] // Lightning invoice
     | ['description', string] // Zap request
-    | ['p', string]           // Recipient
-    | ['e', string]           // Zapped event
+    | ['p', string] // Recipient
+    | ['e', string] // Zapped event
     | string[]
   >;
 }
@@ -564,13 +564,13 @@ export interface ZapReceipt extends NostrEvent {
 export interface CreatorProfileEvent extends NostrEvent {
   kind: 30024;
   tags: Array<
-    | ['d', string]           // Profile identifier
+    | ['d', string] // Profile identifier
     | ['name', string]
     | ['about', string]
     | ['picture', string]
     | ['banner', string]
     | ['subscription_tiers', string] // JSON
-    | ['payment_methods', string]    // JSON
+    | ['payment_methods', string] // JSON
     | string[]
   >;
 }
@@ -581,7 +581,7 @@ export interface CreatorProfileEvent extends NostrEvent {
 export interface MonetizationEvent extends NostrEvent {
   kind: 30025;
   tags: Array<
-    | ['d', string]           // Transaction ID
+    | ['d', string] // Transaction ID
     | ['amount', string]
     | ['currency', string]
     | ['payment_method', string]
@@ -599,32 +599,32 @@ export interface MonetizationEvent extends NostrEvent {
  * Supported NIPs
  */
 export const SUPPORTED_NIPS = [
-  1,   // Basic protocol
-  2,   // Contact list
-  4,   // Encrypted DMs
-  5,   // Event deletion
-  9,   // Event deletion
-  11,  // Relay information
-  19,  // Bech32 entities
-  23,  // Long-form content
-  25,  // Reactions
-  26,  // Delegated signing
-  28,  // Public chat
-  33,  // Parameterized replaceable events
-  40,  // Expiration
-  42,  // Authentication
-  45,  // Event counts
-  50,  // Search
-  56,  // Reporting
-  57,  // Lightning zaps
-  65,  // Relay list metadata
+  1, // Basic protocol
+  2, // Contact list
+  4, // Encrypted DMs
+  5, // Event deletion
+  9, // Event deletion
+  11, // Relay information
+  19, // Bech32 entities
+  23, // Long-form content
+  25, // Reactions
+  26, // Delegated signing
+  28, // Public chat
+  33, // Parameterized replaceable events
+  40, // Expiration
+  42, // Authentication
+  45, // Event counts
+  50, // Search
+  56, // Reporting
+  57, // Lightning zaps
+  65, // Relay list metadata
 ] as const;
 
 /**
  * Check if NIP is supported
  */
 export function isNIPSupported(nip: number): boolean {
-  return SUPPORTED_NIPS.includes(nip as typeof SUPPORTED_NIPS[number]);
+  return SUPPORTED_NIPS.includes(nip as (typeof SUPPORTED_NIPS)[number]);
 }
 
 // ========================================

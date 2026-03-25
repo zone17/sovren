@@ -302,10 +302,12 @@ const RecommendationCard: React.FC<{
               </CardTitle>
 
               {recommendation.description && (
-                <p className="text-sm text-gray-600 line-clamp-2">{recommendation.description}</p>
+                <p className="text-sm text-muted-foreground line-clamp-2">
+                  {recommendation.description}
+                </p>
               )}
 
-              <div className="flex items-center gap-4 text-xs text-gray-500">
+              <div className="flex items-center gap-4 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <Eye className="h-3 w-3" />
                   {recommendation.metadata.viewCount.toLocaleString()}
@@ -375,7 +377,7 @@ const RecommendationCard: React.FC<{
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500">Creator:</span>
+                <span className="text-xs text-muted-foreground">Creator:</span>
                 <span className="text-xs font-medium">{recommendation.creatorName}</span>
               </div>
             </div>
@@ -413,7 +415,7 @@ const RecommendationCard: React.FC<{
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="mt-4 p-3 bg-gray-50 rounded-lg"
+                className="mt-4 p-3 bg-muted rounded-lg"
               >
                 <p className="text-sm font-medium mb-2">Rate this recommendation:</p>
                 <div className="flex items-center gap-1">
@@ -530,8 +532,8 @@ export const PersonalizedRecommendations: React.FC<PersonalizedRecommendationsPr
       <div className={cn('space-y-6', className)}>
         <div className="flex items-center justify-between">
           <div className="space-y-2">
-            <div className="h-6 bg-gray-200 rounded w-48 animate-pulse" />
-            <div className="h-4 bg-gray-200 rounded w-32 animate-pulse" />
+            <div className="h-6 bg-muted rounded w-48 animate-pulse" />
+            <div className="h-4 bg-muted rounded w-32 animate-pulse" />
           </div>
         </div>
 
@@ -540,12 +542,12 @@ export const PersonalizedRecommendations: React.FC<PersonalizedRecommendationsPr
             <Card key={index} className="animate-pulse">
               <CardHeader>
                 <div className="space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-3/4" />
-                  <div className="h-3 bg-gray-200 rounded w-1/2" />
+                  <div className="h-4 bg-muted rounded w-3/4" />
+                  <div className="h-3 bg-muted rounded w-1/2" />
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="h-3 bg-gray-200 rounded w-full" />
+                <div className="h-3 bg-muted rounded w-full" />
               </CardContent>
             </Card>
           ))}
@@ -584,9 +586,9 @@ export const PersonalizedRecommendations: React.FC<PersonalizedRecommendationsPr
           <h2 className="text-2xl font-bold flex items-center gap-2">
             <Sparkles className="h-6 w-6 text-purple-500" />
             Personalized for You
-            {refreshing && <RefreshCw className="h-4 w-4 animate-spin text-gray-500" />}
+            {refreshing && <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />}
           </h2>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             AI-powered recommendations based on your interests and behavior
           </p>
         </div>
@@ -610,10 +612,12 @@ export const PersonalizedRecommendations: React.FC<PersonalizedRecommendationsPr
           <Card>
             <CardContent className="pt-6">
               <div className="text-center space-y-4">
-                <Sparkles className="h-12 w-12 mx-auto text-gray-400" />
+                <Sparkles className="h-12 w-12 mx-auto text-muted-foreground/60" />
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-600">No Recommendations Yet</h3>
-                  <p className="text-sm text-gray-500">
+                  <h3 className="text-lg font-semibold text-muted-foreground">
+                    No Recommendations Yet
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
                     Start exploring content to get personalized recommendations!
                   </p>
                 </div>

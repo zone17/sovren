@@ -6,12 +6,12 @@
 
 ## Summary
 
-| Project | Suites Pass | Suites Fail | Tests Pass | Tests Fail | Pass Rate |
-|---------|------------|------------|-----------|-----------|-----------|
-| shared | 10 | 1 | 379 | 4 | 99.0% |
-| backend | 75 | 54 | 2,032 | 562 | 78.3% |
-| frontend | 57 | 66 | 1,523 | 1,025 | 59.8% |
-| **TOTAL** | **142** | **121** | **3,934** | **1,591** | **71.2%** |
+| Project   | Suites Pass | Suites Fail | Tests Pass | Tests Fail | Pass Rate |
+| --------- | ----------- | ----------- | ---------- | ---------- | --------- |
+| shared    | 10          | 1           | 379        | 4          | 99.0%     |
+| backend   | 75          | 54          | 2,032      | 562        | 78.3%     |
+| frontend  | 57          | 66          | 1,523      | 1,025      | 59.8%     |
+| **TOTAL** | **142**     | **121**     | **3,934**  | **1,591**  | **71.2%** |
 
 ## Backend Failures (54 suites, ~562 tests)
 
@@ -22,6 +22,7 @@
 **Fix:** Create a chainable Supabase mock helper in `test-utils/supabase-mock.ts` that returns `this` for all chain methods.
 
 **Affected files:**
+
 - `packages/backend/src/services/wellness/__tests__/WellnessService.test.ts`
 - `packages/backend/src/services/content/__tests__/ContentVersioningService.test.ts`
 - `packages/backend/src/__tests__/content-management-service.test.ts`
@@ -45,6 +46,7 @@
 **Fix:** Mock `createPlan` to return deterministic IDs, or use the actual returned ID in assertions.
 
 **Affected files:**
+
 - `packages/backend/src/services/payment/__tests__/SubscriptionService.test.ts` (90 tests, largest single failure source)
 
 ### Priority 3: ZodError in Receipt Generation (32 tests)
@@ -54,6 +56,7 @@
 **Fix:** Update receipt test fixtures to match current Zod schemas.
 
 **Affected files:**
+
 - `packages/backend/src/__tests__/services/lightning-receipt-service.test.ts`
 - `packages/backend/src/__tests__/services/lightning-receipt-simple.test.ts`
 
@@ -64,6 +67,7 @@
 **Fix:** Add `.get()` to the mock Request factory.
 
 **Affected files:**
+
 - `packages/backend/src/__tests__/routes/content.routes.test.ts`
 - `packages/backend/src/__tests__/routes/v1-api-routes.test.ts`
 - `packages/backend/src/routes/__tests__/auth.test.ts`
@@ -78,6 +82,7 @@
 **Fix:** Add Redis mock initialization to backend test setup or individual test `beforeAll`.
 
 **Affected files:**
+
 - `packages/backend/src/__tests__/lib/redis.test.ts`
 - `packages/backend/src/__tests__/integration/cache-layer.integration.test.ts`
 
@@ -88,6 +93,7 @@
 **Fix:** Convert to ESM import or mock the module.
 
 **Affected files:**
+
 - `packages/backend/src/__tests__/deployment-smoke-tests.test.ts`
 
 ### Priority 7: `pathRegexp` Not a Function (4 tests)
@@ -97,6 +103,7 @@
 **Fix:** Check `path-to-regexp` version compatibility or mock it.
 
 **Affected files:**
+
 - `packages/backend/src/__tests__/integration/webhook-signature-verification.test.ts`
 - `packages/backend/src/__tests__/nip05-routes.test.ts`
 
@@ -107,6 +114,7 @@
 **Fix:** Ensure all mocked methods use `vi.fn()`.
 
 **Affected files:**
+
 - `packages/backend/src/services/__tests__/DatabaseSessionManager.test.ts`
 - `packages/backend/src/__tests__/middleware/correlation-id.test.ts`
 - `packages/backend/src/services/__tests__/creator-recommendation-service.test.ts`
@@ -118,11 +126,13 @@
 **Fix:** Add proper `afterEach` cleanup and `vi.useFakeTimers()` where appropriate.
 
 **Affected files:**
+
 - `packages/backend/src/services/__tests__/EventBusService.test.ts`
 - `packages/backend/src/__tests__/supabase-realtime-service.test.ts`
 - `packages/backend/src/__tests__/performance/database-performance.test.ts`
 
 ### Other Backend Issues
+
 - `EmailService.ts` uses `createTransporter` (wrong API — should be `createTransport`) — 24 tests
 - `supabaseKey is required` — env var not set in test setup — 3 tests
 - `router.use is not a function` — Express Router mock incomplete — 2 tests
@@ -138,11 +148,13 @@
 **Fix:** Create comprehensive store mock in `test-utils/mock-store.ts` with all required slices.
 
 **Affected patterns:**
+
 - `Cannot read properties of undefined (reading 'globalFeed')` — 80 hits
 - `Cannot read properties of undefined (reading 'getUnreadCount')` — 44 hits
 - `Cannot read properties of null (reading 'enableOfflineCapabilities')` — 42 hits
 
 **Affected files:**
+
 - `packages/frontend/src/pages/Home.test.tsx`
 - `packages/frontend/src/pages/Post.test.tsx`
 - `packages/frontend/src/pages/Profile.test.tsx`
@@ -196,6 +208,7 @@
 **Fix:** Mock WebSocket connections, add `vi.useFakeTimers()`, reduce timeout-dependent logic.
 
 **Affected files:**
+
 - `packages/frontend/src/services/nostr/__tests__/RelayPoolManager.test.ts`
 - `packages/frontend/src/services/nostr/__tests__/CachePersistenceService.test.ts`
 - `packages/frontend/src/services/nostr/__tests__/SubscriptionManagerService.test.ts`
@@ -207,6 +220,7 @@
 **Fix:** Add `cleanup()` from `@testing-library/react` in `afterEach` for affected suites.
 
 ### Other Frontend Issues
+
 - `Cannot read properties of undefined (reading 'bind')` — 33 tests (service mock incomplete)
 - `Cannot read properties of undefined (reading 'sign')` — 15 tests (crypto mock)
 - `Cannot read properties of undefined (reading 'pointerEvents')` — 16 tests (CSSOM mock)
@@ -222,24 +236,25 @@
 **Fix:** Update test to match current Zod schema shape.
 
 **Affected file:**
+
 - `packages/shared/src/__tests__/environment-validator.test.ts`
 
 ---
 
 ## Recommended Fix Order (Maximum Impact)
 
-| Order | Fix | Tests Recovered | Effort |
-|-------|-----|----------------|--------|
-| 1 | Chainable Supabase mock helper | ~100 | Medium |
-| 2 | Comprehensive Redux store mock | ~120 | Medium |
-| 3 | BrowserRouter mock export + Router context | ~52 | Small |
-| 4 | MockAutonomousUserManagementService hoisting | ~49 | Small |
-| 5 | `vi.useFakeTimers()` in setup or affected suites | ~41 | Small |
-| 6 | SubscriptionService plan ID fix | ~35 | Small |
-| 7 | Receipt fixture Zod update | ~32 | Small |
-| 8 | IntersectionObserver mock in beforeEach | ~28 | Small |
-| 9 | Express `req.get()` mock | ~24 | Small |
-| 10 | React cleanup in afterEach | ~23 | Small |
+| Order | Fix                                              | Tests Recovered | Effort |
+| ----- | ------------------------------------------------ | --------------- | ------ |
+| 1     | Chainable Supabase mock helper                   | ~100            | Medium |
+| 2     | Comprehensive Redux store mock                   | ~120            | Medium |
+| 3     | BrowserRouter mock export + Router context       | ~52             | Small  |
+| 4     | MockAutonomousUserManagementService hoisting     | ~49             | Small  |
+| 5     | `vi.useFakeTimers()` in setup or affected suites | ~41             | Small  |
+| 6     | SubscriptionService plan ID fix                  | ~35             | Small  |
+| 7     | Receipt fixture Zod update                       | ~32             | Small  |
+| 8     | IntersectionObserver mock in beforeEach          | ~28             | Small  |
+| 9     | Express `req.get()` mock                         | ~24             | Small  |
+| 10    | React cleanup in afterEach                       | ~23             | Small  |
 
 **Fixing items 1-10 would recover ~500+ tests, bringing pass rate from 71% to ~80-85%.**
 

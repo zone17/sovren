@@ -26,6 +26,7 @@ import { Alert, AlertDescription, AlertTitle } from '../../../components/ui/aler
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
 import { Progress } from '../../../components/ui/progress';
+import { Spinner } from '../../../components/ui/spinner';
 import {
   Tooltip,
   TooltipContent,
@@ -68,8 +69,8 @@ const X = ({ className }: { className?: string }) => <span className={className}
 // Loading component for Suspense
 const LoadingFallback: React.FC<{ title: string }> = ({ title }) => (
   <div className="flex flex-col items-center justify-center h-64 space-y-4">
-    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
-    <p className="text-gray-600">Loading {title}...</p>
+    <Spinner size="lg" />
+    <p className="text-muted-foreground">Loading {title}...</p>
   </div>
 );
 
@@ -298,7 +299,7 @@ export const ContentManagementHub: React.FC<ContentManagementHubProps> = ({
         default:
           return (
             <div className="flex items-center justify-center h-64">
-              <p className="text-gray-600">Select a tab to get started</p>
+              <p className="text-muted-foreground">Select a tab to get started</p>
             </div>
           );
       }
@@ -311,12 +312,12 @@ export const ContentManagementHub: React.FC<ContentManagementHubProps> = ({
     return (
       <div className="h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto" />
-          <p className="text-gray-600">Initializing Content Management...</p>
+          <Spinner size="lg" className="mx-auto" />
+          <p className="text-muted-foreground">Initializing Content Management...</p>
           {syncProgress > 0 && (
             <div className="w-64 mx-auto">
               <Progress value={syncProgress} className="h-2" />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Loading data... {Math.round(syncProgress)}%
               </p>
             </div>
@@ -328,11 +329,9 @@ export const ContentManagementHub: React.FC<ContentManagementHubProps> = ({
 
   return (
     <TooltipProvider>
-      <div
-        className={`h-screen flex flex-col bg-gradient-to-br from-gray-50 via-white to-blue-50 ${className}`}
-      >
+      <div className={`h-screen flex flex-col bg-background ${className}`}>
         {/* Header */}
-        <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+        <header className="bg-card border-b border-border px-4 py-3 flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <Button
               variant="ghost"
@@ -348,7 +347,7 @@ export const ContentManagementHub: React.FC<ContentManagementHubProps> = ({
               <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
                 Content Management
               </h1>
-              <p className="text-sm text-gray-600 hidden sm:block">
+              <p className="text-sm text-muted-foreground hidden sm:block">
                 Unified content creation and management platform
               </p>
             </div>
@@ -380,7 +379,7 @@ export const ContentManagementHub: React.FC<ContentManagementHubProps> = ({
           {/* Sidebar - Hidden on mobile, overlay on tablet, fixed on desktop */}
           <aside
             className={`
-              bg-white border-r border-gray-200 flex-shrink-0 transition-all duration-300
+              bg-card border-r border-border flex-shrink-0 transition-all duration-300
               ${sidebar_open ? 'w-64' : 'w-0 lg:w-16'}
               ${mobile_nav_open ? 'fixed inset-y-0 left-0 z-50 w-64 lg:relative' : 'hidden lg:block'}
             `}
@@ -401,7 +400,7 @@ export const ContentManagementHub: React.FC<ContentManagementHubProps> = ({
                             ${
                               isActive
                                 ? 'bg-blue-100 text-blue-700 border-l-4 border-blue-700'
-                                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                                : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                             }
                           `}
                           aria-label={tab.description}
@@ -423,9 +422,9 @@ export const ContentManagementHub: React.FC<ContentManagementHubProps> = ({
                         <TooltipContent side="right">
                           <div>
                             <p className="font-medium">{tab.label}</p>
-                            <p className="text-xs text-gray-500">{tab.description}</p>
+                            <p className="text-xs text-muted-foreground">{tab.description}</p>
                             {tab.count !== undefined && (
-                              <p className="text-xs text-gray-500">{tab.count} items</p>
+                              <p className="text-xs text-muted-foreground">{tab.count} items</p>
                             )}
                           </div>
                         </TooltipContent>
@@ -447,7 +446,7 @@ export const ContentManagementHub: React.FC<ContentManagementHubProps> = ({
           )}
 
           {/* Main content area */}
-          <main className="flex-1 overflow-hidden bg-gray-50">
+          <main className="flex-1 overflow-hidden bg-muted">
             {/* Error display */}
             {(error.content || error.collections || error.series || error.analytics) && (
               <Alert variant="destructive" className="m-4">

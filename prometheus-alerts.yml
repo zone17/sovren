@@ -1,0 +1,261 @@
+groups:
+  # ─────────────────────────────────────────────────────────────────────────
+  # API Error Rate
+  # ─────────────────────────────────────────────────────────────────────────
+  - name: api_error_rate
+    interval: 1m
+    rules:
+      - alert: HighApiErrorRate
+        expr: |
+          (
+            sum(rate(http_requests_total{status=~"5.."}[5m])) by (job)
+            /
+            sum(rate(http_requests_total[5m])) by (job)
+          ) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          service: sovren-backend
+        annotations:
+          summary: "High API error rate on {{ $labels.job }}"
+          description: >
+            API 5xx error rate is {{ $value | humanizePercentage }} over the last 5 minutes
+            (threshold: 5%). Job: {{ $labels.job }}.
+
+      - alert: CriticalApiErrorRate
+        expr: |
+          (
+            sum(rate(http_requests_total{status=~"5.."}[5m])) by (job)
+            /
+            sum(rate(http_requests_total[5m])) by (job)
+          ) > 0.20
+        for: 2m
+        labels:
+          severity: critical
+          service: sovren-backend
+        annotations:
+          summary: "Critical API error rate on {{ $labels.job }}"
+          description: >
+            API 5xx error rate is {{ $value | humanizePercentage }} over the last 5 minutes
+            (threshold: 20%). Immediate action required. Job: {{ $labels.job }}.
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # API Latency
+  # ─────────────────────────────────────────────────────────────────────────
+  - name: api_latency
+    interval: 1m
+    rules:
+      - alert: HighApiLatencyP99
+        expr: |
+          histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, job))
+          > 2.0
+        for: 5m
+        labels:
+          severity: warning
+          service: sovren-backend
+        annotations:
+          summary: "High P99 latency on {{ $labels.job }}"
+          description: >
+            P99 request latency is {{ $value | humanizeDuration }} (threshold: 2s).
+            Job: {{ $labels.job }}.
+
+      - alert: CriticalApiLatencyP99
+        expr: |
+          histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, job))
+          > 10.0
+        for: 2m
+        labels:
+          severity: critical
+          service: sovren-backend
+        annotations:
+          summary: "Critical P99 latency on {{ $labels.job }}"
+          description: >
+            P99 request latency is {{ $value | humanizeDuration }} (threshold: 10s).
+            Job: {{ $labels.job }}.
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Payment Failures (Lightning Network)
+  # ─────────────────────────────────────────────────────────────────────────
+  - name: payment_failures
+    interval: 1m
+    rules:
+      - alert: HighPaymentFailureRate
+        expr: |
+          (
+            sum(rate(payment_transactions_total{status="failed"}[10m])) by (job)
+            /
+            sum(rate(payment_transactions_total[10m])) by (job)
+          ) > 0.10
+        for: 5m
+        labels:
+          severity: warning
+          service: sovren-backend
+          domain: payments
+        annotations:
+          summary: "High payment failure rate on {{ $labels.job }}"
+          description: >
+            Payment failure rate is {{ $value | humanizePercentage }} over the last 10 minutes
+            (threshold: 10%). Job: {{ $labels.job }}.
+
+      - alert: CriticalPaymentFailureRate
+        expr: |
+          (
+            sum(rate(payment_transactions_total{status="failed"}[10m])) by (job)
+            /
+            sum(rate(payment_transactions_total[10m])) by (job)
+          ) > 0.30
+        for: 2m
+        labels:
+          severity: critical
+          service: sovren-backend
+          domain: payments
+        annotations:
+          summary: "Critical payment failure rate on {{ $labels.job }}"
+          description: >
+            Payment failure rate is {{ $value | humanizePercentage }} over the last 10 minutes
+            (threshold: 30%). Financial impact — immediate action required.
+            Job: {{ $labels.job }}.
+
+      - alert: PaymentProcessingStalled
+        expr: |
+          sum(rate(payment_transactions_total[5m])) by (job) == 0
+          and on(job)
+          sum(payment_transactions_pending) by (job) > 0
+        for: 10m
+        labels:
+          severity: critical
+          service: sovren-backend
+          domain: payments
+        annotations:
+          summary: "Payment processing stalled on {{ $labels.job }}"
+          description: >
+            No payment transactions processed in the last 5 minutes, but
+            {{ $value }} pending transactions exist. Payment queue may be stuck.
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Auth Failures
+  # ─────────────────────────────────────────────────────────────────────────
+  - name: auth_failures
+    interval: 1m
+    rules:
+      - alert: HighAuthFailureRate
+        expr: |
+          (
+            sum(rate(auth_attempts_total{result="failure"}[5m])) by (job)
+            /
+            sum(rate(auth_attempts_total[5m])) by (job)
+          ) > 0.20
+        for: 5m
+        labels:
+          severity: warning
+          service: sovren-backend
+          domain: security
+        annotations:
+          summary: "High auth failure rate on {{ $labels.job }}"
+          description: >
+            Auth failure rate is {{ $value | humanizePercentage }} over the last 5 minutes
+            (threshold: 20%). Possible brute-force or credential stuffing attack.
+            Job: {{ $labels.job }}.
+
+      - alert: AuthBruteForceDetected
+        expr: |
+          sum(rate(auth_attempts_total{result="failure"}[1m])) by (job, remote_addr)
+          > 10
+        for: 2m
+        labels:
+          severity: critical
+          service: sovren-backend
+          domain: security
+        annotations:
+          summary: "Possible brute-force attack from {{ $labels.remote_addr }}"
+          description: >
+            More than 10 auth failures/minute from {{ $labels.remote_addr }}.
+            Investigate and consider blocking. Job: {{ $labels.job }}.
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Disk Usage
+  # ─────────────────────────────────────────────────────────────────────────
+  - name: disk_usage
+    interval: 5m
+    rules:
+      - alert: DiskSpaceLow
+        expr: |
+          (
+            1 - (node_filesystem_avail_bytes{fstype!="tmpfs"} / node_filesystem_size_bytes{fstype!="tmpfs"})
+          ) > 0.80
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low disk space on {{ $labels.instance }} ({{ $labels.mountpoint }})"
+          description: >
+            Disk {{ $labels.mountpoint }} on {{ $labels.instance }} is
+            {{ $value | humanizePercentage }} full (threshold: 80%).
+
+      - alert: DiskSpaceCritical
+        expr: |
+          (
+            1 - (node_filesystem_avail_bytes{fstype!="tmpfs"} / node_filesystem_size_bytes{fstype!="tmpfs"})
+          ) > 0.95
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Disk space critical on {{ $labels.instance }} ({{ $labels.mountpoint }})"
+          description: >
+            Disk {{ $labels.mountpoint }} on {{ $labels.instance }} is
+            {{ $value | humanizePercentage }} full (threshold: 95%). Immediate action required.
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Service Availability
+  # ─────────────────────────────────────────────────────────────────────────
+  - name: service_availability
+    interval: 1m
+    rules:
+      - alert: BackendDown
+        expr: up{job="backend"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: sovren-backend
+        annotations:
+          summary: "Backend API is down"
+          description: "Prometheus cannot scrape the backend service. It has been down for 2+ minutes."
+
+      - alert: PrometheusDown
+        expr: absent(up{job="prometheus"})
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Prometheus self-monitoring lost"
+          description: "Prometheus is not scraping itself — check Prometheus process."
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Redis
+  # ─────────────────────────────────────────────────────────────────────────
+  - name: redis_health
+    interval: 1m
+    rules:
+      - alert: RedisMemoryHigh
+        expr: |
+          redis_memory_used_bytes / redis_memory_max_bytes > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          service: sovren-redis
+        annotations:
+          summary: "Redis memory usage high"
+          description: >
+            Redis is using {{ $value | humanizePercentage }} of its maxmemory limit
+            (threshold: 85%). Risk of eviction or OOM.
+
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 2m
+        labels:
+          severity: warning
+          service: sovren-redis
+        annotations:
+          summary: "Redis is down"
+          description: "Redis exporter cannot reach Redis. Cache and queue functionality degraded."

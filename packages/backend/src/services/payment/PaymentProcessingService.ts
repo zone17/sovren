@@ -237,6 +237,16 @@ export class PaymentProcessingService implements IPaymentProcessingService {
     this.cache = cache;
     this.repository = repository || new InMemoryPaymentRepository();
 
+    // Guard: InMemoryPaymentRepository must never be used in production
+    if (
+      process.env.NODE_ENV === 'production' &&
+      this.repository instanceof InMemoryPaymentRepository
+    ) {
+      throw new Error(
+        'InMemoryPaymentRepository cannot be used in production. Configure a persistent payment repository.'
+      );
+    }
+
     // Default retry configuration
     this.retryConfig = retryConfig || {
       maxRetries: 3,
@@ -751,14 +761,23 @@ export class PaymentProcessingService implements IPaymentProcessingService {
     startDate?: Date,
     endDate?: Date
   ): Promise<PaymentStatistics> {
-    const query: PaymentHistoryQuery = {
-      userId,
-      startDate,
-      endDate,
-      limit: Number.MAX_SAFE_INTEGER,
-    };
-
-    const transactions = await this.repository.queryTransactions(query);
+    // Paginated accumulation to avoid unbounded query (#768)
+    const PAGE_SIZE = 500;
+    const transactions: PaymentTransaction[] = [];
+    let offset = 0;
+    let batch: PaymentTransaction[];
+    do {
+      const query: PaymentHistoryQuery = {
+        userId,
+        startDate,
+        endDate,
+        limit: PAGE_SIZE,
+        offset,
+      };
+      batch = await this.repository.queryTransactions(query);
+      transactions.push(...batch);
+      offset += PAGE_SIZE;
+    } while (batch.length === PAGE_SIZE);
 
     const stats: PaymentStatistics = {
       totalTransactions: transactions.length,
@@ -992,19 +1011,127 @@ export class PaymentProcessingService implements IPaymentProcessingService {
     transaction: PaymentTransaction,
     params: ProcessPaymentParams
   ): Promise<PaymentResult> {
-    // Simplified payment execution - in production would interact with Lightning node
-    // For now, simulate successful payment
-    const preimage = randomBytes(32).toString('hex');
+    const lnbitsUrl = process.env.LNBITS_URL;
+    const lnbitsApiKey = process.env.LNBITS_API_KEY;
 
-    return {
-      success: true,
-      transactionId: transaction.id,
-      paymentHash: transaction.paymentHash,
-      preimage,
-      amount: transaction.amount,
-      fee: Math.floor(transaction.amount * 0.001), // 0.1% fee
-      timestamp: new Date(),
-    };
+    if (!lnbitsUrl || !lnbitsApiKey) {
+      // In test environment, simulate successful payment to allow integration tests
+      if (process.env.NODE_ENV === 'test') {
+        const preimage = Array.from({ length: 32 }, () =>
+          Math.floor(Math.random() * 256)
+            .toString(16)
+            .padStart(2, '0')
+        ).join('');
+        return {
+          success: true,
+          transactionId: transaction.id,
+          paymentHash: transaction.paymentHash,
+          preimage,
+          amount: transaction.amount,
+          timestamp: new Date(),
+        };
+      }
+      this.logger.error('LNbits configuration missing — LNBITS_URL and LNBITS_API_KEY required');
+      return {
+        success: false,
+        transactionId: transaction.id,
+        paymentHash: transaction.paymentHash,
+        amount: transaction.amount,
+        timestamp: new Date(),
+        error: this.createPaymentError(
+          'CONFIG_ERROR',
+          'Lightning payment provider not configured',
+          PaymentFailureReason.NETWORK_ERROR,
+          false
+        ),
+      };
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30_000);
+
+    try {
+      const response = await fetch(`${lnbitsUrl}/api/v1/payments`, {
+        method: 'POST',
+        headers: {
+          'X-Api-Key': lnbitsApiKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          out: true,
+          bolt11: params.paymentRequest,
+        }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        const message: string = (body as any)?.detail || `LNbits error: ${response.status}`;
+
+        // Map known LNbits error messages to failure reasons
+        let reason = PaymentFailureReason.NETWORK_ERROR;
+        if (message.includes('insufficient') || message.includes('balance')) {
+          reason = PaymentFailureReason.INSUFFICIENT_FUNDS;
+        } else if (message.includes('expired')) {
+          reason = PaymentFailureReason.EXPIRED_INVOICE;
+        } else if (message.includes('route') || message.includes('path')) {
+          reason = PaymentFailureReason.ROUTE_NOT_FOUND;
+        }
+
+        return {
+          success: false,
+          transactionId: transaction.id,
+          paymentHash: transaction.paymentHash,
+          amount: transaction.amount,
+          timestamp: new Date(),
+          error: this.createPaymentError(
+            'LNBITS_ERROR',
+            message,
+            reason,
+            reason !== PaymentFailureReason.INSUFFICIENT_FUNDS
+          ),
+        };
+      }
+
+      const data = (await response.json()) as {
+        payment_hash: string;
+        preimage: string;
+        fee_msat?: number;
+      };
+
+      return {
+        success: true,
+        transactionId: transaction.id,
+        paymentHash: data.payment_hash || transaction.paymentHash,
+        preimage: data.preimage,
+        amount: transaction.amount,
+        fee: data.fee_msat ? Math.ceil(data.fee_msat / 1000) : 0,
+        timestamp: new Date(),
+      };
+    } catch (error) {
+      clearTimeout(timeoutId);
+      const isTimeout = (error as Error).name === 'AbortError';
+      const message = isTimeout
+        ? 'Payment request timed out'
+        : error instanceof Error
+          ? error.message
+          : 'Unknown error';
+      return {
+        success: false,
+        transactionId: transaction.id,
+        paymentHash: transaction.paymentHash,
+        amount: transaction.amount,
+        timestamp: new Date(),
+        error: this.createPaymentError(
+          isTimeout ? 'TIMEOUT' : 'NETWORK_ERROR',
+          message,
+          isTimeout ? PaymentFailureReason.TIMEOUT : PaymentFailureReason.NETWORK_ERROR,
+          true
+        ),
+      };
+    }
   }
 
   private createPaymentError(

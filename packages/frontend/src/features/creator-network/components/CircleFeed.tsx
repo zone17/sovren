@@ -33,18 +33,18 @@ const CircleFeed: React.FC<CircleFeedProps> = ({ circleId, circleName }) => {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold text-gray-900">
+      <h2 className="text-lg font-semibold text-foreground">
         {circleName ? `${circleName} — Feed` : 'Circle Feed'}
       </h2>
 
       {/* Compose */}
-      <div className="rounded-lg border bg-white p-4 space-y-3">
+      <div className="rounded-lg border bg-card p-4 space-y-3">
         <textarea
           placeholder="Share something with your circle..."
           value={postContent}
           onChange={(e) => setPostContent(e.target.value)}
           rows={3}
-          className="w-full resize-none rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+          className="w-full resize-none rounded-md border border-border px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
           aria-label="New post content"
         />
         <div className="flex justify-end">
@@ -62,27 +62,29 @@ const CircleFeed: React.FC<CircleFeedProps> = ({ circleId, circleName }) => {
       {isLoading ? (
         <div className="space-y-3 animate-pulse">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="rounded-lg border bg-white p-4">
-              <div className="h-3 w-24 bg-gray-200 rounded mb-2" />
-              <div className="h-4 w-full bg-gray-100 rounded" />
+            <div key={i} className="rounded-lg border bg-card p-4">
+              <div className="h-3 w-24 bg-muted rounded mb-2" />
+              <div className="h-4 w-full bg-muted rounded" />
             </div>
           ))}
         </div>
       ) : posts.length === 0 ? (
-        <p className="text-sm text-center text-gray-500 py-6">No posts yet. Be the first!</p>
+        <p className="text-sm text-center text-muted-foreground py-6">
+          No posts yet. Be the first!
+        </p>
       ) : (
         <ul className="space-y-3" role="list">
           {posts.map((post) => (
-            <li key={post.id} className="rounded-lg border bg-white p-4">
+            <li key={post.id} className="rounded-lg border bg-card p-4">
               <div className="flex items-center gap-2 mb-2">
                 <div className="h-7 w-7 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-semibold text-indigo-700">
                   {post.authorId.slice(0, 2).toUpperCase()}
                 </div>
-                <span className="text-xs text-gray-400">
+                <span className="text-xs text-muted-foreground/60">
                   {new Date(post.createdAt).toLocaleString()}
                 </span>
               </div>
-              <p className="text-sm text-gray-800 whitespace-pre-wrap">{post.content}</p>
+              <p className="text-sm text-foreground whitespace-pre-wrap">{post.content}</p>
             </li>
           ))}
         </ul>
@@ -90,7 +92,7 @@ const CircleFeed: React.FC<CircleFeedProps> = ({ circleId, circleName }) => {
 
       {/* Pagination */}
       {total > 20 && (
-        <div className="flex items-center justify-between text-sm text-gray-500">
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span>{total} posts total</span>
           <div className="flex gap-2">
             <button

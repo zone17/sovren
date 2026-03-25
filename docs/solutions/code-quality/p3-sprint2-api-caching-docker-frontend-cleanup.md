@@ -68,6 +68,7 @@ Sprint 2 of the P3 cleanup resolved 14 of 20 remaining findings from PR #73, spa
 ## Problem
 
 After Sprint 1 resolved 14 findings (net -141K lines of dead code), 20 P3 findings remained spanning:
+
 - API documentation (018, 060, 086, 087, 146)
 - Docker/security (035, 059)
 - Caching/architecture (083, 084, 085, 104, 105, 130, 131, 132, 133, 134)
@@ -79,13 +80,13 @@ After Sprint 1 resolved 14 findings (net -141K lines of dead code), 20 P3 findin
 
 Per Sprint 1 lesson: "Always verify against source before implementing."
 
-| Todo | Finding |
-|------|---------|
-| 035 | Vault setup script deleted in prior sprint. Postgres ports already 127.0.0.1. Scope reduced to 2 items. |
-| 059 | Console.log: 0 hits. `_next` fixed. Emojis removed. **Merged into 035.** |
-| 109 | Zero " 2" directories found — already cleaned in Sprint 1. **Mark complete, no changes.** |
-| 085 | ~90+ Math.random() total but ~75 in tests/mocks. Only ~15 production files need fixing. |
-| 106 | Import path is `../../monitoring/ErrorBoundary`, NOT `@/components/ErrorBoundary`. 6 files, not 5. |
+| Todo | Finding                                                                                                 |
+| ---- | ------------------------------------------------------------------------------------------------------- |
+| 035  | Vault setup script deleted in prior sprint. Postgres ports already 127.0.0.1. Scope reduced to 2 items. |
+| 059  | Console.log: 0 hits. `_next` fixed. Emojis removed. **Merged into 035.**                                |
+| 109  | Zero " 2" directories found — already cleaned in Sprint 1. **Mark complete, no changes.**               |
+| 085  | ~90+ Math.random() total but ~75 in tests/mocks. Only ~15 production files need fixing.                 |
+| 106  | Import path is `../../monitoring/ErrorBoundary`, NOT `@/components/ErrorBoundary`. 6 files, not 5.      |
 
 **Result**: 4 stale/narrower items detected, preventing ~2 hours of wasted work.
 
@@ -112,6 +113,7 @@ Per Sprint 1 lesson: "Always verify against source before implementing."
 ### Batch 2: Architecture Fixes
 
 **Todo 104 — TTLCache LRU refactor**: Comprehensive fix in `utils/ttl-cache.ts`:
+
 1. Added `lastAccessed` timestamp tracking to cache entries
 2. Changed eviction from FIFO to LRU (evicts entry with oldest `lastAccessed`)
 3. Fixed `size` getter to exclude expired entries
@@ -146,6 +148,7 @@ export function createFeatureErrorBoundary(featureName: string): React.FC<Props>
 ### Batch 4: Docker Security
 
 **Todo 035+059 (merged)**: In `docker/security/docker-compose.secure.yml`:
+
 1. Redis health check: Changed from `-a ${REDIS_PASSWORD}` CLI arg to `REDISCLI_AUTH=$REDIS_PASSWORD redis-cli ping` (prevents password in process list)
 2. ICC: Changed to `false` for container isolation
 
@@ -159,26 +162,30 @@ export function createFeatureErrorBoundary(featureName: string): React.FC<Props>
 
 ## Deferred Items
 
-| Todo | Title | Reason |
-|------|-------|--------|
-| 086 | Agent API key auth | New feature, not cleanup. Needs API key table, CRUD, rate-limit integration. |
-| 087 | Content CRUD v1 | Overlaps 146. Should be part of v1 API migration sprint. |
-| 146 | v1 API fragmentation (24 endpoints) | Multi-week phased migration. Needs dedicated sprint. |
-| 145 | God classes (5 classes, 4,800+ lines) | High-risk refactor. Already deferred from Sprint 1. |
-| 060 | Agent-native metrics/error APIs | New feature. Depends on 086 (agent auth). |
+| Todo | Title                                 | Reason                                                                       |
+| ---- | ------------------------------------- | ---------------------------------------------------------------------------- |
+| 086  | Agent API key auth                    | New feature, not cleanup. Needs API key table, CRUD, rate-limit integration. |
+| 087  | Content CRUD v1                       | Overlaps 146. Should be part of v1 API migration sprint.                     |
+| 146  | v1 API fragmentation (24 endpoints)   | Multi-week phased migration. Needs dedicated sprint.                         |
+| 145  | God classes (5 classes, 4,800+ lines) | High-risk refactor. Already deferred from Sprint 1.                          |
+| 060  | Agent-native metrics/error APIs       | New feature. Depends on 086 (agent auth).                                    |
 
 ## Key Patterns
 
 ### Pattern: Stale todo detection saves sprint time
+
 Architect verified ALL 20 items against source before planning. Found 4 stale/narrower items. This prevented implementing against deleted files or wrong import paths. Saved ~2 hours.
 
 ### Pattern: Strategic merge of related todos
+
 Todos 035 and 059 had significant overlap (Docker hardening). Architect merged them, identified already-resolved items in both, and reduced scope to 2 actual changes. Future sprints should consolidate overlapping todos during Phase 0.
 
 ### Pattern: Factory function for identical React components
+
 6 error boundary files reduced to 1 factory + 6 one-liners. The factory pattern works when components differ only by a config prop (featureName). Pattern reusable for any feature-specific wrapper.
 
 ### Pattern: TTLCache LRU as drop-in Map replacement
+
 TTLCache with LRU eviction, auto-expiry, and cleanup interval replaces unbounded Maps across the codebase. Interface is Map-compatible (`get`, `set`, `has`, `delete`) so no consumer changes needed.
 
 ## Verification
@@ -189,39 +196,39 @@ TTLCache with LRU eviction, auto-expiry, and cleanup interval replaces unbounded
 
 ## Files Modified Summary
 
-| Category | Files Changed | Lines Added |
-|----------|---------------|-------------|
-| Services (UUID, timers, async init) | 18 modified | ~350 |
-| TTLCache | 1 modified | ~200 |
-| Error handler + health | 2 modified | ~80 |
-| Sensitive fields + bootstrap | 2 modified | ~30 |
-| Frontend error boundaries | 7 (6 modified + 1 new) | ~80 |
-| Docker compose | 1 modified | ~15 |
-| Route files (OpenAPI) | 3 modified | ~780 |
-| Todo renames | 15 renamed | 0 |
-| Plan docs | 2 new | ~730 |
+| Category                            | Files Changed          | Lines Added |
+| ----------------------------------- | ---------------------- | ----------- |
+| Services (UUID, timers, async init) | 18 modified            | ~350        |
+| TTLCache                            | 1 modified             | ~200        |
+| Error handler + health              | 2 modified             | ~80         |
+| Sensitive fields + bootstrap        | 2 modified             | ~30         |
+| Frontend error boundaries           | 7 (6 modified + 1 new) | ~80         |
+| Docker compose                      | 1 modified             | ~15         |
+| Route files (OpenAPI)               | 3 modified             | ~780        |
+| Todo renames                        | 15 renamed             | 0           |
+| Plan docs                           | 2 new                  | ~730        |
 
 ## Sprint Statistics
 
-| Metric | Value |
-|--------|-------|
-| Findings resolved | 14 of 20 (6 deferred) |
-| Files changed | 52 |
-| Lines added | 1,716 |
-| Lines removed | 180 |
-| Net change | +1,536 |
-| Team size | 6 agents |
-| Phases | 3 (arch+PO → backend+frontend → QA+security) |
-| Commit | c39171b |
+| Metric            | Value                                        |
+| ----------------- | -------------------------------------------- |
+| Findings resolved | 14 of 20 (6 deferred)                        |
+| Files changed     | 52                                           |
+| Lines added       | 1,716                                        |
+| Lines removed     | 180                                          |
+| Net change        | +1,536                                       |
+| Team size         | 6 agents                                     |
+| Phases            | 3 (arch+PO → backend+frontend → QA+security) |
+| Commit            | c39171b                                      |
 
 ## Cumulative PR #73 Statistics
 
-| Metric | Sprint 1 | Sprint 2 | Total |
-|--------|----------|----------|-------|
-| Findings resolved | 14 | 14 | 28 |
-| Items deferred | 1 (145) | 6 | 5 unique remaining |
-| Files changed | 690 | 52 | 742 |
-| Net lines | -141,316 | +1,536 | -139,780 |
+| Metric            | Sprint 1 | Sprint 2 | Total              |
+| ----------------- | -------- | -------- | ------------------ |
+| Findings resolved | 14       | 14       | 28                 |
+| Items deferred    | 1 (145)  | 6        | 5 unique remaining |
+| Files changed     | 690      | 52       | 742                |
+| Net lines         | -141,316 | +1,536   | -139,780           |
 
 ## Related Documentation
 

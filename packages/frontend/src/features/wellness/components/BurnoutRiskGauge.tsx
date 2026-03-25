@@ -39,14 +39,14 @@ interface RiskFactorBreakdownProps {
 
 const RiskFactorBreakdown: React.FC<RiskFactorBreakdownProps> = ({ factors }) => (
   <div className="space-y-3 mt-4 pt-4 border-t">
-    <h4 className="text-sm font-medium text-gray-700">Risk Factors</h4>
+    <h4 className="text-sm font-medium text-foreground">Risk Factors</h4>
     {Object.entries(factors).map(([key, factor]) => (
       <div key={key}>
         <div className="flex items-center justify-between mb-1">
-          <span className="text-xs text-gray-600">{FACTOR_LABELS[key] ?? key}</span>
-          <span className="text-xs text-gray-500">{(factor.value * 100).toFixed(0)}%</span>
+          <span className="text-xs text-muted-foreground">{FACTOR_LABELS[key] ?? key}</span>
+          <span className="text-xs text-muted-foreground">{(factor.value * 100).toFixed(0)}%</span>
         </div>
-        <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
           <div
             className="h-full rounded-full transition-all duration-500"
             style={{
@@ -56,7 +56,7 @@ const RiskFactorBreakdown: React.FC<RiskFactorBreakdownProps> = ({ factors }) =>
             }}
           />
         </div>
-        <p className="text-[10px] text-gray-400 mt-0.5">{factor.detail}</p>
+        <p className="text-[10px] text-muted-foreground/60 mt-0.5">{factor.detail}</p>
       </div>
     ))}
   </div>
@@ -85,7 +85,7 @@ export const BurnoutRiskGauge: React.FC = () => {
         <CardHeader>
           <CardTitle className="text-base font-semibold">Burnout Risk</CardTitle>
         </CardHeader>
-        <CardContent className="py-6 text-center text-sm text-gray-500">
+        <CardContent className="py-6 text-center text-sm text-muted-foreground">
           Failed to load burnout risk score.
         </CardContent>
       </Card>
@@ -99,11 +99,11 @@ export const BurnoutRiskGauge: React.FC = () => {
           <CardTitle className="text-base font-semibold">Burnout Risk</CardTitle>
         </CardHeader>
         <CardContent className="text-center py-6">
-          <div className="text-3xl font-bold text-gray-300 mb-2">--</div>
-          <p className="text-sm text-gray-500">
+          <div className="text-3xl font-bold text-muted-foreground/40 mb-2">--</div>
+          <p className="text-sm text-muted-foreground">
             Building your baseline... {data?.baseline_days_remaining ?? 14} days remaining
           </p>
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-muted-foreground/60 mt-1">
             We need 14 days of activity data to calculate your risk score.
           </p>
         </CardContent>
@@ -164,7 +164,9 @@ export const BurnoutRiskGauge: React.FC = () => {
 
           {/* Top recommendation */}
           {data.recommendations.length > 0 && (
-            <p className="text-xs text-gray-500 text-center mt-2 px-2">{data.recommendations[0]}</p>
+            <p className="text-xs text-muted-foreground text-center mt-2 px-2">
+              {data.recommendations[0]}
+            </p>
           )}
         </button>
 

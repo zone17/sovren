@@ -292,11 +292,10 @@ export const ErrorMessage: React.FC<ErrorMessageProps> = ({
                   onClick={onDismiss}
                   className={`
                     px-3 py-1 text-xs font-medium rounded
-                    bg-gray-200 hover:bg-gray-300
-                    dark:bg-gray-700 dark:hover:bg-gray-600
-                    text-gray-900 dark:text-gray-100
+                    bg-muted hover:bg-accent
+                    text-foreground
                     transition-colors
-                    focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2
+                    focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2
                   `.trim()}
                   aria-label="Dismiss error"
                 >

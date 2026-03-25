@@ -37,6 +37,18 @@ vi.mock('@/services/nostr/EventPublisherService');
 vi.mock('@/services/nostr/SubscriptionManagerService');
 vi.mock('@/services/nostr/KeyManagementService');
 
+// Mock ConfirmDialog — Radix Dialog animations fail in jsdom (marginLeft)
+vi.mock('@/components/ui/confirm-dialog', () => ({
+  ConfirmDialog: ({ open, onConfirm, onOpenChange, title, confirmLabel }: any) =>
+    open ? (
+      <div data-testid="confirm-dialog">
+        <p>{title}</p>
+        <button onClick={() => onConfirm()}>{confirmLabel || 'Confirm'}</button>
+        <button onClick={() => onOpenChange(false)}>Cancel</button>
+      </div>
+    ) : null,
+}));
+
 // ========================================
 // Test Data
 // ========================================
@@ -800,8 +812,6 @@ describe('DMInbox - Edge Cases', () => {
   });
 
   it('should handle thread deletion confirmation', async () => {
-    window.confirm = vi.fn(() => true);
-
     render(<DMInbox />);
 
     await waitFor(() => {
@@ -821,6 +831,11 @@ describe('DMInbox - Edge Cases', () => {
         '[aria-label="Delete conversation"]'
       ) as HTMLElement;
       fireEvent.click(deleteButton);
+
+      // ConfirmDialog should now be open — click the confirm button in the dialog
+      const dialog = await screen.findByTestId('confirm-dialog');
+      const confirmButton = dialog.querySelector('button');
+      fireEvent.click(confirmButton!);
 
       await waitFor(() => {
         expect(mockNIP04Service.clearThread).toHaveBeenCalledWith(

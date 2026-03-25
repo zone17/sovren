@@ -8,6 +8,7 @@
 ## Context
 
 API documentation was manually maintained and often out of sync with actual API:
+
 - Markdown docs outdated within weeks
 - No interactive API playground
 - Client developers had to read code to understand API
@@ -19,6 +20,7 @@ API documentation was manually maintained and often out of sync with actual API:
 We will use **OpenAPI 3.0** specification for all API documentation with automated generation from code.
 
 **Implementation**:
+
 ```typescript
 // openapi.yaml (generated from code)
 openapi: 3.0.0
@@ -53,6 +55,7 @@ paths:
 ```
 
 **Tools**:
+
 - **Swagger UI**: Interactive API documentation
 - **OpenAPI Generator**: Auto-generate client SDKs
 - **zod-to-openapi**: Generate OpenAPI from Zod schemas

@@ -18,22 +18,26 @@ Type coverage measures the percentage of your TypeScript code that has explicit 
 ## Quick Commands
 
 ### Check Current Coverage
+
 ```bash
 npm run type-coverage
 ```
 
 **Output**:
+
 ```
 (237262 / 245112) 96.79%
 type-coverage success.
 ```
 
 ### See Detailed List of Untyped Code
+
 ```bash
 npm run type-coverage:detail
 ```
 
 **Output** (first few lines):
+
 ```
 /path/to/file.ts:42:63: variableName
 /path/to/file.ts:45:48: anotherVariable
@@ -41,6 +45,7 @@ npm run type-coverage:detail
 ```
 
 ### Verify Coverage Meets Threshold
+
 ```bash
 npm run type-coverage:verify
 ```
@@ -48,6 +53,7 @@ npm run type-coverage:verify
 This enforces the current baseline of 96.79%. Will fail if coverage drops below.
 
 ### Generate Report File
+
 ```bash
 npm run type-coverage:report
 ```
@@ -59,11 +65,13 @@ Creates `docs/type-coverage-details.txt` with full list of untyped locations.
 ## Interpreting Results
 
 ### Example Output
+
 ```
 /Users/fp/Desktop/Sovren/packages/backend/src/routes/auth.ts:62:63: body
 ```
 
 **Breakdown**:
+
 - **File**: `packages/backend/src/routes/auth.ts`
 - **Line**: 62
 - **Column**: 63
@@ -74,6 +82,7 @@ Creates `docs/type-coverage-details.txt` with full list of untyped locations.
 ### How to Fix
 
 **Before** (untyped):
+
 ```typescript
 const processRequest = (body) => {
   return body.data;
@@ -81,6 +90,7 @@ const processRequest = (body) => {
 ```
 
 **After** (typed):
+
 ```typescript
 interface RequestBody {
   data: string;
@@ -98,6 +108,7 @@ const processRequest = (body: RequestBody) => {
 ### Pattern 1: Implicit `any` Parameters
 
 **Problem**:
+
 ```typescript
 function handler(req, res, next) {
   // TypeScript infers `any` for req, res, next
@@ -105,6 +116,7 @@ function handler(req, res, next) {
 ```
 
 **Fix**:
+
 ```typescript
 import { Request, Response, NextFunction } from 'express';
 
@@ -116,6 +128,7 @@ function handler(req: Request, res: Response, next: NextFunction) {
 ### Pattern 2: Unknown Error Type
 
 **Problem**:
+
 ```typescript
 try {
   // code
@@ -125,6 +138,7 @@ try {
 ```
 
 **Fix**:
+
 ```typescript
 try {
   // code
@@ -138,11 +152,13 @@ try {
 ### Pattern 3: Dynamic Object Access
 
 **Problem**:
+
 ```typescript
 const config = JSON.parse(data); // config is `any`
 ```
 
 **Fix Option 1** - Define interface:
+
 ```typescript
 interface Config {
   apiKey: string;
@@ -153,12 +169,13 @@ const config: Config = JSON.parse(data);
 ```
 
 **Fix Option 2** - Use Zod for runtime validation:
+
 ```typescript
 import { z } from 'zod';
 
 const ConfigSchema = z.object({
   apiKey: z.string(),
-  timeout: z.number()
+  timeout: z.number(),
 });
 
 const config = ConfigSchema.parse(JSON.parse(data));
@@ -167,6 +184,7 @@ const config = ConfigSchema.parse(JSON.parse(data));
 ### Pattern 4: Unused Variables
 
 **Problem**:
+
 ```typescript
 function middleware(req, res, next) {
   return res.json({ success: true });
@@ -175,6 +193,7 @@ function middleware(req, res, next) {
 ```
 
 **Fix**:
+
 ```typescript
 function middleware(_req: Request, res: Response, _next: NextFunction) {
   return res.json({ success: true });
@@ -187,6 +206,7 @@ function middleware(_req: Request, res: Response, _next: NextFunction) {
 ## Best Practices
 
 ### 1. Run Before Committing
+
 ```bash
 npm run type-coverage:verify
 ```
@@ -196,6 +216,7 @@ Ensure your changes don't reduce coverage.
 ### 2. Focus on High-Impact Files
 
 Check the top files with most untyped code:
+
 ```bash
 npm run type-coverage:detail | grep "your-file.ts"
 ```
@@ -203,6 +224,7 @@ npm run type-coverage:detail | grep "your-file.ts"
 ### 3. Incremental Improvements
 
 Don't try to fix everything at once. Target:
+
 - One file per commit
 - One type category per PR
 - Weekly coverage improvements
@@ -228,11 +250,13 @@ try {
 ### 5. Prefer Explicit Over Implicit
 
 **Bad**:
+
 ```typescript
 const data = await fetchData(); // implicit any
 ```
 
 **Good**:
+
 ```typescript
 const data: UserData = await fetchData();
 ```
@@ -254,10 +278,7 @@ class UserService {
 
   // After
   async getUser(id: string): Promise<User | null> {
-    const result = await this.db.query<User>(
-      'SELECT * FROM users WHERE id = ?',
-      [id]
-    );
+    const result = await this.db.query<User>('SELECT * FROM users WHERE id = ?', [id]);
     return result[0] ?? null;
   }
 }
@@ -282,10 +303,10 @@ class AnalyticsService {
 
 ```typescript
 // Before
-data.map(item => item.value)
+data.map((item) => item.value);
 
 // After
-data.map((item: DataItem) => item.value)
+data.map((item: DataItem) => item.value);
 ```
 
 ---
@@ -295,6 +316,7 @@ data.map((item: DataItem) => item.value)
 ### Pre-commit Hook
 
 Add to `.husky/pre-commit`:
+
 ```bash
 npm run type-coverage:verify
 ```
@@ -304,6 +326,7 @@ This prevents commits that reduce type coverage.
 ### CI Pipeline
 
 Add to GitHub Actions workflow:
+
 ```yaml
 - name: Check Type Coverage
   run: npm run type-coverage:verify
@@ -318,11 +341,13 @@ Require type coverage check to pass before merging.
 ## Monitoring Progress
 
 ### Weekly Check
+
 ```bash
 npm run type-coverage
 ```
 
 Track improvements over time:
+
 - Week 1: 96.79%
 - Week 2: 97.29% (+0.5%)
 - Week 3: 97.79% (+0.5%)
@@ -331,6 +356,7 @@ Track improvements over time:
 ### Set Incremental Targets
 
 Update `package.json` as coverage improves:
+
 ```json
 {
   "scripts": {
@@ -348,6 +374,7 @@ Gradually increase threshold each sprint.
 ### Issue: Too Many Errors to Fix
 
 **Solution**: Use `--ignore-files` to focus:
+
 ```bash
 type-coverage --ignore-files "**/*.test.ts" --ignore-files "setupTests.ts"
 ```
@@ -355,11 +382,13 @@ type-coverage --ignore-files "**/*.test.ts" --ignore-files "setupTests.ts"
 ### Issue: Third-party Library Without Types
 
 **Solution 1** - Install `@types` package:
+
 ```bash
 npm install --save-dev @types/library-name
 ```
 
 **Solution 2** - Create type declaration:
+
 ```typescript
 // types/library-name.d.ts
 declare module 'library-name' {
@@ -368,6 +397,7 @@ declare module 'library-name' {
 ```
 
 **Solution 3** - Type as `any` with comment (last resort):
+
 ```typescript
 // @ts-ignore - No types available for legacy-library
 import legacyLib from 'legacy-library';
@@ -376,6 +406,7 @@ import legacyLib from 'legacy-library';
 ### Issue: Complex Generic Types
 
 **Solution**: Break down into smaller types:
+
 ```typescript
 // Complex
 type ComplexType<T> = T extends Array<infer U> ? U : never;
@@ -390,16 +421,19 @@ type ComplexType<T> = ArrayElement<T>;
 ## Resources
 
 ### Documentation
+
 - **Type Coverage Report**: `/docs/type-coverage-report.md`
 - **Epic 001 Summary**: `/docs/epic-001-completion-summary.md`
 - **TypeScript Handbook**: https://www.typescriptlang.org/docs/handbook/
 
 ### Tools
+
 - **type-coverage**: https://github.com/plantain-00/type-coverage
 - **TypeScript Playground**: https://www.typescriptlang.org/play
 - **VS Code TypeScript**: Built-in, shows type errors inline
 
 ### Team Resources
+
 - **Weekly Type Coverage Review**: Every Friday 2pm
 - **Type Safety Champions**: [Assign team members]
 - **Slack Channel**: #type-safety
@@ -408,17 +442,17 @@ type ComplexType<T> = ArrayElement<T>;
 
 ## Quick Reference
 
-| Command | Purpose |
-|---------|---------|
-| `npm run type-coverage` | Check current coverage % |
+| Command                        | Purpose                   |
+| ------------------------------ | ------------------------- |
+| `npm run type-coverage`        | Check current coverage %  |
 | `npm run type-coverage:detail` | See all untyped locations |
 | `npm run type-coverage:verify` | Enforce minimum threshold |
-| `npm run type-coverage:report` | Generate report file |
-| `npm run type-check` | Run TypeScript compiler |
+| `npm run type-coverage:report` | Generate report file      |
+| `npm run type-check`           | Run TypeScript compiler   |
 
-| Baseline | Target | Gap |
-|----------|--------|-----|
-| 96.79% | 99% | 2.21% (5,399 expressions) |
+| Baseline | Target | Gap                       |
+| -------- | ------ | ------------------------- |
+| 96.79%   | 99%    | 2.21% (5,399 expressions) |
 
 ---
 

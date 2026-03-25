@@ -1,6 +1,6 @@
 # Performance Monitoring Implementation Guide
 
-*Elite Engineering Documentation - Sovren Platform*
+_Elite Engineering Documentation - Sovren Platform_
 
 ## Table of Contents
 
@@ -83,13 +83,13 @@ class PerformanceMonitor {
 
 ### 2024 Core Web Vitals Standards
 
-| Metric | Good | Needs Improvement | Poor | Description |
-|--------|------|-------------------|------|-------------|
-| **LCP** | ≤ 2.5s | 2.5s - 4.0s | > 4.0s | Largest Contentful Paint |
-| **INP** | ≤ 200ms | 200ms - 500ms | > 500ms | Interaction to Next Paint (NEW) |
-| **CLS** | ≤ 0.1 | 0.1 - 0.25 | > 0.25 | Cumulative Layout Shift |
-| **FCP** | ≤ 1.8s | 1.8s - 3.0s | > 3.0s | First Contentful Paint |
-| **TTFB** | ≤ 800ms | 800ms - 1.8s | > 1.8s | Time to First Byte |
+| Metric   | Good    | Needs Improvement | Poor    | Description                     |
+| -------- | ------- | ----------------- | ------- | ------------------------------- |
+| **LCP**  | ≤ 2.5s  | 2.5s - 4.0s       | > 4.0s  | Largest Contentful Paint        |
+| **INP**  | ≤ 200ms | 200ms - 500ms     | > 500ms | Interaction to Next Paint (NEW) |
+| **CLS**  | ≤ 0.1   | 0.1 - 0.25        | > 0.25  | Cumulative Layout Shift         |
+| **FCP**  | ≤ 1.8s  | 1.8s - 3.0s       | > 3.0s  | First Contentful Paint          |
+| **TTFB** | ≤ 800ms | 800ms - 1.8s      | > 1.8s  | Time to First Byte              |
 
 ## Error Handling & Recovery
 
@@ -98,6 +98,7 @@ class PerformanceMonitor {
 **Problem Solved:** Runtime error `TypeError: Cannot read properties of undefined (reading 'good')`
 
 **Root Cause:**
+
 ```typescript
 // BEFORE (problematic)
 private getRating(metricName: keyof typeof PERFORMANCE_THRESHOLDS, value: number) {
@@ -108,6 +109,7 @@ private getRating(metricName: keyof typeof PERFORMANCE_THRESHOLDS, value: number
 ```
 
 **Solution Implemented:**
+
 ```typescript
 // AFTER (elite solution)
 private getRating(metricName: keyof typeof PERFORMANCE_THRESHOLDS, value: number) {
@@ -366,10 +368,12 @@ const layoutShiftObserver = new PerformanceObserver((list) => {
 #### 1. Performance Monitoring Not Working
 
 **Symptoms:**
+
 - No performance data in dashboard
 - Console warnings about observers
 
 **Solution:**
+
 ```typescript
 // Check browser support
 if ('PerformanceObserver' in window) {
@@ -383,10 +387,12 @@ if ('PerformanceObserver' in window) {
 #### 2. Memory Leaks in Monitoring
 
 **Symptoms:**
+
 - Increasing memory usage over time
 - Browser becomes sluggish
 
 **Solution:**
+
 ```typescript
 // Proper cleanup in PerformanceMonitor
 public disconnect(): void {
@@ -404,16 +410,21 @@ public disconnect(): void {
 #### 3. Incorrect Performance Ratings
 
 **Symptoms:**
+
 - All metrics showing as "poor"
 - Warnings about unknown metrics
 
 **Solution:**
+
 ```typescript
 // Verify threshold configuration
 console.log('Available thresholds:', Object.keys(PERFORMANCE_THRESHOLDS));
 
 // Check metric names
-console.log('Recorded metrics:', this.metrics.map(m => m.name));
+console.log(
+  'Recorded metrics:',
+  this.metrics.map((m) => m.name)
+);
 
 // Use safe rating method
 const rating = this.getSafeRating(metricName, value);
@@ -482,7 +493,7 @@ export const measureApiCall = <T>(url: string, operation: () => Promise<T>): Pro
 
 // Usage
 const fetchUserData = () =>
-  measureApiCall('/api/users', () => fetch('/api/users').then(r => r.json()));
+  measureApiCall('/api/users', () => fetch('/api/users').then((r) => r.json()));
 ```
 
 ### Component Render Monitoring
@@ -506,7 +517,10 @@ const MyComponent = () => {
 
 ```typescript
 // Monitor navigation performance
-export const measureRouteChange = <T>(routeName: string, operation: () => Promise<T>): Promise<T> => {
+export const measureRouteChange = <T>(
+  routeName: string,
+  operation: () => Promise<T>
+): Promise<T> => {
   return performanceMonitor.measureAsync(`ROUTE_${routeName}`, operation);
 };
 
@@ -519,4 +533,4 @@ const handleNavigation = (route: string) => {
 
 ---
 
-*This documentation represents elite engineering practices with comprehensive performance monitoring, intelligent error handling, and production-ready implementations. The system ensures reliable performance tracking while maintaining application stability and user experience.*
+_This documentation represents elite engineering practices with comprehensive performance monitoring, intelligent error handling, and production-ready implementations. The system ensures reliable performance tracking while maintaining application stability and user experience._

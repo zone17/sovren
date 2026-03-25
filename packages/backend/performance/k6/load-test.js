@@ -31,11 +31,11 @@ const failedRequests = new Counter('failed_requests');
 export const options = {
   stages: [
     // Baseline: 100 concurrent users
-    { duration: '2m', target: 100 },  // Ramp-up to baseline
-    { duration: '5m', target: 100 },  // Hold baseline
+    { duration: '2m', target: 100 }, // Ramp-up to baseline
+    { duration: '5m', target: 100 }, // Hold baseline
 
     // Normal Load: 500 concurrent users
-    { duration: '2m', target: 500 },  // Ramp-up to normal
+    { duration: '2m', target: 500 }, // Ramp-up to normal
     { duration: '10m', target: 500 }, // Hold normal load
 
     // Peak Load: 1,000 concurrent users
@@ -47,24 +47,21 @@ export const options = {
   ],
   thresholds: {
     // Response Time Targets
-    'http_req_duration': [
-      'p(95)<500',   // 95% of requests < 500ms
-      'p(99)<1000'   // 99% of requests < 1000ms
+    http_req_duration: [
+      'p(95)<500', // 95% of requests < 500ms
+      'p(99)<1000', // 99% of requests < 1000ms
     ],
-    'api_response_time': [
-      'p(95)<500',
-      'p(99)<1000'
-    ],
+    api_response_time: ['p(95)<500', 'p(99)<1000'],
 
     // Error Rate Target
-    'errors': ['rate<0.001'],  // < 0.1% error rate
-    'http_req_failed': ['rate<0.001'],
+    errors: ['rate<0.001'], // < 0.1% error rate
+    http_req_failed: ['rate<0.001'],
 
     // Success Rate
-    'checks': ['rate>0.999'],  // > 99.9% success rate
+    checks: ['rate>0.999'], // > 99.9% success rate
 
     // Throughput (requests per second)
-    'http_reqs': ['rate>1000'], // 1000+ req/sec
+    http_reqs: ['rate>1000'], // 1000+ req/sec
   },
   noConnectionReuse: false,
   userAgent: 'K6LoadTest/1.0',
@@ -81,7 +78,7 @@ const testUsers = [
 function getHeaders(token = null) {
   const headers = {
     'Content-Type': 'application/json',
-    'Accept': 'application/json',
+    Accept: 'application/json',
   };
 
   if (token) {
@@ -143,10 +140,9 @@ export default function () {
   // Content API Tests
   group('Content API', () => {
     // List content
-    const listResponse = http.get(
-      `${BASE_URL}${API_VERSION}/content?limit=20`,
-      { headers: getHeaders(token) }
-    );
+    const listResponse = http.get(`${BASE_URL}${API_VERSION}/content?limit=20`, {
+      headers: getHeaders(token),
+    });
 
     const listSuccess = check(listResponse, {
       'content list: status is 200': (r) => r.status === 200,
@@ -168,14 +164,12 @@ export default function () {
     // Get single content item (if list succeeded)
     if (listSuccess) {
       const contentId = 'test-content-id-' + randomIntBetween(1, 1000);
-      const getResponse = http.get(
-        `${BASE_URL}${API_VERSION}/content/${contentId}`,
-        { headers: getHeaders(token) }
-      );
+      const getResponse = http.get(`${BASE_URL}${API_VERSION}/content/${contentId}`, {
+        headers: getHeaders(token),
+      });
 
       const getSuccess = check(getResponse, {
-        'content get: status is 200 or 404': (r) =>
-          r.status === 200 || r.status === 404,
+        'content get: status is 200 or 404': (r) => r.status === 200 || r.status === 404,
         'content get: response time OK': (r) => r.timings.duration < 300,
       });
 
@@ -188,10 +182,9 @@ export default function () {
   // User API Tests
   group('User API', () => {
     // Get user profile
-    const profileResponse = http.get(
-      `${BASE_URL}${API_VERSION}/users/me`,
-      { headers: getHeaders(token) }
-    );
+    const profileResponse = http.get(`${BASE_URL}${API_VERSION}/users/me`, {
+      headers: getHeaders(token),
+    });
 
     const profileSuccess = check(profileResponse, {
       'user profile: status is 200': (r) => r.status === 200,
@@ -211,10 +204,9 @@ export default function () {
     profileSuccess ? successfulRequests.add(1) : failedRequests.add(1);
 
     // Search users
-    const searchResponse = http.get(
-      `${BASE_URL}${API_VERSION}/users/search?q=test&limit=10`,
-      { headers: getHeaders(token) }
-    );
+    const searchResponse = http.get(`${BASE_URL}${API_VERSION}/users/search?q=test&limit=10`, {
+      headers: getHeaders(token),
+    });
 
     const searchSuccess = check(searchResponse, {
       'user search: status is 200': (r) => r.status === 200,
@@ -229,10 +221,9 @@ export default function () {
   // Payment API Tests (Read Operations)
   group('Payment API - Read Operations', () => {
     // List invoices
-    const invoicesResponse = http.get(
-      `${BASE_URL}${API_VERSION}/payments/invoices?limit=10`,
-      { headers: getHeaders(token) }
-    );
+    const invoicesResponse = http.get(`${BASE_URL}${API_VERSION}/payments/invoices?limit=10`, {
+      headers: getHeaders(token),
+    });
 
     const invoicesSuccess = check(invoicesResponse, {
       'invoices list: status is 200': (r) => r.status === 200,
@@ -259,14 +250,12 @@ export default function () {
     transactionsSuccess ? successfulRequests.add(1) : failedRequests.add(1);
 
     // Get subscription status
-    const subscriptionResponse = http.get(
-      `${BASE_URL}${API_VERSION}/payments/subscriptions/me`,
-      { headers: getHeaders(token) }
-    );
+    const subscriptionResponse = http.get(`${BASE_URL}${API_VERSION}/payments/subscriptions/me`, {
+      headers: getHeaders(token),
+    });
 
     const subscriptionSuccess = check(subscriptionResponse, {
-      'subscription: status is 200 or 404': (r) =>
-        r.status === 200 || r.status === 404,
+      'subscription: status is 200 or 404': (r) => r.status === 200 || r.status === 404,
       'subscription: response time OK': (r) => r.timings.duration < 300,
     });
 
@@ -278,10 +267,9 @@ export default function () {
   // Analytics API Tests
   group('Analytics API', () => {
     // Get analytics dashboard
-    const analyticsResponse = http.get(
-      `${BASE_URL}${API_VERSION}/analytics/dashboard`,
-      { headers: getHeaders(token) }
-    );
+    const analyticsResponse = http.get(`${BASE_URL}${API_VERSION}/analytics/dashboard`, {
+      headers: getHeaders(token),
+    });
 
     const analyticsSuccess = check(analyticsResponse, {
       'analytics: status is 200': (r) => r.status === 200,
@@ -336,8 +324,9 @@ export function teardown(data) {
 // Handle Summary (custom reporting)
 export function handleSummary(data) {
   return {
-    'stdout': textSummary(data, { indent: ' ', enableColors: true }),
-    '/Users/fp/Desktop/Sovren/packages/backend/performance/reports/load-test-results.json': JSON.stringify(data, null, 2),
+    stdout: textSummary(data, { indent: ' ', enableColors: true }),
+    '/Users/fp/Desktop/Sovren/packages/backend/performance/reports/load-test-results.json':
+      JSON.stringify(data, null, 2),
   };
 }
 
@@ -375,7 +364,7 @@ function textSummary(data, options = {}) {
   // Pass/Fail status
   const passed = Object.entries(data.metrics).every(([name, metric]) => {
     if (!metric.thresholds) return true;
-    return Object.values(metric.thresholds).every(t => t.ok);
+    return Object.values(metric.thresholds).every((t) => t.ok);
   });
 
   lines.push(`${indent}Overall Status: ${passed ? '✓ PASSED' : '✗ FAILED'}`);

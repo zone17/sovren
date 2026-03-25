@@ -1,4 +1,5 @@
 # Service Refactoring Migration Strategy - Epic 005
+
 **Generated**: 2025-10-26
 **Story**: US-E5-006
 **Author**: Lead Engineering Manager
@@ -19,6 +20,7 @@ This document outlines the comprehensive migration strategy for refactoring the 
 ## Migration Phases
 
 ### Phase 0: Foundation (Days 1-2) ✅ COMPLETE
+
 - [x] Dependency analysis completed (US-E5-001)
 - [x] Bounded contexts defined (US-E5-002)
 - [x] DI container implemented (US-E5-003)
@@ -27,12 +29,14 @@ This document outlines the comprehensive migration strategy for refactoring the 
 - [x] Migration strategy documented (US-E5-006)
 
 ### Phase 1: Shared Services (Days 3-5)
+
 - [ ] EmailService migration
 - [ ] NotificationService migration
 - [ ] AuditLogService migration
 - [ ] CacheService migration
 
 ### Phase 2: Content Services (Days 6-9)
+
 - [ ] ContentCreationService migration
 - [ ] ContentPublishingService migration
 - [ ] ContentModerationService migration
@@ -42,6 +46,7 @@ This document outlines the comprehensive migration strategy for refactoring the 
 - [ ] ContentVersioningService migration
 
 ### Phase 3: User Services (Days 10-12)
+
 - [ ] UserAuthenticationService migration
 - [ ] UserProfileService migration
 - [ ] UserPreferencesService migration
@@ -50,6 +55,7 @@ This document outlines the comprehensive migration strategy for refactoring the 
 - [ ] UserAnalyticsService migration
 
 ### Phase 4: Payment Services (Days 13-16) **CRITICAL PATH**
+
 - [ ] InvoiceService migration
 - [ ] PaymentProcessingService migration
 - [ ] SubscriptionService migration
@@ -60,6 +66,7 @@ This document outlines the comprehensive migration strategy for refactoring the 
 - [ ] Payment Integration Testing
 
 ### Phase 5: Integration & Testing (Days 17-19)
+
 - [ ] End-to-end integration tests
 - [ ] Performance benchmarking
 - [ ] Security audit
@@ -67,6 +74,7 @@ This document outlines the comprehensive migration strategy for refactoring the 
 - [ ] Chaos engineering tests
 
 ### Phase 6: Production Rollout (Days 20-21)
+
 - [ ] Staging deployment
 - [ ] Production canary deployment (5%)
 - [ ] Production gradual rollout (25%, 50%, 100%)
@@ -75,6 +83,7 @@ This document outlines the comprehensive migration strategy for refactoring the 
 ## Feature Flag Strategy
 
 ### Flag Structure
+
 ```typescript
 interface FeatureFlags {
   // Service-level flags
@@ -98,6 +107,7 @@ interface FeatureFlags {
 ```
 
 ### Flag Implementation
+
 ```typescript
 // services/FeatureFlagService.ts
 export class FeatureFlagService {
@@ -135,6 +145,7 @@ export class FeatureFlagService {
 ```
 
 ### Service Router Pattern
+
 ```typescript
 // ServiceRouter.ts
 export class ServiceRouter {
@@ -175,6 +186,7 @@ export class ServiceRouter {
 ## Rollback Procedures
 
 ### Immediate Rollback (< 1 minute)
+
 ```bash
 # 1. Disable feature flag
 npm run flags:disable USE_NEW_PAYMENT_SERVICES
@@ -187,6 +199,7 @@ npm run services:restart
 ```
 
 ### Data Rollback (5-10 minutes)
+
 ```sql
 -- Restore from backup point
 BEGIN TRANSACTION;
@@ -205,6 +218,7 @@ COMMIT;
 ```
 
 ### Full Service Rollback (15-30 minutes)
+
 ```bash
 # 1. Stop new services
 docker-compose stop new-services
@@ -229,11 +243,13 @@ npm run monitor:rollback
 ## Testing Checkpoints
 
 ### Unit Testing Requirements
+
 - ✅ Each new service must have ≥95% test coverage
 - ✅ All critical paths must have 100% coverage
 - ✅ Integration tests for service interactions
 
 ### Performance Benchmarks
+
 ```yaml
 benchmarks:
   response_time:
@@ -255,6 +271,7 @@ benchmarks:
 ```
 
 ### Load Testing Scenarios
+
 ```javascript
 // k6 load test
 import http from 'k6/http';
@@ -262,10 +279,10 @@ import { check } from 'k6';
 
 export const options = {
   stages: [
-    { duration: '5m', target: 100 },  // Ramp up
+    { duration: '5m', target: 100 }, // Ramp up
     { duration: '10m', target: 100 }, // Stable load
-    { duration: '5m', target: 200 },  // Peak load
-    { duration: '5m', target: 0 },    // Ramp down
+    { duration: '5m', target: 200 }, // Peak load
+    { duration: '5m', target: 0 }, // Ramp down
   ],
   thresholds: {
     http_req_duration: ['p(95)<500'],
@@ -273,7 +290,7 @@ export const options = {
   },
 };
 
-export default function() {
+export default function () {
   const res = http.get('http://api.sovren.app/health');
   check(res, {
     'status is 200': (r) => r.status === 200,
@@ -285,6 +302,7 @@ export default function() {
 ## Monitoring & Alerting
 
 ### Key Metrics to Monitor
+
 ```yaml
 metrics:
   service_health:
@@ -307,6 +325,7 @@ metrics:
 ```
 
 ### Alert Configuration
+
 ```yaml
 alerts:
   critical:
@@ -335,12 +354,14 @@ alerts:
 ## Data Migration Strategy
 
 ### Migration Approach
+
 1. **Dual Write**: New services write to both old and new schemas
 2. **Backfill**: Historical data migrated in background
 3. **Verification**: Continuous data integrity checks
 4. **Cutover**: Switch reads to new schema once verified
 
 ### Data Integrity Checks
+
 ```sql
 -- Verification queries
 SELECT
@@ -365,17 +386,18 @@ SELECT * FROM (
 
 ### Identified Risks & Mitigations
 
-| Risk | Probability | Impact | Mitigation |
-|------|------------|--------|------------|
-| Payment service failure | Low | Critical | Feature flags, instant rollback, dual-write |
-| Data loss during migration | Low | Critical | Backups every 15min, dual-write, verification |
-| Performance degradation | Medium | High | Gradual rollout, performance monitoring |
-| Integration failures | Medium | Medium | Comprehensive integration tests, canary deployment |
-| Increased complexity | High | Low | Documentation, training, clear boundaries |
+| Risk                       | Probability | Impact   | Mitigation                                         |
+| -------------------------- | ----------- | -------- | -------------------------------------------------- |
+| Payment service failure    | Low         | Critical | Feature flags, instant rollback, dual-write        |
+| Data loss during migration | Low         | Critical | Backups every 15min, dual-write, verification      |
+| Performance degradation    | Medium      | High     | Gradual rollout, performance monitoring            |
+| Integration failures       | Medium      | Medium   | Comprehensive integration tests, canary deployment |
+| Increased complexity       | High        | Low      | Documentation, training, clear boundaries          |
 
 ### Contingency Plans
 
 #### Scenario 1: Critical Payment Failure
+
 ```bash
 # Immediate Actions (< 2 minutes)
 1. npm run flags:disable USE_NEW_PAYMENT_SERVICES
@@ -389,6 +411,7 @@ SELECT * FROM (
 ```
 
 #### Scenario 2: Performance Degradation
+
 ```bash
 # Immediate Actions (< 5 minutes)
 1. npm run rollout:reduce --percentage=5
@@ -404,6 +427,7 @@ SELECT * FROM (
 ## Success Criteria
 
 ### Phase 1 Completion
+
 - [x] All interfaces defined
 - [x] DI container operational
 - [x] Event bus functional
@@ -411,6 +435,7 @@ SELECT * FROM (
 - [x] Migration strategy approved
 
 ### Service Migration Success
+
 - [ ] Zero customer-facing downtime
 - [ ] Performance benchmarks met
 - [ ] All tests passing (≥95% coverage)
@@ -418,6 +443,7 @@ SELECT * FROM (
 - [ ] Rollback tested successfully
 
 ### Final Success Metrics
+
 - [ ] 100% of services migrated
 - [ ] Error rate < 0.1%
 - [ ] P95 latency < 500ms
@@ -427,6 +453,7 @@ SELECT * FROM (
 ## Team Responsibilities
 
 ### Migration Team Structure
+
 ```
 Migration Lead (1)
 ├── Backend Team Lead (1)
@@ -439,27 +466,31 @@ Migration Lead (1)
 ```
 
 ### RACI Matrix
-| Task | Responsible | Accountable | Consulted | Informed |
-|------|------------|-------------|-----------|----------|
-| Service Implementation | Backend Team | Backend Lead | Architects | All |
-| Testing | QA Team | QA Lead | Backend Team | All |
-| Deployment | DevOps Team | DevOps Lead | Backend Team | All |
-| Monitoring | DevOps Team | Migration Lead | All Teams | Stakeholders |
-| Rollback Decision | Migration Lead | CTO | All Leads | All |
+
+| Task                   | Responsible    | Accountable    | Consulted    | Informed     |
+| ---------------------- | -------------- | -------------- | ------------ | ------------ |
+| Service Implementation | Backend Team   | Backend Lead   | Architects   | All          |
+| Testing                | QA Team        | QA Lead        | Backend Team | All          |
+| Deployment             | DevOps Team    | DevOps Lead    | Backend Team | All          |
+| Monitoring             | DevOps Team    | Migration Lead | All Teams    | Stakeholders |
+| Rollback Decision      | Migration Lead | CTO            | All Leads    | All          |
 
 ## Communication Plan
 
 ### Daily Standups
+
 - Time: 9:00 AM
 - Duration: 15 minutes
 - Focus: Progress, blockers, next 24h
 
 ### Weekly Reviews
+
 - Time: Fridays 2:00 PM
 - Duration: 1 hour
 - Focus: Phase completion, metrics, risks
 
 ### Stakeholder Updates
+
 - Frequency: After each phase
 - Format: Email + Dashboard
 - Content: Progress, metrics, timeline
@@ -467,6 +498,7 @@ Migration Lead (1)
 ## Appendix
 
 ### A. Command Reference
+
 ```bash
 # Feature flag management
 npm run flags:list
@@ -496,12 +528,14 @@ npm run rollback:full
 ```
 
 ### B. Emergency Contacts
+
 - Migration Lead: @lead-engineer
 - Backend Lead: @backend-lead
 - DevOps Lead: @devops-lead
 - On-Call: PagerDuty #sovren-oncall
 
 ### C. Documentation Links
+
 - [Architecture Diagrams](../architecture/diagrams/)
 - [API Documentation](../api/)
 - [Testing Guide](../testing/)
@@ -512,4 +546,5 @@ npm run rollback:full
 **Document Status**: APPROVED
 **Next Review**: After Phase 2 completion
 **Change Log**:
+
 - v1.0.0 (2025-10-26): Initial strategy document

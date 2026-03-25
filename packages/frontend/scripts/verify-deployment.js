@@ -25,7 +25,7 @@ function runCommand(command, description) {
     const output = execSync(command, {
       stdio: 'pipe',
       encoding: 'utf8',
-      cwd: process.cwd()
+      cwd: process.cwd(),
     });
     console.log(`✅ ${description} - SUCCESS`);
     return output;
@@ -43,16 +43,10 @@ function verifyDependencies() {
   console.log('📦 Verifying dependencies...');
 
   const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-  const requiredDeps = [
-    'react',
-    'react-dom',
-    '@vitejs/plugin-react',
-    'vite',
-    'typescript'
-  ];
+  const requiredDeps = ['react', 'react-dom', '@vitejs/plugin-react', 'vite', 'typescript'];
 
-  const missing = requiredDeps.filter(dep =>
-    !packageJson.dependencies[dep] && !packageJson.devDependencies[dep]
+  const missing = requiredDeps.filter(
+    (dep) => !packageJson.dependencies[dep] && !packageJson.devDependencies[dep]
   );
 
   if (missing.length > 0) {
@@ -117,19 +111,20 @@ function verifyBundleSizes() {
   console.log('📊 Verifying bundle sizes...');
 
   const distPath = path.join(process.cwd(), 'dist');
-  const jsFiles = fs.readdirSync(path.join(distPath, 'assets'))
-    .filter(file => file.endsWith('.js'))
-    .map(file => {
+  const jsFiles = fs
+    .readdirSync(path.join(distPath, 'assets'))
+    .filter((file) => file.endsWith('.js'))
+    .map((file) => {
       const filePath = path.join(distPath, 'assets', file);
       const stats = fs.statSync(filePath);
       return { file, size: stats.size };
     });
 
   // Check if any JS file is too large (> 1MB)
-  const largeFiles = jsFiles.filter(f => f.size > 1024 * 1024);
+  const largeFiles = jsFiles.filter((f) => f.size > 1024 * 1024);
   if (largeFiles.length > 0) {
     console.warn(`⚠️  Large bundle detected:`);
-    largeFiles.forEach(f => {
+    largeFiles.forEach((f) => {
       console.warn(`   ${f.file}: ${(f.size / 1024 / 1024).toFixed(2)}MB`);
     });
   }
@@ -158,7 +153,6 @@ async function main() {
     console.log('\n🎉 ELITE DEPLOYMENT VERIFICATION COMPLETE!');
     console.log('✅ Build is ready for Vercel deployment');
     console.log('🚀 You can now safely push to main branch');
-
   } catch (error) {
     console.error('\n❌ DEPLOYMENT VERIFICATION FAILED!');
     console.error(error.message);

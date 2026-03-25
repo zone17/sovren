@@ -252,7 +252,7 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
       case 'desktop':
         return 'bg-green-100 text-green-800';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-muted text-foreground';
     }
   };
 
@@ -428,7 +428,7 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
           {/* Sessions List */}
           <div className="space-y-3">
             {filteredAndSortedSessions.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-muted-foreground">
                 {searchQuery || filterDevice !== 'all'
                   ? 'No sessions match your search criteria'
                   : 'No active sessions found'}
@@ -468,7 +468,7 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
                   {selectedSession.device_info.browser} on {selectedSession.device_info.os}
                 </span>
               </div>
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-muted-foreground">
                 <div>IP: {selectedSession.ip_address}</div>
                 <div>
                   Last active: {new Date(selectedSession.last_activity_at).toLocaleString()}
@@ -561,7 +561,7 @@ const SessionCard: React.FC<SessionCardProps> = ({
                   : session.device_info.deviceType === 'tablet'
                     ? Tablet
                     : Monitor,
-                { className: 'h-5 w-5 text-gray-600' }
+                { className: 'h-5 w-5 text-muted-foreground' }
               )}
               <div>
                 <div className="flex items-center space-x-2">
@@ -579,7 +579,7 @@ const SessionCard: React.FC<SessionCardProps> = ({
                     </div>
                   )}
                 </div>
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-muted-foreground">
                   {session.device_info.os} {session.device_info.osVersion}
                 </div>
               </div>
@@ -588,17 +588,17 @@ const SessionCard: React.FC<SessionCardProps> = ({
 
           <div className="flex items-center space-x-4">
             <div className="text-right text-sm">
-              <div className="flex items-center space-x-1 text-gray-600">
+              <div className="flex items-center space-x-1 text-muted-foreground">
                 <MapPin className="h-3 w-3" />
                 <span>
                   {session.location?.city}, {session.location?.country}
                 </span>
               </div>
-              <div className="flex items-center space-x-1 text-gray-600">
+              <div className="flex items-center space-x-1 text-muted-foreground">
                 <Wifi className="h-3 w-3" />
                 <span>{session.ip_address}</span>
               </div>
-              <div className="flex items-center space-x-1 text-gray-600">
+              <div className="flex items-center space-x-1 text-muted-foreground">
                 <Clock className="h-3 w-3" />
                 <span>{lastActivity.toLocaleString()}</span>
               </div>
@@ -629,7 +629,7 @@ const SessionCard: React.FC<SessionCardProps> = ({
 
         {/* Session Details */}
         <div className="mt-3 pt-3 border-t">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs text-gray-600">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs text-muted-foreground">
             <div>
               <span className="font-medium">Created:</span>
               <br />
@@ -667,7 +667,7 @@ function getDeviceBadgeColor(deviceType: string): string {
     case 'desktop':
       return 'bg-green-100 text-green-800 border-green-200';
     default:
-      return 'bg-gray-100 text-gray-800 border-gray-200';
+      return 'bg-muted text-foreground border-border';
   }
 }
 

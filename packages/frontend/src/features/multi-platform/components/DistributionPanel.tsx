@@ -33,9 +33,11 @@ const DistributionPanel: React.FC<DistributionPanelProps> = ({ contentId }) => {
   };
 
   return (
-    <div className="rounded-lg border bg-white p-6">
-      <h3 className="text-lg font-semibold text-gray-900">Distribute Content</h3>
-      <p className="mt-1 text-sm text-gray-500">Select platforms to cross-post your content.</p>
+    <div className="rounded-lg border bg-card p-6">
+      <h3 className="text-lg font-semibold text-foreground">Distribute Content</h3>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Select platforms to cross-post your content.
+      </p>
 
       {connectedPlatforms.length === 0 ? (
         <p className="mt-4 text-sm text-amber-600">
@@ -54,7 +56,7 @@ const DistributionPanel: React.FC<DistributionPanelProps> = ({ contentId }) => {
                   className={`rounded-full border px-4 py-2 text-sm transition-colors ${
                     isSelected
                       ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                      : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                      : 'border-border bg-card text-foreground hover:bg-accent'
                   }`}
                   onClick={() => togglePlatform(status.platform as SupportedPlatform)}
                 >
@@ -79,7 +81,7 @@ const DistributionPanel: React.FC<DistributionPanelProps> = ({ contentId }) => {
       {/* Publish status tracker */}
       {publishStatus && publishStatus.length > 0 && (
         <div className="mt-4 space-y-2">
-          <h4 className="text-sm font-medium text-gray-700">Publishing Status</h4>
+          <h4 className="text-sm font-medium text-foreground">Publishing Status</h4>
           {publishStatus.map((entry) => {
             const display = PLATFORM_DISPLAY[entry.platform];
             return (
@@ -91,12 +93,12 @@ const DistributionPanel: React.FC<DistributionPanelProps> = ({ contentId }) => {
                 <span
                   className={`rounded-full px-2 py-0.5 text-xs ${
                     entry.status === 'published'
-                      ? 'bg-green-100 text-green-700'
+                      ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
                       : entry.status === 'failed'
-                        ? 'bg-red-100 text-red-700'
+                        ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
                         : entry.status === 'queued'
-                          ? 'bg-blue-100 text-blue-700'
-                          : 'bg-gray-100 text-gray-600'
+                          ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
+                          : 'bg-muted text-muted-foreground'
                   }`}
                 >
                   {entry.status}

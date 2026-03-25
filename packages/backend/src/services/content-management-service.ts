@@ -23,6 +23,7 @@ import type {
   SeriesEpisode,
 } from '../types/content';
 import { ValidationError, NotFoundError, ConflictError, ServiceError } from '../utils/errors';
+import { escapePostgrestFilter } from '../utils/escapePostgrestFilter';
 
 interface ContentManagementServiceConfig {
   supabaseUrl: string;
@@ -181,7 +182,8 @@ export class ContentManagementService {
     if (author_id) query = query.eq('author_id', author_id);
     if (tags && tags.length > 0) query = query.overlaps('tags', tags);
     if (search) {
-      query = query.or(`title.ilike.%${search}%,excerpt.ilike.%${search}%`);
+      const escaped = escapePostgrestFilter(search);
+      query = query.or(`title.ilike.%${escaped}%,excerpt.ilike.%${escaped}%`);
     }
 
     // Apply sorting
@@ -295,8 +297,9 @@ export class ContentManagementService {
     }
     if (author_id) query = query.eq('author_id', author_id);
     if (search) {
+      const escaped = escapePostgrestFilter(search);
       query = query.or(
-        `filename.ilike.%${search}%,alt_text.ilike.%${search}%,caption.ilike.%${search}%`
+        `filename.ilike.%${escaped}%,alt_text.ilike.%${escaped}%,caption.ilike.%${escaped}%`
       );
     }
 
@@ -749,8 +752,9 @@ export class ContentManagementService {
     let searchQuery = this.supabase.from('content_items').select('*').eq('status', 'published');
 
     // Full-text search
+    const escapedQuery = escapePostgrestFilter(query);
     searchQuery = searchQuery.or(
-      `title.ilike.%${query}%,excerpt.ilike.%${query}%,tags.cs.{${query}}`
+      `title.ilike.%${escapedQuery}%,excerpt.ilike.%${escapedQuery}%,tags.cs.{${escapedQuery}}`
     );
 
     // Apply filters

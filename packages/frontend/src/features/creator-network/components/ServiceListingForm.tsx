@@ -42,14 +42,14 @@ const ServiceListingForm: React.FC<ServiceListingFormProps> = ({ onSuccess, onCa
   return (
     <form onSubmit={handleSubmit} className="space-y-4" aria-label="Create service listing">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="serviceType">
+        <label className="block text-sm font-medium text-foreground mb-1" htmlFor="serviceType">
           Service type
         </label>
         <select
           id="serviceType"
           value={serviceType}
           onChange={(e) => setServiceType(e.target.value as ServiceType)}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+          className="w-full rounded-md border border-border px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
         >
           {Object.entries(SERVICE_TYPE_LABELS).map(([value, label]) => (
             <option key={value} value={value}>
@@ -60,7 +60,7 @@ const ServiceListingForm: React.FC<ServiceListingFormProps> = ({ onSuccess, onCa
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="title">
+        <label className="block text-sm font-medium text-foreground mb-1" htmlFor="title">
           Title
         </label>
         <input
@@ -69,13 +69,13 @@ const ServiceListingForm: React.FC<ServiceListingFormProps> = ({ onSuccess, onCa
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="e.g. Professional video editing (up to 10 min)"
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+          className="w-full rounded-md border border-border px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
           required
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="description">
+        <label className="block text-sm font-medium text-foreground mb-1" htmlFor="description">
           Description
         </label>
         <textarea
@@ -84,12 +84,12 @@ const ServiceListingForm: React.FC<ServiceListingFormProps> = ({ onSuccess, onCa
           onChange={(e) => setDescription(e.target.value)}
           rows={3}
           placeholder="Describe what you offer, turnaround time, etc."
-          className="w-full resize-none rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+          className="w-full resize-none rounded-md border border-border px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="priceSats">
+        <label className="block text-sm font-medium text-foreground mb-1" htmlFor="priceSats">
           Price (sats)
         </label>
         <input
@@ -99,13 +99,13 @@ const ServiceListingForm: React.FC<ServiceListingFormProps> = ({ onSuccess, onCa
           value={priceSats}
           onChange={(e) => setPriceSats(e.target.value)}
           placeholder="e.g. 50000"
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+          className="w-full rounded-md border border-border px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
           required
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="portfolioUrls">
+        <label className="block text-sm font-medium text-foreground mb-1" htmlFor="portfolioUrls">
           Portfolio URLs (one per line)
         </label>
         <textarea
@@ -114,7 +114,7 @@ const ServiceListingForm: React.FC<ServiceListingFormProps> = ({ onSuccess, onCa
           onChange={(e) => setPortfolioUrls(e.target.value)}
           rows={2}
           placeholder="https://example.com/portfolio"
-          className="w-full resize-none rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+          className="w-full resize-none rounded-md border border-border px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
         />
       </div>
 
@@ -123,7 +123,7 @@ const ServiceListingForm: React.FC<ServiceListingFormProps> = ({ onSuccess, onCa
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50"
+            className="rounded-md border border-border px-4 py-2 text-sm text-muted-foreground hover:bg-accent"
           >
             Cancel
           </button>

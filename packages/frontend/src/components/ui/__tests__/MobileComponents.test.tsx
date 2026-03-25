@@ -189,7 +189,7 @@ describe('📱 Mobile Components Test Suite', () => {
       expect(screen.getByRole('button')).toHaveClass('bg-blue-600');
 
       rerender(<MobileButton variant="secondary">Secondary</MobileButton>);
-      expect(screen.getByRole('button')).toHaveClass('bg-gray-200');
+      expect(screen.getByRole('button')).toHaveClass('bg-muted');
 
       rerender(<MobileButton variant="ghost">Ghost</MobileButton>);
       expect(screen.getByRole('button')).toHaveClass('bg-transparent');
@@ -277,7 +277,7 @@ describe('📱 Mobile Components Test Suite', () => {
 
       const input = screen.getByRole('textbox');
       expect(input).toBeDisabled();
-      expect(input).toHaveClass('bg-gray-100');
+      expect(input).toHaveClass('bg-muted');
     });
 
     test('should support different input types', () => {

@@ -12,6 +12,7 @@ npm run migrate:diagnose
 ```
 
 This checks:
+
 - Node.js version compatibility
 - Required dependencies
 - File system permissions
@@ -26,16 +27,19 @@ This checks:
 #### Error: "Cannot find module"
 
 **Symptoms**:
+
 ```
 Error: Cannot find module './migrate-keys'
 ```
 
 **Causes**:
+
 - Missing dependencies
 - Incorrect working directory
 - TypeScript compilation needed
 
 **Solutions**:
+
 ```bash
 # Install dependencies
 npm install
@@ -51,15 +55,18 @@ npm run migrate
 #### Error: "Permission denied"
 
 **Symptoms**:
+
 ```
 EACCES: permission denied, mkdir '.migration-backups'
 ```
 
 **Causes**:
+
 - Insufficient file system permissions
 - Directory ownership issues
 
 **Solutions**:
+
 ```bash
 # Fix permissions
 chmod -R u+w .migration-backups
@@ -71,14 +78,17 @@ sudo npm run migrate  # Not recommended for production
 #### Error: "Node version not supported"
 
 **Symptoms**:
+
 ```
 Error: Node.js 20 or higher required
 ```
 
 **Causes**:
+
 - Outdated Node.js version
 
 **Solutions**:
+
 ```bash
 # Check current version
 node --version
@@ -95,10 +105,12 @@ nvm use 20
 #### Issue: "No legacy data found"
 
 **Symptoms**:
+
 - Migration finds 0 items to migrate
 - "No legacy keys found to migrate"
 
 **Diagnosis**:
+
 ```bash
 # Check if already migrated
 npm run migrate -- --status
@@ -111,11 +123,13 @@ sqlite3 ~/.local/share/nostr/db.sqlite "SELECT COUNT(*) FROM events;"
 **Solutions**:
 
 1. **Already migrated**: Use `--force` to re-migrate
+
    ```bash
    npm run migrate -- --all --force
    ```
 
 2. **Data in different location**: Specify custom path
+
    ```bash
    npm run migrate -- --data-path=/custom/path
    ```
@@ -125,10 +139,12 @@ sqlite3 ~/.local/share/nostr/db.sqlite "SELECT COUNT(*) FROM events;"
 #### Issue: "Invalid legacy data format"
 
 **Symptoms**:
+
 - "Failed to parse legacy key data"
 - "Unsupported relay format"
 
 **Diagnosis**:
+
 ```bash
 # Inspect legacy data
 cat .migration-backups/*/legacy-*.json
@@ -151,12 +167,14 @@ npm run validate:legacy-data
 #### Error: "Failed to encrypt keys"
 
 **Symptoms**:
+
 ```
 Error: Failed to encrypt private key
 CryptographyError: Invalid key length
 ```
 
 **Causes**:
+
 - Node.js crypto not available
 - Invalid password
 - Insufficient entropy
@@ -164,6 +182,7 @@ CryptographyError: Invalid key length
 **Solutions**:
 
 1. **Verify crypto support**:
+
    ```bash
    node -e "console.log(crypto.getCiphers())"
    ```
@@ -181,10 +200,12 @@ CryptographyError: Invalid key length
 #### Error: "Passwords do not match"
 
 **Symptoms**:
+
 - Password confirmation fails
 - "Passwords do not match"
 
 **Solutions**:
+
 - Type passwords carefully
 - Use password manager
 - Copy/paste both entries
@@ -196,10 +217,12 @@ CryptographyError: Invalid key length
 #### Error: "Cannot decrypt keys"
 
 **Symptoms**:
+
 - Post-migration key access fails
 - "Invalid authentication tag"
 
 **Diagnosis**:
+
 ```bash
 # Verify encrypted data integrity
 npm run verify:encryption
@@ -219,10 +242,12 @@ npm run verify:encryption
 #### Issue: "No relays configured after migration"
 
 **Symptoms**:
+
 - Cannot connect to any relays
 - Empty relay list
 
 **Diagnosis**:
+
 ```bash
 # Check relay config
 cat packages/shared/src/config/relays.ts
@@ -234,12 +259,14 @@ env | grep NOSTR_RELAYS
 **Solutions**:
 
 1. **Missing config file**:
+
    ```bash
    # Re-run relay migration
    npm run migrate:relay-config -- --force
    ```
 
 2. **Invalid environment variable**:
+
    ```bash
    # Update .env
    echo 'NOSTR_RELAYS="wss://relay.damus.io,wss://nos.lol"' >> .env
@@ -254,18 +281,20 @@ env | grep NOSTR_RELAYS
        read: true,
        write: true,
        search: true,
-       priority: 1
-     }
+       priority: 1,
+     },
    ];
    ```
 
 #### Issue: "Relay URLs invalid"
 
 **Symptoms**:
+
 - "Invalid relay URL format"
 - Connection failures
 
 **Diagnosis**:
+
 ```bash
 # Test relay connectivity
 npm run test:relay wss://relay.damus.io
@@ -281,7 +310,7 @@ npm run test:relay wss://relay.damus.io
      'wss://relay.damus.io',
      'wss://relay.nostr.band',
      'wss://nos.lol',
-     'wss://relay.snort.social'
+     'wss://relay.snort.social',
    ];
    ```
 
@@ -290,10 +319,12 @@ npm run test:relay wss://relay.damus.io
 #### Issue: "Event cache migration timeout"
 
 **Symptoms**:
+
 - Migration stalls at events
 - "Operation timed out"
 
 **Causes**:
+
 - Too many cached events
 - Large event payload
 - Database locks
@@ -301,11 +332,13 @@ npm run test:relay wss://relay.damus.io
 **Solutions**:
 
 1. **Increase timeout**:
+
    ```bash
    npm run migrate:events -- --timeout=600000  # 10 minutes
    ```
 
 2. **Batch migration**:
+
    ```bash
    npm run migrate:events -- --batch-size=100
    ```
@@ -319,10 +352,12 @@ npm run test:relay wss://relay.damus.io
 #### Issue: "Duplicate events detected"
 
 **Symptoms**:
+
 - "Event already exists"
 - Higher event count post-migration
 
 **Causes**:
+
 - Multiple data sources
 - Previous migration attempts
 
@@ -330,6 +365,7 @@ npm run test:relay wss://relay.damus.io
 
 1. **Enable deduplication** (automatic in new system)
 2. **Manual cleanup**:
+
    ```bash
    npm run cache:deduplicate
    ```
@@ -341,10 +377,12 @@ npm run test:relay wss://relay.damus.io
 #### Issue: "Subscriptions not reconnecting"
 
 **Symptoms**:
+
 - No events received
 - "Subscription inactive"
 
 **Diagnosis**:
+
 ```bash
 # Check subscription status
 npm run subs:status
@@ -356,11 +394,13 @@ npm run relays:status
 **Solutions**:
 
 1. **Restart subscription manager**:
+
    ```bash
    npm run subs:restart
    ```
 
 2. **Re-create subscriptions**:
+
    ```bash
    npm run migrate:subscriptions -- --force
    ```
@@ -373,6 +413,7 @@ npm run relays:status
 #### Issue: "Filter format errors"
 
 **Symptoms**:
+
 - "Invalid filter format"
 - Events not matching filters
 
@@ -390,6 +431,7 @@ npm run relays:status
 #### Error: "Validation failed"
 
 **Symptoms**:
+
 ```
 ❌ Validation failed
 - Data integrity check failed
@@ -397,6 +439,7 @@ npm run relays:status
 ```
 
 **Diagnosis**:
+
 ```bash
 # Run detailed validation
 npm run validate:migration -- --verbose
@@ -409,6 +452,7 @@ npm run validate:events
 **Solutions**:
 
 1. **Review validation report**:
+
    ```bash
    cat .migration-backups/*/validation-report.json
    ```
@@ -428,10 +472,12 @@ npm run validate:events
 #### Error: "Rollback not available"
 
 **Symptoms**:
+
 - "No rollback available"
 - "Backup not found"
 
 **Causes**:
+
 - Backup deleted/corrupted
 - Migration never completed
 - Too much time elapsed
@@ -439,11 +485,13 @@ npm run validate:events
 **Solutions**:
 
 1. **Check backup existence**:
+
    ```bash
    ls -la .migration-backups/
    ```
 
 2. **Restore from manual backup**:
+
    ```bash
    npm run rollback:all -- --backup=/path/to/backup
    ```
@@ -453,17 +501,20 @@ npm run validate:events
 #### Error: "Rollback incomplete"
 
 **Symptoms**:
+
 - Some data restored, some not
 - Inconsistent state
 
 **Solutions**:
 
 1. **Complete rollback**:
+
    ```bash
    npm run rollback:all -- --force
    ```
 
 2. **Manual verification**:
+
    ```bash
    npm run verify:rollback
    ```
@@ -479,10 +530,12 @@ npm run validate:events
 #### Issue: "Migration extremely slow"
 
 **Symptoms**:
+
 - Takes 10x longer than estimated
 - High CPU/memory usage
 
 **Diagnosis**:
+
 ```bash
 # Monitor migration progress
 npm run migrate -- --all --verbose
@@ -495,6 +548,7 @@ htop
 **Solutions**:
 
 1. **Reduce batch size**:
+
    ```bash
    npm run migrate -- --batch-size=10
    ```
@@ -512,6 +566,7 @@ htop
 #### Issue: "Out of memory"
 
 **Symptoms**:
+
 ```
 FATAL ERROR: CALL_AND_RETRY_LAST Allocation failed - JavaScript heap out of memory
 ```
@@ -519,11 +574,13 @@ FATAL ERROR: CALL_AND_RETRY_LAST Allocation failed - JavaScript heap out of memo
 **Solutions**:
 
 1. **Increase Node.js memory**:
+
    ```bash
    NODE_OPTIONS="--max-old-space-size=4096" npm run migrate
    ```
 
 2. **Use streaming mode**:
+
    ```bash
    npm run migrate:events -- --streaming
    ```
@@ -539,6 +596,7 @@ FATAL ERROR: CALL_AND_RETRY_LAST Allocation failed - JavaScript heap out of memo
 #### Error: "Database locked"
 
 **Symptoms**:
+
 ```
 Error: database is locked
 SQLITE_BUSY
@@ -559,12 +617,14 @@ SQLITE_BUSY
 #### Error: "Database schema mismatch"
 
 **Symptoms**:
+
 - "Table does not exist"
 - "Column not found"
 
 **Solutions**:
 
 1. **Run migrations**:
+
    ```bash
    npm run db:migrate
    ```
@@ -603,6 +663,7 @@ cat .migration-backups/migration-state.json | jq '.components.keys'
 If automated recovery fails:
 
 1. **Export data**:
+
    ```bash
    npm run export:legacy-data -- --output=./recovery
    ```
@@ -633,11 +694,13 @@ npm run migrate -- --all
 Collect this information:
 
 1. **System info**:
+
    ```bash
    npm run system-info > system-info.txt
    ```
 
 2. **Migration logs**:
+
    ```bash
    cat .migration-backups/*/migration.log > migration-logs.txt
    ```
@@ -669,24 +732,30 @@ Include:
 - Any error messages
 
 Template:
+
 ```markdown
 ## Environment
+
 - OS: macOS 14.1
 - Node.js: 20.10.0
 - Package version: 1.2.0
 
 ## Issue
+
 Migration fails at event cache with "timeout" error
 
 ## Steps to Reproduce
+
 1. Run `npm run migrate -- --events`
 2. Wait for 5 minutes
 3. Error occurs
 
 ## Logs
+
 [Attach migration.log]
 
 ## Migration Report
+
 [Attach migration-report.json]
 ```
 

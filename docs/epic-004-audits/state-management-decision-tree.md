@@ -1,4 +1,5 @@
 # State Management Decision Tree - Epic 004
+
 **Date**: 2025-10-26
 **Epic**: #004 - State Management Boundaries
 **Story**: US-004-003 - Create State Management Decision Tree
@@ -41,6 +42,7 @@ graph TD
 ### 1. Use React Query When ✅
 
 **Criteria:**
+
 - Data comes from an API or external source
 - Data can become stale and needs refreshing
 - Multiple components need the same server data
@@ -49,6 +51,7 @@ graph TD
 - Data has relationships requiring cache invalidation
 
 **Examples:**
+
 ```typescript
 // ✅ User profile data
 const { data: user } = useUser(userId);
@@ -61,13 +64,14 @@ const { data: payments } = usePayments();
 
 // ✅ Real-time data with polling
 const { data: status } = usePaymentStatus(id, {
-  refetchInterval: 2000 // Poll every 2s
+  refetchInterval: 2000, // Poll every 2s
 });
 ```
 
 ### 2. Use Redux When 🔷
 
 **Criteria:**
+
 - UI state shared across multiple components
 - Client-side preferences and settings
 - Authentication state (token, isAuthenticated)
@@ -76,6 +80,7 @@ const { data: status } = usePaymentStatus(id, {
 - Application-wide UI state (theme, modals, notifications)
 
 **Examples:**
+
 ```typescript
 // 🔷 Theme preference
 dispatch(uiActions.setTheme('dark'));
@@ -93,6 +98,7 @@ dispatch(uiActions.addNotification({ message, type: 'success' }));
 ### 3. Use Local State (useState/useReducer) When 🟠
 
 **Criteria:**
+
 - State is only used within a single component
 - Simple form inputs without validation
 - Temporary UI state (hover, focus, toggle)
@@ -100,6 +106,7 @@ dispatch(uiActions.addNotification({ message, type: 'success' }));
 - State doesn't need to survive unmounting
 
 **Examples:**
+
 ```typescript
 // 🟠 Simple form input
 const [email, setEmail] = useState('');
@@ -117,13 +124,14 @@ const [selectedItems, setSelectedItems] = useState<string[]>([]);
 ## Common Scenarios
 
 ### Scenario 1: User Authentication
+
 ```typescript
 // ❌ WRONG: All in Redux
 const userSlice = {
-  user: { id, name, email },      // Server data
-  token: 'jwt...',                 // Client auth
-  loading: false,                  // Server state
-  error: null                      // Server state
+  user: { id, name, email }, // Server data
+  token: 'jwt...', // Client auth
+  loading: false, // Server state
+  error: null, // Server state
 };
 
 // ✅ CORRECT: Split appropriately
@@ -131,7 +139,7 @@ const userSlice = {
 const authSlice = {
   isAuthenticated: boolean,
   token: string | null,
-  nostrPubkey: string | null
+  nostrPubkey: string | null,
 };
 
 // React Query: User data
@@ -139,6 +147,7 @@ const { data: user } = useCurrentUser();
 ```
 
 ### Scenario 2: Content Creation Form
+
 ```typescript
 // Multi-step content creation
 // ✅ Redux: Complex form state
@@ -147,8 +156,8 @@ const formSlice = {
     step: 1,
     data: { title, body, tags },
     validation: { errors },
-    isDirty: true
-  }
+    isDirty: true,
+  },
 };
 
 // ✅ React Query: Save/publish
@@ -159,6 +168,7 @@ const [preview, setPreview] = useState(false);
 ```
 
 ### Scenario 3: Dashboard with Multiple Data Sources
+
 ```typescript
 // ✅ React Query: All API data
 const { data: stats } = useCreatorStats();
@@ -166,8 +176,8 @@ const { data: recentPosts } = useRecentPosts();
 const { data: earnings } = useEarnings();
 
 // ✅ Redux: Dashboard UI state
-const dashboardView = useSelector(state => state.ui.dashboardView);
-const selectedDateRange = useSelector(state => state.ui.dateRange);
+const dashboardView = useSelector((state) => state.ui.dashboardView);
+const selectedDateRange = useSelector((state) => state.ui.dateRange);
 
 // ✅ Local: Component interactions
 const [expandedCard, setExpandedCard] = useState<string | null>(null);
@@ -176,15 +186,16 @@ const [expandedCard, setExpandedCard] = useState<string | null>(null);
 ## Anti-Patterns to Avoid ❌
 
 ### 1. Server Data in Redux
+
 ```typescript
 // ❌ NEVER DO THIS
 const postsSlice = createSlice({
   name: 'posts',
   initialState: {
-    posts: [],        // API data
-    loading: false,   // API state
-    error: null       // API state
-  }
+    posts: [], // API data
+    loading: false, // API state
+    error: null, // API state
+  },
 });
 
 // ✅ DO THIS INSTEAD
@@ -192,6 +203,7 @@ const { data: posts, isLoading, error } = usePosts();
 ```
 
 ### 2. UI State in React Query
+
 ```typescript
 // ❌ NEVER DO THIS
 queryClient.setQueryData(['ui', 'theme'], 'dark');
@@ -201,6 +213,7 @@ dispatch(uiActions.setTheme('dark'));
 ```
 
 ### 3. Complex Form State in useState
+
 ```typescript
 // ❌ AVOID THIS (too complex for local state)
 const [formData, setFormData] = useState({
@@ -217,6 +230,7 @@ const formData = useSelector(state => state.forms.userProfile);
 ## Migration Patterns
 
 ### Pattern 1: Redux to React Query
+
 ```typescript
 // BEFORE: Redux with thunks
 const fetchPosts = createAsyncThunk('posts/fetch', async () => {
@@ -229,12 +243,13 @@ const usePosts = () => {
   return useQuery({
     queryKey: ['posts'],
     queryFn: api.getPosts,
-    staleTime: 2 * 60 * 1000 // 2 minutes
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };
 ```
 
 ### Pattern 2: Split Mixed State
+
 ```typescript
 // BEFORE: Mixed state in Redux
 const userSlice = {
@@ -253,20 +268,21 @@ const { isAuthenticated, preferences } = useSelector(state => state.auth);
 
 ## Decision Matrix
 
-| State Type | React Query | Redux | Local State | Context API |
-|------------|:-----------:|:-----:|:-----------:|:-----------:|
-| API Data | ✅ | ❌ | ❌ | ❌ |
-| Auth Token | ❌ | ✅ | ❌ | ❌ |
-| User Preferences | ❌ | ✅ | ❌ | ⚠️ |
-| Theme | ❌ | ✅ | ❌ | ⚠️ |
-| Modal State | ❌ | ✅ | ⚠️ | ❌ |
-| Form Input | ❌ | ⚠️ | ✅ | ❌ |
-| Multi-step Form | ❌ | ✅ | ❌ | ❌ |
-| Notifications | ❌ | ✅ | ❌ | ❌ |
-| Hover State | ❌ | ❌ | ✅ | ❌ |
-| Animation | ❌ | ❌ | ✅ | ❌ |
+| State Type       | React Query | Redux | Local State | Context API |
+| ---------------- | :---------: | :---: | :---------: | :---------: |
+| API Data         |     ✅      |  ❌   |     ❌      |     ❌      |
+| Auth Token       |     ❌      |  ✅   |     ❌      |     ❌      |
+| User Preferences |     ❌      |  ✅   |     ❌      |     ⚠️      |
+| Theme            |     ❌      |  ✅   |     ❌      |     ⚠️      |
+| Modal State      |     ❌      |  ✅   |     ⚠️      |     ❌      |
+| Form Input       |     ❌      |  ⚠️   |     ✅      |     ❌      |
+| Multi-step Form  |     ❌      |  ✅   |     ❌      |     ❌      |
+| Notifications    |     ❌      |  ✅   |     ❌      |     ❌      |
+| Hover State      |     ❌      |  ❌   |     ✅      |     ❌      |
+| Animation        |     ❌      |  ❌   |     ✅      |     ❌      |
 
 Legend:
+
 - ✅ Recommended
 - ⚠️ Use with caution
 - ❌ Not recommended
@@ -274,16 +290,19 @@ Legend:
 ## Performance Considerations
 
 ### React Query
+
 - **Pros**: Automatic caching, deduplication, background refetch
 - **Cons**: Additional bundle size (~25KB)
 - **Use when**: Managing server state, need caching
 
 ### Redux
+
 - **Pros**: Predictable updates, DevTools, time-travel debugging
 - **Cons**: Boilerplate, manual cache management
 - **Use when**: Complex client state, needs persistence
 
 ### Local State
+
 - **Pros**: Simple, no dependencies, component-scoped
 - **Cons**: Lost on unmount, no sharing
 - **Use when**: Simple, isolated state
@@ -299,6 +318,7 @@ Legend:
 ## Enforcement
 
 ### ESLint Rules
+
 ```javascript
 // .eslintrc.js
 {
@@ -311,6 +331,7 @@ Legend:
 ```
 
 ### Code Review Checklist
+
 - [ ] No API data in Redux slices
 - [ ] No loading/error states in Redux
 - [ ] React Query used for all API calls

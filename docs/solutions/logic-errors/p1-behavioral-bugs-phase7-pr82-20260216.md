@@ -4,14 +4,26 @@ date: 2026-02-16
 problem_type: logic_error
 component: service_object
 symptoms:
-  - "GDPR deletion could fail mid-operation leaving orphaned wellness data across 4 tables"
-  - "Concurrent alert status updates corrupt state machine via TOCTOU race"
-  - "Work pattern upsert silently overwrites previous sessions instead of accumulating"
-  - "BurnoutScoringService returns fake healthy scores when database is unreachable"
+  - 'GDPR deletion could fail mid-operation leaving orphaned wellness data across 4 tables'
+  - 'Concurrent alert status updates corrupt state machine via TOCTOU race'
+  - 'Work pattern upsert silently overwrites previous sessions instead of accumulating'
+  - 'BurnoutScoringService returns fake healthy scores when database is unreachable'
 resolution_type: code_fix
 root_cause: logic_error
 severity: critical
-tags: [p1-fixes, atomicity, toctou, race-condition, upsert-semantics, error-handling, supabase-rpc, plpgsql, phase-7, pr-82]
+tags:
+  [
+    p1-fixes,
+    atomicity,
+    toctou,
+    race-condition,
+    upsert-semantics,
+    error-handling,
+    supabase-rpc,
+    plpgsql,
+    phase-7,
+    pr-82,
+  ]
 ---
 
 # Troubleshooting: 5 P1 Behavioral Bugs in Phase 7 Creator Safety Net
@@ -21,12 +33,14 @@ tags: [p1-fixes, atomicity, toctou, race-condition, upsert-semantics, error-hand
 Phase 7 PR #82 (90 new files, 24 endpoints) passed all structural gate checks (compiles, lints, endpoints exist) but contained 5 P1 critical behavioral bugs caught only during post-sprint `/workflows:review`. All 5 bugs involved correct structure with incorrect runtime behavior.
 
 ## Environment
+
 - Module: WellnessService, AlertService, BurnoutScoringService
 - Stack: Node.js + TypeScript + Supabase
 - Affected Component: Backend service layer (packages/backend/src/services/)
 - Date: 2026-02-16
 
 ## Symptoms
+
 - GDPR deletion (deleteAllWellnessData) used 4 sequential `.delete()` calls without transaction — partial deletion on failure
 - Alert status update (updateAlertStatus) used read-then-write pattern — TOCTOU race under concurrent requests
 - Work pattern recording (recordWorkPattern) used `.upsert()` which replaced entire row — second session same day erased first
@@ -35,7 +49,7 @@ Phase 7 PR #82 (90 new files, 24 endpoints) passed all structural gate checks (c
 
 ## What Didn't Work
 
-**Sprint Gate 2 (Structural Checks):** All 7 structural checks passed — code compiled, linted, endpoints existed, tests present. But none of the checks verified *behavioral correctness* (atomicity, concurrency, merge semantics, error propagation).
+**Sprint Gate 2 (Structural Checks):** All 7 structural checks passed — code compiled, linted, endpoints existed, tests present. But none of the checks verified _behavioral correctness_ (atomicity, concurrency, merge semantics, error propagation).
 
 **Root cause of gate gap:** Gate 2 checked "does the code exist and compile?" but not "does the code behave correctly under real conditions?"
 
@@ -46,6 +60,7 @@ Phase 7 PR #82 (90 new files, 24 endpoints) passed all structural gate checks (c
 ### Fix 1: Atomic GDPR Deletion (Todo 148)
 
 **Before (broken):**
+
 ```typescript
 // 4 sequential deletes — if 3rd fails, first 2 are already committed
 await this.db.from('wellness_snapshots').delete().eq('creator_id', creatorId);
@@ -55,6 +70,7 @@ await this.db.from('creator_boundaries').delete().eq('creator_id', creatorId);
 ```
 
 **After (fixed):**
+
 ```typescript
 // Single RPC call — PL/pgSQL function wraps all DELETEs in one transaction
 const { data, error } = await this.db.rpc('delete_all_wellness_data', {
@@ -92,15 +108,21 @@ END; $$;
 ### Fix 2: TOCTOU Race — Atomic Conditional Update (Todo 149)
 
 **Before (broken):**
+
 ```typescript
 // Read current status, validate, then write — race window between read and write
-const { data: alert } = await this.db.from('content_alerts').select('status').eq('id', alertId).single();
+const { data: alert } = await this.db
+  .from('content_alerts')
+  .select('status')
+  .eq('id', alertId)
+  .single();
 if (ALERT_STATUS_TRANSITIONS[alert.status]?.includes(newStatus)) {
   await this.db.from('content_alerts').update({ status: newStatus }).eq('id', alertId);
 }
 ```
 
 **After (fixed):**
+
 ```typescript
 // Reverse-lookup: compute which statuses CAN transition to newStatus
 const validFromStatuses: AlertStatus[] = [];
@@ -114,13 +136,18 @@ const { data, error } = await this.db
   .update({ status: newStatus, updated_at: now })
   .eq('id', alertId)
   .eq('creator_id', creatorId)
-  .in('status', validFromStatuses)  // Atomic: only matches valid source states
-  .select().single();
+  .in('status', validFromStatuses) // Atomic: only matches valid source states
+  .select()
+  .single();
 
 if (!data) {
   // Diagnostic read to return helpful error (NotFound vs Conflict)
-  const { data: existing } = await this.db.from('content_alerts')
-    .select('status').eq('id', alertId).eq('creator_id', creatorId).single();
+  const { data: existing } = await this.db
+    .from('content_alerts')
+    .select('status')
+    .eq('id', alertId)
+    .eq('creator_id', creatorId)
+    .single();
   if (!existing) throw new NotFoundError(`Alert ${alertId}`);
   throw new ConflictError(`Cannot transition from '${existing.status}' to '${newStatus}'`);
 }
@@ -129,14 +156,18 @@ if (!data) {
 ### Fix 3: Accumulate Upsert via RPC (Todo 150)
 
 **Before (broken):**
+
 ```typescript
 // .upsert() replaces entire row — second session same day erases first
 await this.db.from('creator_work_patterns').upsert({
-  creator_id: creatorId, date: inputDate, duration_mins: input.duration_mins
+  creator_id: creatorId,
+  date: inputDate,
+  duration_mins: input.duration_mins,
 });
 ```
 
 **After (fixed):**
+
 ```typescript
 // RPC with ON CONFLICT DO UPDATE accumulates durations
 const { data, error } = await this.db.rpc('upsert_work_pattern', {
@@ -166,6 +197,7 @@ RETURNING *;
 ### Fix 4: Error Propagation (Todo 151)
 
 **Before (broken):**
+
 ```typescript
 // Catches DB error, returns default — caller thinks "no data yet" when DB is down
 try {
@@ -177,6 +209,7 @@ try {
 ```
 
 **After (fixed):**
+
 ```typescript
 // Destructure error, check, log with context, re-throw
 const { count: totalDays, error: countError } = await this.db
@@ -215,22 +248,24 @@ Verified routes were already mounted at `app.ts:14` (import) and `app.ts:213` (m
 
 Added 6 behavioral correctness rules to backend brief (`~/.claude/skills/team-builder/briefs/backend.md`) and 6 behavioral checks to Gate 2 (`~/.claude/skills/team-builder/gates/gate-2-implementation-done.md`):
 
-| Gate Check | Prevents | Pattern |
-|------------|----------|---------|
-| Check 8: Route mounting | Todo 147 | Grep route files vs app.ts imports |
-| Check 9: Error handling | Todo 151 | Grep catch blocks for return-without-throw |
-| Check 10: Transactions | Todo 148 | Grep for 2+ `.delete()`/`.insert()` in same function |
-| Check 11: No data loss | In-memory Maps | Grep for `new Map()` storing business data |
-| Check 12: Concurrency | Todo 149 | Grep for `.select()` then `.update()` on same table |
-| Check 13: Type safety | ServiceToken<any> | Count `as any` occurrences |
+| Gate Check              | Prevents          | Pattern                                              |
+| ----------------------- | ----------------- | ---------------------------------------------------- |
+| Check 8: Route mounting | Todo 147          | Grep route files vs app.ts imports                   |
+| Check 9: Error handling | Todo 151          | Grep catch blocks for return-without-throw           |
+| Check 10: Transactions  | Todo 148          | Grep for 2+ `.delete()`/`.insert()` in same function |
+| Check 11: No data loss  | In-memory Maps    | Grep for `new Map()` storing business data           |
+| Check 12: Concurrency   | Todo 149          | Grep for `.select()` then `.update()` on same table  |
+| Check 13: Type safety   | ServiceToken<any> | Count `as any` occurrences                           |
 
 ### Code-Level Prevention
+
 - Use Supabase RPC for any multi-table write operation
 - Use `.in('status', validStatuses)` instead of read-then-write for state machines
 - Use `ON CONFLICT DO UPDATE SET field = field + new` for metrics/counters
 - Never catch-and-return-default for database operations — always re-throw
 
 ### Testing-Level Prevention
+
 - Write concurrent request tests for any state machine update
 - Write multi-submission tests for any upsert on numeric fields
 - Write DB-failure propagation tests for any service with Supabase calls

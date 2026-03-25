@@ -151,8 +151,10 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       <Card className={`${className}`}>
         <CardContent className="p-8 text-center">
           <RefreshCw className="h-8 w-8 mx-auto animate-spin text-blue-600 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Loading Analytics Dashboard</h3>
-          <p className="text-gray-600">Initializing analytics systems...</p>
+          <h3 className="text-lg font-semibold text-foreground mb-2">
+            Loading Analytics Dashboard
+          </h3>
+          <p className="text-muted-foreground">Initializing analytics systems...</p>
         </CardContent>
       </Card>
     );
@@ -163,8 +165,8 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       <Card className={`${className}`}>
         <CardContent className="p-8 text-center">
           <AlertTriangle className="h-12 w-12 mx-auto text-red-500 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Analytics Unavailable</h3>
-          <p className="text-gray-600 mb-4">
+          <h3 className="text-lg font-semibold text-foreground mb-2">Analytics Unavailable</h3>
+          <p className="text-muted-foreground mb-4">
             We couldn't load the analytics dashboard. Please try again.
           </p>
           <Button onClick={handleRefresh}>Try Again</Button>
@@ -179,8 +181,8 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Analytics Dashboard</h1>
-            <p className="text-gray-600">Comprehensive platform analytics and insights</p>
+            <h1 className="text-2xl font-bold text-foreground">Analytics Dashboard</h1>
+            <p className="text-muted-foreground">Comprehensive platform analytics and insights</p>
           </div>
           <div className="flex items-center gap-4">
             <Select value={timeRange} onValueChange={handleTimeRangeChange}>
@@ -349,8 +351,8 @@ const MetricCard: React.FC<MetricCardProps> = ({ title, value, icon, trend, colo
             </div>
           )}
         </div>
-        <div className="text-2xl font-bold text-gray-900">{value}</div>
-        <div className="text-sm text-gray-600">{title}</div>
+        <div className="text-2xl font-bold text-foreground">{value}</div>
+        <div className="text-sm text-muted-foreground">{title}</div>
       </CardContent>
     </Card>
   );
@@ -386,7 +388,7 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-64 flex items-center justify-center text-gray-500">
+          <div className="h-64 flex items-center justify-center text-muted-foreground">
             Traffic chart visualization would go here
           </div>
         </CardContent>
@@ -401,7 +403,7 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-64 flex items-center justify-center text-gray-500">
+          <div className="h-64 flex items-center justify-center text-muted-foreground">
             Performance metrics visualization would go here
           </div>
         </CardContent>
@@ -442,7 +444,7 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-64 flex items-center justify-center text-gray-500">
+          <div className="h-64 flex items-center justify-center text-muted-foreground">
             Conversion funnel visualization would go here
           </div>
         </CardContent>
@@ -475,7 +477,7 @@ const WebAnalyticsDashboard: React.FC<WebAnalyticsDashboardProps> = ({
             <CardTitle>Page Views</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-48 flex items-center justify-center text-gray-500">
+            <div className="h-48 flex items-center justify-center text-muted-foreground">
               Page views chart
             </div>
           </CardContent>
@@ -487,7 +489,7 @@ const WebAnalyticsDashboard: React.FC<WebAnalyticsDashboardProps> = ({
             <CardTitle>User Sessions</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-48 flex items-center justify-center text-gray-500">
+            <div className="h-48 flex items-center justify-center text-muted-foreground">
               Sessions chart
             </div>
           </CardContent>
@@ -499,7 +501,7 @@ const WebAnalyticsDashboard: React.FC<WebAnalyticsDashboardProps> = ({
             <CardTitle>Bounce Rate</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-48 flex items-center justify-center text-gray-500">
+            <div className="h-48 flex items-center justify-center text-muted-foreground">
               Bounce rate chart
             </div>
           </CardContent>
@@ -512,7 +514,7 @@ const WebAnalyticsDashboard: React.FC<WebAnalyticsDashboardProps> = ({
           <CardTitle>User Behavior Heatmap</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-64 flex items-center justify-center text-gray-500">
+          <div className="h-64 flex items-center justify-center text-muted-foreground">
             Heatmap visualization would go here
           </div>
         </CardContent>
@@ -548,7 +550,7 @@ const BusinessIntelligenceDashboard: React.FC<BusinessIntelligenceDashboardProps
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-64 flex items-center justify-center text-gray-500">
+            <div className="h-64 flex items-center justify-center text-muted-foreground">
               Revenue forecasting chart
             </div>
           </CardContent>
@@ -563,7 +565,7 @@ const BusinessIntelligenceDashboard: React.FC<BusinessIntelligenceDashboardProps
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-64 flex items-center justify-center text-gray-500">
+            <div className="h-64 flex items-center justify-center text-muted-foreground">
               User growth prediction chart
             </div>
           </CardContent>
@@ -583,7 +585,7 @@ const BusinessIntelligenceDashboard: React.FC<BusinessIntelligenceDashboardProps
             <div className="flex items-center justify-between p-3 border rounded-lg">
               <div>
                 <h4 className="font-medium">Weekly Performance Report</h4>
-                <p className="text-sm text-gray-600">Runs every Monday at 9:00 AM</p>
+                <p className="text-sm text-muted-foreground">Runs every Monday at 9:00 AM</p>
               </div>
               <Button variant="outline" size="sm">
                 View
@@ -592,7 +594,7 @@ const BusinessIntelligenceDashboard: React.FC<BusinessIntelligenceDashboardProps
             <div className="flex items-center justify-between p-3 border rounded-lg">
               <div>
                 <h4 className="font-medium">Monthly Revenue Analysis</h4>
-                <p className="text-sm text-gray-600">Runs first day of each month</p>
+                <p className="text-sm text-muted-foreground">Runs first day of each month</p>
               </div>
               <Button variant="outline" size="sm">
                 View
@@ -629,7 +631,7 @@ const PerformanceMonitoringDashboard: React.FC<PerformanceMonitoringDashboardPro
             <CardTitle>Response Time</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-48 flex items-center justify-center text-gray-500">
+            <div className="h-48 flex items-center justify-center text-muted-foreground">
               Response time chart
             </div>
           </CardContent>
@@ -641,7 +643,7 @@ const PerformanceMonitoringDashboard: React.FC<PerformanceMonitoringDashboardPro
             <CardTitle>Throughput</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-48 flex items-center justify-center text-gray-500">
+            <div className="h-48 flex items-center justify-center text-muted-foreground">
               Throughput chart
             </div>
           </CardContent>
@@ -653,7 +655,7 @@ const PerformanceMonitoringDashboard: React.FC<PerformanceMonitoringDashboardPro
             <CardTitle>Resource Usage</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-48 flex items-center justify-center text-gray-500">
+            <div className="h-48 flex items-center justify-center text-muted-foreground">
               Resource usage chart
             </div>
           </CardContent>
@@ -713,7 +715,7 @@ const ErrorTrackingDashboard: React.FC<ErrorTrackingDashboardProps> = ({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-64 flex items-center justify-center text-gray-500">
+            <div className="h-64 flex items-center justify-center text-muted-foreground">
               Error rate trend chart
             </div>
           </CardContent>
@@ -728,7 +730,7 @@ const ErrorTrackingDashboard: React.FC<ErrorTrackingDashboardProps> = ({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-64 flex items-center justify-center text-gray-500">
+            <div className="h-64 flex items-center justify-center text-muted-foreground">
               Error distribution pie chart
             </div>
           </CardContent>
@@ -745,7 +747,7 @@ const ErrorTrackingDashboard: React.FC<ErrorTrackingDashboardProps> = ({
             <div className="flex items-center justify-between p-3 border rounded-lg">
               <div>
                 <h4 className="font-medium">Database Connection Timeout</h4>
-                <p className="text-sm text-gray-600">45 occurrences in last 24h</p>
+                <p className="text-sm text-muted-foreground">45 occurrences in last 24h</p>
               </div>
               <div className="flex items-center gap-2">
                 <span className="px-2 py-1 text-xs bg-red-100 text-red-800 rounded">Critical</span>
@@ -757,7 +759,7 @@ const ErrorTrackingDashboard: React.FC<ErrorTrackingDashboardProps> = ({
             <div className="flex items-center justify-between p-3 border rounded-lg">
               <div>
                 <h4 className="font-medium">API Rate Limit Exceeded</h4>
-                <p className="text-sm text-gray-600">23 occurrences in last 24h</p>
+                <p className="text-sm text-muted-foreground">23 occurrences in last 24h</p>
               </div>
               <div className="flex items-center gap-2">
                 <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded">

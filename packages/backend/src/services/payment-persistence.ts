@@ -4,6 +4,7 @@ import path from 'path';
 import { EventEmitter } from 'events';
 import type { LightningInvoice, LightningPayment } from './lightning-service';
 import { Logger } from '../utils/logger';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 /**
  * Interface for payment persistence.
@@ -206,4 +207,208 @@ export class JsonFilePaymentStore extends EventEmitter implements PaymentPersist
       throw err;
     }
   }
+}
+
+/**
+ * Supabase-backed payment persistence for production.
+ * Implements PaymentPersistence using the Supabase REST API.
+ *
+ * P1-PAY-002: Replaces JsonFilePaymentStore which throws in production.
+ */
+export class SupabasePaymentStore implements PaymentPersistence {
+  private readonly supabase: SupabaseClient;
+  private readonly logger = new Logger('SupabasePaymentStore');
+
+  constructor(supabase?: SupabaseClient) {
+    if (supabase) {
+      this.supabase = supabase;
+    } else {
+      const url = process.env.SUPABASE_URL;
+      const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      if (!url || !key) {
+        throw new Error('SupabasePaymentStore requires SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY');
+      }
+      this.supabase = createClient(url, key);
+    }
+  }
+
+  async saveInvoice(invoice: LightningInvoice): Promise<void> {
+    const { error } = await this.supabase.from('lightning_invoices').upsert({
+      id: invoice.id,
+      bolt11: invoice.bolt11,
+      amount: invoice.amount,
+      description: invoice.description,
+      created_at: new Date(invoice.created_at).toISOString(),
+      expires_at: new Date(invoice.expires_at).toISOString(),
+      status: invoice.status,
+      payment_hash: invoice.payment_hash,
+      payment_request: invoice.payment_request,
+      metadata: invoice.metadata ?? null,
+    });
+
+    if (error) {
+      this.logger.error('Failed to save invoice to Supabase', {
+        invoiceId: invoice.id,
+        error: error.message,
+      });
+      throw new Error(`Failed to save invoice: ${error.message}`);
+    }
+  }
+
+  async savePayment(payment: LightningPayment): Promise<void> {
+    const { error } = await this.supabase.from('lightning_payments').upsert({
+      id: payment.id,
+      invoice_id: payment.invoice_id,
+      amount: payment.amount,
+      fee: payment.fee,
+      status: payment.status,
+      settled_at: payment.settled_at ? new Date(payment.settled_at).toISOString() : null,
+      preimage: payment.preimage ?? null,
+      memo: payment.memo ?? null,
+      creator_id: payment.creator_id,
+      supporter_id: payment.supporter_id,
+      nostr_event_id: payment.nostr_event_id ?? null,
+    });
+
+    if (error) {
+      this.logger.error('Failed to save payment to Supabase', {
+        paymentId: payment.id,
+        error: error.message,
+      });
+      throw new Error(`Failed to save payment: ${error.message}`);
+    }
+  }
+
+  async getInvoiceById(id: string): Promise<LightningInvoice | null> {
+    const { data, error } = await this.supabase
+      .from('lightning_invoices')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') return null; // Not found
+      this.logger.error('Failed to fetch invoice by id', { id, error: error.message });
+      throw new Error(`Failed to fetch invoice: ${error.message}`);
+    }
+
+    return data ? this.rowToInvoice(data) : null;
+  }
+
+  async getInvoiceByPaymentHash(hash: string): Promise<LightningInvoice | null> {
+    const { data, error } = await this.supabase
+      .from('lightning_invoices')
+      .select('*')
+      .eq('payment_hash', hash)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') return null;
+      this.logger.error('Failed to fetch invoice by payment_hash', { hash, error: error.message });
+      throw new Error(`Failed to fetch invoice: ${error.message}`);
+    }
+
+    return data ? this.rowToInvoice(data) : null;
+  }
+
+  async getPaymentsByCreator(
+    creatorId: string,
+    filters?: { status?: string }
+  ): Promise<LightningPayment[]> {
+    let query = this.supabase.from('lightning_payments').select('*').eq('creator_id', creatorId);
+
+    if (filters?.status) {
+      query = query.eq('status', filters.status);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      this.logger.error('Failed to fetch payments by creator', { creatorId, error: error.message });
+      throw new Error(`Failed to fetch payments: ${error.message}`);
+    }
+
+    return (data ?? []).map((row) => this.rowToPayment(row));
+  }
+
+  async getAllPayments(): Promise<LightningPayment[]> {
+    const { data, error } = await this.supabase
+      .from('lightning_payments')
+      .select('*')
+      .order('settled_at', { ascending: false });
+
+    if (error) {
+      this.logger.error('Failed to fetch all payments', { error: error.message });
+      throw new Error(`Failed to fetch payments: ${error.message}`);
+    }
+
+    return (data ?? []).map((row) => this.rowToPayment(row));
+  }
+
+  async getAllInvoices(): Promise<LightningInvoice[]> {
+    const { data, error } = await this.supabase
+      .from('lightning_invoices')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      this.logger.error('Failed to fetch all invoices', { error: error.message });
+      throw new Error(`Failed to fetch invoices: ${error.message}`);
+    }
+
+    return (data ?? []).map((row) => this.rowToInvoice(row));
+  }
+
+  async updateInvoiceStatus(id: string, status: string): Promise<void> {
+    const { error } = await this.supabase
+      .from('lightning_invoices')
+      .update({ status })
+      .eq('id', id);
+
+    if (error) {
+      this.logger.error('Failed to update invoice status', { id, status, error: error.message });
+      throw new Error(`Failed to update invoice status: ${error.message}`);
+    }
+  }
+
+  private rowToInvoice(row: Record<string, unknown>): LightningInvoice {
+    return {
+      id: row.id as string,
+      bolt11: row.bolt11 as string,
+      amount: row.amount as number,
+      description: row.description as string,
+      created_at: new Date(row.created_at as string).getTime(),
+      expires_at: new Date(row.expires_at as string).getTime(),
+      status: row.status as LightningInvoice['status'],
+      payment_hash: row.payment_hash as string,
+      payment_request: row.payment_request as string,
+      metadata: (row.metadata as Record<string, string> | undefined) ?? undefined,
+    };
+  }
+
+  private rowToPayment(row: Record<string, unknown>): LightningPayment {
+    return {
+      id: row.id as string,
+      invoice_id: row.invoice_id as string,
+      amount: row.amount as number,
+      fee: (row.fee as number) ?? 0,
+      status: row.status as LightningPayment['status'],
+      settled_at: row.settled_at ? new Date(row.settled_at as string).getTime() : undefined,
+      preimage: (row.preimage as string | undefined) ?? undefined,
+      memo: (row.memo as string | undefined) ?? undefined,
+      creator_id: row.creator_id as string,
+      supporter_id: row.supporter_id as string,
+      nostr_event_id: (row.nostr_event_id as string | undefined) ?? undefined,
+    };
+  }
+}
+
+/**
+ * Factory: returns SupabasePaymentStore in production, JsonFilePaymentStore in development.
+ */
+export function createPaymentStore(supabase?: SupabaseClient): PaymentPersistence {
+  if (process.env.NODE_ENV === 'production') {
+    return new SupabasePaymentStore(supabase);
+  }
+  return new JsonFilePaymentStore();
 }

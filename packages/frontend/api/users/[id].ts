@@ -17,7 +17,10 @@ async function authenticateUser(req: VercelRequest): Promise<AuthResult> {
   const token = authHeader.substring(7);
 
   try {
-    const { data: { user }, error } = await supabase.auth.getUser(token);
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser(token);
 
     if (error || !user) {
       return { user: null, error: 'Invalid or expired token' };
@@ -30,13 +33,14 @@ async function authenticateUser(req: VercelRequest): Promise<AuthResult> {
 }
 
 // 📊 UPDATE USER VALIDATION SCHEMA
-const updateUserSchema = z.object({
-  name: nameSchema.optional(),
-  email: z.string().email('Invalid email format').optional(),
-}).refine(
-  (data) => Object.keys(data).length > 0,
-  { message: 'At least one field must be provided for update' }
-);
+const updateUserSchema = z
+  .object({
+    name: nameSchema.optional(),
+    email: z.string().email('Invalid email format').optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: 'At least one field must be provided for update',
+  });
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { id } = req.query;
@@ -47,7 +51,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({
       error: 'Invalid user ID',
       message: 'User ID must be a valid UUID',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -61,7 +65,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         error: 'Rate limit exceeded',
         message: 'Too many requests. Please try again later.',
         retryAfter: rateLimitResult.retryAfter,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
@@ -71,7 +75,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(401).json({
         error: 'Authentication required',
         message: auth.error,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
@@ -88,10 +92,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(405).json({
           error: 'Method not allowed',
           message: `${req.method} method is not supported`,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
     }
-
   } catch (error) {
     console.error('User API error:', error);
 
@@ -99,13 +102,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       error: 'Internal server error',
       message: 'An unexpected error occurred',
       timestamp: new Date().toISOString(),
-      requestId: req.headers['x-vercel-id'] || 'unknown'
+      requestId: req.headers['x-vercel-id'] || 'unknown',
     });
   }
 }
 
 // 👤 GET USER PROFILE
-async function handleGetUser(req: VercelRequest, res: VercelResponse, userId: string, currentUser: User) {
+async function handleGetUser(
+  req: VercelRequest,
+  res: VercelResponse,
+  userId: string,
+  currentUser: User
+) {
   try {
     // 🔒 Authorization: Users can view their own profile or public profiles
     const { data: user, error } = await supabase
@@ -118,7 +126,7 @@ async function handleGetUser(req: VercelRequest, res: VercelResponse, userId: st
       return res.status(404).json({
         error: 'User not found',
         message: 'The requested user does not exist',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
@@ -135,9 +143,8 @@ async function handleGetUser(req: VercelRequest, res: VercelResponse, userId: st
       success: true,
       message: 'User profile retrieved successfully',
       data: { user: responseData },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
-
   } catch (error) {
     console.error('Get user error:', error);
     throw error;
@@ -145,13 +152,18 @@ async function handleGetUser(req: VercelRequest, res: VercelResponse, userId: st
 }
 
 // ✏️ UPDATE USER PROFILE
-async function handleUpdateUser(req: VercelRequest, res: VercelResponse, userId: string, currentUser: User) {
+async function handleUpdateUser(
+  req: VercelRequest,
+  res: VercelResponse,
+  userId: string,
+  currentUser: User
+) {
   // 🔒 Authorization: Users can only update their own profile
   if (userId !== currentUser.id) {
     return res.status(403).json({
       error: 'Access denied',
       message: 'You can only update your own profile',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -168,7 +180,7 @@ async function handleUpdateUser(req: VercelRequest, res: VercelResponse, userId:
         error: 'Validation failed',
         message: 'Invalid update data',
         details: validation.errors,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
@@ -188,20 +200,20 @@ async function handleUpdateUser(req: VercelRequest, res: VercelResponse, userId:
         return res.status(409).json({
           error: 'Email already taken',
           message: 'This email is already associated with another account',
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
 
       // Update email in Supabase Auth
       const { error: authError } = await supabase.auth.updateUser({
-        email: updateData.email
+        email: updateData.email,
       });
 
       if (authError) {
         return res.status(400).json({
           error: 'Email update failed',
           message: authError.message,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
     }
@@ -222,7 +234,7 @@ async function handleUpdateUser(req: VercelRequest, res: VercelResponse, userId:
       return res.status(500).json({
         error: 'Update failed',
         message: 'Failed to update user profile',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
@@ -230,9 +242,8 @@ async function handleUpdateUser(req: VercelRequest, res: VercelResponse, userId:
       success: true,
       message: 'User profile updated successfully',
       data: { user: updatedUser },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
-
   } catch (error) {
     console.error('Update user error:', error);
     throw error;
@@ -240,13 +251,18 @@ async function handleUpdateUser(req: VercelRequest, res: VercelResponse, userId:
 }
 
 // 🗑️ DELETE USER ACCOUNT
-async function handleDeleteUser(req: VercelRequest, res: VercelResponse, userId: string, currentUser: User) {
+async function handleDeleteUser(
+  req: VercelRequest,
+  res: VercelResponse,
+  userId: string,
+  currentUser: User
+) {
   // 🔒 Authorization: Users can only delete their own account
   if (userId !== currentUser.id) {
     return res.status(403).json({
       error: 'Access denied',
       message: 'You can only delete your own account',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -273,16 +289,15 @@ async function handleDeleteUser(req: VercelRequest, res: VercelResponse, userId:
       return res.status(500).json({
         error: 'Account deletion failed',
         message: 'Failed to delete user account',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
     return res.status(200).json({
       success: true,
       message: 'User account deleted successfully',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
-
   } catch (error) {
     console.error('Delete user error:', error);
     throw error;

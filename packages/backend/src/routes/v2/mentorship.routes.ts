@@ -16,8 +16,10 @@ import {
   RequestMentorshipSchema,
   RespondMentorshipSchema,
   UpdateMentorProfileSchema,
+  UuidParamSchema,
 } from '../../validators/community';
 import { ValidationError } from '../../utils/errors';
+import { getUserIdByPubkey } from '../../utils/getUserIdByPubkey';
 import type { IMentorshipService } from '../../interfaces/community/IMentorshipService';
 
 const router = Router();
@@ -31,6 +33,11 @@ let _mentorshipService: IMentorshipService | null = null;
 function getMentorshipService(): IMentorshipService {
   if (!_mentorshipService) _mentorshipService = container.resolve(TYPES.MentorshipService);
   return _mentorshipService;
+}
+
+/** Resolve supabase DB client from DI container (safe cast — DI guarantees ISupabaseClient) */
+function resolveDb(): Parameters<typeof getUserIdByPubkey>[0] {
+  return container.resolve(TYPES.Database) as unknown as Parameters<typeof getUserIdByPubkey>[0];
 }
 
 // ============================================================================
@@ -52,10 +59,9 @@ router.post(
       throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
 
-    const data = await getMentorshipService().registerMentor(
-      getAuthUser(req).nostr_pubkey,
-      result.data
-    );
+    const db = resolveDb();
+    const creatorId = await getUserIdByPubkey(db, getAuthUser(req).nostr_pubkey);
+    const data = await getMentorshipService().registerMentor(creatorId, result.data);
     res.status(201).json(createApiResponse(req, data));
   })
 );
@@ -64,7 +70,7 @@ router.post(
  * GET /api/v2/mentorship/mentors
  * Browse mentors with optional niche/audience filters
  * NOTE: Must come before /:id routes to avoid collision
- * #382: Pagination support
+ * #382/#713: DB-level pagination via service (limit 50 in service)
  */
 router.get(
   '/mentors',
@@ -81,15 +87,11 @@ router.get(
       filters.audienceSizeRange = req.query.audienceSizeRange;
     }
 
-    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 50));
-    const offset = Math.max(0, parseInt(req.query.offset as string) || 0);
-
     const data = await getMentorshipService().getMentors(
       Object.keys(filters).length > 0 ? filters : undefined
     );
 
-    const paginated = data.slice(offset, offset + limit);
-    res.json(createApiResponse(req, { items: paginated, total: data.length, limit, offset }));
+    res.json(createApiResponse(req, data));
   })
 );
 
@@ -97,18 +99,19 @@ router.get(
  * GET /api/v2/mentorship/my-mentorships
  * Get all mentorships for the authenticated user (as mentor or mentee)
  * NOTE: Must come before /:id routes to avoid collision
- * #382: Pagination support
+ * #382/#713: DB-level pagination via service (limit 100 in service)
  */
 router.get(
   '/my-mentorships',
   authenticate,
   requireCreator,
   asyncHandler(async (req, res) => {
-    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 50));
+    const db = resolveDb();
+    const creatorId = await getUserIdByPubkey(db, getAuthUser(req).nostr_pubkey);
     const offset = Math.max(0, parseInt(req.query.offset as string) || 0);
-    const data = await getMentorshipService().getMyMentorships(getAuthUser(req).nostr_pubkey);
-    const paginated = data.slice(offset, offset + limit);
-    res.json(createApiResponse(req, { items: paginated, total: data.length, limit, offset }));
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 50));
+    const data = await getMentorshipService().getMyMentorships(creatorId, { offset, limit });
+    res.json(createApiResponse(req, data));
   })
 );
 
@@ -131,11 +134,12 @@ router.post(
       throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
 
-    const data = await getMentorshipService().requestMentorship(
-      getAuthUser(req).nostr_pubkey,
-      result.data.mentorId,
-      { niche: result.data.niche, goals: result.data.goals }
-    );
+    const db = resolveDb();
+    const menteeId = await getUserIdByPubkey(db, getAuthUser(req).nostr_pubkey);
+    const data = await getMentorshipService().requestMentorship(menteeId, result.data.mentorId, {
+      niche: result.data.niche,
+      goals: result.data.goals,
+    });
 
     res.status(201).json(createApiResponse(req, data));
   })
@@ -151,16 +155,19 @@ router.put(
   requireCreator,
   mutationRateLimiter,
   asyncHandler(async (req, res) => {
+    const idResult = UuidParamSchema.safeParse(req.params.id);
+    if (!idResult.success) {
+      throw new ValidationError('Invalid mentorship ID format');
+    }
+
     const result = RespondMentorshipSchema.safeParse(req.body);
     if (!result.success) {
       throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
 
-    await getMentorshipService().respondToRequest(
-      req.params.id,
-      getAuthUser(req).nostr_pubkey,
-      result.data.accept
-    );
+    const db = resolveDb();
+    const creatorId = await getUserIdByPubkey(db, getAuthUser(req).nostr_pubkey);
+    await getMentorshipService().respondToRequest(idResult.data, creatorId, result.data.accept);
     res.json(createApiResponse(req, { accepted: result.data.accept }));
   })
 );
@@ -175,16 +182,19 @@ router.put(
   requireCreator,
   mutationRateLimiter,
   asyncHandler(async (req, res) => {
+    const idResult = UuidParamSchema.safeParse(req.params.id);
+    if (!idResult.success) {
+      throw new ValidationError('Invalid profile ID format');
+    }
+
     const result = UpdateMentorProfileSchema.safeParse(req.body);
     if (!result.success) {
       throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
 
-    await getMentorshipService().updateMentorProfile(
-      req.params.id,
-      getAuthUser(req).nostr_pubkey,
-      result.data
-    );
+    const db = resolveDb();
+    const creatorId = await getUserIdByPubkey(db, getAuthUser(req).nostr_pubkey);
+    await getMentorshipService().updateMentorProfile(idResult.data, creatorId, result.data);
     res.json(createApiResponse(req, { updated: true }));
   })
 );

@@ -532,7 +532,7 @@ export const NetworkPerformanceOptimizer: React.FC<NetworkPerformanceOptimizerPr
     return (
       <div className="flex items-center justify-center p-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-2 text-gray-600">Optimizing network performance...</span>
+        <span className="ml-2 text-muted-foreground">Optimizing network performance...</span>
       </div>
     );
   }
@@ -540,16 +540,16 @@ export const NetworkPerformanceOptimizer: React.FC<NetworkPerformanceOptimizerPr
   const connectionQuality = getConnectionQuality();
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6 space-y-6">
+    <div className="bg-card rounded-lg shadow-lg p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <Activity className="h-6 w-6 text-blue-600" />
-          <h2 className="text-xl font-semibold text-gray-900">Network Performance Optimizer</h2>
+          <h2 className="text-xl font-semibold text-foreground">Network Performance Optimizer</h2>
         </div>
         <div className="flex items-center space-x-2">
           <Wifi className={`h-5 w-5 text-${connectionQuality.color}-500`} />
-          <span className="text-sm text-gray-500">{connectionQuality.level}</span>
+          <span className="text-sm text-muted-foreground">{connectionQuality.level}</span>
         </div>
       </div>
 
@@ -602,12 +602,12 @@ export const NetworkPerformanceOptimizer: React.FC<NetworkPerformanceOptimizerPr
 
       {/* Request Queue Status */}
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Request Queue Status</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-4">Request Queue Status</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {Object.entries(requestQueue).map(([status, count]) => (
-            <div key={status} className="text-center p-3 bg-gray-50 rounded-lg">
-              <span className="block text-2xl font-bold text-gray-900">{count}</span>
-              <span className="text-sm text-gray-600 capitalize">{status}</span>
+            <div key={status} className="text-center p-3 bg-muted rounded-lg">
+              <span className="block text-2xl font-bold text-foreground">{count}</span>
+              <span className="text-sm text-muted-foreground capitalize">{status}</span>
             </div>
           ))}
         </div>
@@ -616,18 +616,18 @@ export const NetworkPerformanceOptimizer: React.FC<NetworkPerformanceOptimizerPr
       {/* CDN Performance */}
       {cdnMetrics.length > 0 && (
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">CDN Performance</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-4">CDN Performance</h3>
           <div className="space-y-2">
             {cdnMetrics.map((cdn, index) => (
               <div
                 key={index}
                 className={`p-3 rounded-lg border ${
-                  cdn.isOptimal ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'
+                  cdn.isOptimal ? 'bg-green-50 border-green-200' : 'bg-muted border-border'
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="font-medium text-gray-900">{cdn.region}</span>
+                    <span className="font-medium text-foreground">{cdn.region}</span>
                     {cdn.isOptimal && (
                       <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
                         Optimal
@@ -635,10 +635,10 @@ export const NetworkPerformanceOptimizer: React.FC<NetworkPerformanceOptimizerPr
                     )}
                   </div>
                   <div className="text-right">
-                    <span className="font-mono text-sm text-gray-700">
+                    <span className="font-mono text-sm text-foreground">
                       {cdn.latency.toFixed(0)}ms
                     </span>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted-foreground">
                       Hit rate: {(cdn.hitRate * 100).toFixed(1)}%
                     </p>
                   </div>
@@ -651,7 +651,7 @@ export const NetworkPerformanceOptimizer: React.FC<NetworkPerformanceOptimizerPr
 
       {/* Performance Recommendations */}
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Performance Recommendations</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-4">Performance Recommendations</h3>
         <div className="space-y-2">
           {connectionMetrics?.latency && connectionMetrics.latency > 500 && (
             <div className="p-3 bg-red-50 rounded-lg">
@@ -679,7 +679,7 @@ export const NetworkPerformanceOptimizer: React.FC<NetworkPerformanceOptimizerPr
 
       {/* Actions */}
       <div className="border-t pt-4">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Optimization Actions</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-4">Optimization Actions</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           <button
             onClick={handleOptimizeConnections}

@@ -1,7 +1,7 @@
 ---
 status: pending
 priority: p2
-issue_id: "481"
+issue_id: '481'
 tags:
   - code-review
   - msw
@@ -61,8 +61,8 @@ Option A. Create helper, apply to all handlers.
 
 ## Work Log
 
-| Date | Action | Learnings |
-|------|--------|-----------|
+| Date       | Action                                                | Learnings                                                 |
+| ---------- | ----------------------------------------------------- | --------------------------------------------------------- |
 | 2026-02-24 | Created from Phase 9 MSW review (4/7 agent consensus) | MSW handlers must match API envelope, not just data shape |
 
 ## Resources

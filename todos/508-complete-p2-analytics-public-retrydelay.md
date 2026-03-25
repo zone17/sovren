@@ -26,6 +26,7 @@ class AnalyticsServiceImpl {
 ## Proposed Solutions
 
 ### Option A: Make private, use MSW for test control (Recommended)
+
 - Change to `private retryDelay`
 - Tests should use MSW handlers or dependency injection, not property mutation
 - Pros: Proper encapsulation
@@ -34,6 +35,7 @@ class AnalyticsServiceImpl {
 - Risk: Low
 
 ### Option B: Make protected
+
 - Change to `protected retryDelay`
 - Pros: Allows subclass override without full public exposure
 - Cons: Still somewhat exposed
@@ -55,8 +57,8 @@ Option A.
 
 ## Work Log
 
-| Date | Action | Learnings |
-|------|--------|-----------|
+| Date       | Action                                 | Learnings                                   |
+| ---------- | -------------------------------------- | ------------------------------------------- |
 | 2026-02-25 | Identified during manual PR #98 review | Test convenience shouldn't drive API design |
 
 ## Resources

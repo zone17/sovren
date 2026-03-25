@@ -80,12 +80,12 @@ DB_CONNECTION_TIMEOUT=2000  # Fail fast if no connection available
 
 ### Tuning Guidelines
 
-| Concurrent Users | DB_POOL_MAX | DB_POOL_MIN | Notes |
-|-----------------|-------------|-------------|-------|
-| < 100 | 10 | 2 | Low traffic |
-| 100-500 | 20 | 5 | **Default** (Production) |
-| 500-1,000 | 30 | 10 | High traffic |
-| 1,000+ | 50 | 15 | Scale horizontally |
+| Concurrent Users | DB_POOL_MAX | DB_POOL_MIN | Notes                    |
+| ---------------- | ----------- | ----------- | ------------------------ |
+| < 100            | 10          | 2           | Low traffic              |
+| 100-500          | 20          | 5           | **Default** (Production) |
+| 500-1,000        | 30          | 10          | High traffic             |
+| 1,000+           | 50          | 15          | Scale horizontally       |
 
 **WARNING**: Don't set `DB_POOL_MAX` too high! PostgreSQL has a connection limit (usually 100). Monitor your database's max_connections setting.
 
@@ -105,10 +105,9 @@ const result = await pool.query('SELECT NOW()');
 console.log(result.rows[0]);
 
 // Parameterized query (prevents SQL injection)
-const users = await pool.query(
-  'SELECT * FROM users WHERE created_at > $1',
-  [new Date('2025-01-01')]
-);
+const users = await pool.query('SELECT * FROM users WHERE created_at > $1', [
+  new Date('2025-01-01'),
+]);
 ```
 
 ### Query with Metrics Tracking
@@ -117,10 +116,7 @@ const users = await pool.query(
 import { poolManager } from './config/database.config';
 
 // Automatically tracks query time and logs slow queries
-const result = await poolManager.query(
-  'SELECT * FROM users WHERE role = $1',
-  ['creator']
-);
+const result = await poolManager.query('SELECT * FROM users WHERE role = $1', ['creator']);
 
 // If query takes > 100ms, automatically logged as slow query
 ```
@@ -155,11 +151,13 @@ try {
 ### Health Check Endpoints
 
 #### 1. Database Pool Status
+
 ```bash
 GET /health/db-pool
 ```
 
 **Response**:
+
 ```json
 {
   "status": "healthy",
@@ -178,13 +176,12 @@ GET /health/db-pool
     "totalQueries": 15420,
     "averageQueryTime": 45
   },
-  "recommendations": [
-    "Pool is operating optimally. No action required."
-  ]
+  "recommendations": ["Pool is operating optimally. No action required."]
 }
 ```
 
 #### 2. Overall System Health
+
 ```bash
 GET /health/detailed
 ```
@@ -228,11 +225,13 @@ The pool manager tracks metrics suitable for Prometheus integration:
 ### Problem: "Connection Pool Exhausted"
 
 **Symptoms**:
+
 - `pool.query()` hangs indefinitely
 - Waiting requests > 10
 - Utilization > 90%
 
 **Solutions**:
+
 1. Increase `DB_POOL_MAX` (e.g., from 20 to 30)
 2. Check for connection leaks (always `client.release()`)
 3. Optimize slow queries (check average query time)
@@ -241,10 +240,12 @@ The pool manager tracks metrics suitable for Prometheus integration:
 ### Problem: "Too Many Database Connections"
 
 **Symptoms**:
+
 - PostgreSQL error: "too many connections"
 - Database rejecting new connections
 
 **Solutions**:
+
 1. **Reduce** `DB_POOL_MAX` across all services
 2. Calculate: `DB_POOL_MAX × number_of_instances < postgres_max_connections`
 3. Increase PostgreSQL's `max_connections` setting
@@ -253,10 +254,12 @@ The pool manager tracks metrics suitable for Prometheus integration:
 ### Problem: "Slow Query Performance"
 
 **Symptoms**:
+
 - Average query time > 100ms
 - Pool health status: degraded
 
 **Solutions**:
+
 1. Check slow query logs (automatically logged)
 2. Add database indexes for frequently queried columns
 3. Use `EXPLAIN ANALYZE` to identify bottlenecks
@@ -265,11 +268,13 @@ The pool manager tracks metrics suitable for Prometheus integration:
 ### Problem: "Connection Leaks"
 
 **Symptoms**:
+
 - Idle connections decrease over time
 - Total connections stay at max
 - Waiting requests increase
 
 **Solutions**:
+
 1. Review code for missing `client.release()` calls
 2. Use try-finally blocks to ensure release
 3. Prefer `pool.query()` over manual `pool.connect()`
@@ -339,15 +344,9 @@ describe('My Feature', () => {
 ```typescript
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
-);
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
-const { data, error } = await supabase
-  .from('users')
-  .select('*')
-  .eq('role', 'creator');
+const { data, error } = await supabase.from('users').select('*').eq('role', 'creator');
 ```
 
 ### After (Connection Pool)
@@ -357,10 +356,7 @@ import { getPool } from './config/database.config';
 
 const pool = getPool();
 
-const result = await pool.query(
-  'SELECT * FROM users WHERE role = $1',
-  ['creator']
-);
+const result = await pool.query('SELECT * FROM users WHERE role = $1', ['creator']);
 
 const data = result.rows;
 ```
@@ -434,6 +430,7 @@ const data = result.rows;
 ### DO ✅
 
 1. **Always release connections**
+
    ```typescript
    const client = await pool.connect();
    try {
@@ -444,6 +441,7 @@ const data = result.rows;
    ```
 
 2. **Use parameterized queries**
+
    ```typescript
    // Good: Prevents SQL injection
    await pool.query('SELECT * FROM users WHERE id = $1', [userId]);
@@ -453,6 +451,7 @@ const data = result.rows;
    ```
 
 3. **Monitor pool health**
+
    ```typescript
    const stats = getPoolStats();
    if (stats.utilizationPercent > 80) {
@@ -473,6 +472,7 @@ const data = result.rows;
 ### DON'T ❌
 
 1. **Don't create multiple pool instances**
+
    ```typescript
    // Bad: Creates duplicate pools
    const pool1 = new Pool(config);
@@ -483,6 +483,7 @@ const data = result.rows;
    ```
 
 2. **Don't forget to release connections**
+
    ```typescript
    // Bad: Connection leak!
    const client = await pool.connect();
@@ -491,12 +492,13 @@ const data = result.rows;
    ```
 
 3. **Don't set pool size too high**
+
    ```typescript
    // Bad: Exceeds database connection limit
-   DB_POOL_MAX=200
+   DB_POOL_MAX = 200;
 
    // Good: Stay within limits
-   DB_POOL_MAX=20
+   DB_POOL_MAX = 20;
    ```
 
 4. **Don't ignore slow queries**
@@ -511,12 +513,12 @@ const data = result.rows;
 
 ### Load Testing Results
 
-| Concurrent Users | Avg Response Time | Pool Utilization | Status |
-|-----------------|-------------------|------------------|--------|
-| 100 | 45ms | 25% | ✅ Healthy |
-| 500 | 78ms | 55% | ✅ Healthy |
-| 1,000 | 120ms | 75% | ⚠️ Degraded |
-| 1,500 | 250ms | 95% | ❌ Unhealthy |
+| Concurrent Users | Avg Response Time | Pool Utilization | Status       |
+| ---------------- | ----------------- | ---------------- | ------------ |
+| 100              | 45ms              | 25%              | ✅ Healthy   |
+| 500              | 78ms              | 55%              | ✅ Healthy   |
+| 1,000            | 120ms             | 75%              | ⚠️ Degraded  |
+| 1,500            | 250ms             | 95%              | ❌ Unhealthy |
 
 **Optimal Range**: 100-1,000 concurrent users with DB_POOL_MAX=20
 
@@ -541,6 +543,7 @@ const data = result.rows;
 ## Support
 
 For issues or questions:
+
 1. Check the [Troubleshooting](#troubleshooting) section
 2. Review health endpoint metrics: `/health/db-pool`
 3. Check application logs for slow queries

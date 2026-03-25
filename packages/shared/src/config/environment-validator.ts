@@ -490,7 +490,11 @@ export class EnvironmentValidator {
   /**
    * Add production-specific validations
    */
-  private addProductionValidations(varName: string, value: EnvVarValue | undefined, warnings: ValidationError[]): void {
+  private addProductionValidations(
+    varName: string,
+    value: EnvVarValue | undefined,
+    warnings: ValidationError[]
+  ): void {
     // Check for weak secrets in production
     if (varName.includes('SECRET') && typeof value === 'string') {
       if (value.length < 64) {

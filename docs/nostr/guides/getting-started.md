@@ -348,7 +348,7 @@ const subId = subManager.subscribe(
   [
     {
       kinds: [1], // Text notes
-      limit: 50,  // Latest 50
+      limit: 50, // Latest 50
     },
   ],
   (event, relay) => {
@@ -660,10 +660,7 @@ const result = await publisher.createAndPublish({
 
 // Subscribe to events
 const subManager = SubscriptionManagerService.getInstance();
-const subId = subManager.subscribe(
-  [{ kinds: [1], limit: 50 }],
-  (event) => console.log(event)
-);
+const subId = subManager.subscribe([{ kinds: [1], limit: 50 }], (event) => console.log(event));
 
 // Unsubscribe
 subManager.unsubscribe(subId);

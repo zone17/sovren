@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Button } from '../components/ui/button';
+import { Spinner } from '../components/ui/spinner';
 import { LightningPaymentButton } from '../components/lightning/LightningPaymentButton';
 import { useCreatorProfile } from '../queries/creators/useCreatorProfile';
 import type { CreatorProfileDetail } from '@shared/types/discovery';
@@ -13,17 +14,17 @@ interface TierCardProps {
 }
 
 const TierCard: React.FC<TierCardProps> = ({ tier, onSubscribe }) => (
-  <div className="bg-white rounded-xl border border-gray-200 p-6 hover:border-amber-400 transition-colors">
-    <h3 className="text-lg font-bold text-gray-900">{tier.name}</h3>
+  <div className="glass-hover rounded-xl p-6 transition-all duration-150">
+    <h3 className="text-lg font-bold text-foreground">{tier.name}</h3>
     <div className="mt-2">
-      <span className="text-3xl font-bold text-gray-900">{tier.priceSats.toLocaleString()}</span>
-      <span className="text-gray-500 ml-1">sats/month</span>
+      <span className="text-3xl font-bold text-foreground">{tier.priceSats.toLocaleString()}</span>
+      <span className="text-muted-foreground ml-1">sats/month</span>
     </div>
     <ul className="mt-4 space-y-2" role="list" aria-label={`${tier.name} features`}>
       {tier.features.map((feature, idx) => (
-        <li key={idx} className="flex items-start gap-2 text-sm text-gray-600">
+        <li key={idx} className="flex items-start gap-2 text-sm text-muted-foreground">
           <svg
-            className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0"
+            className="w-4 h-4 text-purple-500 mt-0.5 flex-shrink-0"
             fill="currentColor"
             viewBox="0 0 20 20"
             aria-hidden="true"
@@ -41,7 +42,7 @@ const TierCard: React.FC<TierCardProps> = ({ tier, onSubscribe }) => (
     <Button
       onClick={() => onSubscribe(tier.id)}
       variant="lightning"
-      className="w-full mt-6"
+      className="w-full mt-6 bg-gradient-to-r from-violet-600 to-purple-600 shadow-[0_4px_16px_rgba(139,92,246,0.3)] text-white transition-all duration-150"
       aria-label={`Subscribe to ${tier.name} tier for ${tier.priceSats} sats per month`}
     >
       Subscribe
@@ -70,8 +71,8 @@ const CreatorProfilePage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center" role="status">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900" />
+      <div className="min-h-screen bg-background flex items-center justify-center" role="status">
+        <Spinner size="lg" />
         <span className="sr-only">Loading creator profile...</span>
       </div>
     );
@@ -79,10 +80,10 @@ const CreatorProfilePage: React.FC = () => {
 
   if (isError || !profile) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center" role="alert">
+      <div className="min-h-screen bg-background flex items-center justify-center" role="alert">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-900">Creator Not Found</h2>
-          <p className="mt-2 text-gray-600">
+          <h2 className="text-xl font-semibold text-foreground font-display">Creator Not Found</h2>
+          <p className="mt-2 text-muted-foreground">
             {error?.message || 'This creator profile does not exist.'}
           </p>
         </div>
@@ -97,14 +98,14 @@ const CreatorProfilePage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Profile Header */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="glass border-b border-border">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col sm:flex-row items-start gap-6">
             {/* Avatar */}
             <div
-              className="w-24 h-24 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-3xl font-bold flex-shrink-0"
+              className="w-24 h-24 rounded-full bg-gradient-to-br from-violet-600 to-purple-600 flex items-center justify-center text-white text-3xl font-bold flex-shrink-0"
               aria-hidden="true"
             >
               {profile.displayName.charAt(0).toUpperCase()}
@@ -113,27 +114,29 @@ const CreatorProfilePage: React.FC = () => {
             {/* Info */}
             <div className="flex-1">
               <div className="flex items-center gap-3 flex-wrap">
-                <h1 className="text-2xl font-bold text-gray-900">{profile.displayName}</h1>
+                <h1 className="text-2xl font-bold text-foreground font-display">
+                  {profile.displayName}
+                </h1>
                 {profile.nip05Verified && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-500/20 text-purple-300">
                     NIP-05 Verified
                   </span>
                 )}
               </div>
-              <p className="text-gray-500 mt-1">@{profile.username}</p>
-              <p className="mt-3 text-gray-700 max-w-2xl">{profile.bio}</p>
+              <p className="text-muted-foreground mt-1">@{profile.username}</p>
+              <p className="mt-3 text-foreground/80 max-w-2xl">{profile.bio}</p>
 
               {/* Stats */}
               <div className="mt-4 flex items-center gap-6 text-sm">
                 <div>
-                  <span className="font-semibold text-gray-900">
+                  <span className="font-semibold text-foreground">
                     {profile.followerCount.toLocaleString()}
                   </span>
-                  <span className="text-gray-500 ml-1">followers</span>
+                  <span className="text-muted-foreground ml-1">followers</span>
                 </div>
                 <div>
-                  <span className="font-semibold text-gray-900">{profile.contentCount}</span>
-                  <span className="text-gray-500 ml-1">posts</span>
+                  <span className="font-semibold text-foreground">{profile.contentCount}</span>
+                  <span className="text-muted-foreground ml-1">posts</span>
                 </div>
               </div>
 
@@ -162,15 +165,15 @@ const CreatorProfilePage: React.FC = () => {
           </div>
 
           {/* Tabs */}
-          <nav className="mt-8 flex border-b border-gray-200 -mb-px" aria-label="Profile sections">
+          <nav className="mt-8 flex border-b border-border -mb-px" aria-label="Profile sections">
             {tabs.map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-150 ${
                   activeTab === tab.key
-                    ? 'border-gray-900 text-gray-900'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-purple-500 text-purple-400'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-purple-500/30'
                 }`}
                 aria-selected={activeTab === tab.key}
                 role="tab"
@@ -186,10 +189,10 @@ const CreatorProfilePage: React.FC = () => {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {activeTab === 'tiers' && (
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            <h2 className="text-lg font-semibold text-foreground mb-4 font-display">
               Support {profile.displayName}
             </h2>
-            <p className="text-gray-600 mb-6">
+            <p className="text-muted-foreground mb-6">
               Choose a subscription tier to access premium content and support this creator.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -202,8 +205,8 @@ const CreatorProfilePage: React.FC = () => {
 
         {activeTab === 'content' && (
           <div className="text-center py-12">
-            <p className="text-lg font-semibold text-gray-900">Content Feed</p>
-            <p className="mt-2 text-gray-600">
+            <p className="text-lg font-semibold text-foreground">Content Feed</p>
+            <p className="mt-2 text-muted-foreground">
               Subscribe to see {profile.displayName}&apos;s latest posts and exclusive content.
             </p>
           </div>
@@ -211,20 +214,20 @@ const CreatorProfilePage: React.FC = () => {
 
         {activeTab === 'about' && (
           <div className="max-w-2xl">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">About</h2>
-            <p className="text-gray-700 whitespace-pre-line">{profile.bio}</p>
+            <h2 className="text-lg font-semibold text-foreground mb-4 font-display">About</h2>
+            <p className="text-foreground/80 whitespace-pre-line">{profile.bio}</p>
             <div className="mt-6 space-y-3">
               {profile.lightningAddress && (
                 <div className="flex items-center gap-2 text-sm">
-                  <span className="text-gray-500">Lightning Address:</span>
-                  <code className="px-2 py-1 bg-gray-100 rounded text-gray-800 text-xs">
+                  <span className="text-muted-foreground">Lightning Address:</span>
+                  <code className="px-2 py-1 bg-card rounded text-foreground text-xs border border-border">
                     {profile.lightningAddress}
                   </code>
                 </div>
               )}
               <div className="flex items-center gap-2 text-sm">
-                <span className="text-gray-500">Joined:</span>
-                <span className="text-gray-800">
+                <span className="text-muted-foreground">Joined:</span>
+                <span className="text-foreground">
                   {new Date(profile.createdAt).toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: 'long',

@@ -1,0 +1,24 @@
+---
+status: pending
+priority: p2
+issue_id: "689"
+tags: [code-review, frontend, react, slice-8]
+dependencies: []
+---
+
+# Duplicate inFlightRef between useFollowMutation and FollowButton
+
+## Problem Statement
+
+Both the hook (`useFollow.ts:51`) and component (`FollowButton.tsx:20`) own separate `inFlightRef` guards. They don't coordinate. Unmount/remount can strand the hook-level ref as `true`, preventing further mutations.
+
+**Agent consensus: 2/8** (Simplicity, TypeScript)
+
+## Fix
+
+Remove `inFlightRef` from `FollowButton`. Rely on `disabled={isCheckingFollow || isMutating}` which is sufficient. The hook-level ref can also be removed if there's only one consumer — `isPending` from React Query is the authoritative guard.
+
+## Acceptance Criteria
+
+- [ ] Single guard mechanism (not two redundant refs)
+- [ ] Follow/unfollow still prevented during pending mutation

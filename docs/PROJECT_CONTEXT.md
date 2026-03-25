@@ -63,7 +63,7 @@ packages/
 ```
 routes/       → API endpoints (Express routers)
   auth.ts, users.ts, content-discovery.ts, lightning.ts, webhooks.ts,
-  subscription-tiers.ts, nip05.ts, health.ts, sessions.ts, admin/
+  subscription-tiers.ts, nip05.ts, health.ts, sessions.ts, notifications.ts, admin/
 services/     → Business logic
   finance/, payment/, lightning/, community/, content/, distribution/,
   nostr-auth.ts, CacheService.ts, EventBusService.ts, AuditLogService.ts
@@ -100,7 +100,7 @@ Import as: `import { Type } from '@shared/types/module'`
 
 ### Database (Supabase)
 
-**Core tables**: users, content, payments, followers, comments, content_analytics
+**Core tables**: users, content, payments, followers, comments, content_analytics, notifications
 **Financial**: payment_events, payment_retry_attempts, payment_lock_events, webhook_events
 **Creator**: creator_circles, circle_members, mentor_profiles, service_listings, service_orders
 **Business**: business_invoices, expenses, revenue_entries, contracts, diversification_goals
@@ -114,55 +114,74 @@ Migrations: `supabase/migrations/` (baseline + incremental)
 
 **Full details**: `docs/solutions/patterns/critical-patterns.md`
 
-| #   | Pattern                        | When to Use                                            | HTTP |
-| --- | ------------------------------ | ------------------------------------------------------ | ---- |
-| 1   | TOCTOU Race Conditions         | Aggregate caps, status transitions, scarce resources   | 409  |
-| 1a  | Insert-then-verify             | Enforcing member/slot counts                           | 409  |
-| 1b  | Accept-then-verify-or-revert   | Status change + capacity check                         | 409  |
-| 1c  | Atomic claim (UPDATE WHERE)    | Tickets, slots, listings                               | 409  |
-| 2   | Service-layer authorization    | Every data access method                               | 403  |
-| 3   | Paginated accumulation         | Any unbounded SELECT (PAGE_SIZE=500)                   | —    |
-| 4   | Non-atomic multi-table writes  | 2+ table writes → RPC or compensating tx               | 500  |
-| 4c  | DB + Queue compensation        | Enqueue fails mid-loop → mark failed rows              | 500  |
-| 5   | Payment persistence            | Atomic write, write mutex, persist-then-mutate         | —    |
-| 6   | SSRF validation                | User-supplied URLs → DNS resolve + IP check + pin      | 400  |
-| 7   | Status guards                  | DELETE/void/cancel → assert status first + check count | 409  |
-| 8   | Test infra integration         | New test type → CI gate + brief + CLAUDE.md            | —    |
-| 9   | NOSTR verifyEvent              | Always `getEventHash(UnsignedEvent)` first             | —    |
-| 10  | Cross-pkg string dedup         | Same string in 3+ files → extract to `@shared/`        | —    |
-| 11  | PostgREST filter escape        | User text in `.or()` → escape `\` first, then metachar | 400  |
-| 12  | VIEW security_barrier          | Public-facing PostgreSQL VIEWs                         | —    |
-| 13  | Route boundary UUID validation | Every `:id` route param → Zod `safeParse` first        | 400  |
-| 14  | Avatar/image URL whitelist     | User-supplied URLs in `<img src>` → `https?` only      | —    |
-| 15  | Cross-content parent guard     | Threaded data parent lookup → scope to content context | 404  |
+| #   | Pattern                        | When to Use                                                             | HTTP |
+| --- | ------------------------------ | ----------------------------------------------------------------------- | ---- |
+| 1   | TOCTOU Race Conditions         | Aggregate caps, status transitions, scarce resources                    | 409  |
+| 1a  | Insert-then-verify             | Enforcing member/slot counts                                            | 409  |
+| 1b  | Accept-then-verify-or-revert   | Status change + capacity check                                          | 409  |
+| 1c  | Atomic claim (UPDATE WHERE)    | Tickets, slots, listings                                                | 409  |
+| 2   | Service-layer authorization    | Every data access method                                                | 403  |
+| 3   | Paginated accumulation         | Any unbounded SELECT (PAGE_SIZE=500)                                    | —    |
+| 4   | Non-atomic multi-table writes  | 2+ table writes → RPC or compensating tx                                | 500  |
+| 4c  | DB + Queue compensation        | Enqueue fails mid-loop → mark failed rows                               | 500  |
+| 5   | Payment persistence            | Atomic write, write mutex, persist-then-mutate                          | —    |
+| 6   | SSRF validation                | User-supplied URLs → DNS resolve + IP check + pin                       | 400  |
+| 7   | Status guards                  | DELETE/void/cancel → assert status first + check count                  | 409  |
+| 8   | Test infra integration         | New test type → CI gate + brief + CLAUDE.md                             | —    |
+| 9   | NOSTR verifyEvent              | Always `getEventHash(UnsignedEvent)` first                              | —    |
+| 10  | Cross-pkg string dedup         | Same string in 3+ files → extract to `@shared/`                         | —    |
+| 11  | PostgREST filter escape        | User text in `.or()` → escape `\` first, then metachar                  | 400  |
+| 12  | VIEW security_barrier          | Public-facing PostgreSQL VIEWs                                          | —    |
+| 13  | Route boundary UUID validation | Every `:id` route param → Zod `safeParse` first                         | 400  |
+| 14  | Avatar/image URL whitelist     | User-supplied URLs in `<img src>` → `https?` only                       | —    |
+| 15  | Cross-content parent guard     | Threaded data parent lookup → scope to content context                  | 404  |
+| 16  | RLS INSERT service_role        | Service-inserted tables → `WITH CHECK (auth.role() = 'service_role')`   | —    |
+| 17  | Trigger atomic increments      | Counter triggers → `count + 1` not `COALESCE + 1`; add SECURITY DEFINER | —    |
+| 18  | RLS on every CREATE TABLE      | Every new table migration → RLS + policies in same file                 | —    |
+| 19  | crypto.timingSafeEqual         | All HMAC/signature comparisons → never `===`; no empty secret fallback  | 401  |
 
 ### Top Common Solutions (by recurrence)
 
 **Full details**: `docs/solutions/patterns/common-solutions.md` — reference by number.
 
-| #   | Pattern                                            | Category   |
-| --- | -------------------------------------------------- | ---------- |
-| 1   | Double-submit prevention (useRef + disabled)       | Frontend   |
-| 2   | TTLCache for in-memory Maps                        | Backend    |
-| 3   | Environment variable validation (Zod)              | Infra      |
-| 4   | Error response format (createApiResponse)          | Backend    |
-| 7   | Supabase mock chain pattern                        | Testing    |
-| 13  | Promise.allSettled for batch operations            | Backend    |
-| 15  | Task hooks must NOT run full quality gates         | DevOps     |
-| 16  | Security-critical file mapping                     | Testing    |
-| 17  | Hook migration checklist                           | DevOps     |
-| 25  | Stale todo detection — triage before implementing  | Process    |
-| 26  | E2E tests must not mock API calls                  | Testing    |
-| 50  | Real services > vi.fn() for integration tests      | Testing    |
-| 62  | Per-package tsc in monorepos                       | TypeScript |
-| 68  | env: indirection for ${{ }} injection prevention   | CI/CD      |
-| 69  | Fan-in aggregator job for branch protection        | CI/CD      |
-| 81  | Blob download via apiClient (never relative fetch) | Frontend   |
-| 82  | Loading state must not hide structural UI          | Frontend   |
-| 85  | Optimistic delete multi-page cache snapshot        | Frontend   |
-| 86  | Soft-delete enum — only written values             | Backend    |
-| 87  | DOMPurify no-op in Node.js without jsdom           | Security   |
-| 88  | Dialog aria-labelledby per-instance IDs            | A11y       |
+| #   | Pattern                                             | Category   |
+| --- | --------------------------------------------------- | ---------- |
+| 1   | Double-submit prevention (useRef + disabled)        | Frontend   |
+| 2   | TTLCache for in-memory Maps                         | Backend    |
+| 3   | Environment variable validation (Zod)               | Infra      |
+| 4   | Error response format (createApiResponse)           | Backend    |
+| 7   | Supabase mock chain pattern                         | Testing    |
+| 13  | Promise.allSettled for batch operations             | Backend    |
+| 15  | Task hooks must NOT run full quality gates          | DevOps     |
+| 16  | Security-critical file mapping                      | Testing    |
+| 17  | Hook migration checklist                            | DevOps     |
+| 25  | Stale todo detection — triage before implementing   | Process    |
+| 26  | E2E tests must not mock API calls                   | Testing    |
+| 50  | Real services > vi.fn() for integration tests       | Testing    |
+| 62  | Per-package tsc in monorepos                        | TypeScript |
+| 68  | env: indirection for ${{ }} injection prevention    | CI/CD      |
+| 69  | Fan-in aggregator job for branch protection         | CI/CD      |
+| 81  | Blob download via apiClient (never relative fetch)  | Frontend   |
+| 82  | Loading state must not hide structural UI           | Frontend   |
+| 85  | Optimistic delete multi-page cache snapshot         | Frontend   |
+| 86  | Soft-delete enum — only written values              | Backend    |
+| 87  | DOMPurify no-op in Node.js without jsdom            | Security   |
+| 88  | Dialog aria-labelledby per-instance IDs             | A11y       |
+| 111 | Extend target enum before migration (no `as any`)   | TypeScript |
+| 113 | POM locators — only what specs use today            | Testing    |
+| 114 | Auth E2E specs must assert content, not just URL    | Testing    |
+| 116 | Response key alignment (backend ↔ frontend)         | Full-stack |
+| 117 | DI lazy singleton eager init for side-effects       | Backend    |
+| 118 | Remediation team sizing (2 agents for <20 findings) | Process    |
+| 119 | Utility extraction threshold (LOC x copies > 40)    | Backend    |
+| 120 | Redis KEYS → SCAN (never KEYS in production)        | Backend    |
+| 121 | asyncHandler mandatory for all route handlers       | Backend    |
+| 122 | Route files must not create DB clients directly     | Backend    |
+| 123 | Bootstrap production guards on placeholder services | Backend    |
+| 125 | Domain-grouped agents = zero merge conflicts        | Process    |
+| 129 | CI bootstrap must mirror testcontainers setup       | CI/CD      |
+| 130 | RLS policy column type verification                 | Database   |
+| 131 | Stale nested lockfile → full regeneration           | Deps       |
 
 ---
 

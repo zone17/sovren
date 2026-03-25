@@ -1,7 +1,7 @@
 ---
 status: pending
 priority: p3
-issue_id: "420"
+issue_id: '420'
 tags: [code-review, architecture, api-contract, pr-87]
 dependencies: []
 ---
@@ -15,6 +15,7 @@ The 10 newly-paginated endpoints return `{ items, total, limit, offset }` while 
 The `PaginatedResponse<T>` type in `api-handlers.ts` uses `{ items: T[], pagination: PaginationMeta }` with `PaginationMeta` having `page, limit, total, totalPages, hasNext, hasPrev`.
 
 This means 3 different pagination shapes exist:
+
 1. New (this PR): `{ items, total, limit, offset }` (offset-based)
 2. Existing shield/alerts: `{ data, pagination }` (page-based)
 3. Canonical type: `PaginatedResponse<T>` with full `PaginationMeta` (page-based, never used)
@@ -54,6 +55,7 @@ Accept for this PR. Create a follow-up to standardize pagination response shape 
 ## Technical Details
 
 **Affected files:**
+
 - All 10 newly-paginated route files
 - `packages/shared/src/types/api-handlers.ts` (PaginatedResponse type)
 - `packages/backend/src/routes/v2/shield.routes.ts` (existing pagination)

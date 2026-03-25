@@ -4104,6 +4104,533 @@ echo '{"additionalContext":"[test]"}'
 
 ---
 
+## 111. Extend Target Enum Before Migration — Never `as any` for Enum Bridges
+
+**Recurrence:** 1 P1 in PR #146. `SubscriptionEventType` (18 values) passed to `DomainEventBuilder.withType()` via `as any`. 15 event types silently bypassed the type system.
+
+### Pattern
+
+When migrating from untyped API (`emit(type, data)`) to typed API (`publish(DomainEvent)`), extend the target type to cover ALL source values BEFORE the migration:
+
+```typescript
+// WRONG: Bridge with as any
+.withType(eventType as any)  // 15 of 18 values not in DomainEventType
+
+// RIGHT: Extend target enum first, then migrate
+export enum DomainEventType {
+  SUBSCRIPTION_CREATED = 'subscription.created',
+  SUBSCRIPTION_TRIAL_STARTED = 'subscription.trial_started',
+  // ... all 18 values
+}
+.withType(eventType as DomainEventType)  // All values now valid
+```
+
+### Checklist
+
+- [ ] Target enum covers ALL source enum values
+- [ ] No `as any` in enum assignments — use `as TargetEnum` only when values genuinely overlap
+- [ ] Search for other callsites of the old API that need the same migration
+
+---
+
+## 112. Test Harness Event Buses Must Be Capture-Only
+
+**Recurrence:** 1 P2 in PR #146. `TestableEventBus.publish()` called `super.publish()`, triggering real subscribers during tests.
+
+### Pattern
+
+Test event bus overrides should ONLY capture events for assertion. Never call `super.publish()` — it fires subscribers unexpectedly.
+
+```typescript
+// WRONG: Capture AND process
+async publish<T>(event: DomainEvent<T>): Promise<void> {
+  this.capturedEmits.push({ type: event.type, data: event.payload });
+  await super.publish(event);  // Subscribers fire unexpectedly!
+}
+
+// RIGHT: Capture only
+async publish<T>(event: DomainEvent<T>): Promise<void> {
+  this.capturedEmits.push({ type: event.type, data: event.payload });
+}
+```
+
+If tests need real subscriber execution, use the actual `EventBusService` directly.
+
+---
+
+## 113. POM Locators — Only What Specs Use Today
+
+**Recurrence:** 3 P2s across 3 sprints (02-24, 02-24, 03-07). Each time, 30-50+ unused POM locators found.
+
+### Pattern
+
+POMs should start minimal. Add locators when specs need them, not speculatively.
+
+```typescript
+// WRONG: Speculative locators (YAGNI)
+export class AnalyticsPage {
+  readonly heading: Locator; // Used by spec
+  readonly overviewTab: Locator; // Never referenced
+  readonly geographyTab: Locator; // Never referenced
+  readonly periodSelector: Locator; // Never referenced
+  readonly refreshButton: Locator; // Never referenced
+  // ... 5 more unused locators
+}
+
+// RIGHT: Only what specs assert on
+export class AnalyticsPage {
+  readonly heading: Locator; // Used in spec
+}
+```
+
+### Checklist
+
+- [ ] Every POM locator is referenced by at least one spec assertion or action
+- [ ] No CSS selectors (`.class`, `#id`, `tag`) — use `getByRole`/`getByLabel`
+- [ ] Add locators when expanding test coverage, not when creating the POM
+
+---
+
+## 114. Auth E2E Specs Must Assert Content, Not Just URL
+
+**Recurrence:** 1 P2 in PR #146. 5 auth specs only checked URL patterns, accepting `/login` as valid in `chromium-authenticated` project.
+
+### Pattern
+
+URL-only assertions pass even when the page crashes during render. Always assert at least one visible element.
+
+```typescript
+// WRONG: URL-only (zero regression value)
+test('route loads', async ({ page }) => {
+  await page.waitForURL(/\/(dashboard\/analytics|login)/);
+  expect(/\/(dashboard\/analytics|login)/.test(page.url())).toBe(true);
+});
+
+// RIGHT: Conditional content assertion
+test('route loads or redirects to login', async ({ page }) => {
+  await page.waitForURL(/\/(dashboard\/analytics|login)/);
+  if (/\/dashboard\/analytics/.test(page.url())) {
+    await expect(analytics.heading).toBeVisible();
+  } else {
+    expect(/\/login/.test(page.url())).toBe(true);
+  }
+});
+```
+
+---
+
+## 115. ProtectedRoute requireRole Consistency
+
+**Recurrence:** 1 P2 in PR #146. `/community` route missed `requireRole="creator"` while siblings had it.
+
+### Pattern
+
+When adding a new `<ProtectedRoute>`, grep for adjacent routes and match `requireRole`:
+
+```bash
+grep -n 'ProtectedRoute' packages/frontend/src/App.tsx
+# Verify all creator-facing routes have requireRole="creator"
+```
+
+### Checklist
+
+- [ ] New ProtectedRoute has `requireRole` matching sibling routes
+- [ ] `showAccessDenied={true}` set for role-gated routes
+- [ ] Nav link added in Layout.tsx for discoverable routes
+
+---
+
+## 116. Response Key Alignment Between Backend and Frontend
+
+**Recurrence:** 1 P1 in Slice 8. Backend returned `{ isFollowing }`, frontend read `res.following`. Follow button always showed "Follow" even when following.
+
+### Fix
+
+Define response types in `@shared/types/` as single source of truth. Both backend route and frontend API function import the same type.
+
+### Checklist
+
+- [ ] API response shape defined in `@shared/types/`
+- [ ] Backend route handler returns the shared type
+- [ ] Frontend API function types the response with the shared type
+- [ ] At least one E2E test exercises the full round-trip
+
+---
+
+## 117. DI Lazy Singleton Eager Init for Side-Effect Services
+
+**Recurrence:** 1 P1 in Slice 8. NotificationPersistenceService subscribed to events in its factory, but nothing resolved it at startup — notifications silently never worked.
+
+### Fix
+
+```typescript
+// In server startup, AFTER DI container configured:
+container.resolve(TYPES.NotificationPersistenceService); // force eager init
+```
+
+### Detection
+
+Search for `subscribeToEvents`, `setInterval`, `connect()`, or `startListening()` in DI singleton factories. Any side-effect-producing factory needs explicit resolution at startup.
+
+---
+
+## 118. Token Efficiency for Review Remediation Teams
+
+**Recurrence:** Slice 8 scored 6.2/10 on token efficiency. ~25-30% waste from over-sized team and unnecessary planning artifacts.
+
+### Optimal Team Size
+
+| Findings | Agents                     | Why                               |
+| -------- | -------------------------- | --------------------------------- |
+| <8       | 1 (solo)                   | Agent briefing overhead > savings |
+| 8-20     | 2 (backend + frontend)     | Sweet spot: zero conflicts        |
+| 20+      | 3+ (add domain specialist) | Only when 3+ distinct domains     |
+
+### Efficiency Rules
+
+- Skip remediation plan file — todos already contain all needed info
+- Add `npm run lint` to agent briefs (saves follow-up commit)
+- Require agents test their own code before declaring complete
+- 9 review agents but only 2 fix agents (review = embarrassingly parallel; fixing has dependencies)
+
+---
+
+## 119. Utility Extraction Threshold (Refined)
+
+**Recurrence:** 3 utilities duplicated in Slice 8 (getUserIdByPubkey x3, stripControlChars x2, emitEvent x4). Refines pattern #14.
+
+### Decision Matrix
+
+| Copies | LOC per Copy | Total Duplicated LOC | Action                        |
+| ------ | ------------ | -------------------- | ----------------------------- |
+| 2      | <10          | <20                  | Leave inline                  |
+| 2      | >10          | >20                  | Extract to `src/utils/`       |
+| 3+     | any          | any                  | Always extract                |
+| 4+     | >15          | >60                  | Extract + add to DI container |
+
+**Key signal:** If `LOC x copies > 40`, always extract.
+
+---
+
+## 120. Redis KEYS Command Is Always Wrong in Production — Use SCAN
+
+**Recurrence:** 1 P2 in audit (#767). `CacheService.ts` used `this.client.keys(pattern)` — O(N) blocking command that freezes all Redis clients.
+
+```typescript
+// WRONG — blocks entire Redis server
+const keys = await redis.keys('cache:user:*');
+
+// CORRECT — non-blocking cursor iteration
+let cursor = '0';
+const keys: string[] = [];
+do {
+  const [nextCursor, batch] = await redis.scan(cursor, 'MATCH', pattern, 'COUNT', 100);
+  cursor = nextCursor;
+  keys.push(...batch);
+} while (cursor !== '0');
+```
+
+**Detection:** `grep -rn "\.keys(" packages/backend/src/ | grep -v "__tests__"` — any match in production code is a violation.
+
+---
+
+## 121. asyncHandler Is Mandatory for All Express Route Handlers
+
+**Recurrence:** 1 P2 in audit (#773). Legacy try/catch + console.error pattern in 5 top routes bypassed global error handler, making errors invisible to Sentry and structured logging.
+
+```typescript
+// WRONG — bypasses global error handler
+router.post('/endpoint', async (req, res) => {
+  try {
+    const result = await service.doThing(req.body);
+    res.json({ success: true, data: result });
+  } catch (err) {
+    console.error('Error:', err);
+    res.status(500).json({ error: 'Internal error' });
+  }
+});
+
+// CORRECT — errors route to global handler → Sentry → structured logs
+router.post(
+  '/endpoint',
+  authenticate,
+  asyncHandler(async (req: Request, res: Response) => {
+    const result = await service.doThing(req.body);
+    res.json(createApiResponse(req, result));
+  })
+);
+```
+
+**Detection:** `grep -rn "^router\.\(get\|post\|put\|patch\|delete\)(" packages/backend/src/routes/ | grep -v "asyncHandler"` — any match is a violation.
+
+---
+
+## 122. Route Files Must Not Create DB Clients Directly
+
+**Recurrence:** 1 P2 in audit (#774). 3 route files created Supabase clients directly via `createClient()` bypassing the DI service layer.
+
+```typescript
+// WRONG — route creates its own DB client
+import { createClient } from '@supabase/supabase-js';
+const { data } = await supabase.from('sessions').select('*');
+
+// CORRECT — service injected via DI
+const sessionService = req.app.locals.container.get<ISessionService>(TYPES.SessionService);
+const sessions = await sessionService.getUserSessions(userId);
+```
+
+**Detection:** `grep -rn "createClient\|supabase\.from" packages/backend/src/routes/` — any hit is a violation.
+
+---
+
+## 123. Bootstrap Production Guards for Placeholder Services
+
+**Recurrence:** 1 P1 in audit (#769). 8 placeholder/mock service registrations (`InMemory*`, `JsonFile*`) would execute in production if resolved, silently swallowing operations.
+
+```typescript
+// Every placeholder registration must be guarded
+if (process.env.NODE_ENV === 'production') {
+  throw new Error('Placeholder services must not be registered in production');
+}
+container.register(TYPES.PaymentRepository, InMemoryPaymentRepository);
+```
+
+**Detection:** `grep -rn "InMemory\|Placeholder\|MockService\|JsonFile.*Repository" packages/backend/src/bootstrap.ts` — any match without a production guard is P1.
+
+---
+
+## 124. Stale Todo Triage Rates Confirm Triage-First Methodology
+
+**Recurrence:** 4th data point confirming common-solutions.md #25. Stale rates across sprints: 40%, 71%, 76%, **85%**. In this audit, 101 of 119 pre-existing todos were already fixed or no longer applicable. **Always triage before assigning to agents** — skipping triage wastes ~60% of remediation effort.
+
+---
+
+## 125. Domain-Grouped Agent Zero-Conflict Streak
+
+**Recurrence:** 10th consecutive sprint with 0 merge conflicts using non-overlapping domain agents. Both batches in this audit (5 agents each: security/db/backend/architecture/typescript and db-migration/community-services/backend-routes/frontend/testing-features) produced zero file ownership conflicts. **When scoping by domain, 5 agents is the validated sweet spot for 15-28 items.**
+
+---
+
+## 126. Promise.race Settle Pattern for SPA Auth E2E
+
+**Recurrence:** 89 failures across 17 spec files (PR #160). SPA client-side auth redirects fire AFTER `page.goto()` resolves — React hasn't evaluated auth state yet. Tests assert on elements from the protected page, but the DOM is actually the login page.
+
+### Standard Pattern: Promise.race in beforeEach (with error/loading states)
+
+```typescript
+test.beforeEach(async ({ page }) => {
+  const somePage = new SomePage(page);
+  await page.goto('/protected-route'); // Resolves on HTTP 200, not React ready
+
+  // Wait for EITHER content, error, OR auth redirect — whichever first
+  await Promise.race([
+    somePage.heading.waitFor({ state: 'visible', timeout: 10_000 }),
+    page.getByText(/error/i).first().waitFor({ state: 'visible', timeout: 10_000 }),
+    page.getByRole('button', { name: /try again/i }).waitFor({ state: 'visible', timeout: 10_000 }),
+    page.waitForURL(/\/login/, { timeout: 10_000 }),
+  ]).catch(() => {});
+
+  if (page.url().includes('/login')) {
+    test.skip(true, 'Redirected to login — auth state unavailable');
+  }
+});
+```
+
+### Four failure modes this pattern covers:
+
+1. **Auth redirect race** — `page.goto()` resolves before React redirects. Fix: Promise.race heading vs `/login` URL.
+2. **POM goto() blocking** — POM's `goto()` includes `waitFor()` that consumes full 30s timeout before Promise.race runs. Fix: use `page.goto()` directly, never POM `goto()` in auth spec beforeEach.
+3. **Partial visibility** — Page section visible without auth (e.g., comments heading), but auth-dependent children missing. Fix: secondary check for auth-specific UI (sign-in link) after section visibility passes.
+4. **Error state not detected** — Page shows error/retry instead of expected heading. Without error state in Promise.race, test hangs for full timeout then fails with wrong assertion. Fix: add error text and retry button to race legs (PR #161, 2 failures).
+
+**Checklist:**
+
+- [ ] `beforeEach` uses `Promise.race` with explicit `timeout: 10_000` on all legs
+- [ ] Race includes: heading, error text, retry button, `/login` URL (all 4 states)
+- [ ] `.catch(() => {})` after race to handle all-timeout edge case
+- [ ] `test.skip()` (not silent return) for visibility in CI reports
+- [ ] `page.goto()` directly, never POM `goto()` if it has blocking `waitFor()`
+- [ ] For partially-visible pages: secondary auth state detection after section check
+
+**Full doc:** `docs/solutions/testing/e2e-auth-redirect-resilience-pattern.md`, `docs/solutions/testing/e2e-auth-demo-mode-pom-remediation-20260309.md`
+
+---
+
+## 127. Never Reload Between Auth Setup and storageState()
+
+**Recurrence:** 1 P1 (PR #161). `page.reload()` in `auth.setup.ts` triggered `verifyAuth()` → backend 401 → `auth_token` cleared from localStorage before `storageState()` could persist it. 122 tests skipped.
+
+### Root Cause
+
+Vite's `demoAuthService` reads localStorage synchronously on mount. But `page.reload()` triggers a full React re-mount, and if `realAuthService` is active (VITE_DEMO_MODE not set), it calls the backend which returns 401 and wipes the token.
+
+Even with correct env vars, the race window exists: `storageState()` must run _before_ any code clears the token.
+
+### Standard Pattern
+
+```typescript
+// auth.setup.ts — correct order
+await page.evaluate(() => {
+  localStorage.setItem('demo_user', JSON.stringify(demoUser));
+  localStorage.setItem('auth_token', 'e2e-demo-token-' + Date.now());
+});
+// NO page.reload() — AuthProvider reads localStorage on next mount
+await page.context().storageState({ path: authFile });
+```
+
+### Checklist
+
+- [ ] No `page.reload()` between `localStorage.setItem()` and `storageState()`
+- [ ] `VITE_DEMO_MODE: 'true'` set in `playwright.config.ts` `webServer.env`
+- [ ] Auth setup flow: navigate → set tokens → storageState() → (only then reload if needed)
+
+**Full doc:** `docs/solutions/testing/e2e-auth-demo-mode-pom-remediation-20260309.md`
+
+---
+
+## 128. POM Locators Must Use Case-Insensitive Regex
+
+**Recurrence:** 1 P1 (PR #161, 12 failures). POMs written from design docs used exact strings ("Creator Dashboard", "Total Views") but rendered UI used different casing ("Dashboard", "VIEWS"). All 12 failures were case or text mismatches.
+
+---
+
+## 129. CI Bootstrap Must Mirror Testcontainers Supabase Setup
+
+**Recurrence:** 1 P1 (PR #164). DB Migration Validation failed with `role "authenticated" does not exist` because CI bootstrap created auth schema/functions but forgot the three Supabase roles.
+
+### Root Cause
+
+Two separate files create Supabase-compatible PostgreSQL environments:
+
+- **CI:** `.github/workflows/ci.yml` — DB Migration Validation bootstrap
+- **Tests:** `packages/backend/src/__tests__/setup/testcontainers-global-setup.ts`
+
+When CI bootstrap was added, it copied auth schema and functions from testcontainers but missed the role creation block.
+
+### Standard Pattern
+
+Both files must create these Supabase stubs:
+
+1. `auth` schema
+2. `auth.uid()` function
+3. `auth.role()` function
+4. `anon`, `authenticated`, `service_role` roles
+5. `supabase_realtime` publication
+
+### Checklist
+
+- [ ] When modifying either file, check the other for parity
+- [ ] Search for `CREATE ROLE` in both files after any Supabase migration change
+- [ ] Use testcontainers setup as the source of truth
+
+**Full doc:** `docs/solutions/remediation/ci-production-readiness-audit-2026-03-17.md`
+
+---
+
+## 130. RLS Policies Must Verify Column Types — Never Assume from Comments
+
+**Recurrence:** 1 P1 (PR #164, 4 tables affected). Security-hardener agent wrote `auth.uid()::text` for UUID columns, causing `operator does not exist: uuid = text`.
+
+### Root Cause
+
+Agent assumed `creator_id` was TEXT on all tables because one table (`platform_connections`) uses TEXT. The migration file comments reinforced this by saying "creator_id is TEXT" for that table, and the agent applied the same cast everywhere.
+
+### Standard Pattern
+
+```sql
+-- UUID column (most tables): NO cast
+CREATE POLICY "table_select_own" ON table_name
+  FOR SELECT USING (creator_id = auth.uid());
+
+-- TEXT column (platform_connections, cross_posts, etc.): cast to text
+CREATE POLICY "table_select_own" ON table_name
+  FOR SELECT USING (creator_id = auth.uid()::text);
+```
+
+### Detection
+
+Integration tests with testcontainers catch type mismatches at parse time — always run before pushing RLS migrations.
+
+### Checklist
+
+- [ ] Before writing RLS policy, check actual `CREATE TABLE` migration for column type
+- [ ] UUID columns: use `auth.uid()` (no cast)
+- [ ] TEXT columns: use `auth.uid()::text`
+- [ ] Never infer column types from comments or similar tables
+- [ ] Agent briefs for RLS work must include: "ALWAYS check column type in CREATE TABLE migration"
+
+**Full doc:** `docs/solutions/remediation/ci-production-readiness-audit-2026-03-17.md`
+
+---
+
+## 131. Stale Nested Lockfile Entries Require Full Regeneration
+
+**Recurrence:** 1 P1 (PR #164). Trivy found `undici 5.29.0` from `testcontainers@10.28.0` despite root `overrides`. Four fix attempts failed before lockfile regeneration worked.
+
+### Root Cause
+
+npm lockfile preserves per-workspace dependency resolutions even when root `overrides` should force a different version. Nested entries at `packages/backend/node_modules/testcontainers@10.28.0` persisted despite:
+
+- `npm audit fix`
+- `npm update`
+- `npm audit fix --force`
+- Manual lockfile editing
+
+### Standard Pattern
+
+```bash
+# 1. Update the source dependency in the workspace package.json
+# e.g., "testcontainers": "^10.28.0" → "^11.12.0"
+
+# 2. Delete lockfile entirely
+rm package-lock.json
+
+# 3. Regenerate
+npm install
+
+# 4. Verify
+npm audit && npx trivy fs . --scanners vuln
+```
+
+### Detection
+
+Run both `npm audit` AND `npx trivy fs .` — npm audit misses transitive dev dependencies that Trivy catches.
+
+### Checklist
+
+- [ ] If `npm audit fix` doesn't resolve a vulnerability, check for stale nested entries: `grep -r "vulnerable-package" package-lock.json`
+- [ ] Update the workspace `package.json` dependency, not just the lockfile
+- [ ] Delete and regenerate `package-lock.json` when overrides aren't working
+- [ ] Always run Trivy in addition to npm audit
+
+**Full doc:** `docs/solutions/remediation/ci-production-readiness-audit-2026-03-17.md`
+
+### Root Cause
+
+POMs authored speculatively from specs/mockups, not from actual rendered UI. When the app renders differently (case, abbreviations, word changes), exact-string locators fail silently.
+
+### Standard Pattern
+
+```typescript
+// BEFORE (brittle — breaks on case or text changes)
+this.heading = page.getByRole('heading', { name: 'Creator Dashboard' });
+this.viewsLabel = page.getByText('Total Views');
+
+// AFTER (resilient — tolerates case and partial text changes)
+this.heading = page.getByRole('heading', { name: /dashboard/i }).first();
+this.viewsLabel = page.getByText(/views/i).first();
+```
+
+### Checklist
+
+- [ ] All POM `getByText()` and `getByRole({ name })` use regex with `/i` flag
+- [ ] All POM locators include `.first()` to prevent strict-mode multi-match errors
+- [ ] POM locators verified against actual rendered UI, not design docs
+
+**Full doc:** `docs/solutions/testing/e2e-auth-demo-mode-pom-remediation-20260309.md`
+
+---
+
 ## Agent Brief Template Addition
 
 Add this to every agent brief's CONTEXT TO LOAD section:
@@ -4249,3 +4776,28 @@ CONTEXT TO LOAD:
 | Phase detection misses plugin-namespaced skills  | 108       | common-solutions.md  |
 | Lightweight hooks read stale global phase        | 109       | common-solutions.md  |
 | Hook output JSON nested wrapper causes error     | 110       | common-solutions.md  |
+| `as any` bridging two enums with partial overlap | 111       | common-solutions.md  |
+| Test event bus triggers real subscribers         | 112       | common-solutions.md  |
+| POM has 10+ locators, spec uses 1                | 113       | common-solutions.md  |
+| Auth E2E spec only checks URL, not content       | 114       | common-solutions.md  |
+| New ProtectedRoute missing requireRole           | 115       | common-solutions.md  |
+| Backend/frontend response key mismatch           | 116       | common-solutions.md  |
+| DI lazy singleton side-effects never fire        | 117       | common-solutions.md  |
+| Token waste from over-sized remediation team     | 118       | common-solutions.md  |
+| Same utility in 2+ files (refined threshold)     | 119       | common-solutions.md  |
+| RLS INSERT WITH CHECK (TRUE) too permissive      | 16        | critical-patterns.md |
+| Trigger COALESCE race + missing SECURITY DEFINER | 17        | critical-patterns.md |
+| New table migration missing RLS + policies       | 18        | critical-patterns.md |
+| HMAC/signature compared with === (timing attack) | 19        | critical-patterns.md |
+| Redis .keys() used in production code            | 120       | common-solutions.md  |
+| Route handler missing asyncHandler wrapper       | 121       | common-solutions.md  |
+| Route file creates DB client directly            | 122       | common-solutions.md  |
+| Placeholder mock service in production bootstrap | 123       | common-solutions.md  |
+| Stale todo rate (4th data point: 85%)            | 124       | common-solutions.md  |
+| Domain-grouped agents = zero merge conflicts     | 125       | common-solutions.md  |
+| Auth spec fails — redirected to /login           | 126       | common-solutions.md  |
+| page.reload() wipes auth token before persist    | 127       | common-solutions.md  |
+| POM exact-string locator fails on case mismatch  | 128       | common-solutions.md  |
+| CI bootstrap missing Supabase roles              | 129       | common-solutions.md  |
+| RLS policy uses wrong cast for column type       | 130       | common-solutions.md  |
+| Stale nested lockfile ignores root overrides     | 131       | common-solutions.md  |

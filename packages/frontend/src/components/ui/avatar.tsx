@@ -35,9 +35,7 @@ const Avatar = React.forwardRef<
       // Base: Perfect circle with modern proportions
       'relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full',
       // Modern styling: Subtle border and shadow
-      'border border-gray-200 bg-gray-50',
-      // Dark mode support
-      'dark:border-gray-700 dark:bg-gray-800',
+      'border border-border bg-muted',
       className
     )}
     {...props}
@@ -73,11 +71,9 @@ const AvatarFallback = React.forwardRef<
       // Perfect centering with modern typography
       'flex h-full w-full items-center justify-center rounded-full',
       // Elite background with subtle gradient
-      'bg-gradient-to-br from-gray-100 to-gray-200 text-gray-700',
+      'bg-muted text-muted-foreground',
       // Modern typography - clean and readable
       'text-[13px] font-medium leading-none tracking-[-0.01em]',
-      // Dark mode support
-      'dark:from-gray-700 dark:to-gray-800 dark:text-gray-300',
       // Smooth appearance transition
       'transition-colors duration-200',
       className

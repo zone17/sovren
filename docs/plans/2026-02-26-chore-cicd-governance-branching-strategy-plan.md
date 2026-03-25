@@ -65,19 +65,16 @@ Developer pushes feat/squad-a/TICKET-123
 ### Phase 1: Prerequisites (fix before activating governance)
 
 - [x] **Fix quality-gates.yml `Update PR status` bug**
-
   - File: `.github/workflows/quality-gates.yml` lines 517-530
   - Change: `state: 'success'` → post actual gate result based on `FAILED` variable
   - This is a one-line fix but critical — without it, the required check is illusory
 
 - [x] **Add `merge_group` trigger to all CI workflows**
-
   - Files: `.github/workflows/ci.yml`, `.github/workflows/quality-gates.yml`
   - Add `merge_group: { types: [checks_requested] }` alongside existing `pull_request` trigger
   - Without this, merge queue entries timeout waiting for checks that never run
 
 - [x] **Create aggregator `test-gate` job in ci.yml**
-
   - Add `dorny/paths-filter@v3` to detect which packages changed
   - Make `test-backend` and `test-frontend` conditional on path changes
   - Add `test-gate` job with `if: always()` that:
@@ -88,7 +85,6 @@ Developer pushes feat/squad-a/TICKET-123
   - This prevents frontend-only PRs from being blocked by "backend tests pending"
 
 - [x] **Remove `develop` from all CI workflow triggers**
-
   - Files: `ci.yml`, `quality-gates.yml`, `security-scan.yml`, `docker-build-push.yml`, `docker-security-scan.yml`, `database-migrations.yml`, `dependency-audit.yml`
   - Remove `develop` from both `push.branches` and `pull_request.branches` arrays
   - Delete the `develop` branch from remote if it exists: `git push origin :develop`
@@ -118,7 +114,6 @@ Developer pushes feat/squad-a/TICKET-123
   ```
 
 - [x] **Create GitHub Ruleset on `main`**
-
   - Create `scripts/setup-ruleset.sh` with the `gh api` call
   - Ruleset configuration:
 
@@ -177,7 +172,6 @@ Developer pushes feat/squad-a/TICKET-123
 ### Phase 3: Documentation & Conventions
 
 - [x] **Create `docs/development/BRANCHING_STRATEGY.md`** — single source of truth
-
   - Branch naming: `{type}/{squad}/{ticket}-{slug}`
   - Types: `feat`, `fix`, `hotfix`, `chore`, `refactor`, `docs`
   - Squads: `squad-a`, `squad-b` (or omit squad prefix for solo/infra work)
@@ -188,7 +182,6 @@ Developer pushes feat/squad-a/TICKET-123
   - Claude Code PRs: always require human reviewer from relevant squad
 
 - [x] **Create `docs/development/SHARED_PACKAGE_PROTOCOL.md`**
-
   - When modifying `packages/shared/`: open a dedicated PR with ONLY the shared change
   - Do NOT combine shared changes with consumer changes in the same PR
   - Both squad leads are auto-requested via CODEOWNERS
@@ -196,7 +189,6 @@ Developer pushes feat/squad-a/TICKET-123
   - Breaking changes require an ADR in `docs/decisions/` before the PR
 
 - [x] **Create `docs/development/HOTFIX_PROCEDURE.md`**
-
   - Step 1: Create `hotfix/TICKET-{id}-{slug}` branch from `main`
   - Step 2: Open PR targeting `main`, add label `hotfix`
   - Step 3: Admin approves and merges via bypass (skips merge queue, still requires review + CI)
@@ -204,7 +196,6 @@ Developer pushes feat/squad-a/TICKET-123
   - Step 5: Post-mortem within 24 hours if production impact
 
 - [x] **Update `CLAUDE.md` — replace branching section**
-
   - Remove current "Branch Scope" section (3 lines)
   - Add reference to `docs/development/BRANCHING_STRATEGY.md`
   - Add: "All merges to main go through the merge queue. No `--admin` bypass except hotfix lane."
@@ -219,7 +210,6 @@ Developer pushes feat/squad-a/TICKET-123
 ### Phase 4: Automation
 
 - [x] **Create `.github/workflows/branch-cleanup.yml`**
-
   - Schedule: Sundays at 02:00 UTC
   - Deletes remote branches merged to main (via GitHub API `merged` state, not `git branch --merged`)
   - Excludes `main` and any `hotfix/*` branches less than 7 days old
@@ -234,26 +224,22 @@ Developer pushes feat/squad-a/TICKET-123
 ### Phase 5: Verification
 
 - [ ] **Test the full merge queue flow**
-
   - Create 2 test PRs from different "squads"
   - Verify both enter the queue and merge serially
   - Verify the second PR's CI runs against main + first PR's changes
   - Verify head branches are auto-deleted after merge
 
 - [ ] **Test the hotfix bypass**
-
   - With 1 PR in the queue, create a hotfix PR
   - Verify admin can bypass the queue (merge directly via PR)
   - Verify the queued PR rebases against the new main HEAD
 
 - [ ] **Test CODEOWNERS enforcement**
-
   - PR touching `packages/backend/` → must be approved by squad-a member
   - PR touching `packages/shared/` → must be approved by both squads
   - PR touching `.github/` → must be approved by tech-leads
 
 - [ ] **Test path-gated CI**
-
   - PR touching only `packages/frontend/` → backend tests skipped, `test-gate` passes
   - PR touching `packages/shared/` → both backend and frontend tests run
 

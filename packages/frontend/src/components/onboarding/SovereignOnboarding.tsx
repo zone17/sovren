@@ -265,7 +265,7 @@ const SovereignOnboarding: React.FC = () => {
       createdAt: new Date().toISOString(),
       platform: 'Sovren',
       userType: userType,
-      warning: '🔒 CRITICAL: Keep your private key (nsec) absolutely secure! Never share it!',
+      warning: 'CRITICAL: Keep your private key (nsec) absolutely secure! Never share it!',
       instructions: 'Import these keys into any NOSTR client to access your sovereign identity.',
     };
 
@@ -309,7 +309,7 @@ const SovereignOnboarding: React.FC = () => {
           ['t', 'sovren-onboarding'],
           ['t', userType || 'supporter'],
         ],
-        content: `🎉 Just completed sovereign onboarding on Sovren! NOSTR identity verified and Lightning wallet ready. The future of digital freedom starts now! #Sovren #NOSTR #Lightning #Sovereignty`,
+        content: `Just completed sovereign onboarding on Sovren! NOSTR identity verified and Lightning wallet ready. The future of digital freedom starts now! #Sovren #NOSTR #Lightning #Sovereignty`,
       };
 
       // Convert hex string to Uint8Array for signing
@@ -399,10 +399,10 @@ const SovereignOnboarding: React.FC = () => {
 
               {/* Typography Hierarchy */}
               <div className="space-y-3">
-                <h1 className="pb-1 text-3xl font-black tracking-tight text-transparent sm:text-4xl md:text-5xl bg-gradient-to-r from-amber-200 via-orange-300 to-amber-400 bg-clip-text leading-[1.1]">
+                <h1 className="pb-1 text-3xl font-black tracking-tight text-transparent sm:text-4xl md:text-5xl bg-gradient-to-r from-amber-200 via-orange-300 to-amber-400 bg-clip-text leading-[1.1] font-display">
                   Welcome to True Digital Sovereignty
                 </h1>
-                <p className="max-w-xl mx-auto text-base font-light leading-relaxed text-center sm:text-lg text-slate-200">
+                <p className="max-w-xl mx-auto text-base font-light leading-relaxed text-center sm:text-lg text-muted-foreground">
                   Break free from Big Tech control. Own your identity, control your money, and
                   experience the internet as it was meant to be — Sovren.
                 </p>
@@ -412,7 +412,7 @@ const SovereignOnboarding: React.FC = () => {
             {/* Feature Grid */}
             <div className="grid w-full max-w-5xl grid-cols-1 gap-6 mt-12 md:grid-cols-3">
               {/* Card 1 */}
-              <Card className="relative overflow-hidden transition-all duration-500 border shadow-lg group bg-slate-800/40 border-slate-600/30 hover:border-amber-500/50 backdrop-blur-xl rounded-xl">
+              <Card className="relative overflow-hidden transition-all duration-500 border shadow-lg group glass-dark border-border/50 hover:border-amber-500/50 rounded-xl">
                 <CardContent className="relative z-10 p-6 text-center">
                   <div className="p-3 mx-auto mb-4 transition-transform duration-300 bg-gradient-to-br from-amber-500/20 to-orange-500/20 rounded-lg w-fit group-hover:scale-110">
                     <Globe className="w-8 h-8 mx-auto text-amber-300" />
@@ -420,13 +420,13 @@ const SovereignOnboarding: React.FC = () => {
                   <h3 className="mb-2 text-lg font-bold text-white transition-colors group-hover:text-amber-200">
                     Own Your Identity
                   </h3>
-                  <p className="text-sm leading-relaxed text-slate-300">
+                  <p className="text-sm leading-relaxed text-muted-foreground">
                     NOSTR gives you complete control.
                   </p>
                 </CardContent>
               </Card>
               {/* Card 2 */}
-              <Card className="relative overflow-hidden transition-all duration-500 border shadow-lg group bg-slate-800/40 border-slate-600/30 hover:border-violet-500/50 backdrop-blur-xl rounded-xl">
+              <Card className="relative overflow-hidden transition-all duration-500 border shadow-lg group glass-dark border-border/50 hover:border-violet-500/50 rounded-xl">
                 <CardContent className="relative z-10 p-6 text-center">
                   <div className="p-3 mx-auto mb-4 transition-transform duration-300 bg-gradient-to-br from-violet-500/20 to-purple-500/20 rounded-lg w-fit group-hover:scale-110">
                     <Zap className="w-8 h-8 mx-auto text-violet-300" />
@@ -434,13 +434,13 @@ const SovereignOnboarding: React.FC = () => {
                   <h3 className="mb-2 text-lg font-bold text-white transition-colors group-hover:text-violet-200">
                     Control Your Money
                   </h3>
-                  <p className="text-sm leading-relaxed text-slate-300">
+                  <p className="text-sm leading-relaxed text-muted-foreground">
                     Instant, low-cost Bitcoin payments.
                   </p>
                 </CardContent>
               </Card>
               {/* Card 3 */}
-              <Card className="relative overflow-hidden transition-all duration-500 border shadow-lg group bg-slate-800/40 border-slate-600/30 hover:border-emerald-500/50 backdrop-blur-xl rounded-xl">
+              <Card className="relative overflow-hidden transition-all duration-500 border shadow-lg group glass-dark border-border/50 hover:border-emerald-500/50 rounded-xl">
                 <CardContent className="relative z-10 p-6 text-center">
                   <div className="p-3 mx-auto mb-4 transition-transform duration-300 bg-gradient-to-br from-emerald-500/20 to-green-500/20 rounded-lg w-fit group-hover:scale-110">
                     <Shield className="w-8 h-8 mx-auto text-emerald-300" />
@@ -448,7 +448,7 @@ const SovereignOnboarding: React.FC = () => {
                   <h3 className="mb-2 text-lg font-bold text-white transition-colors group-hover:text-emerald-200">
                     Censorship Resistant
                   </h3>
-                  <p className="text-sm leading-relaxed text-slate-300">
+                  <p className="text-sm leading-relaxed text-muted-foreground">
                     No deplatforming, just pure freedom.
                   </p>
                 </CardContent>
@@ -485,7 +485,7 @@ const SovereignOnboarding: React.FC = () => {
                 </div>
               </div>
 
-              <h2 className="mb-8 text-4xl font-black leading-tight text-transparent md:text-6xl bg-gradient-to-r from-violet-200 via-purple-300 to-violet-400 bg-clip-text">
+              <h2 className="mb-8 text-4xl font-black leading-tight text-transparent md:text-6xl bg-gradient-to-r from-violet-200 via-purple-300 to-violet-400 bg-clip-text font-display">
                 Choose Your
                 <br />
                 <span className="text-transparent bg-gradient-to-r from-purple-300 via-violet-400 to-purple-500 bg-clip-text">
@@ -493,7 +493,7 @@ const SovereignOnboarding: React.FC = () => {
                 </span>
               </h2>
 
-              <p className="max-w-3xl mx-auto text-xl font-light leading-relaxed md:text-2xl text-slate-200">
+              <p className="max-w-3xl mx-auto text-xl font-light leading-relaxed md:text-2xl text-muted-foreground">
                 Are you here to{' '}
                 <span className="font-semibold text-violet-300">create and monetize content</span>,
                 or to{' '}
@@ -512,7 +512,7 @@ const SovereignOnboarding: React.FC = () => {
                   ${
                     userType === 'creator'
                       ? 'border-amber-500/60 bg-gradient-to-br from-amber-500/15 to-orange-500/10 shadow-2xl shadow-amber-500/25 scale-105'
-                      : 'border-slate-600/40 bg-slate-800/40 hover:border-amber-500/50 hover:bg-gradient-to-br hover:from-amber-500/10 hover:to-orange-500/5 hover:scale-102 hover:shadow-xl hover:shadow-amber-500/15'
+                      : 'border-border/50 bg-secondary hover:border-amber-500/50 hover:bg-gradient-to-br hover:from-amber-500/10 hover:to-orange-500/5 hover:scale-102 hover:shadow-xl hover:shadow-amber-500/15'
                   }
                 `}
                 onClick={() => setUserType('creator')}
@@ -534,7 +534,7 @@ const SovereignOnboarding: React.FC = () => {
                     I&apos;m a Creator
                   </h3>
 
-                  <p className="mb-8 text-lg leading-relaxed transition-colors text-slate-300 group-hover:text-slate-200">
+                  <p className="mb-8 text-lg leading-relaxed transition-colors text-muted-foreground group-hover:text-muted-foreground">
                     <span className="font-semibold text-amber-300">Monetize your content</span> with
                     Bitcoin, build your Sovren audience, and never worry about
                     <span className="font-semibold text-orange-300"> deplatforming</span> again.
@@ -560,7 +560,7 @@ const SovereignOnboarding: React.FC = () => {
                   ${
                     userType === 'supporter'
                       ? 'border-violet-500/60 bg-gradient-to-br from-violet-500/15 to-purple-500/10 shadow-2xl shadow-violet-500/25 scale-105'
-                      : 'border-slate-600/40 bg-slate-800/40 hover:border-violet-500/50 hover:bg-gradient-to-br hover:from-violet-500/10 hover:to-purple-500/5 hover:scale-102 hover:shadow-xl hover:shadow-violet-500/15'
+                      : 'border-border/50 bg-secondary hover:border-violet-500/50 hover:bg-gradient-to-br hover:from-violet-500/10 hover:to-purple-500/5 hover:scale-102 hover:shadow-xl hover:shadow-violet-500/15'
                   }
                 `}
                 onClick={() => setUserType('supporter')}
@@ -582,7 +582,7 @@ const SovereignOnboarding: React.FC = () => {
                     I&apos;m a Supporter
                   </h3>
 
-                  <p className="mb-8 text-lg leading-relaxed transition-colors text-slate-300 group-hover:text-slate-200">
+                  <p className="mb-8 text-lg leading-relaxed transition-colors text-muted-foreground group-hover:text-muted-foreground">
                     <span className="font-semibold text-violet-300">
                       Support your favorite creators
                     </span>{' '}
@@ -644,19 +644,21 @@ const SovereignOnboarding: React.FC = () => {
           <div className="space-y-8">
             <div className="mb-8 text-center">
               <div className="flex justify-center mb-6">
-                <div className="p-6 bg-gradient-to-br from-sovereign-500 to-sovereign-600 rounded-2xl">
-                  <Key className="w-10 h-10 text-white" />
+                <div className="p-6 bg-primary/20 rounded-2xl">
+                  <Key className="w-10 h-10 text-primary" />
                 </div>
               </div>
-              <h2 className="mb-4 text-3xl font-bold text-white">Create Your Sovereign Identity</h2>
-              <p className="max-w-2xl mx-auto text-lg text-slate-200">
+              <h2 className="mb-4 text-3xl font-bold text-white font-display">
+                Create Your Sovereign Identity
+              </h2>
+              <p className="max-w-2xl mx-auto text-lg text-muted-foreground">
                 Your NOSTR keys are your digital identity. Generated locally, owned by you, forever.
               </p>
             </div>
 
-            <Alert className="max-w-3xl mx-auto border-sovereign-500/20 bg-sovereign-500/10">
+            <Alert className="max-w-3xl mx-auto border-primary/20 bg-primary/10">
               <HelpCircle className="w-5 h-5" />
-              <AlertDescription className="text-sovereign-100">
+              <AlertDescription className="text-foreground">
                 <strong>What makes this special?</strong>
                 <br />
                 Unlike social media accounts that can be banned or deleted, your NOSTR identity is
@@ -665,15 +667,15 @@ const SovereignOnboarding: React.FC = () => {
             </Alert>
 
             <div className="max-w-2xl mx-auto">
-              <Card className="bg-card/50">
+              <Card className="glass-dark bg-card/50 border-border/50">
                 <CardContent className="p-8 text-center">
                   <div className="space-y-6">
-                    <div className="p-4 bg-gradient-to-br from-lightning-500/20 to-sovereign-500/20 rounded-xl">
-                      <Sparkles className="w-8 h-8 mx-auto mb-3 text-lightning-400" />
+                    <div className="p-4 bg-amber-500/20 rounded-xl">
+                      <Sparkles className="w-8 h-8 mx-auto mb-3 text-amber-400" />
                       <h3 className="mb-2 text-xl font-semibold text-white">
                         Zero-Friction Key Generation
                       </h3>
-                      <p className="text-slate-200">
+                      <p className="text-muted-foreground">
                         One click to generate your sovereign identity. No forms, no verification, no
                         waiting.
                       </p>
@@ -682,7 +684,7 @@ const SovereignOnboarding: React.FC = () => {
                     <Button
                       onClick={generateNostrKeys}
                       disabled={isGenerating || !!nostrKeys}
-                      className="w-full py-4 text-lg bg-gradient-to-r from-sovereign-500 to-lightning-600 hover:from-sovereign-600 hover:to-lightning-700"
+                      className="w-full py-4 text-lg bg-primary hover:bg-primary/90"
                     >
                       {isGenerating ? (
                         <>
@@ -705,7 +707,7 @@ const SovereignOnboarding: React.FC = () => {
                     {nostrKeys && (
                       <div className="text-center">
                         <p className="font-medium text-green-400">
-                          🎉 Your sovereign identity is ready! Let's secure it...
+                          Your sovereign identity is ready! Let's secure it...
                         </p>
                       </div>
                     )}
@@ -733,7 +735,7 @@ const SovereignOnboarding: React.FC = () => {
               {nostrKeys && (
                 <Button
                   onClick={() => setCurrentStep(3)}
-                  className="flex items-center bg-gradient-to-r from-sovereign-500 to-lightning-600"
+                  className="flex items-center bg-primary hover:bg-primary/90"
                 >
                   Secure My Keys
                   <ArrowRight className="w-4 h-4 ml-2" />
@@ -748,19 +750,21 @@ const SovereignOnboarding: React.FC = () => {
           <div className="space-y-8">
             <div className="mb-8 text-center">
               <div className="flex justify-center mb-6">
-                <div className="p-6 bg-gradient-to-br from-premium-700 to-premium-800 rounded-2xl">
-                  <Shield className="w-10 h-10 text-white" />
+                <div className="p-6 bg-primary/20 rounded-2xl">
+                  <Shield className="w-10 h-10 text-primary" />
                 </div>
               </div>
-              <h2 className="mb-4 text-3xl font-bold text-white">Secure Your Sovereign Identity</h2>
-              <p className="max-w-2xl mx-auto text-lg text-slate-200">
+              <h2 className="mb-4 text-3xl font-bold text-white font-display">
+                Secure Your Sovereign Identity
+              </h2>
+              <p className="max-w-2xl mx-auto text-lg text-muted-foreground">
                 Your keys, your identity. Let's make sure they're safely backed up.
               </p>
             </div>
 
             {nostrKeys && (
               <div className="max-w-3xl mx-auto space-y-6">
-                <Card className="bg-card/50">
+                <Card className="glass-dark bg-card/50 border-border/50">
                   <CardContent className="p-8">
                     <h3 className="mb-6 text-xl font-semibold text-white">
                       Your Sovereign Identity Keys
@@ -770,9 +774,9 @@ const SovereignOnboarding: React.FC = () => {
                       {/* Public Key */}
                       <div>
                         <Label className="text-lg font-medium text-white">
-                          🌐 Public Key (npub) - Your Username
+                          Public Key (npub) - Your Username
                         </Label>
-                        <p className="mb-3 text-sm text-slate-200">
+                        <p className="mb-3 text-sm text-muted-foreground">
                           Share this freely - it's how others find and verify you
                         </p>
                         <div className="flex">
@@ -799,7 +803,7 @@ const SovereignOnboarding: React.FC = () => {
                       {/* Private Key */}
                       <div>
                         <Label className="text-lg font-medium text-white">
-                          🔒 Private Key (nsec) - Your Master Password
+                          Private Key (nsec) - Your Master Password
                         </Label>
                         <p className="mb-3 text-sm text-red-300">
                           NEVER share this! It's your digital identity's master key
@@ -840,10 +844,7 @@ const SovereignOnboarding: React.FC = () => {
 
                       {/* Download Button */}
                       <div className="pt-4 text-center">
-                        <Button
-                          onClick={downloadKeys}
-                          className="bg-premium-700 hover:bg-premium-800"
-                        >
+                        <Button onClick={downloadKeys} className="bg-primary hover:bg-primary/90">
                           <Download className="w-4 h-4 mr-2" />
                           Download Secure Backup
                         </Button>
@@ -865,10 +866,10 @@ const SovereignOnboarding: React.FC = () => {
                           id="backup"
                           checked={backupConfirmed}
                           onChange={(e) => setBackupConfirmed(e.target.checked)}
-                          className="mt-1 border-gray-300 rounded"
+                          className="mt-1 border-border rounded"
                         />
                         <Label htmlFor="backup" className="text-yellow-100 cursor-pointer">
-                          ✅ I have safely downloaded and stored my private key (nsec) backup
+                          I have safely downloaded and stored my private key (nsec) backup
                         </Label>
                       </div>
 
@@ -878,11 +879,11 @@ const SovereignOnboarding: React.FC = () => {
                           id="security"
                           checked={understandsSecurity}
                           onChange={(e) => setUnderstandsSecurity(e.target.checked)}
-                          className="mt-1 border-gray-300 rounded"
+                          className="mt-1 border-border rounded"
                         />
                         <Label htmlFor="security" className="text-yellow-100 cursor-pointer">
-                          🔒 I understand that losing my private key means losing my sovereign
-                          identity forever
+                          I understand that losing my private key means losing my sovereign identity
+                          forever
                         </Label>
                       </div>
                     </div>
@@ -893,7 +894,7 @@ const SovereignOnboarding: React.FC = () => {
                   <div className="text-center">
                     <Button
                       onClick={() => setCurrentStep(4)}
-                      className="px-10 py-4 text-lg bg-gradient-to-r from-premium-700 to-sovereign-600"
+                      className="px-10 py-4 text-lg bg-primary hover:bg-primary/90"
                     >
                       Identity Secured - Setup Lightning
                       <ArrowRight className="w-5 h-5 ml-2" />
@@ -922,12 +923,14 @@ const SovereignOnboarding: React.FC = () => {
           <div className="space-y-8">
             <div className="mb-8 text-center">
               <div className="flex justify-center mb-6">
-                <div className="p-6 bg-gradient-to-br from-lightning-500 to-lightning-600 rounded-2xl">
-                  <Zap className="w-10 h-10 text-white" />
+                <div className="p-6 bg-amber-500/20 rounded-2xl">
+                  <Zap className="w-10 h-10 text-amber-400" />
                 </div>
               </div>
-              <h2 className="mb-4 text-3xl font-bold text-white">Setup Lightning Payments</h2>
-              <p className="max-w-2xl mx-auto text-lg text-slate-200">
+              <h2 className="mb-4 text-3xl font-bold text-white font-display">
+                Setup Lightning Payments
+              </h2>
+              <p className="max-w-2xl mx-auto text-lg text-muted-foreground">
                 Enable instant Bitcoin payments to{' '}
                 {userType === 'creator' ? 'monetize your content' : 'support creators'}.
               </p>
@@ -935,9 +938,9 @@ const SovereignOnboarding: React.FC = () => {
 
             {/* Recommended wallet for user type */}
             <div className="max-w-3xl mx-auto">
-              <Alert className="mb-8 border-lightning-500/20 bg-lightning-500/10">
+              <Alert className="mb-8 border-amber-500/20 bg-amber-500/10">
                 <Star className="w-5 h-5" />
-                <AlertDescription className="text-lightning-100">
+                <AlertDescription className="text-foreground">
                   <strong>
                     Recommended for {userType === 'creator' ? 'Creators' : 'Supporters'}:
                   </strong>
@@ -955,10 +958,10 @@ const SovereignOnboarding: React.FC = () => {
                       key={index}
                       className={`cursor-pointer transition-all duration-200 ${
                         selectedWallet?.name === wallet.name
-                          ? 'border-lightning-500 bg-lightning-500/10 scale-105'
+                          ? 'border-primary bg-primary/10 scale-105'
                           : isRecommended
-                            ? 'border-lightning-500/50 bg-lightning-500/5'
-                            : 'border-border/50 hover:border-lightning-500/50'
+                            ? 'border-primary/50 bg-primary/5'
+                            : 'border-border/50 hover:border-primary/50'
                       }`}
                       onClick={() => setSelectedWallet(wallet)}
                     >
@@ -969,7 +972,7 @@ const SovereignOnboarding: React.FC = () => {
                               wallet.type === 'custodial'
                                 ? 'bg-green-500/20'
                                 : wallet.type === 'self-custodial'
-                                  ? 'bg-blue-500/20'
+                                  ? 'bg-purple-500/20'
                                   : 'bg-purple-500/20'
                             }`}
                           >
@@ -981,7 +984,7 @@ const SovereignOnboarding: React.FC = () => {
                               <h3 className="font-semibold text-white">{wallet.name}</h3>
                               <div className="flex space-x-1">
                                 {isRecommended && (
-                                  <Badge className="text-xs text-white bg-lightning-500">
+                                  <Badge className="text-xs text-white bg-primary">
                                     Recommended
                                   </Badge>
                                 )}
@@ -991,9 +994,11 @@ const SovereignOnboarding: React.FC = () => {
                               </div>
                             </div>
 
-                            <p className="mb-3 text-sm text-slate-200">{wallet.description}</p>
+                            <p className="mb-3 text-sm text-muted-foreground">
+                              {wallet.description}
+                            </p>
 
-                            <div className="flex items-center mb-3 text-xs text-slate-200">
+                            <div className="flex items-center mb-3 text-xs text-muted-foreground">
                               <Clock className="w-3 h-3 mr-1" />
                               Setup: {wallet.setupTime}
                             </div>
@@ -1018,7 +1023,7 @@ const SovereignOnboarding: React.FC = () => {
                   <div className="mb-4">
                     <Button
                       onClick={() => window.open(selectedWallet.downloadUrl, '_blank')}
-                      className="mr-4 bg-lightning-500 hover:bg-lightning-600"
+                      className="mr-4 bg-amber-500 hover:bg-amber-600"
                     >
                       <Download className="w-4 h-4 mr-2" />
                       Download {selectedWallet.name}
@@ -1034,7 +1039,7 @@ const SovereignOnboarding: React.FC = () => {
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
                   </div>
-                  <p className="text-sm text-slate-200">
+                  <p className="text-sm text-muted-foreground">
                     Download the wallet, set it up, then continue to verify everything works!
                   </p>
                 </div>
@@ -1052,14 +1057,16 @@ const SovereignOnboarding: React.FC = () => {
                   <CheckCircle className="w-10 h-10 text-white" />
                 </div>
               </div>
-              <h2 className="mb-4 text-3xl font-bold text-white">Verify Your Sovereign Setup</h2>
-              <p className="max-w-2xl mx-auto text-lg text-slate-200">
+              <h2 className="mb-4 text-3xl font-bold text-white font-display">
+                Verify Your Sovereign Setup
+              </h2>
+              <p className="max-w-2xl mx-auto text-lg text-muted-foreground">
                 Let's verify your NOSTR identity and celebrate your sovereignty!
               </p>
             </div>
 
             <div className="max-w-2xl mx-auto">
-              <Card className="bg-card/50">
+              <Card className="glass-dark bg-card/50 border-border/50">
                 <CardContent className="p-8">
                   <div className="space-y-6">
                     <div className="text-center">
@@ -1097,9 +1104,9 @@ const SovereignOnboarding: React.FC = () => {
                       </div>
                     </div>
 
-                    <Alert className="border-lightning-500/20 bg-lightning-500/10">
+                    <Alert className="border-amber-500/20 bg-amber-500/10">
                       <Sparkles className="w-4 h-4" />
-                      <AlertDescription className="text-lightning-100">
+                      <AlertDescription className="text-foreground">
                         <strong>Final Step:</strong>
                         <br />
                         We'll create your first NOSTR event to verify your identity and announce
@@ -1110,7 +1117,7 @@ const SovereignOnboarding: React.FC = () => {
                     <Button
                       onClick={completeSovereignSetup}
                       disabled={isAuthenticating}
-                      className="w-full py-4 text-lg bg-gradient-to-r from-sovereign-500 to-lightning-600"
+                      className="w-full py-4 text-lg bg-primary hover:bg-primary/90"
                     >
                       {isAuthenticating ? (
                         <>
@@ -1132,7 +1139,7 @@ const SovereignOnboarding: React.FC = () => {
             {error && (
               <Alert className="max-w-2xl mx-auto shadow-lg border-red-500/50 bg-red-500/20">
                 <AlertDescription className="text-base font-medium text-red-100">
-                  <strong className="text-red-200">⚠️ Verification Error:</strong> {error}
+                  <strong className="text-red-200">Verification Error:</strong> {error}
                 </AlertDescription>
               </Alert>
             )}
@@ -1143,45 +1150,45 @@ const SovereignOnboarding: React.FC = () => {
         return (
           <div className="space-y-8 text-center">
             <div className="flex justify-center mb-8">
-              <div className="p-8 bg-gradient-to-br from-lightning-500 via-sovereign-500 to-premium-600 rounded-3xl shadow-hero animate-pulse">
-                <Rocket className="w-16 h-16 text-white" />
+              <div className="p-8 bg-primary/20 rounded-3xl shadow-hero animate-pulse">
+                <Rocket className="w-16 h-16 text-primary" />
               </div>
             </div>
 
             <div className="space-y-6">
-              <h1 className="text-4xl font-black text-transparent md:text-5xl bg-gradient-to-r from-lightning-200 via-sovereign-200 to-premium-200 bg-clip-text">
-                🎉 Welcome to Sovereignty!
+              <h1 className="text-4xl font-black text-transparent md:text-5xl bg-gradient-to-r from-amber-200 via-primary to-purple-200 bg-clip-text font-display">
+                Welcome to Sovereignty!
               </h1>
-              <p className="max-w-3xl mx-auto text-xl leading-relaxed text-slate-200">
+              <p className="max-w-3xl mx-auto text-xl leading-relaxed text-muted-foreground">
                 Congratulations! You now have a sovereign digital identity and Lightning payments.
                 You're part of the revolution toward true digital freedom.
               </p>
             </div>
 
             <div className="grid max-w-4xl grid-cols-1 gap-6 mx-auto mt-12 md:grid-cols-3">
-              <Card className="bg-gradient-to-br from-sovereign-500/20 to-sovereign-600/10 border-sovereign-500/30">
+              <Card className="glass-dark border-border/50">
                 <CardContent className="p-8 text-center">
-                  <Key className="w-12 h-12 mx-auto mb-4 text-sovereign-400" />
+                  <Key className="w-12 h-12 mx-auto mb-4 text-primary" />
                   <h3 className="mb-3 text-xl font-bold text-white">Your Identity</h3>
-                  <p className="text-slate-200">
+                  <p className="text-muted-foreground">
                     Sovereign NOSTR identity that no one can take away
                   </p>
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-to-br from-lightning-500/20 to-lightning-600/10 border-lightning-500/30">
+              <Card className="glass-dark border-border/50">
                 <CardContent className="p-8 text-center">
-                  <Zap className="w-12 h-12 mx-auto mb-4 text-lightning-400" />
+                  <Zap className="w-12 h-12 mx-auto mb-4 text-amber-400" />
                   <h3 className="mb-3 text-xl font-bold text-white">Instant Payments</h3>
-                  <p className="text-slate-200">Lightning-fast Bitcoin transactions</p>
+                  <p className="text-muted-foreground">Lightning-fast Bitcoin transactions</p>
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-to-br from-premium-500/20 to-premium-600/10 border-premium-500/30">
+              <Card className="glass-dark border-border/50">
                 <CardContent className="p-8 text-center">
-                  <Crown className="w-12 h-12 mx-auto mb-4 text-premium-400" />
+                  <Crown className="w-12 h-12 mx-auto mb-4 text-primary" />
                   <h3 className="mb-3 text-xl font-bold text-white">True Freedom</h3>
-                  <p className="text-slate-200">Censorship-resistant digital sovereignty</p>
+                  <p className="text-muted-foreground">Censorship-resistant digital sovereignty</p>
                 </CardContent>
               </Card>
             </div>
@@ -1189,14 +1196,14 @@ const SovereignOnboarding: React.FC = () => {
             <div className="mt-12 space-y-6">
               <Button
                 onClick={() => navigate('/profile-dashboard')}
-                className="px-12 py-6 mr-4 text-xl font-bold bg-gradient-to-r from-lightning-500 to-sovereign-600 hover:from-lightning-600 hover:to-sovereign-700 shadow-hero"
+                className="px-12 py-6 mr-4 text-xl font-bold bg-primary hover:bg-primary/90 shadow-hero"
               >
                 View My Sovereign Profile
                 <Crown className="w-6 h-6 ml-3" />
               </Button>
 
               <div className="text-center">
-                <p className="mb-4 text-slate-200">Share your sovereignty journey:</p>
+                <p className="mb-4 text-muted-foreground">Share your sovereignty journey:</p>
                 <div className="flex justify-center space-x-4">
                   <Button variant="outline" size="sm">
                     Share on NOSTR
@@ -1216,7 +1223,7 @@ const SovereignOnboarding: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+    <div className="relative min-h-screen overflow-hidden bg-background">
       {/* Elite Background Effects */}
       <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
       <div className="absolute w-64 h-64 rounded-full top-1/4 left-1/4 md:w-96 md:h-96 bg-gradient-to-r from-violet-600/20 to-purple-600/20 blur-3xl"></div>
@@ -1228,7 +1235,7 @@ const SovereignOnboarding: React.FC = () => {
           <div className="max-w-sm mx-auto mb-6 sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl sm:mb-8 lg:mb-12 xl:mb-16 2xl:mb-20">
             <div className="relative">
               {/* Progress Track */}
-              <div className="absolute top-6 sm:top-8 lg:top-10 xl:top-12 2xl:top-14 left-0 right-0 h-0.5 sm:h-1 lg:h-1.5 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800"></div>
+              <div className="absolute top-6 sm:top-8 lg:top-10 xl:top-12 2xl:top-14 left-0 right-0 h-0.5 sm:h-1 lg:h-1.5 bg-gradient-to-r from-muted via-border to-muted"></div>
 
               {/* Combined Steps Container */}
               <div className="relative z-10 flex items-start justify-evenly pb-0 overflow-x-auto">
@@ -1249,7 +1256,7 @@ const SovereignOnboarding: React.FC = () => {
                             ? index === currentStep
                               ? 'bg-gradient-to-br from-amber-400 to-orange-500 border-amber-400/50 text-white shadow-lg lg:shadow-xl xl:shadow-2xl shadow-amber-500/25'
                               : 'bg-gradient-to-br from-emerald-400 to-green-500 border-emerald-400/50 text-white shadow-md lg:shadow-lg shadow-emerald-500/25'
-                            : 'bg-slate-800/50 border-slate-600/50 text-slate-400 backdrop-blur-sm'
+                            : 'bg-secondary border-muted text-muted-foreground backdrop-blur-sm'
                         }
                       `}
                     >
@@ -1275,7 +1282,7 @@ const SovereignOnboarding: React.FC = () => {
                     <div
                       className={`
                         text-xs sm:text-sm font-bold transition-colors duration-300 leading-snug
-                        ${index <= currentStep ? 'text-white' : 'text-slate-400'}
+                        ${index <= currentStep ? 'text-white' : 'text-muted-foreground'}
                       `}
                     >
                       <span className="block sm:hidden">{step.title.split(' ')[0]}</span>
@@ -1286,7 +1293,7 @@ const SovereignOnboarding: React.FC = () => {
                     <div
                       className={`
                         text-xs mt-1 font-light leading-normal transition-colors duration-300 hidden md:block
-                        ${index === currentStep ? 'text-amber-300' : index < currentStep ? 'text-emerald-300' : 'text-slate-400'}
+                        ${index === currentStep ? 'text-amber-300' : index < currentStep ? 'text-emerald-300' : 'text-muted-foreground'}
                       `}
                     >
                       {step.description}
@@ -1298,8 +1305,8 @@ const SovereignOnboarding: React.FC = () => {
           </div>
 
           {/* Elite Responsive Main Content Container */}
-          <Card className="max-w-sm mx-auto overflow-hidden border shadow-xl sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl bg-slate-900/40 backdrop-blur-xl border-slate-700/50 lg:shadow-2xl xl:shadow-3xl shadow-black/20 rounded-xl lg:rounded-2xl xl:rounded-3xl">
-            <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-slate-800/30 via-transparent to-slate-800/30"></div>
+          <Card className="max-w-sm mx-auto overflow-hidden border shadow-xl sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl glass-dark bg-card/50 backdrop-blur-xl border-border/50 lg:shadow-2xl xl:shadow-3xl shadow-black/20 rounded-xl lg:rounded-2xl xl:rounded-3xl">
+            <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-secondary/30 via-transparent to-secondary/30"></div>
             <CardContent className="relative z-10 p-4 sm:p-6 md:p-8 lg:p-12 xl:p-16 2xl:p-20">
               {renderStep()}
             </CardContent>

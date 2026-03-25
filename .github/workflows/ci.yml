@@ -153,6 +153,22 @@ jobs:
           fi
           echo "No type errors in changed files"
 
+      - name: E2E type check
+        if: steps.changed.outputs.count != '0'
+        run: npx tsc -p packages/frontend/tsconfig.e2e.json --noEmit
+
+      # Ratchet: @ts-nocheck count must only decrease. Baseline set in PR #146 (S9 buffer hardening).
+      # To lower the threshold: grep -rn '@ts-nocheck' packages/ --include='*.ts' --include='*.tsx' | wc -l
+      # Runs unconditionally — counts ALL files, not just changed ones.
+      - name: '@ts-nocheck ratchet (max 169)'
+        run: |
+          COUNT=$(grep -rn '@ts-nocheck' packages/ --include='*.ts' --include='*.tsx' | wc -l | tr -d ' ')
+          echo "@ts-nocheck count: $COUNT (threshold: 169)"
+          if [ "$COUNT" -gt 169 ]; then
+            echo "::error::@ts-nocheck count ($COUNT) exceeds ratchet threshold (169). Remove @ts-nocheck from files before adding new ones."
+            exit 1
+          fi
+
       - name: No files changed
         if: steps.changed.outputs.count == '0'
         run: echo "No TS files changed — type check skipped"
@@ -179,6 +195,109 @@ jobs:
           severity: 'CRITICAL,HIGH'
           exit-code: '1'
           format: 'table'
+
+  # ===========================================
+  # Stage 2b: DB Migration Validation (P1-INFRA-003)
+  # Validates that all migration files are syntactically valid SQL and
+  # that migration filenames follow the expected timestamp ordering.
+  # Runs on any backend or migration file change.
+  # ===========================================
+  validate-migrations:
+    name: DB Migration Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [changes, lint]
+    if: needs.changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: sovren_migrate_test
+          POSTGRES_USER: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate migration filenames (timestamp ordering)
+        run: |
+          MIGRATIONS=$(ls supabase/migrations/*.sql 2>/dev/null | sort)
+          if [ -z "$MIGRATIONS" ]; then
+            echo "No migrations found — skipping ordering check"
+            exit 0
+          fi
+          PREV=""
+          ERRORS=0
+          for f in $MIGRATIONS; do
+            NAME=$(basename "$f")
+            # Timestamp must be 14-digit prefix: YYYYMMDDHHMMSS
+            TS=$(echo "$NAME" | grep -oE '^[0-9]{14}' || true)
+            if [ -z "$TS" ]; then
+              echo "::error file=$f::Migration filename must start with 14-digit timestamp: $NAME"
+              ERRORS=$((ERRORS + 1))
+              continue
+            fi
+            if [ -n "$PREV" ] && [ "$TS" -le "$PREV" ]; then
+              echo "::error file=$f::Migration timestamp out of order: $NAME (prev=$PREV)"
+              ERRORS=$((ERRORS + 1))
+            fi
+            PREV="$TS"
+          done
+          if [ "$ERRORS" -gt 0 ]; then
+            echo "::error::$ERRORS migration ordering error(s) found"
+            exit 1
+          fi
+          echo "Migration filename ordering: OK"
+
+      - name: Bootstrap Supabase-compatible schemas
+        run: |
+          DB_URL="postgresql://postgres:postgres@localhost:5432/sovren_migrate_test"
+          # Supabase migrations reference auth.uid(), auth.role(), supabase_realtime etc.
+          # Bootstrap these on vanilla postgres so migrations can dry-run.
+          psql "$DB_URL" -v ON_ERROR_STOP=1 <<'SQL'
+          CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+          CREATE SCHEMA IF NOT EXISTS auth;
+          CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid AS $$ SELECT '00000000-0000-0000-0000-000000000000'::uuid; $$ LANGUAGE sql;
+          CREATE OR REPLACE FUNCTION auth.role() RETURNS text AS $$ SELECT 'anon'::text; $$ LANGUAGE sql;
+          DO $$ BEGIN
+            IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'anon') THEN CREATE ROLE anon NOLOGIN; END IF;
+            IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'authenticated') THEN CREATE ROLE authenticated NOLOGIN; END IF;
+            IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'service_role') THEN CREATE ROLE service_role NOLOGIN; END IF;
+          END $$;
+          CREATE PUBLICATION supabase_realtime;
+          SQL
+          echo "Supabase-compatible bootstrap complete"
+
+      - name: Dry-run migrations against test database
+        run: |
+          DB_URL="postgresql://postgres:postgres@localhost:5432/sovren_migrate_test"
+          MIGRATIONS=$(ls supabase/migrations/*.sql 2>/dev/null | sort)
+          if [ -z "$MIGRATIONS" ]; then
+            echo "No migrations found — skipping dry-run"
+            exit 0
+          fi
+          ERRORS=0
+          for f in $MIGRATIONS; do
+            echo "Applying: $(basename $f)"
+            if ! psql "$DB_URL" -f "$f" -v ON_ERROR_STOP=1 -q 2>&1; then
+              echo "::error file=$f::Migration failed: $(basename $f)"
+              ERRORS=$((ERRORS + 1))
+              # Stop on first failure — later migrations depend on earlier ones
+              break
+            fi
+          done
+          if [ "$ERRORS" -gt 0 ]; then
+            exit 1
+          fi
+          echo "All migrations applied successfully"
 
   # ===========================================
   # Stage 3: Backend Tests (conditional on changes)
@@ -257,9 +376,7 @@ jobs:
     timeout-minutes: 30
     needs: [changes, lint, typecheck, security]
     if: needs.changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
-    # Advisory-only during stabilization — CI stays green even if these fail.
-    # TODO: Remove continue-on-error after 5 consecutive green integration runs on main.
-    continue-on-error: true
+    # Graduated from advisory to blocking — integration suite is stable.
 
     steps:
       - uses: actions/checkout@v4
@@ -279,7 +396,7 @@ jobs:
   test-gate:
     name: Test Gate
     runs-on: ubuntu-latest
-    needs: [changes, test-backend, test-frontend, test-integration]
+    needs: [changes, test-backend, test-frontend, test-integration, validate-migrations]
     if: always()
     steps:
       - name: Evaluate test results
@@ -293,12 +410,15 @@ jobs:
           echo "Changes:     ${{ needs.changes.result }}"
           echo "Backend:     ${{ needs.test-backend.result }}"
           echo "Frontend:    ${{ needs.test-frontend.result }}"
-          echo "Integration: ${{ needs.test-integration.result }} (advisory — continue-on-error)"
+          echo "Integration: ${{ needs.test-integration.result }}"
+          echo "Migrations:  ${{ needs.validate-migrations.result }}"
 
-          # Blocking gates: backend + frontend must pass (or be skipped)
+          # Blocking gates: all test jobs must pass (or be skipped due to path filter)
           blocking=(
             "${{ needs.test-backend.result }}"
             "${{ needs.test-frontend.result }}"
+            "${{ needs.test-integration.result }}"
+            "${{ needs.validate-migrations.result }}"
           )
           for result in "${blocking[@]}"; do
             if [[ "$result" == "failure" || "$result" == "cancelled" ]]; then
@@ -306,11 +426,6 @@ jobs:
               exit 1
             fi
           done
-
-          # Advisory: integration tests (continue-on-error) — log but don't block
-          if [[ "${{ needs.test-integration.result }}" == "failure" ]]; then
-            echo "::warning::Integration tests failed (advisory — not blocking merge)"
-          fi
 
           echo "Test gate PASSED — all blocking test jobs succeeded or were skipped"
 
@@ -366,9 +481,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: [build]
-    # Advisory-only — E2E depends on external services (Supabase) and fixtures.
-    # TODO: Remove continue-on-error after test fixtures are seeded in CI.
-    continue-on-error: true
+    # Graduated from advisory to blocking — E2E fixtures are seeded in CI.
 
     steps:
       - uses: actions/checkout@v4
@@ -457,6 +570,9 @@ jobs:
             type=sha,prefix={{branch}}-
             type=raw,value=latest,enable={{is_default_branch}}
 
+      - name: Copy root lockfile into backend context
+        run: cp package-lock.json packages/backend/package-lock.json
+
       - name: Build and push backend image
         id: build
         uses: docker/build-push-action@v6
@@ -512,7 +628,22 @@ jobs:
           name: frontend-dist
           path: packages/frontend/dist
 
+      - name: Check Vercel secrets
+        id: vercel-check
+        run: |
+          if [ -n "$VERCEL_TOKEN" ] && [ -n "$VERCEL_ORG_ID" ] && [ -n "$VERCEL_PROJECT_ID" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::Vercel secrets not configured — skipping frontend deploy"
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
       - name: Deploy frontend to Vercel (staging)
+        if: steps.vercel-check.outputs.available == 'true'
         uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
@@ -522,6 +653,7 @@ jobs:
           alias-domains: staging.sovren.dev
 
       - name: Health check staging
+        if: steps.vercel-check.outputs.available == 'true'
         run: |
           for i in 1 2 3 4 5; do
             sleep 10
@@ -534,6 +666,98 @@ jobs:
           done
           echo "Staging health check failed after 5 attempts"
           exit 1
+
+  # ===========================================
+  # Stage 6b: Deploy Backend Staging (P1-INFRA-004)
+  # Automated backend deployment — pulls the image built by the docker job
+  # and deploys it to the staging Docker host via SSH.
+  # Requires secrets: STAGING_SSH_HOST, STAGING_SSH_USER, STAGING_SSH_KEY,
+  #                   STAGING_DEPLOY_PATH (default: /opt/sovren)
+  # ===========================================
+  deploy-backend-staging:
+    name: Deploy Backend (Staging)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [deploy-staging, docker]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment:
+      name: staging
+      url: https://api-staging.sovren.dev
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check SSH secrets
+        id: ssh-check
+        run: |
+          if [ -n "$SSH_HOST" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::SSH deployment secrets not configured — skipping backend deploy"
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          SSH_HOST: ${{ secrets.STAGING_SSH_HOST }}
+
+      - name: Deploy backend image to staging host
+        if: steps.ssh-check.outputs.available == 'true'
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.STAGING_SSH_HOST }}
+          username: ${{ secrets.STAGING_SSH_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          script: |
+            set -e
+            DEPLOY_PATH="${{ secrets.STAGING_DEPLOY_PATH || '/opt/sovren' }}"
+            IMAGE="${{ needs.docker.outputs.image_tag }}"
+            DIGEST="${{ needs.docker.outputs.image_digest }}"
+
+            echo "Deploying backend image: $IMAGE"
+            echo "Digest: $DIGEST"
+
+            # Pull the new image (pinned by digest for reproducibility)
+            docker pull "ghcr.io/${{ github.repository }}/backend@${DIGEST}"
+
+            # Atomic blue-green swap: update image reference in compose override
+            cd "$DEPLOY_PATH"
+            cat > docker-compose.staging-override.yml <<EOF
+            services:
+              backend:
+                image: "ghcr.io/${{ github.repository }}/backend@${DIGEST}"
+            EOF
+
+            # Rolling restart: bring up new containers before stopping old ones
+            docker compose -f docker-compose.prod.yml \
+                           -f docker-compose.staging-override.yml \
+                           up -d --no-deps --pull never backend
+
+            # Wait for health check to pass
+            for i in 1 2 3 4 5 6; do
+              sleep 10
+              STATUS=$(curl -sf http://localhost:3001/health | python3 -c "import sys,json; print(json.load(sys.stdin)['status'])" 2>/dev/null || echo "error")
+              if [ "$STATUS" = "healthy" ]; then
+                echo "Backend health check passed"
+                exit 0
+              fi
+              echo "Attempt $i: status=$STATUS"
+            done
+            echo "Backend health check failed after 60s — rolling back"
+            docker compose -f docker-compose.prod.yml up -d --no-deps backend
+            exit 1
+
+      - name: Verify backend API health (external)
+        if: steps.ssh-check.outputs.available == 'true'
+        run: |
+          for i in 1 2 3 4 5; do
+            sleep 5
+            STATUS=$(curl -sf https://api-staging.sovren.dev/health | python3 -c "import sys,json; print(json.load(sys.stdin).get('status',''))" 2>/dev/null || echo "")
+            if [ "$STATUS" = "healthy" ]; then
+              echo "External backend health check passed"
+              exit 0
+            fi
+            echo "Attempt $i: $STATUS"
+          done
+          echo "::warning::External backend health check failed — check staging deployment"
 
   # ===========================================
   # Stage 7: Deploy Production (manual approval)
@@ -557,7 +781,22 @@ jobs:
           name: frontend-dist
           path: packages/frontend/dist
 
+      - name: Check Vercel secrets (production)
+        id: vercel-check-prod
+        run: |
+          if [ -n "$VERCEL_TOKEN" ] && [ -n "$VERCEL_ORG_ID" ] && [ -n "$VERCEL_PROJECT_ID" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::Vercel secrets not configured — skipping production frontend deploy"
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
       - name: Deploy frontend to Vercel (production)
+        if: steps.vercel-check-prod.outputs.available == 'true'
         id: deploy
         uses: amondnet/vercel-action@v25
         with:
@@ -568,6 +807,7 @@ jobs:
           vercel-args: '--prod'
 
       - name: Health check production
+        if: steps.vercel-check-prod.outputs.available == 'true'
         run: |
           sleep 30
           for i in 1 2 3 4 5; do
@@ -592,6 +832,104 @@ jobs:
           payload: |
             {
               "text": "${{ job.status == 'success' && 'Production deployment successful' || 'Production deployment FAILED' }} - ${{ github.sha }}"
+            }
+
+  # ===========================================
+  # Stage 7b: Deploy Backend Production (P1-INFRA-004)
+  # Manual-approval production backend deployment.
+  # Mirrors staging deploy — same image promoted (no rebuild).
+  # Requires secrets: PROD_SSH_HOST, PROD_SSH_USER, PROD_SSH_KEY,
+  #                   PROD_DEPLOY_PATH (default: /opt/sovren)
+  # ===========================================
+  deploy-backend-production:
+    name: Deploy Backend (Production)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [deploy-production, deploy-backend-staging, docker]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment:
+      name: production
+      url: https://api.sovren.dev
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check SSH secrets (production)
+        id: ssh-check-prod
+        run: |
+          if [ -n "$SSH_HOST" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::Production SSH secrets not configured — skipping backend deploy"
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          SSH_HOST: ${{ secrets.PROD_SSH_HOST }}
+
+      - name: Deploy backend image to production host
+        if: steps.ssh-check-prod.outputs.available == 'true'
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.PROD_SSH_HOST }}
+          username: ${{ secrets.PROD_SSH_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          script: |
+            set -e
+            DEPLOY_PATH="${{ secrets.PROD_DEPLOY_PATH || '/opt/sovren' }}"
+            DIGEST="${{ needs.docker.outputs.image_digest }}"
+
+            echo "Promoting staging image to production: digest=$DIGEST"
+
+            docker pull "ghcr.io/${{ github.repository }}/backend@${DIGEST}"
+
+            cd "$DEPLOY_PATH"
+            cat > docker-compose.prod-override.yml <<EOF
+            services:
+              backend:
+                image: "ghcr.io/${{ github.repository }}/backend@${DIGEST}"
+            EOF
+
+            docker compose -f docker-compose.prod.yml \
+                           -f docker-compose.prod-override.yml \
+                           up -d --no-deps --pull never backend
+
+            for i in 1 2 3 4 5 6; do
+              sleep 10
+              STATUS=$(curl -sf http://localhost:3001/health | python3 -c "import sys,json; print(json.load(sys.stdin)['status'])" 2>/dev/null || echo "error")
+              if [ "$STATUS" = "healthy" ]; then
+                echo "Production backend health check passed"
+                exit 0
+              fi
+              echo "Attempt $i: status=$STATUS"
+            done
+            echo "Production backend health check FAILED — rolling back"
+            docker compose -f docker-compose.prod.yml up -d --no-deps backend
+            exit 1
+
+      - name: Verify production backend API health (external)
+        if: steps.ssh-check-prod.outputs.available == 'true'
+        run: |
+          for i in 1 2 3 4 5; do
+            sleep 5
+            STATUS=$(curl -sf https://api.sovren.dev/health | python3 -c "import sys,json; print(json.load(sys.stdin).get('status',''))" 2>/dev/null || echo "")
+            if [ "$STATUS" = "healthy" ]; then
+              echo "External production health check passed"
+              exit 0
+            fi
+            echo "Attempt $i: $STATUS"
+          done
+          echo "::warning::External production backend health check failed — check production deployment"
+
+      - name: Notify backend deployment
+        if: always()
+        uses: slackapi/slack-github-action@v2
+        continue-on-error: true
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": "${{ job.status == 'success' && 'Backend production deployment successful' || 'Backend production deployment FAILED' }} - ${{ github.sha }}"
             }
 
   # ===========================================

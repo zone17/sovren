@@ -47,29 +47,27 @@ Fix Order:
 **Step 1**: Remove the mock block from `packages/backend/src/routes/auth.ts`
 
 Delete lines 64-84 (the entire `if (process.env.NODE_ENV === 'test' ...)` block and its comment on line 64):
+
 ```typescript
 // DELETE lines 64-84:
-    // For testing purposes, mock the signature verification
-    if (process.env.NODE_ENV === 'test' && req.body.signature?.includes('mock')) {
-      // Mock successful verification for tests
-      const token = await nostrAuth.generateJWT(
-        validatedData.nostr_pubkey,
-        validatedData.role
-      );
+// For testing purposes, mock the signature verification
+if (process.env.NODE_ENV === 'test' && req.body.signature?.includes('mock')) {
+  // Mock successful verification for tests
+  const token = await nostrAuth.generateJWT(validatedData.nostr_pubkey, validatedData.role);
 
-      return res.status(200).json({
-        success: true,
-        data: {
-          token,
-          user: {
-            nostr_pubkey: validatedData.nostr_pubkey,
-            role: validatedData.role,
-            signature_verified: true,
-          },
-          expires_in: '24h',
-        },
-      });
-    }
+  return res.status(200).json({
+    success: true,
+    data: {
+      token,
+      user: {
+        nostr_pubkey: validatedData.nostr_pubkey,
+        role: validatedData.role,
+        signature_verified: true,
+      },
+      expires_in: '24h',
+    },
+  });
+}
 ```
 
 After deletion, line 64 should be the `// Real NOSTR signature verification` comment (previously line 86).
@@ -202,53 +200,54 @@ Replace the existing `try/finally` block content:
 
 ```typescript
 // CURRENT (lines 313-331):
-    try {
-      await new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => {
-          reject(new Error('Connection timeout'));
-        }, 5000);
+try {
+  await new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      reject(new Error('Connection timeout'));
+    }, 5000);
 
-        ws.onopen = () => {
-          clearTimeout(timeout);
-          resolve(void 0);
-        };
+    ws.onopen = () => {
+      clearTimeout(timeout);
+      resolve(void 0);
+    };
 
-        ws.onerror = (error) => {
-          clearTimeout(timeout);
-          reject(error);
-        };
-      });
-    } finally {
-      ws.close();
-    }
+    ws.onerror = (error) => {
+      clearTimeout(timeout);
+      reject(error);
+    };
+  });
+} finally {
+  ws.close();
+}
 
 // REPLACE WITH:
-    try {
-      await new Promise<void>((resolve, reject) => {
-        const timeout = setTimeout(() => {
-          reject(new Error('Connection timeout'));
-        }, 5000);
+try {
+  await new Promise<void>((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      reject(new Error('Connection timeout'));
+    }, 5000);
 
-        ws.onopen = () => {
-          clearTimeout(timeout);
-          resolve();
-        };
+    ws.onopen = () => {
+      clearTimeout(timeout);
+      resolve();
+    };
 
-        ws.onerror = (error) => {
-          clearTimeout(timeout);
-          reject(error);
-        };
-      });
-    } finally {
-      ws.onopen = null;
-      ws.onerror = null;
-      ws.onclose = null;
-      ws.onmessage = null;
-      ws.close();
-    }
+    ws.onerror = (error) => {
+      clearTimeout(timeout);
+      reject(error);
+    };
+  });
+} finally {
+  ws.onopen = null;
+  ws.onerror = null;
+  ws.onclose = null;
+  ws.onmessage = null;
+  ws.close();
+}
 ```
 
 Key changes:
+
 1. Null out all event handlers before `ws.close()` to prevent stale callbacks
 2. Change `resolve(void 0)` to `resolve()` (cleaner)
 3. Type the Promise as `Promise<void>`
@@ -276,6 +275,7 @@ Key changes:
 **In `packages/backend/src/server.ts`, line 24**:
 
 Replace:
+
 ```typescript
 // 🔧 Process Configuration
 // WHY: Prevent memory leaks and handle unhandled Promise rejections
@@ -283,6 +283,7 @@ process.setMaxListeners(0);
 ```
 
 With:
+
 ```typescript
 // Process listener limit: set above known listener count (~15)
 // to detect genuine leaks without false positives during normal operation.
@@ -290,6 +291,7 @@ process.setMaxListeners(25);
 ```
 
 **Listener count analysis**: The server registers ~13-15 process listeners:
+
 - `uncaughtException` (1)
 - `unhandledRejection` (1)
 - `SIGTERM` (1)
@@ -317,6 +319,7 @@ A limit of 25 provides headroom without masking genuine leaks.
 ### Problem
 
 Three `Map` objects grow without bound:
+
 1. `lightning-payment-service.ts` line 118: `invoiceCache: Map<string, LightningInvoice>`
 2. `lightning-payment-service.ts` line 117: `paymentMonitors: Map<string, NodeJS.Timeout>` (actually self-cleaning via 1-hour timeout)
 3. `lightning-service.ts` line 151: `invoiceCache = new Map<string, LightningInvoice>()`
@@ -418,11 +421,13 @@ export class TTLCache<K, V> {
 **Step 2**: Update `packages/backend/src/services/lightning-payment-service.ts`
 
 Add import at top:
+
 ```typescript
 import { TTLCache } from '../utils/ttl-cache';
 ```
 
 Change type declarations (lines 117-118):
+
 ```typescript
 // BEFORE:
 private paymentMonitors: Map<string, NodeJS.Timeout>;
@@ -434,6 +439,7 @@ private invoiceCache: TTLCache<string, LightningInvoice>;
 ```
 
 Change constructor (lines 128-129):
+
 ```typescript
 // BEFORE:
 this.paymentMonitors = new Map();
@@ -445,6 +451,7 @@ this.invoiceCache = new TTLCache({ maxSize: 10_000, ttlMs: 30 * 60 * 1000 }); //
 ```
 
 Change `shutdown()` method (line 831):
+
 ```typescript
 // BEFORE:
 this.invoiceCache.clear();
@@ -455,11 +462,13 @@ this.invoiceCache.destroy();
 **Step 3**: Update `packages/backend/src/services/lightning-service.ts`
 
 Add import at top:
+
 ```typescript
 import { TTLCache } from '../utils/ttl-cache';
 ```
 
 Change declarations (lines 151-152):
+
 ```typescript
 // BEFORE:
 private invoiceCache = new Map<string, LightningInvoice>();
@@ -471,6 +480,7 @@ private paymentCache = new TTLCache<string, LightningPayment>({ maxSize: 50_000,
 ```
 
 Update `Array.from(this.xxxCache.values())` calls to `this.xxxCache.values()`:
+
 - `processWebhook()` line 536: `Array.from(this.invoiceCache.values())` -> `this.invoiceCache.values()`
 - `getCreatorPayments()` line 603: `Array.from(this.paymentCache.values())` -> `this.paymentCache.values()`
 - `getStats()` lines 652-653: same for both caches
@@ -536,11 +546,13 @@ export function sanitizeObject(
 ```
 
 **Key changes from current code**:
+
 1. Parameter type: `seen: WeakSet<object>` -> `seen: WeakMap<object, Record<string, unknown>>`
 2. Registration: `seen.add(data)` -> `seen.set(data, sanitized)` (register BEFORE recursing)
 3. Re-encounter: `return { _circular: '[CIRCULAR]' }` -> `return seen.get(data)!` (return cached sanitized copy)
 
 **How this handles both cases**:
+
 - **Circular** (`a.self = a`): Creates `sanitized`, registers `seen.set(a, sanitized)`, recurses on `a.self` -> finds `a` in `seen` -> returns `sanitized` (self-referencing object, correct)
 - **Shared** (`{a: obj, b: obj}`): First encounter sanitizes `obj` and caches it. Second encounter returns the cached sanitized copy. Both fields contain correct data.
 
@@ -563,6 +575,7 @@ export function sanitizeObject(
 ### Problem
 
 Three files declare `Express.Request.user` via `declare global`:
+
 1. `packages/backend/src/types/express.d.ts` line 5: `role?: string` (TOO WIDE)
 2. `packages/backend/src/middleware/auth.ts` lines 6-18: `role?: 'creator' | 'supporter' | 'admin'` (correct but conflicts)
 3. `packages/backend/src/middleware/nostr-auth.ts` lines 16-28: adds `req.nostr` property
@@ -572,6 +585,7 @@ Three files declare `Express.Request.user` via `declare global`:
 **Step 1**: Update `packages/backend/src/types/express.d.ts` to be the single canonical source
 
 Replace full file content with:
+
 ```typescript
 declare global {
   namespace Express {
@@ -602,12 +616,14 @@ export {};
 ```
 
 Changes from current:
+
 - `role?: string` -> `role?: 'creator' | 'supporter' | 'admin'` (narrow union)
 - Add `nostr?` property (moved from nostr-auth.ts)
 
 **Step 2**: Remove `declare global` block from `packages/backend/src/middleware/auth.ts`
 
 Delete lines 5-18 (the comment and `declare global` block):
+
 ```typescript
 // DELETE lines 5-18:
 // 🌟 Extended Request interface with NOSTR authentication
@@ -629,6 +645,7 @@ declare global {
 **Step 3**: Remove `declare global` block from `packages/backend/src/middleware/nostr-auth.ts`
 
 Delete lines 16-28:
+
 ```typescript
 // DELETE lines 16-28:
 declare global {
@@ -668,6 +685,7 @@ Multiple `.env` files exist in the working tree. While `.gitignore` covers `.env
 ### Current State
 
 Files found:
+
 - `/.env` -- placeholder values (OK)
 - `/packages/backend/.env` -- placeholder values (OK)
 - `/packages/backend/.env.example` -- placeholder values (OK, should be tracked)
@@ -719,15 +737,15 @@ Check each `.env.example` file for any values that look like real credentials (l
 
 ## Summary Table
 
-| # | Finding | File(s) | Risk | Est. LOC | Deps | Tests Needed |
-|---|---------|---------|------|----------|------|-------------|
-| 062 | Auth Bypass Mock | auth.ts, enhanced-auth.ts, auth.test.ts | Low | ~65 | None | Mock service layer tests |
-| 064 | WS Leak in Health | health.ts | Low | ~5 | None | WS close verification |
-| 065 | setMaxListeners(0) | server.ts | Med | ~3 | #064 | No MaxListeners warnings |
-| 063 | Unbounded Caches | lightning-*.ts, new ttl-cache.ts | Low | ~100 | None | TTLCache unit tests |
-| 066 | WeakSet False Positive | sensitive-fields.ts | Low | ~10 | None | Shared ref + circular tests |
-| 067 | Conflicting Types | express.d.ts, auth.ts, nostr-auth.ts | Low | ~15 | None | tsc --noEmit |
-| 068 | .env Secrets | .env files, .gitignore | Low | ~5 | None | git ls-files audit |
+| #   | Finding                | File(s)                                 | Risk | Est. LOC | Deps | Tests Needed                |
+| --- | ---------------------- | --------------------------------------- | ---- | -------- | ---- | --------------------------- |
+| 062 | Auth Bypass Mock       | auth.ts, enhanced-auth.ts, auth.test.ts | Low  | ~65      | None | Mock service layer tests    |
+| 064 | WS Leak in Health      | health.ts                               | Low  | ~5       | None | WS close verification       |
+| 065 | setMaxListeners(0)     | server.ts                               | Med  | ~3       | #064 | No MaxListeners warnings    |
+| 063 | Unbounded Caches       | lightning-\*.ts, new ttl-cache.ts       | Low  | ~100     | None | TTLCache unit tests         |
+| 066 | WeakSet False Positive | sensitive-fields.ts                     | Low  | ~10      | None | Shared ref + circular tests |
+| 067 | Conflicting Types      | express.d.ts, auth.ts, nostr-auth.ts    | Low  | ~15      | None | tsc --noEmit                |
+| 068 | .env Secrets           | .env files, .gitignore                  | Low  | ~5       | None | git ls-files audit          |
 
 **Total estimated changes**: ~200 lines across ~10 files + 1 new file (ttl-cache.ts)
 

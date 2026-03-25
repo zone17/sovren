@@ -66,9 +66,9 @@ const DiversificationGoals: React.FC = () => {
   if (isLoading) {
     return (
       <div className="animate-pulse space-y-3">
-        <div className="h-5 w-48 rounded bg-gray-200" />
+        <div className="h-5 w-48 rounded bg-muted" />
         {REVENUE_SOURCES.slice(0, 4).map((s) => (
-          <div key={s} className="h-8 rounded bg-gray-100" />
+          <div key={s} className="h-8 rounded bg-muted" />
         ))}
       </div>
     );
@@ -77,8 +77,8 @@ const DiversificationGoals: React.FC = () => {
   return (
     <div className="space-y-4">
       <div>
-        <h4 className="text-sm font-semibold text-gray-900">Diversification Goals</h4>
-        <p className="text-xs text-gray-500 mt-0.5">
+        <h4 className="text-sm font-semibold text-foreground">Diversification Goals</h4>
+        <p className="text-xs text-muted-foreground mt-0.5">
           Set target percentages for each revenue source. Total must equal 100%.
         </p>
       </div>
@@ -96,7 +96,7 @@ const DiversificationGoals: React.FC = () => {
             <div key={source} className="flex items-center gap-3">
               <label
                 htmlFor={`goal-${source}`}
-                className="w-28 flex-shrink-0 text-sm capitalize text-gray-700"
+                className="w-28 flex-shrink-0 text-sm capitalize text-foreground"
               >
                 {SOURCE_LABELS[source]}
               </label>
@@ -118,12 +118,12 @@ const DiversificationGoals: React.FC = () => {
                 type="number"
                 min="0"
                 max="100"
-                className="w-16 rounded-md border border-gray-300 px-2 py-1 text-sm text-right focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-16 rounded-md border border-border px-2 py-1 text-sm text-right focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 value={distribution[source]}
                 onChange={(e) => updateSource(source, Number(e.target.value))}
                 aria-label={`${SOURCE_LABELS[source]} target percentage`}
               />
-              <span className="text-sm text-gray-500 w-4">%</span>
+              <span className="text-sm text-muted-foreground w-4">%</span>
             </div>
           ))}
         </fieldset>

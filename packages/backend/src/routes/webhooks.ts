@@ -33,16 +33,17 @@ import {
 
 const router = express.Router();
 
-// Initialize Supabase client (only if credentials exist)
+// TODO #774: Move direct Supabase access to service/repository layer.
+// Webhooks need service-key client for admin operations — inject via DI container.
 const supabase =
-  process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY
-    ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
+  process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
+    ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
     : null;
 
 // Initialize Payment State Machine (only if Supabase available)
 const paymentStateMachine = supabase ? new PaymentStateMachine({ supabase }) : null;
 
-// Webhook secrets for signature verification — require in production
+// Webhook secrets for signature verification — require in production/staging
 const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || '';
 if (
   !WEBHOOK_SECRET &&
@@ -101,36 +102,31 @@ function rateLimitWebhook(req: Request, res: Response, next: NextFunction) {
 }
 
 /**
- * Verify HMAC signature with support for secret rotation
+ * Timing-safe HMAC comparison to prevent timing attacks.
+ * Returns true if the signature matches the expected HMAC.
  */
-function timingSafeCompare(a: string, b: string): boolean {
-  // Hash both to fixed-length digests to eliminate length oracle leak.
-  // Direct length comparison would leak whether the attacker's signature
-  // matched the expected byte count via timing differences.
-  const aBuf = crypto.createHash('sha256').update(a).digest();
-  const bBuf = crypto.createHash('sha256').update(b).digest();
+/**
+ * Timing-safe HMAC comparison. Hashes both the provided signature and the
+ * expected HMAC to fixed-length SHA-256 digests before comparing, eliminating
+ * any length oracle leak.
+ */
+function timingSafeHmacCompare(signature: string, secret: string, payload: string): boolean {
+  const expected = crypto.createHmac('sha256', secret).update(payload).digest('hex');
+  // Hash both to fixed 32-byte digests — no length leak possible
+  const aBuf = crypto.createHash('sha256').update(signature).digest();
+  const bBuf = crypto.createHash('sha256').update(expected).digest();
   return crypto.timingSafeEqual(aBuf, bBuf);
 }
 
 function verifySignature(payload: string, signature: string): boolean {
   // Try primary secret
-  const primarySignature = crypto
-    .createHmac('sha256', WEBHOOK_SECRET)
-    .update(payload)
-    .digest('hex');
-
-  if (timingSafeCompare(signature, primarySignature)) {
+  if (timingSafeHmacCompare(signature, WEBHOOK_SECRET, payload)) {
     return true;
   }
 
   // Try rotation secret if configured
   if (WEBHOOK_SECRET_ROTATION) {
-    const rotationSignature = crypto
-      .createHmac('sha256', WEBHOOK_SECRET_ROTATION)
-      .update(payload)
-      .digest('hex');
-
-    if (timingSafeCompare(signature, rotationSignature)) {
+    if (timingSafeHmacCompare(signature, WEBHOOK_SECRET_ROTATION, payload)) {
       console.info('[WEBHOOK] Request verified with rotation secret');
       return true;
     }
@@ -297,9 +293,93 @@ router.post(
           targetState = PaymentState.COMPLETED;
           metadata.preimage = preimage;
           metadata.amount = amount;
-          // Update payment record with preimage
-          await supabase.from('payments').update({ preimage }).eq('id', payment.id);
-          break;
+
+          // P1-PAY-003: Use atomic RPC to write preimage + transition state in one transaction.
+          // This prevents a crash between the two operations leaving payment proof lost.
+          {
+            const { data: rpcData, error: rpcError } = await supabase.rpc(
+              'complete_payment_atomically',
+              {
+                p_payment_id: payment.id,
+                p_from_state: payment.state,
+                p_preimage: preimage,
+                p_metadata: metadata,
+                p_user_id: null,
+              }
+            );
+
+            if (rpcError) {
+              console.error('[WEBHOOK] Atomic payment completion failed:', rpcError);
+              return res.status(500).json({
+                success: false,
+                error: 'Failed to complete payment atomically',
+              });
+            }
+
+            const result = Array.isArray(rpcData) ? rpcData[0] : rpcData;
+            if (!result?.success) {
+              console.error('[WEBHOOK] Atomic completion rejected:', result?.error_message);
+              return res.status(409).json({
+                success: false,
+                error: result?.error_message || 'Payment state transition rejected',
+              });
+            }
+
+            // P1-PAY-005: Grant content access after successful payment.
+            // Uses insert-then-verify pattern (critical-patterns.md #1).
+            // If content_id is on the payment, grant access atomically.
+            // If this fails, payment is already confirmed — log for manual recovery.
+            if (payment.content_id && payment.user_id) {
+              const accessId = crypto.randomUUID();
+              const { error: accessError } = await supabase.from('premium_content_access').insert({
+                id: accessId,
+                content_id: payment.content_id,
+                user_id: payment.user_id,
+                access_type: 'purchase',
+                price_paid: payment.amount,
+                purchased_at: new Date().toISOString(),
+                is_active: true,
+              });
+
+              if (accessError) {
+                // Payment is confirmed but access grant failed — critical alert
+                console.error(
+                  '[WEBHOOK] CRITICAL: Payment completed but content access grant failed',
+                  {
+                    paymentId: payment.id,
+                    contentId: payment.content_id,
+                    userId: payment.user_id,
+                    error: accessError.message,
+                  }
+                );
+                // Do not return error — payment succeeded. Access grant failure is handled separately.
+              } else {
+                // Verify the grant was actually written (insert-then-verify)
+                const { data: verifyData } = await supabase
+                  .from('premium_content_access')
+                  .select('id')
+                  .eq('id', accessId)
+                  .single();
+
+                if (!verifyData) {
+                  console.error('[WEBHOOK] CRITICAL: Content access grant verification failed', {
+                    paymentId: payment.id,
+                    contentId: payment.content_id,
+                    userId: payment.user_id,
+                    accessId,
+                  });
+                }
+              }
+            }
+
+            // Atomic completion successful — skip the generic transition below.
+            return res.json({
+              success: true,
+              message: `Webhook processed: ${event}`,
+              paymentId: payment.id,
+              newState: targetState,
+            });
+          }
 
         case 'payment.failed':
           targetState = PaymentState.FAILED;
@@ -319,7 +399,7 @@ router.post(
           });
       }
 
-      // Transition payment state
+      // Transition payment state for non-completed events
       if (targetState) {
         await paymentStateMachine.transition(payment.id, targetState, metadata);
       }

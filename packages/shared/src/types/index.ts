@@ -17,6 +17,8 @@ export * from './community';
 export * from './finance';
 export * from './discovery';
 export * from './comments';
+export * from './notifications';
+export * from './pagination';
 
 // Export config utilities
 export * from '../config';

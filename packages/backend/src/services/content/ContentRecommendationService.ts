@@ -222,20 +222,24 @@ export class ContentRecommendationService
       const features = await this.getContentFeatures(contentId);
 
       // Find similar content using cosine similarity
+      // Cap candidates to avoid unbounded queries
       const candidates = await this.contentRepository.findPublished({ limit: 100 });
+      const filteredCandidates = candidates.filter((c: Content) => c.id !== contentId);
+
+      // Batch-fetch all candidate features in parallel instead of N+1
+      const candidateFeatures = await Promise.all(
+        filteredCandidates.map((c: Content) => this.getContentFeatures(c.id))
+      );
+
       const similarities: Array<{ contentId: string; score: number }> = [];
-
-      for (const candidate of candidates) {
-        if (candidate.id === contentId) continue;
-
-        const candidateFeatures = await this.getContentFeatures(candidate.id);
+      for (let i = 0; i < filteredCandidates.length; i++) {
         const similarity = this.calculateCosineSimilarity(
           features.embedding || [],
-          candidateFeatures.embedding || []
+          candidateFeatures[i].embedding || []
         );
 
         if (similarity > this.minSimilarity) {
-          similarities.push({ contentId: candidate.id, score: similarity });
+          similarities.push({ contentId: filteredCandidates[i].id, score: similarity });
         }
       }
 
@@ -518,28 +522,32 @@ export class ContentRecommendationService
       const userProfile = await this.buildUserContentProfile(interactions);
 
       // Find similar content using vector similarity
+      // Cap candidates to avoid unbounded queries
       const candidates = await this.contentRepository.findPublished({ limit: 200 });
+
+      // Filter out already-interacted content
+      const interactedIds = new Set(interactions.map((i) => i.contentId));
+      const newCandidates = candidates.filter((c: Content) => !interactedIds.has(c.id));
+
+      // Batch-fetch all candidate features in parallel instead of N+1
+      const candidateFeatures = await Promise.all(
+        newCandidates.map((c: Content) => this.getContentFeatures(c.id))
+      );
+
       const similarities: Recommendation[] = [];
-
-      for (const candidate of candidates) {
-        // Skip if user already interacted
-        if (interactions.some((i) => i.contentId === candidate.id)) {
-          continue;
-        }
-
-        const features = await this.getContentFeatures(candidate.id);
+      for (let i = 0; i < newCandidates.length; i++) {
         const similarity = this.calculateCosineSimilarity(
           userProfile.embedding,
-          features.embedding || []
+          candidateFeatures[i].embedding || []
         );
 
         if (similarity > this.minSimilarity) {
           similarities.push({
-            contentId: candidate.id,
+            contentId: newCandidates[i].id,
             score: similarity,
             reason: 'content-based',
             explanation: 'Similar to content you enjoyed',
-            features: features.features,
+            features: candidateFeatures[i].features,
           });
         }
       }
@@ -642,16 +650,18 @@ export class ContentRecommendationService
       // Get candidate users who interacted with similar content
       const candidates = await this.getCandidateUsers(userId, 100);
 
+      // Batch-fetch all candidate interactions in parallel instead of N+1
+      const candidateInteractions = await Promise.all(
+        candidates.map((candidateId) => this.getUserInteractions(candidateId))
+      );
+
       const similarities: UserSimilarity[] = [];
-
-      for (const candidateId of candidates) {
-        const candidateInteractions = await this.getUserInteractions(candidateId);
-        const candidateContentIds = candidateInteractions.map((i) => i.contentId);
-
+      for (let i = 0; i < candidates.length; i++) {
+        const candidateContentIds = candidateInteractions[i].map((ia) => ia.contentId);
         const similarity = this.calculateJaccardSimilarity(userContentIds, candidateContentIds);
 
         if (similarity > this.minSimilarity) {
-          similarities.push({ userId: candidateId, similarity });
+          similarities.push({ userId: candidates[i], similarity });
         }
       }
 

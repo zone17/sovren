@@ -67,7 +67,7 @@ describe('useInvoices', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     expect(result.current.data).toEqual(mockData);
-    expect(fetchSpy).toHaveBeenCalledWith('/api/payments/invoices?', expect.any(Object));
+    expect(fetchSpy).toHaveBeenCalledWith('/api/v1/payments/invoices?', expect.any(Object));
   });
 
   it('should handle filters correctly', async () => {
@@ -103,7 +103,7 @@ describe('useInvoices', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     expect(fetchSpy).toHaveBeenCalledWith(
-      '/api/payments/invoices?userId=user1&status=completed&method=lightning&minAmount=100&maxAmount=1000&sortBy=amount&sortOrder=desc',
+      '/api/v1/payments/invoices?userId=user1&status=completed&method=lightning&minAmount=100&maxAmount=1000&sortBy=amount&sortOrder=desc',
       expect.any(Object)
     );
   });
@@ -136,7 +136,7 @@ describe('useInvoices', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     expect(fetchSpy).toHaveBeenCalledWith(
-      '/api/payments/invoices?dateFrom=2024-01-01&dateTo=2024-12-31',
+      '/api/v1/payments/invoices?dateFrom=2024-01-01&dateTo=2024-12-31',
       expect.any(Object)
     );
   });

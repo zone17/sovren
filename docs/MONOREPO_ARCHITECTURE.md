@@ -165,12 +165,10 @@ npm run dev
 ### Common Issues
 
 1. **Multiple vercel.json conflict**
-
    - **Symptom**: "Function Runtimes must have a valid version"
    - **Solution**: Check governance in `.vercelrc.json`
 
 2. **Build command not found**
-
    - **Symptom**: Build fails with command not found
    - **Solution**: Verify `buildCommand` paths in root config
 

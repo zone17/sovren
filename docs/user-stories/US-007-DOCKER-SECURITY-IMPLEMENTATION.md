@@ -263,13 +263,11 @@ deploy:
 ### Security Testing
 
 1. **Container Security Audit**
-
    - Verify non-root user execution
    - Test read-only filesystem enforcement
    - Validate capability restrictions
 
 2. **Vulnerability Scanning**
-
    - Automated image scanning with Trivy
    - Regular base image updates
    - Security patch management

@@ -430,9 +430,7 @@
       "incomingDependencies": 0,
       "totalDependencies": 0,
       "couplingScore": 0,
-      "serviceDependencies": [
-        "KeyManagementService"
-      ],
+      "serviceDependencies": ["KeyManagementService"],
       "externalDependencies": 5,
       "patterns": {
         "usesSupabase": false,
@@ -1336,9 +1334,7 @@
     }
   },
   "circularDependencies": [],
-  "missingServices": [
-    "keymanagementservice"
-  ],
+  "missingServices": ["keymanagementservice"],
   "recommendations": [
     {
       "type": "LARGE_SERVICES",

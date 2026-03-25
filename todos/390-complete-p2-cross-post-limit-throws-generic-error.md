@@ -1,7 +1,7 @@
 ---
 status: pending
 priority: p2
-issue_id: "407"
+issue_id: '407'
 tags: [code-review, error-handling, pr-87]
 dependencies: []
 ---
@@ -27,11 +27,13 @@ The new cross-post limit check in `CrossPostService.publish()` throws a bare `ne
 **Approach:** Replace `throw new Error(...)` with `throw new ValidationError(...)`.
 
 **Pros:**
+
 - Consistent with the rest of the PR
 - Returns 400 with structured error body
 - 1-line change
 
 **Cons:**
+
 - None
 
 **Effort:** 5 minutes
@@ -45,9 +47,11 @@ Change to `throw new ValidationError(...)`. One-line fix.
 ## Technical Details
 
 **Affected files:**
+
 - `packages/backend/src/services/distribution/CrossPostService.ts:57-61`
 
 **Fix:**
+
 ```typescript
 import { ValidationError } from '../../utils/errors';
 // ...
@@ -70,6 +74,7 @@ if (request.platforms.length > MAX_CROSS_POST_TARGETS) {
 **By:** Claude Code (PR #87 review)
 
 **Actions:**
+
 - Identified generic Error throw in CrossPostService
 - Verified ValidationError is the canonical pattern
 

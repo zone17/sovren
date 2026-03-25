@@ -140,7 +140,6 @@ graph LR
 ### Diagram Creation Guidelines
 
 1. **Use Appropriate Diagram Type**:
-
    - Flow charts for processes
    - Sequence diagrams for interactions
    - Class diagrams for data models
@@ -148,14 +147,12 @@ graph LR
    - Entity-relationship diagrams for databases
 
 2. **Follow Consistent Styling**:
-
    - Use consistent node shapes for similar entities
    - Apply color coding for different types of components
    - Maintain readable text with appropriate font size
    - Use clear, concise labels for all elements
 
 3. **Ensure Readability**:
-
    - Limit diagram complexity (max 15-20 nodes per diagram)
    - Group related elements
    - Use subgraphs for logical grouping
@@ -193,13 +190,11 @@ graph TD
 ### Documentation Placement
 
 1. **Primary Location**: Each user story implementation must have its documentation in the appropriate location:
-
    - Feature-specific documentation in `/docs/features/[feature-name].md`
    - Architecture changes in `/docs/architecture/[component-name].md`
    - API documentation in `/docs/api/[api-name].md`
 
 2. **CHANGELOG Integration**:
-
    - Each user story implementation must be documented in the CHANGELOG.md
    - Include links to the detailed documentation
    - Reference the Mermaid diagrams created
@@ -235,25 +230,21 @@ graph LR
 ### Review Requirements
 
 1. **Documentation Completeness**:
-
    - All required sections are present
    - All mandatory diagrams are included
    - Content addresses the full scope of the user story
 
 2. **Technical Accuracy**:
-
    - Information is technically correct
    - Diagrams accurately represent the implementation
    - Code examples are functional and follow best practices
 
 3. **Diagram Quality**:
-
    - Diagrams follow the established standards
    - Visual representation is clear and understandable
    - Appropriate level of detail is provided
 
 4. **Consistency Check**:
-
    - Documentation is consistent with existing documentation
    - Terminology is used consistently
    - Style and format follow established patterns
@@ -274,7 +265,6 @@ graph LR
 ### Diagram Tools
 
 - **IDE Plugins**:
-
   - VS Code: Mermaid Preview
   - JetBrains: Mermaid plugin
   - Vim/Neovim: Mermaid preview plugins

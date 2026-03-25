@@ -148,6 +148,7 @@ router.use('/v2', v2Routes);
 ```
 
 The v2 route aggregator (`routes/v2/index.ts`) mounts:
+
 - `/wellness` → `wellness.routes.ts`
 - `/shield` → `shield.routes.ts`
 
@@ -175,6 +176,7 @@ A new service module (`container/bindings/phase7-bindings.ts`) registers factori
 ### 3. Content Publish Pipeline Hook
 
 `ProvenanceService.signContent()` hooks into the existing content publish flow. When `POST /api/v1/content/publish` completes, the `EventBusService` emits a `content.published` event. `ProvenanceService` subscribes to this event and:
+
 1. Signs the content with the creator's NOSTR key
 2. Generates SimHash/pHash fingerprints
 3. Creates `provenance_records` and `content_fingerprints` entries
@@ -188,6 +190,7 @@ This event-driven approach avoids modifying the existing v1 publish route.
 ### 4. Auto-Tracking Middleware (Wellness)
 
 A lightweight Express middleware (`middleware/wellness-tracking.ts`) intercepts specific v1 actions and emits `wellness.activity` events:
+
 - `POST /api/v1/content/publish` → `content_creation` activity
 - `POST /api/v1/users/*/messages` → `engagement` activity
 - `GET /api/v1/content/analytics` → `management` activity
@@ -204,6 +207,7 @@ A lightweight Express middleware (`middleware/wellness-tracking.ts`) intercepts 
 ### 6. Notification Integration
 
 Both domains integrate with the existing `NotificationService`:
+
 - Wellness: Burnout risk threshold alerts, buffer depth warnings
 - Shield: Copy detection alerts, DMCA report status updates
 
@@ -212,48 +216,56 @@ Both domains integrate with the existing `NotificationService`:
 ## Implementation Batch Order
 
 ### Batch 1: Data Models & Shared Types (No dependencies)
+
 **Stories**: US-E7-001, US-E8-001
 **What**: Database migrations, RLS policies, shared TypeScript types, Zod schemas
 **Duration**: ~3 hours
 **Agents**: architect → backend
 
 ### Batch 2: Core Backend Services (Depends on Batch 1)
+
 **Stories**: US-E7-002, US-E8-002, US-E8-003, US-E8-007
 **What**: Work pattern tracking API, provenance signing service, fingerprint service, auto-signing integration
 **Duration**: ~6 hours
 **Agents**: backend (parallelizable: wellness API + shield services)
 
 ### Batch 3: Scoring & Scheduling (Depends on Batch 2)
+
 **Stories**: US-E7-003, US-E7-005, US-E7-006, US-E7-007
 **What**: Burnout risk scoring engine, sustainable scheduler, creator boundaries, pulse check-ins
 **Duration**: ~6 hours
 **Agents**: backend + frontend
 
 ### Batch 4: Scanner & Alert System (Depends on Batch 2)
+
 **Stories**: US-E8-004a, US-E8-004b, US-E8-004c
 **What**: NOSTR relay scanner job, alert management API, DMCA report generator
 **Duration**: ~5 hours
 **Agents**: backend
 
 ### Batch 5: Frontend Dashboards (Depends on Batches 2-4)
+
 **Stories**: US-E7-004, US-E8-005, US-E8-006
 **What**: Wellness dashboard UI, authenticity badge, content shield dashboard
 **Duration**: ~6 hours
 **Agents**: frontend
 
 ### Batch 6: Static Content & Low Priority (No blocking dependencies)
+
 **Stories**: US-E7-008
 **What**: Wellness resource library (static data, no API)
 **Duration**: ~1 hour
 **Agents**: frontend
 
 ### Batch 7: Integration Tests (Depends on Batches 5-6)
+
 **Stories**: US-E7-009, US-E8-008
 **What**: E2E and integration tests for both domains
 **Duration**: ~4 hours
 **Agents**: qa
 
 ### Batch 8: Documentation (Depends on all)
+
 **Stories**: US-E7-010, US-E8-009
 **What**: Mermaid diagrams, ADRs, CHANGELOG entries
 **Duration**: ~2 hours
@@ -291,18 +303,18 @@ Batch 8: [US-E7-010] [US-E8-009]                (parallel)
 
 ## Key Design Decisions
 
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| API versioning | `/api/v2/` prefix | Separates new domains from v1; avoids breaking existing clients |
-| Server state management (FE) | TanStack Query (no Redux) | Per CLAUDE.md: "All new v2 modules use TanStack Query for server state" |
-| Lazy loading | `React.lazy()` + `Suspense` | Per CLAUDE.md: "New feature modules lazy-loaded" |
-| Burnout scoring | Weighted sum, 5 factors, 0-100 scale | Transparent, configurable, testable — see ADR-019 |
-| Fingerprinting | SimHash (text) + pHash (images) | Industry-standard perceptual hashing — see ADR-020 |
-| Provenance chain | NOSTR event tags (NIP-compliant) | Builds on existing NOSTR infrastructure; decentralized verification |
-| Auto-tracking | EventBus subscriber (not middleware mutation) | Non-invasive; existing routes untouched; event-driven pattern already in codebase |
-| Copy detection scanning | BullMQ scheduled job | Matches PRD requirement (US-E8-004a depends on US-E0-001 BullMQ) |
-| Wellness data privacy | RLS + creator-only access | "All wellness data is PRIVATE to creator — never shared or used for platform metrics" |
-| DMCA export format | PDF + JSON | PDF for legal filing; JSON for programmatic use |
+| Decision                     | Choice                                        | Rationale                                                                             |
+| ---------------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------- |
+| API versioning               | `/api/v2/` prefix                             | Separates new domains from v1; avoids breaking existing clients                       |
+| Server state management (FE) | TanStack Query (no Redux)                     | Per CLAUDE.md: "All new v2 modules use TanStack Query for server state"               |
+| Lazy loading                 | `React.lazy()` + `Suspense`                   | Per CLAUDE.md: "New feature modules lazy-loaded"                                      |
+| Burnout scoring              | Weighted sum, 5 factors, 0-100 scale          | Transparent, configurable, testable — see ADR-019                                     |
+| Fingerprinting               | SimHash (text) + pHash (images)               | Industry-standard perceptual hashing — see ADR-020                                    |
+| Provenance chain             | NOSTR event tags (NIP-compliant)              | Builds on existing NOSTR infrastructure; decentralized verification                   |
+| Auto-tracking                | EventBus subscriber (not middleware mutation) | Non-invasive; existing routes untouched; event-driven pattern already in codebase     |
+| Copy detection scanning      | BullMQ scheduled job                          | Matches PRD requirement (US-E8-004a depends on US-E0-001 BullMQ)                      |
+| Wellness data privacy        | RLS + creator-only access                     | "All wellness data is PRIVATE to creator — never shared or used for platform metrics" |
+| DMCA export format           | PDF + JSON                                    | PDF for legal filing; JSON for programmatic use                                       |
 
 ---
 
@@ -319,23 +331,23 @@ Batch 8: [US-E7-010] [US-E8-009]                (parallel)
 
 ## Technology Choices (Within Existing Stack)
 
-| Concern | Technology | Notes |
-|---------|------------|-------|
-| Text hashing | `simhash-js` or custom SimHash | Lightweight, no native deps |
-| Image hashing | `sharp` + custom pHash | sharp already in dependency tree for image processing |
-| Job queue | BullMQ + Redis | Already planned in US-E0-001; required for scanner |
-| PDF generation | `pdfkit` or `pdf-lib` | For DMCA report export |
-| Charts (FE) | Recharts | Already used in analytics feature for charts |
-| Heatmap (FE) | Custom component with TailwindCSS grid or Recharts | Lightweight; no new charting library needed |
+| Concern        | Technology                                         | Notes                                                 |
+| -------------- | -------------------------------------------------- | ----------------------------------------------------- |
+| Text hashing   | `simhash-js` or custom SimHash                     | Lightweight, no native deps                           |
+| Image hashing  | `sharp` + custom pHash                             | sharp already in dependency tree for image processing |
+| Job queue      | BullMQ + Redis                                     | Already planned in US-E0-001; required for scanner    |
+| PDF generation | `pdfkit` or `pdf-lib`                              | For DMCA report export                                |
+| Charts (FE)    | Recharts                                           | Already used in analytics feature for charts          |
+| Heatmap (FE)   | Custom component with TailwindCSS grid or Recharts | Lightweight; no new charting library needed           |
 
 ---
 
 ## Risk Mitigations
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| BullMQ dependency not yet available (US-E0-001) | Scanner job blocked | Scanner job can be implemented with a simple `setInterval` fallback; swap to BullMQ when available |
-| NOSTR relay rate limits | Scanner banned from relays | Configurable rate limits per relay; exponential backoff; distribute across relays |
-| pHash accuracy for small images | False positives/negatives | Configurable similarity thresholds; creators can tune sensitivity |
-| Burnout score gaming | Creators manipulate data to get "good" scores | Wellness data is for the creator's benefit only; no platform consequences; no incentive to game |
-| Large fingerprint registry | Slow comparison queries | Indexed hash columns; batch scanning with bloom filter pre-check |
+| Risk                                            | Impact                                        | Mitigation                                                                                         |
+| ----------------------------------------------- | --------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| BullMQ dependency not yet available (US-E0-001) | Scanner job blocked                           | Scanner job can be implemented with a simple `setInterval` fallback; swap to BullMQ when available |
+| NOSTR relay rate limits                         | Scanner banned from relays                    | Configurable rate limits per relay; exponential backoff; distribute across relays                  |
+| pHash accuracy for small images                 | False positives/negatives                     | Configurable similarity thresholds; creators can tune sensitivity                                  |
+| Burnout score gaming                            | Creators manipulate data to get "good" scores | Wellness data is for the creator's benefit only; no platform consequences; no incentive to game    |
+| Large fingerprint registry                      | Slow comparison queries                       | Indexed hash columns; batch scanning with bloom filter pre-check                                   |

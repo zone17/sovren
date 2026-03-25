@@ -36,16 +36,19 @@ Implemented a production-ready, two-tier caching system for NOSTR events with Re
 ### Subtask 1: Cache Schema Design ✅
 
 **Files**:
+
 - `/packages/frontend/src/services/nostr/EventCacheService.ts` (Lines 1-1095)
 - `/packages/frontend/src/services/nostr/CacheInvalidationService.ts`
 - `/packages/frontend/src/services/nostr/CachePersistenceService.ts`
 
 **Implementation**:
+
 - Two-tier architecture: Hot (Memory) + Cold (IndexedDB)
 - Indexed lookups: Pubkey, Kind, Tag indexes for O(1) queries
 - Metadata tracking: TTL, access time, relay source, verification status
 
 **Schema**:
+
 ```typescript
 interface CachedEvent {
   event: NostrEvent;
@@ -65,12 +68,14 @@ interface CachedEvent {
 ### Subtask 2: React Query Integration ✅
 
 **Files**:
+
 - `/packages/frontend/src/services/nostr/hooks/useEventCache.ts`
 - `/packages/frontend/src/services/nostr/hooks/__tests__/useEventCache.test.tsx`
 
 **Hooks Implemented**:
 
 #### Query Hooks
+
 - `useEvent(eventId)` - Single event with 5min TTL
 - `useEvents(ids[])` - Multiple events batch fetch
 - `useEventQuery(filter)` - Filter-based queries
@@ -79,6 +84,7 @@ interface CachedEvent {
 - `useNIP05Verification(nip05)` - NIP-05 with 24hr TTL
 
 #### Mutation Hooks
+
 - `useSetEvent()` - Add/update with auto-invalidation
 - `useSetEvents()` - Batch updates
 - `useDeleteEvent()` - Remove from cache
@@ -86,11 +92,13 @@ interface CachedEvent {
 - `useInvalidateCache()` - Pattern-based invalidation
 
 #### Utility Hooks
+
 - `useCacheStats()` - Real-time statistics
 - `useWarmCache()` - Preload with filters
 - `usePreloadEvents()` - Preload specific events
 
 **Usage Example**:
+
 ```typescript
 // Component usage
 function EventDisplay({ eventId }) {
@@ -113,16 +121,17 @@ function ProfileCard({ pubkey }) {
 
 **Configuration**:
 
-| Event Type | TTL | Rationale |
-|------------|-----|-----------|
-| Kind 1 (Text Notes) | 5 minutes | Frequent updates |
-| Kind 0 (Profiles) | 1 hour | Infrequent changes |
-| Kind 3 (Contact Lists) | 1 hour | Stable data |
-| Kind 7 (Reactions) | 5 minutes | Real-time updates |
-| NIP-05 Verification | 24 hours | Very stable |
-| Custom Events | 5 minutes | Default conservative |
+| Event Type             | TTL       | Rationale            |
+| ---------------------- | --------- | -------------------- |
+| Kind 1 (Text Notes)    | 5 minutes | Frequent updates     |
+| Kind 0 (Profiles)      | 1 hour    | Infrequent changes   |
+| Kind 3 (Contact Lists) | 1 hour    | Stable data          |
+| Kind 7 (Reactions)     | 5 minutes | Real-time updates    |
+| NIP-05 Verification    | 24 hours  | Very stable          |
+| Custom Events          | 5 minutes | Default conservative |
 
 **Implementation**:
+
 ```typescript
 // Automatic TTL assignment
 await cache.set(event, {
@@ -134,6 +143,7 @@ setInterval(() => cache.cleanup(), 300000);
 ```
 
 **Performance**:
+
 - Expiration check: < 1ms
 - Automatic cleanup: Background thread
 - Zero memory leaks: All expired events removed
@@ -159,6 +169,7 @@ await cache.invalidate('all:*');
 ```
 
 **Event-Driven Invalidation**:
+
 ```typescript
 // Automatically invalidate on publish
 await cache.invalidateOnPublish(newEvent);
@@ -168,6 +179,7 @@ await cache.invalidateOnPublish(newEvent);
 ```
 
 **React Query Sync**:
+
 - Cache invalidation triggers React Query refetch
 - Optimistic updates supported
 - Background revalidation enabled
@@ -177,6 +189,7 @@ await cache.invalidateOnPublish(newEvent);
 ### Subtask 5: Profile Caching ✅
 
 **Implementation**:
+
 ```typescript
 // Hook with 1 hour TTL
 const { data: profile } = useProfile(pubkey);
@@ -190,6 +203,7 @@ mutate({ event: updatedProfile }); // Auto-invalidates old profile
 ```
 
 **Features**:
+
 - 1 hour TTL for profiles
 - Auto-invalidation on kind 0 publish
 - Metadata parsing included
@@ -200,6 +214,7 @@ mutate({ event: updatedProfile }); // Auto-invalidates old profile
 ### Subtask 6: NIP-05 Metadata Caching ✅
 
 **Implementation**:
+
 ```typescript
 // 24 hour TTL for verification results
 const { data: verification } = useNIP05Verification('alice@example.com');
@@ -214,6 +229,7 @@ interface NIP05Cache {
 ```
 
 **Benefits**:
+
 - Reduces external API calls
 - 24 hour cache (verification is stable)
 - Background revalidation
@@ -224,12 +240,14 @@ interface NIP05Cache {
 ### Subtask 7: IndexedDB Persistence ✅
 
 **Features**:
+
 - Automatic persistence of hot cache to disk
 - Survives page reloads
 - Compression support (placeholder for pako)
 - Batch operations for performance
 
 **Schema**:
+
 ```typescript
 // IndexedDB Stores
 - events: { id, event, metadata, pubkey, kind, created_at, expiresAt }
@@ -238,6 +256,7 @@ interface NIP05Cache {
 ```
 
 **Performance**:
+
 - Write: < 10ms average
 - Read: < 5ms average
 - Bulk operations supported
@@ -247,10 +266,12 @@ interface NIP05Cache {
 ### Subtask 8: LRU Eviction ✅
 
 **Memory Limits**:
+
 - **Memory Cache**: 1000 events or 50MB (whichever first)
 - **IndexedDB**: 10,000 events or 500MB
 
 **LRU Algorithm**:
+
 ```typescript
 // Track access order
 private accessOrder: Map<string, number>;
@@ -266,6 +287,7 @@ evict(lruId);
 ```
 
 **Eviction Flow**:
+
 1. Memory limit reached
 2. Find least recently accessed event
 3. Evict from memory
@@ -277,29 +299,32 @@ evict(lruId);
 ### Subtask 9: Performance Tests ✅
 
 **Test Files**:
+
 - `/packages/frontend/src/services/nostr/__tests__/EventCacheService.test.ts`
 - `/packages/frontend/src/services/nostr/hooks/__tests__/useEventCache.test.tsx`
 
 **Benchmark Results**:
 
-| Operation | Target | Actual | Status |
-|-----------|--------|--------|--------|
-| Cache Hit (Memory) | < 5ms | < 2ms | ✅ PASS |
-| Cache Hit (IndexedDB) | < 10ms | < 8ms | ✅ PASS |
-| Cache Miss | N/A | N/A | N/A |
-| Set Operation | < 5ms | < 3ms | ✅ PASS |
-| Query (100 events) | < 10ms | < 7ms | ✅ PASS |
-| LRU Eviction | < 10ms | < 5ms | ✅ PASS |
-| TTL Cleanup | < 50ms | < 30ms | ✅ PASS |
-| Hit Rate | > 80% | 85%+ | ✅ PASS |
+| Operation             | Target | Actual | Status  |
+| --------------------- | ------ | ------ | ------- |
+| Cache Hit (Memory)    | < 5ms  | < 2ms  | ✅ PASS |
+| Cache Hit (IndexedDB) | < 10ms | < 8ms  | ✅ PASS |
+| Cache Miss            | N/A    | N/A    | N/A     |
+| Set Operation         | < 5ms  | < 3ms  | ✅ PASS |
+| Query (100 events)    | < 10ms | < 7ms  | ✅ PASS |
+| LRU Eviction          | < 10ms | < 5ms  | ✅ PASS |
+| TTL Cleanup           | < 50ms | < 30ms | ✅ PASS |
+| Hit Rate              | > 80%  | 85%+   | ✅ PASS |
 
 **Test Coverage**:
+
 - Unit tests: 95%+ coverage
 - Integration tests: Complete workflows
 - Performance benchmarks: All passing
 - Edge cases: Handled
 
 **Performance Test Examples**:
+
 ```typescript
 it('should handle cache operations under 5ms target', async () => {
   const event = createMockEvent();
@@ -322,6 +347,7 @@ it('should handle cache operations under 5ms target', async () => {
 ### Subtask 10: Documentation ✅
 
 **Files Created**:
+
 1. **This Document**: `/docs/features/US-317-NOSTR-CACHING-LAYER.md`
 2. **Mermaid Diagrams**:
    - `/docs/architecture/diagrams/us-317-cache-architecture.mmd`
@@ -333,18 +359,23 @@ it('should handle cache operations under 5ms target', async () => {
 **Diagram Previews**:
 
 #### Architecture Overview
+
 ![Cache Architecture](https://github.com/sovr/sovren/blob/main/docs/architecture/diagrams/us-317-cache-architecture.mmd)
 
 #### Data Flow
+
 ![Data Flow](https://github.com/sovr/sovren/blob/main/docs/architecture/diagrams/us-317-cache-data-flow.mmd)
 
 #### TTL Strategy
+
 ![TTL Strategy](https://github.com/sovr/sovren/blob/main/docs/architecture/diagrams/us-317-cache-ttl-strategy.mmd)
 
 #### Invalidation Patterns
+
 ![Invalidation](https://github.com/sovr/sovren/blob/main/docs/architecture/diagrams/us-317-cache-invalidation.mmd)
 
 #### Performance Optimization
+
 ![Performance](https://github.com/sovr/sovren/blob/main/docs/architecture/diagrams/us-317-cache-performance.mmd)
 
 ---
@@ -419,12 +450,12 @@ console.log(`Hit rate: ${stats?.hitRate}%`);
 ```typescript
 // Initialize with custom config
 const cache = new EventCacheService({
-  maxMemoryEvents: 1000,      // Max events in memory
-  maxIndexedDBEvents: 10000,  // Max events in IndexedDB
-  maxMemoryBytes: 52428800,   // 50MB memory limit
-  defaultTTL: 300000,         // 5 minutes default
-  enableIndexedDB: true,      // Enable persistence
-  enableAnalytics: true,      // Track performance
+  maxMemoryEvents: 1000, // Max events in memory
+  maxIndexedDBEvents: 10000, // Max events in IndexedDB
+  maxMemoryBytes: 52428800, // 50MB memory limit
+  defaultTTL: 300000, // 5 minutes default
+  enableIndexedDB: true, // Enable persistence
+  enableAnalytics: true, // Track performance
 });
 ```
 
@@ -508,6 +539,7 @@ npm test -- --grep "Performance Benchmarks"
 ## Troubleshooting
 
 ### High Memory Usage
+
 ```typescript
 // Check memory stats
 const stats = await cache.getStats();
@@ -518,17 +550,17 @@ if (stats.memoryBytes > 40_000_000) {
 ```
 
 ### Low Hit Rate
+
 ```typescript
 // Increase TTL for stable data
 await cache.set(profileEvent, { ttl: 3600000 }); // 1 hour
 
 // Warm cache on app start
-await cache.warmCache([
-  { kinds: [0], authors: followList },
-]);
+await cache.warmCache([{ kinds: [0], authors: followList }]);
 ```
 
 ### IndexedDB Errors
+
 ```typescript
 // Falls back to memory-only automatically
 const cache = new EventCacheService({
@@ -580,4 +612,4 @@ const cache = new EventCacheService({
 
 ---
 
-*Generated with Claude Code - Elite Engineering Standards Applied*
+_Generated with Claude Code - Elite Engineering Standards Applied_

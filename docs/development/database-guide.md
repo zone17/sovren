@@ -84,7 +84,7 @@ exports.up = (pgm) => {
     status: { type: 'varchar(20)', default: 'active' },
     expires_at: { type: 'timestamp', notNull: true },
     created_at: { type: 'timestamp', default: pgm.func('NOW()') },
-    updated_at: { type: 'timestamp', default: pgm.func('NOW()') }
+    updated_at: { type: 'timestamp', default: pgm.func('NOW()') },
   });
 
   pgm.createIndex('subscriptions', 'user_id');
@@ -118,15 +118,10 @@ npx node-pg-migrate down --to 1234567890
 
 ```typescript
 // ✅ GOOD: Parameterized query
-await db.query(
-  'SELECT * FROM users WHERE email = $1',
-  [email]
-);
+await db.query('SELECT * FROM users WHERE email = $1', [email]);
 
 // ❌ BAD: String interpolation (SQL injection risk!)
-await db.query(
-  `SELECT * FROM users WHERE email = '${email}'`
-);
+await db.query(`SELECT * FROM users WHERE email = '${email}'`);
 ```
 
 ### Index Usage
@@ -151,7 +146,7 @@ await db.query(
 
 // ❌ BAD: Loop with individual inserts
 for (const payment of payments) {
-  await db.query('INSERT INTO payments ...');  // N queries!
+  await db.query('INSERT INTO payments ...'); // N queries!
 }
 ```
 
@@ -163,33 +158,25 @@ for (const payment of payments) {
 
 ```typescript
 export class PaymentRepository {
-  async processPaymentWithRefund(
-    paymentId: string,
-    refundAmount: number
-  ): Promise<void> {
+  async processPaymentWithRefund(paymentId: string, refundAmount: number): Promise<void> {
     const client = await this.pool.connect();
 
     try {
       await client.query('BEGIN');
 
       // Update payment
-      await client.query(
-        'UPDATE payments SET status = $1 WHERE id = $2',
-        ['refunded', paymentId]
-      );
+      await client.query('UPDATE payments SET status = $1 WHERE id = $2', ['refunded', paymentId]);
 
       // Create refund record
-      await client.query(
-        'INSERT INTO refunds (payment_id, amount) VALUES ($1, $2)',
-        [paymentId, refundAmount]
-      );
+      await client.query('INSERT INTO refunds (payment_id, amount) VALUES ($1, $2)', [
+        paymentId,
+        refundAmount,
+      ]);
 
       await client.query('COMMIT');
-
     } catch (error) {
       await client.query('ROLLBACK');
       throw error;
-
     } finally {
       client.release();
     }
@@ -213,10 +200,10 @@ export const pool = new Pool({
   database: process.env.DB_NAME,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
-  min: 2,          // Minimum connections
-  max: 10,         // Maximum connections
+  min: 2, // Minimum connections
+  max: 10, // Maximum connections
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000
+  connectionTimeoutMillis: 2000,
 });
 
 pool.on('error', (err) => {

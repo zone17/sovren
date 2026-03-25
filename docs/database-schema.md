@@ -338,54 +338,55 @@ Table migration_performance {
 
 ## Triggers
 
-| Trigger | Table | Event | Function | Purpose |
-|---------|-------|-------|----------|---------|
-| `trigger_users_updated_at` | users | BEFORE UPDATE | `update_updated_at()` | Auto-set updated_at |
-| `trigger_content_updated_at` | content | BEFORE UPDATE | `update_updated_at()` | Auto-set updated_at |
-| `trigger_payments_updated_at` | payments | BEFORE UPDATE | `update_updated_at()` | Auto-set updated_at |
-| `trigger_comments_updated_at` | comments | BEFORE UPDATE | `update_updated_at()` | Auto-set updated_at |
-| `trigger_content_search_vector` | content | BEFORE INSERT/UPDATE | `update_content_search_vector()` | Auto-populate tsvector from title + description + tags |
+| Trigger                         | Table    | Event                | Function                         | Purpose                                                |
+| ------------------------------- | -------- | -------------------- | -------------------------------- | ------------------------------------------------------ |
+| `trigger_users_updated_at`      | users    | BEFORE UPDATE        | `update_updated_at()`            | Auto-set updated_at                                    |
+| `trigger_content_updated_at`    | content  | BEFORE UPDATE        | `update_updated_at()`            | Auto-set updated_at                                    |
+| `trigger_payments_updated_at`   | payments | BEFORE UPDATE        | `update_updated_at()`            | Auto-set updated_at                                    |
+| `trigger_comments_updated_at`   | comments | BEFORE UPDATE        | `update_updated_at()`            | Auto-set updated_at                                    |
+| `trigger_content_search_vector` | content  | BEFORE INSERT/UPDATE | `update_content_search_vector()` | Auto-populate tsvector from title + description + tags |
 
 ## Row-Level Security (RLS) Policies
 
-| Table | Policy | Operation | Rule |
-|-------|--------|-----------|------|
-| users | `users_select_public_or_own` | SELECT | Own profile or non-admin users visible |
-| users | `users_update_own` | UPDATE | Only own profile |
-| content | `content_select_public` | SELECT | Public content, own content, or supporters-only if follower |
-| content | `content_insert_own` | INSERT | Only own content (creator_id = auth.uid()) |
-| content | `content_update_own` | UPDATE | Only own content |
-| payments | `payments_select_own` | SELECT | Payer or recipient |
-| payments | `payments_insert_own` | INSERT | Payer or recipient |
-| comments | `comments_select_public` | SELECT | Active comments only |
-| comments | `comments_insert_own` | INSERT | Own comments only |
-| comments | `comments_update_own` | UPDATE | Own comments only |
+| Table    | Policy                       | Operation | Rule                                                        |
+| -------- | ---------------------------- | --------- | ----------------------------------------------------------- |
+| users    | `users_select_public_or_own` | SELECT    | Own profile or non-admin users visible                      |
+| users    | `users_update_own`           | UPDATE    | Only own profile                                            |
+| content  | `content_select_public`      | SELECT    | Public content, own content, or supporters-only if follower |
+| content  | `content_insert_own`         | INSERT    | Only own content (creator_id = auth.uid())                  |
+| content  | `content_update_own`         | UPDATE    | Only own content                                            |
+| payments | `payments_select_own`        | SELECT    | Payer or recipient                                          |
+| payments | `payments_insert_own`        | INSERT    | Payer or recipient                                          |
+| comments | `comments_select_public`     | SELECT    | Active comments only                                        |
+| comments | `comments_insert_own`        | INSERT    | Own comments only                                           |
+| comments | `comments_update_own`        | UPDATE    | Own comments only                                           |
 
 ## PostgreSQL Extensions
 
-| Extension | Purpose |
-|-----------|---------|
+| Extension   | Purpose                                |
+| ----------- | -------------------------------------- |
 | `uuid-ossp` | UUID generation (`uuid_generate_v4()`) |
-| `pgcrypto` | Cryptographic functions |
+| `pgcrypto`  | Cryptographic functions                |
 
 ## Migration History
 
-| Migration | Date | Description |
-|-----------|------|-------------|
-| `001_baseline_schema` | 2024-12-29 | Complete baseline: users, content, payments, followers, comments, analytics |
-| `20251023_add_invoice_expiration` | 2025-10-23 | Invoice expiration handling |
-| `20251023_add_payment_lock_function` | 2025-10-23 | Payment locking for race condition prevention |
-| `20251023233811_add_payment_events_table` | 2025-10-23 | Immutable payment state transition audit log |
-| `20251023234155_add_payment_state_transition_function` | 2025-10-23 | Payment state machine enforcement at DB level |
-| `20251023235000_add_payment_retry_support` | 2025-10-23 | Retry tracking for failed payments |
-| `20251024000000_add_webhook_event_log` | 2025-10-24 | Webhook delivery tracking and retry log |
-| `20251026000000_unified_session_management` | 2025-10-26 | Multi-device session management tables |
+| Migration                                              | Date       | Description                                                                 |
+| ------------------------------------------------------ | ---------- | --------------------------------------------------------------------------- |
+| `001_baseline_schema`                                  | 2024-12-29 | Complete baseline: users, content, payments, followers, comments, analytics |
+| `20251023_add_invoice_expiration`                      | 2025-10-23 | Invoice expiration handling                                                 |
+| `20251023_add_payment_lock_function`                   | 2025-10-23 | Payment locking for race condition prevention                               |
+| `20251023233811_add_payment_events_table`              | 2025-10-23 | Immutable payment state transition audit log                                |
+| `20251023234155_add_payment_state_transition_function` | 2025-10-23 | Payment state machine enforcement at DB level                               |
+| `20251023235000_add_payment_retry_support`             | 2025-10-23 | Retry tracking for failed payments                                          |
+| `20251024000000_add_webhook_event_log`                 | 2025-10-24 | Webhook delivery tracking and retry log                                     |
+| `20251026000000_unified_session_management`            | 2025-10-26 | Multi-device session management tables                                      |
 
 ## Index Summary
 
 **Total indexes:** 25+
 
 Key performance indexes:
+
 - `idx_users_nostr_pubkey` - Primary lookup for authentication
 - `idx_content_search` (GIN) - Full-text search on content
 - `idx_content_tags` (GIN) - Tag-based content discovery

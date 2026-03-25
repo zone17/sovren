@@ -6,6 +6,7 @@ import Redis from 'ioredis';
 import { getRedisClient } from '../lib/redis';
 import { supabase } from '../config/supabase';
 import { Logger } from '../utils/logger';
+import { TTLCache } from '../utils/ttl-cache';
 import { AnalyticsService } from './analytics-service';
 import { LightningPaymentService } from './lightning-payment-service';
 import { NotificationService } from './notification-stub';
@@ -88,7 +89,8 @@ export class PayoutManagementService extends EventEmitter {
   private notificationService: NotificationService;
   private analyticsService: AnalyticsService;
   private payoutJobs: Map<string, NodeJS.Timeout>;
-  private earningsCache: Map<string, CreatorEarnings>;
+  // TTLCache: 5-min TTL aligned with Redis cache, max 10k creators to prevent OOM
+  private earningsCache: TTLCache<string, CreatorEarnings>;
   private payoutSchedulerInterval?: NodeJS.Timeout;
   private earningsCalculationInterval?: NodeJS.Timeout;
 
@@ -104,7 +106,10 @@ export class PayoutManagementService extends EventEmitter {
     this.notificationService = new NotificationService();
     this.analyticsService = new AnalyticsService();
     this.payoutJobs = new Map();
-    this.earningsCache = new Map();
+    this.earningsCache = new TTLCache<string, CreatorEarnings>({
+      maxSize: 10_000,
+      ttlMs: 5 * 60 * 1000, // 5 minutes — aligned with Redis setex 300s
+    });
 
     this.initializeService();
   }
@@ -823,21 +828,126 @@ export class PayoutManagementService extends EventEmitter {
   }
 
   private async updateEarningsCache(): Promise<void> {
-    // Update cached earnings for active creators
-    const { data: activeCreators, error } = await supabase
-      .from('payout_schedules')
-      .select('creator_id')
-      .eq('is_active', true);
+    // P2-INFRA-009: Batch earnings cache warm-up.
+    // Old approach: N sequential calculateCreatorEarnings calls = N*3 DB round-trips.
+    // New approach: 3 bulk queries for all active creators, then compute in-memory.
+    // Uses PAGE_SIZE=500 pagination (common-solutions.md #8) to avoid unbounded queries.
+    const PAGE_SIZE = 500;
 
-    if (error) return;
+    // 1. Fetch all active creator IDs
+    const creatorIds: string[] = [];
+    let page = 0;
+    while (true) {
+      const { data, error } = await supabase
+        .from('payout_schedules')
+        .select('creator_id')
+        .eq('is_active', true)
+        .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
-    for (const creator of activeCreators || []) {
+      if (error) {
+        this.logger.error('Failed to fetch active payout schedules', error);
+        return;
+      }
+      if (!data || data.length === 0) break;
+      for (const row of data) creatorIds.push(row.creator_id);
+      if (data.length < PAGE_SIZE) break;
+      page++;
+    }
+
+    if (creatorIds.length === 0) return;
+
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    // 2. Batch-fetch current-month transactions for all active creators
+    const txByCreator = new Map<string, Record<string, unknown>[]>();
+    page = 0;
+    while (true) {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('creator_id, net_amount_msats, fee_msats, type')
+        .in('creator_id', creatorIds)
+        .eq('status', 'completed')
+        .gte('completed_at', monthStart.toISOString())
+        .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+
+      if (error) {
+        this.logger.error('Batch transaction fetch failed during cache warm-up', error);
+        break;
+      }
+      if (!data || data.length === 0) break;
+      for (const tx of data) {
+        if (!txByCreator.has(tx.creator_id)) txByCreator.set(tx.creator_id, []);
+        txByCreator.get(tx.creator_id)!.push(tx);
+      }
+      if (data.length < PAGE_SIZE) break;
+      page++;
+    }
+
+    // 3. Batch-fetch lifetime transactions for all active creators
+    const lifetimeByCreator = new Map<string, number>();
+    page = 0;
+    while (true) {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('creator_id, net_amount_msats')
+        .in('creator_id', creatorIds)
+        .eq('status', 'completed')
+        .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+
+      if (error) {
+        this.logger.error('Batch lifetime transaction fetch failed during cache warm-up', error);
+        break;
+      }
+      if (!data || data.length === 0) break;
+      for (const tx of data) {
+        lifetimeByCreator.set(
+          tx.creator_id,
+          (lifetimeByCreator.get(tx.creator_id) ?? 0) + (tx.net_amount_msats ?? 0)
+        );
+      }
+      if (data.length < PAGE_SIZE) break;
+      page++;
+    }
+
+    // 4. Populate cache for each creator from batch results
+    for (const creator_id of creatorIds) {
       try {
-        await this.calculateCreatorEarnings(creator.creator_id);
+        const cacheKey = `creator_earnings:${creator_id}`;
+        // Skip if Redis cache is still warm (avoid unnecessary writes)
+        const cached = await this.redis.get(cacheKey);
+        if (cached) {
+          this.earningsCache.set(creator_id, JSON.parse(cached));
+          continue;
+        }
+
+        const txs = txByCreator.get(creator_id) ?? [];
+        const totalEarnings = this.calculateTotalEarnings(txs);
+        const feesPaid = this.calculateTotalFees(txs);
+        const lifetimeEarnings = lifetimeByCreator.get(creator_id) ?? 0;
+        const earningsBreakdown = this.calculateEarningsBreakdown(txs);
+
+        const earnings: CreatorEarnings = {
+          creator_id,
+          total_earnings: totalEarnings,
+          available_balance: Math.max(0, lifetimeEarnings),
+          pending_balance: 0,
+          lifetime_earnings: lifetimeEarnings,
+          current_period_earnings: totalEarnings,
+          earnings_breakdown: earningsBreakdown,
+          fees_paid: feesPaid,
+          last_payout_date: undefined,
+          next_payout_date: undefined,
+        };
+
+        await this.redis.setex(cacheKey, 300, JSON.stringify(earnings));
+        this.earningsCache.set(creator_id, earnings);
       } catch (error) {
-        this.logger.error(`Failed to update earnings cache for ${creator.creator_id}`, error);
+        this.logger.error(`Failed to update earnings cache for ${creator_id}`, error);
       }
     }
+
+    this.logger.info(`Earnings cache warmed for ${creatorIds.length} creators`);
   }
 
   /**
@@ -887,8 +997,8 @@ export class PayoutManagementService extends EventEmitter {
     }
     this.payoutJobs.clear();
 
-    // Clear caches
-    this.earningsCache.clear();
+    // Destroy TTLCache (clears entries + stops cleanup interval)
+    this.earningsCache.destroy();
 
     // Shared Redis client — managed by lib/redis.ts disconnectRedis()
 

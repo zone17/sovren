@@ -1,7 +1,7 @@
 ---
 status: pending
 priority: p3
-issue_id: "412"
+issue_id: '412'
 tags: [code-review, types, quality, pr-87]
 dependencies: []
 ---
@@ -48,6 +48,7 @@ Accept as-is. The `as T & string` pattern is marginally better than `as unknown 
 ## Technical Details
 
 **Affected files:**
+
 - `packages/backend/src/services/CacheService.ts:264,479`
 
 ## Acceptance Criteria

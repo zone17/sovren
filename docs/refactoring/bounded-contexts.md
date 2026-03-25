@@ -1,4 +1,5 @@
 # Service Bounded Contexts and Interface Definitions - Epic 005
+
 **Generated**: 2025-10-26
 **Story**: US-E5-002
 **Architect**: Lead Engineering Manager
@@ -77,6 +78,7 @@ graph TB
 ### 1. Payment Context Interfaces
 
 #### IPaymentService
+
 ```typescript
 // packages/backend/src/interfaces/payment/IPaymentService.ts
 import { PaymentStatus, PaymentMethod, Currency } from '@/types/payment';
@@ -133,6 +135,7 @@ export type PaymentCallback = (event: PaymentEvent) => void | Promise<void>;
 ```
 
 #### ISubscriptionService
+
 ```typescript
 // packages/backend/src/interfaces/payment/ISubscriptionService.ts
 export interface ISubscriptionService {
@@ -182,6 +185,7 @@ export type SubscriptionStatus = 'active' | 'paused' | 'cancelled' | 'expired' |
 ### 2. Content Context Interfaces
 
 #### IContentService
+
 ```typescript
 // packages/backend/src/interfaces/content/IContentService.ts
 export interface IContentService {
@@ -234,12 +238,19 @@ export type ContentStatus = 'draft' | 'published' | 'archived' | 'deleted';
 ```
 
 #### IRecommendationService
+
 ```typescript
 // packages/backend/src/interfaces/content/IRecommendationService.ts
 export interface IRecommendationService {
   // Recommendations
-  getRecommendationsForUser(userId: string, options?: RecommendationOptions): Promise<Recommendation[]>;
-  getRecommendationsForContent(contentId: string, options?: RecommendationOptions): Promise<Recommendation[]>;
+  getRecommendationsForUser(
+    userId: string,
+    options?: RecommendationOptions
+  ): Promise<Recommendation[]>;
+  getRecommendationsForContent(
+    contentId: string,
+    options?: RecommendationOptions
+  ): Promise<Recommendation[]>;
   getSimilarCreators(creatorId: string, limit?: number): Promise<CreatorRecommendation[]>;
 
   // Training & Feedback
@@ -268,6 +279,7 @@ export interface Recommendation {
 ### 3. User Context Interfaces
 
 #### IUserService
+
 ```typescript
 // packages/backend/src/interfaces/user/IUserService.ts
 export interface IUserService {
@@ -313,6 +325,7 @@ export interface UserProfile {
 ```
 
 #### IAuthService
+
 ```typescript
 // packages/backend/src/interfaces/user/IAuthService.ts
 export interface IAuthService {
@@ -359,6 +372,7 @@ export interface Session {
 ### 4. Analytics Context Interfaces
 
 #### IAnalyticsService
+
 ```typescript
 // packages/backend/src/interfaces/analytics/IAnalyticsService.ts
 export interface IAnalyticsService {
@@ -396,6 +410,7 @@ export interface MetricsQuery {
 ### 5. Communication Context Interfaces
 
 #### INotificationService
+
 ```typescript
 // packages/backend/src/interfaces/communication/INotificationService.ts
 export interface INotificationService {
@@ -431,6 +446,7 @@ export type NotificationChannel = 'email' | 'push' | 'in-app' | 'nostr';
 ```
 
 #### IEmailService
+
 ```typescript
 // packages/backend/src/interfaces/communication/IEmailService.ts
 export interface IEmailService {
@@ -463,6 +479,7 @@ export interface EmailRequest {
 ```
 
 #### IWebSocketService
+
 ```typescript
 // packages/backend/src/interfaces/communication/IWebSocketService.ts
 export interface IWebSocketService {
@@ -519,6 +536,7 @@ export interface WebSocketMessage {
 ### Anti-Corruption Layer
 
 Each bounded context will implement an Anti-Corruption Layer (ACL) to:
+
 - Translate external models to internal domain models
 - Validate incoming data
 - Handle versioning and backward compatibility
@@ -540,7 +558,7 @@ export class PaymentContextACL {
       customerId: user.id,
       email: user.email,
       paymentMethods: [], // Load from payment context
-      billingAddress: this.extractBillingAddress(user.profile)
+      billingAddress: this.extractBillingAddress(user.profile),
     };
   }
 }
@@ -573,7 +591,7 @@ export enum DomainEventType {
 
   // Analytics Events
   METRIC_THRESHOLD_REACHED = 'metric.threshold.reached',
-  ANOMALY_DETECTED = 'anomaly.detected'
+  ANOMALY_DETECTED = 'anomaly.detected',
 }
 
 // Base Domain Event
@@ -645,7 +663,7 @@ export const TOKENS = {
   NotificationService: new ServiceToken<INotificationService>('NotificationService'),
   EmailService: new ServiceToken<IEmailService>('EmailService'),
   WebSocketService: new ServiceToken<IWebSocketService>('WebSocketService'),
-  EventBus: new ServiceToken<IEventBus>('EventBus')
+  EventBus: new ServiceToken<IEventBus>('EventBus'),
 };
 ```
 
@@ -654,6 +672,7 @@ export const TOKENS = {
 ### 1. Interface Segregation
 
 Each interface should:
+
 - Be focused on a single responsibility
 - Contain 5-10 methods maximum
 - Use clear, descriptive method names
@@ -662,6 +681,7 @@ Each interface should:
 ### 2. Dependency Injection
 
 All services must:
+
 - Depend on interfaces, not implementations
 - Receive dependencies through constructor injection
 - Register with the service registry
@@ -670,6 +690,7 @@ All services must:
 ### 3. Error Handling
 
 Services should:
+
 - Throw domain-specific exceptions
 - Include error codes for client handling
 - Log errors with appropriate context
@@ -678,6 +699,7 @@ Services should:
 ### 4. Testing
 
 Each service requires:
+
 - Unit tests with mocked dependencies
 - Integration tests for boundary interactions
 - Contract tests for interface compliance
@@ -686,26 +708,31 @@ Each service requires:
 ## Migration Path
 
 ### Phase 1: Interface Definition (Current)
+
 - ✅ Define all service interfaces
 - ✅ Create bounded context documentation
 - ⏳ Review with team
 
 ### Phase 2: Implementation Adapters
+
 - Create adapter classes for existing services
 - Implement interface compliance
 - Add missing methods as stubs
 
 ### Phase 3: Service Extraction
+
 - Extract services one context at a time
 - Start with leaf contexts (Analytics, Communication)
 - Payment context last (highest risk)
 
 ### Phase 4: Event Bus Integration
+
 - Implement domain events
 - Replace direct calls with events
 - Add event replay capability
 
 ### Phase 5: Cleanup
+
 - Remove old service implementations
 - Update all imports
 - Final testing and validation

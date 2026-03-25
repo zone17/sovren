@@ -1,7 +1,18 @@
 ---
-title: "Phase 7 Creator Safety Net Sprint"
+title: 'Phase 7 Creator Safety Net Sprint'
 category: feature-implementation
-tags: [phase-7, wellness, content-shield, provenance, burnout-detection, fingerprinting, team-builder, standard-tier, CE-workflow]
+tags:
+  [
+    phase-7,
+    wellness,
+    content-shield,
+    provenance,
+    burnout-detection,
+    fingerprinting,
+    team-builder,
+    standard-tier,
+    CE-workflow,
+  ]
 severity: feature
 module: wellness, provenance, content-shield
 date: 2026-02-14
@@ -32,28 +43,29 @@ Both epics required coordinated backend services, frontend feature modules, shar
 
 Used `/team-builder standard` with 6 agents across 3 phases:
 
-| Phase | Agents | Duration |
-|-------|--------|----------|
-| Phase 0: Architecture | architect + product-owner (parallel) | ~30 min |
-| Phase 1: Implementation | backend + frontend (parallel) | ~90 min |
-| Phase 2: Verification | qa + security-audit (parallel) | ~30 min |
+| Phase                   | Agents                               | Duration |
+| ----------------------- | ------------------------------------ | -------- |
+| Phase 0: Architecture   | architect + product-owner (parallel) | ~30 min  |
+| Phase 1: Implementation | backend + frontend (parallel)        | ~90 min  |
+| Phase 2: Verification   | qa + security-audit (parallel)       | ~30 min  |
 
 ### Architecture (Phase 0)
 
 **8 architecture documents produced (~140KB)**:
 
-| Document | Purpose |
-|----------|---------|
-| `docs/plans/phase7-architecture.md` | System design, component interactions |
-| `docs/plans/phase7-api-spec.md` | 24 API endpoints (14 wellness + 10 shield) |
-| `docs/plans/phase7-database-schema.md` | 7 new tables with RLS policies |
-| `docs/plans/phase7-component-tree.md` | React component hierarchy |
-| `docs/plans/phase7-requirements.md` | Acceptance criteria per story |
-| `docs/plans/phase7-dod.md` | Definition of Done per story |
-| `docs/adr/ADR-019-burnout-scoring-algorithm.md` | Weighted 5-factor scoring (0-100) |
-| `docs/adr/ADR-020-content-fingerprinting-approach.md` | SimHash + pHash approach |
+| Document                                              | Purpose                                    |
+| ----------------------------------------------------- | ------------------------------------------ |
+| `docs/plans/phase7-architecture.md`                   | System design, component interactions      |
+| `docs/plans/phase7-api-spec.md`                       | 24 API endpoints (14 wellness + 10 shield) |
+| `docs/plans/phase7-database-schema.md`                | 7 new tables with RLS policies             |
+| `docs/plans/phase7-component-tree.md`                 | React component hierarchy                  |
+| `docs/plans/phase7-requirements.md`                   | Acceptance criteria per story              |
+| `docs/plans/phase7-dod.md`                            | Definition of Done per story               |
+| `docs/adr/ADR-019-burnout-scoring-algorithm.md`       | Weighted 5-factor scoring (0-100)          |
+| `docs/adr/ADR-020-content-fingerprinting-approach.md` | SimHash + pHash approach                   |
 
 **Key architectural decisions**:
+
 - Three-layer access control: middleware auth + service-level creator scoping + database RLS
 - TanStack Query for all new v2 server state (no Redux)
 - React.lazy() + Suspense for lazy-loaded feature modules
@@ -62,6 +74,7 @@ Used `/team-builder standard` with 6 agents across 3 phases:
 ### Implementation (Phase 1)
 
 **Backend (31 files)**:
+
 - 4 wellness services: WellnessService, BurnoutScoringService, ScheduleService, BoundaryService
 - 4 provenance services: ProvenanceService, FingerprintService, AlertService, DmcaService
 - 10 interface files (5 wellness + 5 provenance)
@@ -71,6 +84,7 @@ Used `/team-builder standard` with 6 agents across 3 phases:
 - 5 unit test files
 
 **Frontend (38 files)**:
+
 - 15 React components across 2 feature modules
 - 9 custom hooks (all TanStack Query)
 - 2 API service clients
@@ -79,18 +93,21 @@ Used `/team-builder standard` with 6 agents across 3 phases:
 - App.tsx + Layout + MobileNavigation updates
 
 **Shared (2 files)**:
+
 - `packages/shared/src/types/wellness.ts` — Domain types for wellness
 - `packages/shared/src/types/provenance.ts` — Domain types for provenance
 
 ### Verification (Phase 2)
 
 **QA agent** created:
+
 - `packages/frontend/e2e/wellness-dashboard.spec.ts` — Playwright E2E for wellness
 - `packages/frontend/e2e/content-shield.spec.ts` — Playwright E2E for shield
 - `packages/backend/src/__tests__/routes/v2/wellness.routes.test.ts` — Integration tests
 - `packages/backend/src/__tests__/routes/v2/shield.routes.test.ts` — Integration tests
 
 **Security audit** produced `docs/security/phase7-security-report.md`:
+
 - Score: **90/100**
 - 0 critical, 0 high, 2 moderate (accepted risk), 3 low (accepted risk)
 - OWASP Top 10: all PASS
@@ -127,6 +144,7 @@ export function registerPhase7Bindings(container: ServiceContainer) {
 ### 3. Three-Layer Access Control
 
 Every wellness/shield endpoint uses defense-in-depth:
+
 1. **Middleware**: `authenticate` + `requireCreator` + `validate`
 2. **Service**: All queries scoped by `req.user!.nostr_pubkey`
 3. **Database**: RLS policies enforce `creator_id = auth.uid()`
@@ -134,6 +152,7 @@ Every wellness/shield endpoint uses defense-in-depth:
 ### 4. Burnout Scoring Algorithm (ADR-019)
 
 Weighted 5-factor algorithm producing 0-100 risk score:
+
 - Work patterns (frequency, duration, consistency)
 - Energy/motivation self-reports
 - Stress indicators
@@ -145,6 +164,7 @@ Sensitivity adjustment stored in-memory Map (accepted risk for MVP; should persi
 ### 5. Content Fingerprinting (ADR-020)
 
 Dual-approach fingerprinting:
+
 - **SimHash** for text content (locality-sensitive hash, 16 hex chars)
 - **pHash** for image content (perceptual hash, invariant to minor edits)
 - Similarity comparison with configurable threshold
@@ -212,21 +232,21 @@ BurnoutScoringService stores sensitivity settings in a `Map<string, SensitivityL
 
 ## Sprint Metrics
 
-| Metric | Value |
-|--------|-------|
-| Total files created/modified | 90 |
-| Architecture docs | 8 (140KB) |
-| Backend files | 31 |
-| Frontend files | 38 |
-| Shared type files | 2 |
-| E2E test files | 2 |
-| Integration test files | 2 |
-| Security report | 1 (90/100) |
-| API endpoints | 24 (14 wellness + 10 shield) |
-| React components | 15 |
-| Custom hooks | 9 |
-| Database tables (planned) | 7 |
-| Team tier | Standard (6 agents) |
-| Phases | 3 |
-| Gate retries | 1 (barrel re-export fix) |
-| Critical/High findings | 0 |
+| Metric                       | Value                        |
+| ---------------------------- | ---------------------------- |
+| Total files created/modified | 90                           |
+| Architecture docs            | 8 (140KB)                    |
+| Backend files                | 31                           |
+| Frontend files               | 38                           |
+| Shared type files            | 2                            |
+| E2E test files               | 2                            |
+| Integration test files       | 2                            |
+| Security report              | 1 (90/100)                   |
+| API endpoints                | 24 (14 wellness + 10 shield) |
+| React components             | 15                           |
+| Custom hooks                 | 9                            |
+| Database tables (planned)    | 7                            |
+| Team tier                    | Standard (6 agents)          |
+| Phases                       | 3                            |
+| Gate retries                 | 1 (barrel re-export fix)     |
+| Critical/High findings       | 0                            |

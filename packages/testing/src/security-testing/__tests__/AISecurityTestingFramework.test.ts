@@ -14,7 +14,6 @@
  * - Security testing coverage verification
  */
 
-
 import { AISecurityTestingFramework } from '../AISecurityTestingFramework';
 import type { AISecurityTestingConfig } from '../types';
 

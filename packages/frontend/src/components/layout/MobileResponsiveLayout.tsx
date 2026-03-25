@@ -118,10 +118,10 @@ export const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
   const breakpoint = useBreakpoint();
 
   const layoutClasses = {
-    default: 'min-h-screen bg-gray-50',
-    'full-width': 'min-h-screen bg-gray-50 w-full',
-    centered: 'min-h-screen bg-gray-50 flex items-center justify-center',
-    sidebar: 'min-h-screen bg-gray-50 lg:grid lg:grid-cols-[250px_1fr]',
+    default: 'min-h-screen bg-muted',
+    'full-width': 'min-h-screen bg-muted w-full',
+    centered: 'min-h-screen bg-muted flex items-center justify-center',
+    sidebar: 'min-h-screen bg-muted lg:grid lg:grid-cols-[250px_1fr]',
     hero: 'min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100',
   };
 
@@ -338,8 +338,8 @@ export const ResponsiveSection: React.FC<ResponsiveSectionProps> = ({
 }) => {
   const backgroundClasses = {
     none: '',
-    white: 'bg-white',
-    gray: 'bg-gray-50',
+    white: 'bg-background',
+    gray: 'bg-muted',
     blue: 'bg-blue-50',
     gradient: 'bg-gradient-to-r from-blue-50 to-indigo-50',
   };

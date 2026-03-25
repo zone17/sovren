@@ -1,16 +1,19 @@
 # US-308: NOSTR Type Consolidation - Quick Reference
 
 ## Location
+
 `/Users/fp/Desktop/Sovren/packages/shared/src/types/nostr/`
 
 ## Import Patterns
 
 ### Import Everything
+
 ```typescript
 import * as Nostr from '@shared/types/nostr';
 ```
 
 ### Import Specific Types
+
 ```typescript
 // Events
 import { NostrEvent, NostrEventKind, EventTemplate } from '@shared/types/nostr';
@@ -37,6 +40,7 @@ import { NostrError, NostrConnectionError } from '@shared/types/nostr';
 ## Common Usage Patterns
 
 ### Creating an Event
+
 ```typescript
 import { NostrEvent, NostrEventKind, NostrEventSchema } from '@shared/types/nostr';
 
@@ -58,6 +62,7 @@ if (result.success) {
 ```
 
 ### Building a Filter
+
 ```typescript
 import { NostrFilterBuilder, CommonFilters } from '@shared/types/nostr';
 
@@ -76,6 +81,7 @@ const mentions = CommonFilters.mentions(myPubkey);
 ```
 
 ### Validating a Key Pair
+
 ```typescript
 import { NostrEnhancedKeyPairSchema } from '@shared/types/nostr';
 
@@ -97,6 +103,7 @@ const result = NostrEnhancedKeyPairSchema.safeParse(keyPair);
 ```
 
 ### Using Type Guards
+
 ```typescript
 import { isNostrEvent, isNostrFilter } from '@shared/types/nostr';
 
@@ -112,12 +119,9 @@ if (isNostrFilter(obj)) {
 ```
 
 ### Event Utilities
+
 ```typescript
-import {
-  isReplaceableEvent,
-  getEventCoordinate,
-  extractMentions,
-} from '@shared/types/nostr';
+import { isReplaceableEvent, getEventCoordinate, extractMentions } from '@shared/types/nostr';
 
 // Check event type
 if (isReplaceableEvent(event.kind)) {
@@ -153,35 +157,35 @@ packages/shared/src/types/nostr/
 import { NostrSchemas } from '@shared/types/nostr';
 
 // Events
-NostrSchemas.Event
-NostrSchemas.UnsignedEvent
-NostrSchemas.EventTag
-NostrSchemas.EventCacheEntry
+NostrSchemas.Event;
+NostrSchemas.UnsignedEvent;
+NostrSchemas.EventTag;
+NostrSchemas.EventCacheEntry;
 
 // Keys
-NostrSchemas.KeyPair
-NostrSchemas.EnhancedKeyPair
-NostrSchemas.KeyDerivation
-NostrSchemas.MnemonicBackup
-NostrSchemas.KeyStorageConfig
-NostrSchemas.HardwareWallet
-NostrSchemas.BrowserExtension
-NostrSchemas.KeyUsageAnalytics
-NostrSchemas.KeySecurityMonitoring
-NostrSchemas.KeyRotation
-NostrSchemas.KeyRecovery
+NostrSchemas.KeyPair;
+NostrSchemas.EnhancedKeyPair;
+NostrSchemas.KeyDerivation;
+NostrSchemas.MnemonicBackup;
+NostrSchemas.KeyStorageConfig;
+NostrSchemas.HardwareWallet;
+NostrSchemas.BrowserExtension;
+NostrSchemas.KeyUsageAnalytics;
+NostrSchemas.KeySecurityMonitoring;
+NostrSchemas.KeyRotation;
+NostrSchemas.KeyRecovery;
 
 // Relays
-NostrSchemas.Relay
-NostrSchemas.RelayConfig
-NostrSchemas.RelayInformationDocument
+NostrSchemas.Relay;
+NostrSchemas.RelayConfig;
+NostrSchemas.RelayInformationDocument;
 
 // Filters
-NostrSchemas.Filter
-NostrSchemas.SubscriptionInfo
+NostrSchemas.Filter;
+NostrSchemas.SubscriptionInfo;
 
 // NIPs
-NostrSchemas.DirectMessage
+NostrSchemas.DirectMessage;
 ```
 
 ## Supported NIPs
@@ -201,6 +205,7 @@ NostrSchemas.DirectMessage
 - NIP-57: Lightning zaps
 
 Check support:
+
 ```typescript
 import { isNIPSupported, SUPPORTED_NIPS } from '@shared/types/nostr';
 
@@ -253,11 +258,13 @@ console.log(DEFAULT_TIMEOUTS.CONNECTION); // 5000ms
 ## Next Steps
 
 The remaining implementation tasks (migration) are tracked in:
+
 - US-301: Update NOSTR Service Implementations
 - US-312: Implement NOSTR Event Cache
 - US-313: Implement NOSTR Relay Pool
 
 These stories will:
+
 1. Update all imports to use new consolidated types
 2. Delete old duplicate type files
 3. Leverage new utility functions

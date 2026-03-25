@@ -27,9 +27,10 @@ const PHASE_2_COMPLETIONS = {
       'packages/frontend/src/queries/creators/useCreatorProfile.ts',
       'packages/frontend/src/queries/creators/mutations/useUpdateCreator.ts',
       'packages/frontend/src/queries/creators/mutations/useDeleteCreator.ts',
-      'packages/frontend/src/queries/creators/__tests__/useCreators.test.ts'
+      'packages/frontend/src/queries/creators/__tests__/useCreators.test.ts',
     ],
-    notes: 'React Query hooks for creators domain - useCreators, useCreatorProfile with optimistic updates, error handling, and cache management'
+    notes:
+      'React Query hooks for creators domain - useCreators, useCreatorProfile with optimistic updates, error handling, and cache management',
   },
   'US-E4-007': {
     name: 'Create React Query Hooks for Content',
@@ -44,9 +45,10 @@ const PHASE_2_COMPLETIONS = {
       'packages/frontend/src/queries/content/mutations/useCreateContent.ts',
       'packages/frontend/src/queries/content/mutations/useUpdateContent.ts',
       'packages/frontend/src/queries/content/mutations/useDeleteContent.ts',
-      'packages/frontend/src/queries/content/__tests__/useContent.test.ts'
+      'packages/frontend/src/queries/content/__tests__/useContent.test.ts',
     ],
-    notes: 'React Query hooks for content domain - useContent, useContentItem with optimistic updates, error handling, and cache management'
+    notes:
+      'React Query hooks for content domain - useContent, useContentItem with optimistic updates, error handling, and cache management',
   },
   'US-E4-008': {
     name: 'Create React Query Hooks for Payments',
@@ -60,9 +62,10 @@ const PHASE_2_COMPLETIONS = {
       'packages/frontend/src/queries/payments/useSubscriptions.ts',
       'packages/frontend/src/queries/payments/mutations/useCreateInvoice.ts',
       'packages/frontend/src/queries/payments/mutations/useUpdateSubscription.ts',
-      'packages/frontend/src/queries/payments/__tests__/useInvoices.test.ts'
+      'packages/frontend/src/queries/payments/__tests__/useInvoices.test.ts',
     ],
-    notes: 'React Query hooks for payments domain - useInvoices, useSubscriptions with optimistic updates, error handling, and cache management'
+    notes:
+      'React Query hooks for payments domain - useInvoices, useSubscriptions with optimistic updates, error handling, and cache management',
   },
   'US-E4-009': {
     name: 'Remove Server Data from Redux Slices',
@@ -73,14 +76,15 @@ const PHASE_2_COMPLETIONS = {
     files_created: [
       'packages/frontend/src/store/slices/uiSlice.ts',
       'packages/frontend/src/store/slices/cmsUiSlice.ts',
-      'packages/frontend/src/store/index-refactored.ts'
+      'packages/frontend/src/store/index-refactored.ts',
     ],
     files_removed: [
       'packages/frontend/src/store/slices/postSlice.ts',
       'packages/frontend/src/store/slices/paymentSlice.ts',
-      'packages/frontend/src/store/slices/cmsSlice.ts'
+      'packages/frontend/src/store/slices/cmsSlice.ts',
     ],
-    notes: 'Removed all server data from Redux - created UI-only slices, reduced bundle size by 15KB'
+    notes:
+      'Removed all server data from Redux - created UI-only slices, reduced bundle size by 15KB',
   },
   'US-E4-010': {
     name: 'Update Components to Use React Query',
@@ -95,9 +99,10 @@ const PHASE_2_COMPLETIONS = {
       'packages/frontend/src/components/content/ContentEditor.tsx',
       'packages/frontend/src/components/payments/PaymentHistory.tsx',
       'packages/frontend/src/components/payments/SubscriptionManager.tsx',
-      'packages/frontend/src/pages/CreatorDashboard.tsx'
+      'packages/frontend/src/pages/CreatorDashboard.tsx',
     ],
-    notes: 'Updated all components to use React Query hooks - removed Redux dependencies, proper loading/error states'
+    notes:
+      'Updated all components to use React Query hooks - removed Redux dependencies, proper loading/error states',
   },
   'US-E4-011': {
     name: 'Implement Caching Strategies',
@@ -108,9 +113,10 @@ const PHASE_2_COMPLETIONS = {
     files_created: [
       'packages/frontend/src/queries/queryClient.ts',
       'packages/frontend/src/queries/cacheConfig.ts',
-      'packages/frontend/src/queries/__tests__/queryClient.test.ts'
+      'packages/frontend/src/queries/__tests__/queryClient.test.ts',
     ],
-    notes: 'Tiered caching strategy - static (24h), user (5m), content (1m), realtime (30s), financial (10m). Smart invalidation and warming.'
+    notes:
+      'Tiered caching strategy - static (24h), user (5m), content (1m), realtime (30s), financial (10m). Smart invalidation and warming.',
   },
   'US-E4-012': {
     name: 'Implement Error Handling for React Query',
@@ -122,10 +128,11 @@ const PHASE_2_COMPLETIONS = {
       'packages/frontend/src/queries/errorHandling.tsx',
       'packages/frontend/src/queries/ErrorBoundary.tsx',
       'packages/frontend/src/queries/errorClassification.ts',
-      'packages/frontend/src/queries/__tests__/errorHandling.test.tsx'
+      'packages/frontend/src/queries/__tests__/errorHandling.test.tsx',
     ],
-    notes: 'Complete error handling - error boundaries, retry logic, classification, recovery strategies, network monitoring'
-  }
+    notes:
+      'Complete error handling - error boundaries, retry logic, classification, recovery strategies, network monitoring',
+  },
 };
 
 async function completePhase2() {
@@ -142,7 +149,7 @@ async function completePhase2() {
   let updatedCount = 0;
 
   for (const [storyId, completion] of Object.entries(PHASE_2_COMPLETIONS)) {
-    const story = activeDev.tasks.find(t => t.story_id === storyId);
+    const story = activeDev.tasks.find((t) => t.story_id === storyId);
 
     if (!story) {
       console.log(`⚠️  Story ${storyId} not found in tasks.json - skipping`);
@@ -170,11 +177,11 @@ async function completePhase2() {
     story.notes = completion.notes;
 
     // Mark all subtasks as completed
-    story.subtasks.forEach(subtask => {
+    story.subtasks.forEach((subtask) => {
       subtask.status = 'completed';
     });
 
-    const completedSubtasks = story.subtasks.filter(st => st.status === 'completed').length;
+    const completedSubtasks = story.subtasks.filter((st) => st.status === 'completed').length;
     console.log(`✅ Updated ${storyId}: ${completion.name}`);
     console.log(`   📋 ${completedSubtasks}/${story.subtasks.length} subtasks complete`);
     console.log(`   📊 Test coverage: ${completion.test_coverage}%`);
@@ -194,27 +201,41 @@ async function completePhase2() {
   await fs.writeFile(TASKS_FILE, JSON.stringify(tasksData, null, 2));
 
   // Calculate summary
-  const epic004Stories = activeDev.tasks.filter(t => t.story_id && t.story_id.startsWith('US-E4-'));
-  const phase2Stories = epic004Stories.filter(s => {
+  const epic004Stories = activeDev.tasks.filter(
+    (t) => t.story_id && t.story_id.startsWith('US-E4-')
+  );
+  const phase2Stories = epic004Stories.filter((s) => {
     const num = parseInt(s.story_id.split('-')[2]);
     return num >= 6 && num <= 12;
   });
 
-  const phase2Complete = phase2Stories.filter(s => s.status === 'completed').length;
-  const totalComplete = epic004Stories.filter(s => s.status === 'completed').length;
+  const phase2Complete = phase2Stories.filter((s) => s.status === 'completed').length;
+  const totalComplete = epic004Stories.filter((s) => s.status === 'completed').length;
 
   console.log('✅ SUCCESS!\n');
   console.log('📊 Epic 004 Phase 2 Completion Summary:');
   console.log('   - Stories updated: ' + updatedCount);
-  console.log('   - Phase 2 progress: ' + phase2Complete + '/7 stories (' + Math.round(phase2Complete/7*100) + '%)');
-  console.log('   - Epic 004 progress: ' + totalComplete + '/25 stories (' + Math.round(totalComplete/25*100) + '%)');
+  console.log(
+    '   - Phase 2 progress: ' +
+      phase2Complete +
+      '/7 stories (' +
+      Math.round((phase2Complete / 7) * 100) +
+      '%)'
+  );
+  console.log(
+    '   - Epic 004 progress: ' +
+      totalComplete +
+      '/25 stories (' +
+      Math.round((totalComplete / 25) * 100) +
+      '%)'
+  );
   console.log('');
   console.log('📊 Dashboard at http://localhost:3001 now shows:');
   console.log('   - Phase 2: COMPLETE ✅');
   console.log('   - Ready for Phase 3: Client State Consolidation');
 }
 
-completePhase2().catch(err => {
+completePhase2().catch((err) => {
   console.error('❌ Error:', err);
   process.exit(1);
 });

@@ -51,6 +51,7 @@ Sovren is a full-stack content creator platform built on the NOSTR protocol with
 **User Story:** As a platform operator, I want all services to use persistent database storage so that data survives restarts and supports production workloads.
 
 **Acceptance Criteria:**
+
 - Given the backend starts, when a subscription is created, then it is persisted in PostgreSQL (not in-memory maps).
 - Given the backend restarts, when a user queries their subscriptions, then all previously created subscriptions are returned.
 - Given concurrent users create subscriptions, when the system is under load, then database transactions prevent data corruption.
@@ -67,6 +68,7 @@ Sovren is a full-stack content creator platform built on the NOSTR protocol with
 **User Story:** As a new creator, I want a guided onboarding experience so that I can set up my profile, connect my Lightning wallet, and create my first subscription tier within 10 minutes.
 
 **Acceptance Criteria:**
+
 - Given a user signs up with their NOSTR key, when they select the "creator" role, then they enter a step-by-step onboarding wizard.
 - Given the onboarding wizard is active, when the creator completes each step (profile, wallet, first tier), then progress is saved and the creator can resume later.
 - Given the creator connects a Lightning wallet, when they provide their Lightning address or LNURL, then the system verifies the wallet can receive payments.
@@ -81,6 +83,7 @@ Sovren is a full-stack content creator platform built on the NOSTR protocol with
 **User Story:** As a supporter, I want to see payment confirmations and new content notifications in real time so that I have a responsive, live experience.
 
 **Acceptance Criteria:**
+
 - Given a supporter is viewing a creator's page, when they send a Lightning payment, then they see a confirmation within 3 seconds of settlement.
 - Given a supporter is subscribed to a creator, when the creator publishes new content, then the supporter receives a push notification within 5 seconds.
 - Given a WebSocket connection drops, when the client reconnects, then missed events are delivered in order.
@@ -95,6 +98,7 @@ Sovren is a full-stack content creator platform built on the NOSTR protocol with
 **User Story:** As a creator, I want my Sovren profile, content, and subscription tiers to be visible in other NOSTR clients (Damus, Amethyst, Primal) so that I can reach the broader NOSTR audience.
 
 **Acceptance Criteria:**
+
 - Given a creator publishes a text note on Sovren, when a user views the creator's profile on Damus, then the note appears correctly with proper NIP-01 formatting.
 - Given a creator sets up a subscription tier, when the tier is encoded as a NIP-33 parameterized replaceable event (kind 30027), then other NOSTR clients can display the tier metadata even if they do not support the full subscription flow.
 - Given a supporter sends a Zap (NIP-57) to a creator on Primal, when Sovren receives the Zap receipt event, then it is displayed in the creator's analytics dashboard.
@@ -109,6 +113,7 @@ Sovren is a full-stack content creator platform built on the NOSTR protocol with
 **User Story:** As a creator, I want a real-time analytics dashboard showing revenue, subscriber growth, content performance, and audience demographics so that I can make data-driven content decisions.
 
 **Acceptance Criteria:**
+
 - Given a creator opens their dashboard, when revenue data is available, then they see total earnings, earnings by tier, and earnings trend over 7/30/90-day periods.
 - Given a creator views content performance, when they select a specific piece of content, then they see views, engagement rate, and conversion to subscriptions.
 - Given a creator has multiple subscription tiers, when they view tier analytics, then they see subscriber count per tier, churn rate, and average lifetime value.
@@ -123,6 +128,7 @@ Sovren is a full-stack content creator platform built on the NOSTR protocol with
 **User Story:** As a supporter, I want to discover creators through personalized recommendations, preview their content, and subscribe with a single Lightning payment so that finding and supporting creators is frictionless.
 
 **Acceptance Criteria:**
+
 - Given a supporter opens the discovery page, when recommendations load, then they see creators ranked by relevance to their interests and past behavior.
 - Given a supporter views a creator's profile, when the creator has subscription tiers, then the supporter sees tier names, prices (in sats), and benefits listed clearly.
 - Given a supporter selects a tier, when they confirm the subscription, then a Lightning invoice is generated and presented (QR code and bolt11 string).
@@ -137,6 +143,7 @@ Sovren is a full-stack content creator platform built on the NOSTR protocol with
 **User Story:** As a creator, I want to gate specific content behind subscription tiers so that only paying supporters can access premium material.
 
 **Acceptance Criteria:**
+
 - Given a creator publishes content marked as "premium" for a specific tier, when a non-subscriber tries to access it, then they see a paywall with the tier information and a subscribe button.
 - Given a supporter has an active subscription at the required tier, when they access premium content, then the content loads fully without any paywall.
 - Given a supporter's subscription expires, when they try to access premium content, then they see a renewal prompt instead of the content.
@@ -151,6 +158,7 @@ Sovren is a full-stack content creator platform built on the NOSTR protocol with
 **User Story:** As a creator, I want 95% of subscription and tip revenue deposited to my Lightning wallet automatically so that I receive my earnings without manual intervention.
 
 **Acceptance Criteria:**
+
 - Given a supporter pays 10,000 sats for a subscription, when the payment settles, then 9,500 sats are allocated to the creator and 500 sats to the platform.
 - Given the creator has a verified Lightning address, when accumulated earnings exceed the minimum payout threshold (configurable, default 1,000 sats), then a payout is initiated automatically.
 - Given a payout fails (e.g., creator's node is offline), when the system retries, then it attempts 3 retries with exponential backoff before marking the payout as failed and notifying the creator.
@@ -165,6 +173,7 @@ Sovren is a full-stack content creator platform built on the NOSTR protocol with
 **User Story:** As a creator, I want to collaborate with other creators on joint content (co-authored posts, shared subscription bundles) so that we can cross-promote and grow audiences together.
 
 **Acceptance Criteria:**
+
 - Given a creator initiates a collaboration, when they invite another creator by NOSTR pubkey, then the invitee receives a notification and can accept or decline.
 - Given two creators co-author content, when the content is published, then both creators are attributed and the content appears on both profiles.
 - Given collaborating creators set up a shared subscription bundle, when a supporter subscribes to the bundle, then revenue is split according to the agreed ratio.
@@ -179,6 +188,7 @@ Sovren is a full-stack content creator platform built on the NOSTR protocol with
 **User Story:** As a creator with a global audience, I want the platform interface available in multiple languages so that supporters worldwide can use Sovren in their preferred language.
 
 **Acceptance Criteria:**
+
 - Given the platform supports i18n, when a user sets their language preference to Spanish, then all UI text (navigation, buttons, labels, error messages) displays in Spanish.
 - Given content is created in English, when a Spanish-speaking user views it, then the content remains in English but all surrounding UI is in Spanish.
 - Given a new language is added, when translators provide a translation file, then the language becomes available without code changes.
@@ -254,57 +264,57 @@ Sovren is a full-stack content creator platform built on the NOSTR protocol with
 
 ### Payment and Revenue Split
 
-| Rule | Description |
-|------|-------------|
-| BR-001 | Creator revenue share is 95% of all subscription and tip payments. Platform retains 5%. |
-| BR-002 | Minimum payout threshold is 1,000 sats (configurable per creator). |
-| BR-003 | Payouts are processed automatically when accumulated balance exceeds threshold. |
-| BR-004 | Failed payouts are retried 3 times with exponential backoff (1 min, 5 min, 30 min). |
-| BR-005 | Lightning invoices expire after 60 minutes (configurable in LightningConfigSchema). |
-| BR-006 | Maximum single invoice amount is 1,000,000 sats (0.01 BTC). Minimum is 1 sat. |
+| Rule   | Description                                                                                      |
+| ------ | ------------------------------------------------------------------------------------------------ |
+| BR-001 | Creator revenue share is 95% of all subscription and tip payments. Platform retains 5%.          |
+| BR-002 | Minimum payout threshold is 1,000 sats (configurable per creator).                               |
+| BR-003 | Payouts are processed automatically when accumulated balance exceeds threshold.                  |
+| BR-004 | Failed payouts are retried 3 times with exponential backoff (1 min, 5 min, 30 min).              |
+| BR-005 | Lightning invoices expire after 60 minutes (configurable in LightningConfigSchema).              |
+| BR-006 | Maximum single invoice amount is 1,000,000 sats (0.01 BTC). Minimum is 1 sat.                    |
 | BR-007 | Payment disputes: No chargebacks (Lightning is final settlement). Refunds are creator-initiated. |
 
 ### Subscription Tiers
 
-| Rule | Description |
-|------|-------------|
-| BR-008 | Creators can create up to 10 subscription tiers. |
-| BR-009 | Each tier must have at least one benefit and a positive price in millisatoshis. |
-| BR-010 | Supported billing intervals: daily, weekly, monthly, yearly. |
-| BR-011 | Tiers can have optional maximum subscriber limits. |
+| Rule   | Description                                                                                             |
+| ------ | ------------------------------------------------------------------------------------------------------- |
+| BR-008 | Creators can create up to 10 subscription tiers.                                                        |
+| BR-009 | Each tier must have at least one benefit and a positive price in millisatoshis.                         |
+| BR-010 | Supported billing intervals: daily, weekly, monthly, yearly.                                            |
+| BR-011 | Tiers can have optional maximum subscriber limits.                                                      |
 | BR-012 | When a subscriber's billing period ends and auto-renew is on, a new invoice is generated automatically. |
-| BR-013 | Grace period: 3 days after failed renewal before content access is revoked. |
-| BR-014 | Tier changes (upgrade/downgrade) are prorated based on remaining billing period. |
+| BR-013 | Grace period: 3 days after failed renewal before content access is revoked.                             |
+| BR-014 | Tier changes (upgrade/downgrade) are prorated based on remaining billing period.                        |
 
 ### Content Access Control
 
-| Rule | Description |
-|------|-------------|
-| BR-015 | Content can be marked as free (visible to all) or premium (gated to specific tier). |
-| BR-016 | Premium content is not delivered to clients without a valid, active subscription at the required tier or higher. |
-| BR-017 | Content access is verified on every request (no client-side-only gating). |
+| Rule   | Description                                                                                                        |
+| ------ | ------------------------------------------------------------------------------------------------------------------ |
+| BR-015 | Content can be marked as free (visible to all) or premium (gated to specific tier).                                |
+| BR-016 | Premium content is not delivered to clients without a valid, active subscription at the required tier or higher.   |
+| BR-017 | Content access is verified on every request (no client-side-only gating).                                          |
 | BR-018 | Creators can change content from premium to free at any time; the reverse (free to premium) requires confirmation. |
 
 ### NOSTR Protocol
 
-| Rule | Description |
-|------|-------------|
-| BR-019 | All user identities are NOSTR public keys (64-character hex strings). |
-| BR-020 | Authentication uses NIP-42 challenge-response with JWT session tokens. |
+| Rule   | Description                                                                                                      |
+| ------ | ---------------------------------------------------------------------------------------------------------------- |
+| BR-019 | All user identities are NOSTR public keys (64-character hex strings).                                            |
+| BR-020 | Authentication uses NIP-42 challenge-response with JWT session tokens.                                           |
 | BR-021 | Content is published as NOSTR events (kind 1 for notes, kind 30023 for long-form, kind 30026 for gated content). |
-| BR-022 | Subscription tiers are published as kind 30027 parameterized replaceable events. |
-| BR-023 | Payment receipts are published as kind 30029 events. |
-| BR-024 | NIP-05 verification (user@sovren.app) is available to all creators. |
-| BR-025 | Relay list: Events are published to a configurable set of relays (minimum 3 for redundancy). |
+| BR-022 | Subscription tiers are published as kind 30027 parameterized replaceable events.                                 |
+| BR-023 | Payment receipts are published as kind 30029 events.                                                             |
+| BR-024 | NIP-05 verification (user@sovren.app) is available to all creators.                                              |
+| BR-025 | Relay list: Events are published to a configurable set of relays (minimum 3 for redundancy).                     |
 
 ### User Roles
 
-| Rule | Description |
-|------|-------------|
-| BR-026 | Three roles: creator, supporter, admin. |
+| Rule   | Description                                                                          |
+| ------ | ------------------------------------------------------------------------------------ |
+| BR-026 | Three roles: creator, supporter, admin.                                              |
 | BR-027 | A user can be both a creator and a supporter (they can subscribe to other creators). |
-| BR-028 | Only creators can create subscription tiers and publish premium content. |
-| BR-029 | Admins can view platform-wide analytics and manage NIP-05 verification. |
+| BR-028 | Only creators can create subscription tiers and publish premium content.             |
+| BR-029 | Admins can view platform-wide analytics and manage NIP-05 verification.              |
 
 ---
 
@@ -362,18 +372,18 @@ Sovren is a full-stack content creator platform built on the NOSTR protocol with
 
 ## Success Metrics
 
-| Metric | Baseline | Target | Timeline | Measurement Method |
-|--------|----------|--------|----------|--------------------|
-| Creator onboarding completion rate | N/A (new flow) | 80% of new creators complete onboarding within one session | 3 months post-launch | Funnel analytics: steps completed / steps started |
-| Payment success rate | N/A (in-memory only) | 98% of Lightning invoices are paid successfully | 1 month post-launch | Payment service logs: settled / generated |
-| Subscription retention (monthly) | N/A | 85% of subscribers renew after first month | 3 months | Subscription service: renewed / eligible |
-| Content discovery conversion | 23% follow-from-recommendation | 30% follow-from-recommendation | 3 months | Analytics: follows / recommendation impressions |
-| API response time (p95) | < 200ms | Maintain < 200ms with 10x user growth | 6 months | Prometheus/Grafana latency histograms |
-| WebSocket event delivery (p95) | N/A | < 500ms | 1 month post-launch | Event timestamp delta measurement |
-| Creator revenue payout success | N/A | 99% of payouts succeed on first attempt | 3 months | Payout service logs |
-| Cross-client content visibility | Unknown | 95% of Sovren-published NIP-01 events visible on Damus/Primal | 2 months | Manual QA + automated relay monitoring |
-| Platform uptime | 99.9% | Maintain 99.9% | Ongoing | Uptime monitoring (Grafana/Sentry) |
-| Creator satisfaction (NPS) | N/A | NPS > 50 | 6 months | In-app survey |
+| Metric                             | Baseline                       | Target                                                        | Timeline             | Measurement Method                                |
+| ---------------------------------- | ------------------------------ | ------------------------------------------------------------- | -------------------- | ------------------------------------------------- |
+| Creator onboarding completion rate | N/A (new flow)                 | 80% of new creators complete onboarding within one session    | 3 months post-launch | Funnel analytics: steps completed / steps started |
+| Payment success rate               | N/A (in-memory only)           | 98% of Lightning invoices are paid successfully               | 1 month post-launch  | Payment service logs: settled / generated         |
+| Subscription retention (monthly)   | N/A                            | 85% of subscribers renew after first month                    | 3 months             | Subscription service: renewed / eligible          |
+| Content discovery conversion       | 23% follow-from-recommendation | 30% follow-from-recommendation                                | 3 months             | Analytics: follows / recommendation impressions   |
+| API response time (p95)            | < 200ms                        | Maintain < 200ms with 10x user growth                         | 6 months             | Prometheus/Grafana latency histograms             |
+| WebSocket event delivery (p95)     | N/A                            | < 500ms                                                       | 1 month post-launch  | Event timestamp delta measurement                 |
+| Creator revenue payout success     | N/A                            | 99% of payouts succeed on first attempt                       | 3 months             | Payout service logs                               |
+| Cross-client content visibility    | Unknown                        | 95% of Sovren-published NIP-01 events visible on Damus/Primal | 2 months             | Manual QA + automated relay monitoring            |
+| Platform uptime                    | 99.9%                          | Maintain 99.9%                                                | Ongoing              | Uptime monitoring (Grafana/Sentry)                |
+| Creator satisfaction (NPS)         | N/A                            | NPS > 50                                                      | 6 months             | In-app survey                                     |
 
 ### Leading Indicators
 
@@ -418,14 +428,14 @@ Sovren is a full-stack content creator platform built on the NOSTR protocol with
 
 ## Risk Assessment
 
-| Risk | Probability | Impact | Mitigation Strategy |
-|------|-------------|--------|---------------------|
-| Network effects: creators won't migrate without audience | High | High | Focus on NOSTR-native creators first (already on Damus/Primal); provide migration tools for Twitter/YouTube audiences; ensure cross-client compatibility so creators don't lose existing NOSTR followers. |
-| Lightning payment UX friction | Medium | High | Implement WebLN for in-browser payments; support multiple wallet types (LNURL, Lightning Address, BOLT11); provide clear payment status feedback via WebSocket. |
-| NOSTR relay instability | Medium | Medium | Publish to 3+ relays; implement relay health monitoring (nip05-monitoring-service already exists); cache events locally; graceful degradation when relays are unavailable. |
-| In-memory services data loss in production | High | High | FR-001 (database integration) is P0 priority. All InMemoryRepository implementations must be replaced before production launch. |
-| Custom NOSTR event kind conflicts | Low | High | Register custom kinds with NOSTR community; use the 30000-39999 parameterized replaceable range per NIP-33; monitor NIP proposals for conflicts with kinds 30024-30030. |
-| Creator key management errors | Medium | High | Provide clear key backup instructions during onboarding; implement NIP-07 browser extension support; warn users about key loss consequences (irrecoverable identity). |
+| Risk                                                     | Probability | Impact | Mitigation Strategy                                                                                                                                                                                       |
+| -------------------------------------------------------- | ----------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Network effects: creators won't migrate without audience | High        | High   | Focus on NOSTR-native creators first (already on Damus/Primal); provide migration tools for Twitter/YouTube audiences; ensure cross-client compatibility so creators don't lose existing NOSTR followers. |
+| Lightning payment UX friction                            | Medium      | High   | Implement WebLN for in-browser payments; support multiple wallet types (LNURL, Lightning Address, BOLT11); provide clear payment status feedback via WebSocket.                                           |
+| NOSTR relay instability                                  | Medium      | Medium | Publish to 3+ relays; implement relay health monitoring (nip05-monitoring-service already exists); cache events locally; graceful degradation when relays are unavailable.                                |
+| In-memory services data loss in production               | High        | High   | FR-001 (database integration) is P0 priority. All InMemoryRepository implementations must be replaced before production launch.                                                                           |
+| Custom NOSTR event kind conflicts                        | Low         | High   | Register custom kinds with NOSTR community; use the 30000-39999 parameterized replaceable range per NIP-33; monitor NIP proposals for conflicts with kinds 30024-30030.                                   |
+| Creator key management errors                            | Medium      | High   | Provide clear key backup instructions during onboarding; implement NIP-07 browser extension support; warn users about key loss consequences (irrecoverable identity).                                     |
 
 ---
 

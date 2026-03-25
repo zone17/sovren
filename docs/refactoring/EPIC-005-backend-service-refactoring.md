@@ -121,16 +121,17 @@ services/
 ### Service Decomposition Strategy
 
 #### ContentService → 7 Services
+
 ```typescript
 // Before: 680 lines in ContentService.ts
 class ContentService {
-  create() { }
-  publish() { }
-  moderate() { }
-  search() { }
-  recommend() { }
-  analytics() { }
-  version() { }
+  create() {}
+  publish() {}
+  moderate() {}
+  search() {}
+  recommend() {}
+  analytics() {}
+  version() {}
 }
 
 // After: 7 focused services (~100 lines each)
@@ -150,6 +151,7 @@ interface IContentPublishingService {
 ```
 
 #### PaymentService → 7 Services
+
 ```typescript
 interface IInvoiceService {
   generateInvoice(subscription: Subscription): Promise<Invoice>;
@@ -176,6 +178,7 @@ interface ISubscriptionService {
 ## Technical Approach
 
 ### Phase 1: Design & Interface Definition (2-3 days)
+
 1. Analyze existing service responsibilities
 2. Define bounded contexts for each service
 3. Create interface definitions (contracts)
@@ -183,12 +186,14 @@ interface ISubscriptionService {
 5. Create service interaction diagrams
 
 ### Phase 2: Extract Shared Utilities (1-2 days)
+
 1. Identify common code across services
 2. Extract to shared utility services
 3. Create EmailService, NotificationService, etc.
 4. Test shared services in isolation
 
 ### Phase 3: Refactor Content Services (2-3 days)
+
 1. Create new service classes with interfaces
 2. Migrate functionality from ContentService
 3. Update tests for each new service
@@ -196,12 +201,14 @@ interface ISubscriptionService {
 5. Update API routes to use new services
 
 ### Phase 4: Refactor User Services (2-3 days)
+
 1. Follow same pattern as content services
 2. Extract user-related services
 3. Update authentication middleware
 4. Update tests and integration points
 
 ### Phase 5: Refactor Payment Services (3-4 days)
+
 1. **CRITICAL**: Extra care needed for payment logic
 2. Extract payment services with comprehensive testing
 3. Ensure no regression in payment flows
@@ -209,12 +216,14 @@ interface ISubscriptionService {
 5. Extensive integration testing
 
 ### Phase 6: Integration & Testing (2-3 days)
+
 1. Wire all new services together
 2. Run comprehensive integration test suite
 3. Performance testing and optimization
 4. Fix any regressions or issues
 
 ### Phase 7: Documentation & Cleanup (1-2 days)
+
 1. Generate service architecture diagrams
 2. Document service contracts and dependencies
 3. Remove old monolithic services
@@ -223,22 +232,24 @@ interface ISubscriptionService {
 ## Dependencies
 
 ### Blockers
+
 - Type Safety Improvements (Epic 001) should be done first
 - Payment TODO Resolution (Epic 002) should be integrated
 
 ### Related Work
+
 - State Management Boundaries (Epic 004) affects frontend service consumption
 - NOSTR Consolidation (Epic 003) eliminates NostrService refactoring
 
 ## Risks & Mitigation
 
-| Risk | Impact | Likelihood | Mitigation |
-|------|--------|------------|------------|
-| Breaking payment flows | Critical | Medium | Extensive testing, feature flags, canary deployment |
-| Performance degradation | Medium | Low | Benchmark before/after, optimize DI container |
-| Increased complexity | Medium | Medium | Clear documentation, proper DI setup |
-| Testing gaps | High | Medium | Maintain 95%+ coverage, add integration tests |
-| Database transaction issues | High | Low | Careful transaction boundary design |
+| Risk                        | Impact   | Likelihood | Mitigation                                          |
+| --------------------------- | -------- | ---------- | --------------------------------------------------- |
+| Breaking payment flows      | Critical | Medium     | Extensive testing, feature flags, canary deployment |
+| Performance degradation     | Medium   | Low        | Benchmark before/after, optimize DI container       |
+| Increased complexity        | Medium   | Medium     | Clear documentation, proper DI setup                |
+| Testing gaps                | High     | Medium     | Maintain 95%+ coverage, add integration tests       |
+| Database transaction issues | High     | Low        | Careful transaction boundary design                 |
 
 ## Estimated Effort
 
@@ -249,20 +260,24 @@ interface ISubscriptionService {
 ## Implementation Order
 
 ### Week 1
+
 1. Design & interface definition
 2. Extract shared utilities
 3. Begin content service refactoring
 
 ### Week 2
+
 4. Complete content services
 5. Begin user service refactoring
 6. Complete user services
 
 ### Week 3
+
 7. Begin payment service refactoring (critical path)
 8. Extensive payment testing
 
 ### Week 4
+
 9. Complete payment services
 10. Integration testing
 11. Documentation and cleanup
@@ -270,23 +285,27 @@ interface ISubscriptionService {
 ## Testing Strategy
 
 ### Unit Tests
+
 - Each service tested in isolation
 - Mock all dependencies
 - 95%+ coverage per service
 - Test all error paths
 
 ### Integration Tests
+
 - Test service interactions
 - Test database transactions
 - Test external API calls
 - Test event publishing
 
 ### E2E Tests
+
 - Critical user flows (signup, payment, content publishing)
 - Cross-service workflows
 - Error scenarios and recovery
 
 ### Performance Tests
+
 - Benchmark service response times
 - Load testing for payment services
 - Database query optimization
@@ -307,11 +326,15 @@ container.bind<ICacheService>(TYPES.CacheService).to(CacheService).inSingletonSc
 
 // Bind content services
 container.bind<IContentCreationService>(TYPES.ContentCreationService).to(ContentCreationService);
-container.bind<IContentPublishingService>(TYPES.ContentPublishingService).to(ContentPublishingService);
+container
+  .bind<IContentPublishingService>(TYPES.ContentPublishingService)
+  .to(ContentPublishingService);
 
 // Bind payment services
 container.bind<IInvoiceService>(TYPES.InvoiceService).to(InvoiceService);
-container.bind<IPaymentProcessingService>(TYPES.PaymentProcessingService).to(PaymentProcessingService);
+container
+  .bind<IPaymentProcessingService>(TYPES.PaymentProcessingService)
+  .to(PaymentProcessingService);
 
 export { container };
 ```
@@ -327,20 +350,34 @@ export { container };
 ## Example Refactoring
 
 ### Before (Monolithic)
+
 ```typescript
 // 680 lines in one file
 class ContentService {
-  async create(data: ContentData): Promise<Content> { /* 80 lines */ }
-  async publish(id: string): Promise<void> { /* 120 lines */ }
-  async moderate(id: string): Promise<void> { /* 90 lines */ }
-  async search(query: string): Promise<Content[]> { /* 150 lines */ }
-  async recommend(userId: string): Promise<Content[]> { /* 140 lines */ }
-  async getAnalytics(id: string): Promise<Analytics> { /* 100 lines */ }
+  async create(data: ContentData): Promise<Content> {
+    /* 80 lines */
+  }
+  async publish(id: string): Promise<void> {
+    /* 120 lines */
+  }
+  async moderate(id: string): Promise<void> {
+    /* 90 lines */
+  }
+  async search(query: string): Promise<Content[]> {
+    /* 150 lines */
+  }
+  async recommend(userId: string): Promise<Content[]> {
+    /* 140 lines */
+  }
+  async getAnalytics(id: string): Promise<Analytics> {
+    /* 100 lines */
+  }
   // ... many private helper methods
 }
 ```
 
 ### After (Service-Oriented)
+
 ```typescript
 // ContentCreationService.ts (~100 lines)
 @injectable()

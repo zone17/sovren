@@ -37,13 +37,13 @@ Complete procedures for rotating all deployment secrets with zero-downtime strat
 
 ## Rotation Schedule
 
-| Secret Category | Frequency | Next Review | Notes |
-|-----------------|-----------|-------------|-------|
-| **Critical** | Every 30 days | Monthly | Database credentials, JWT secrets |
-| **High** | Every 90 days | Quarterly | API keys, service tokens |
-| **Medium** | Every 180 days | Semi-annual | Webhook URLs, integration keys |
-| **Low** | Annually | Yearly | Feature flags, static IDs |
-| **Never** | N/A | N/A | Project IDs, organization IDs |
+| Secret Category | Frequency      | Next Review | Notes                             |
+| --------------- | -------------- | ----------- | --------------------------------- |
+| **Critical**    | Every 30 days  | Monthly     | Database credentials, JWT secrets |
+| **High**        | Every 90 days  | Quarterly   | API keys, service tokens          |
+| **Medium**      | Every 180 days | Semi-annual | Webhook URLs, integration keys    |
+| **Low**         | Annually       | Yearly      | Feature flags, static IDs         |
+| **Never**       | N/A            | N/A         | Project IDs, organization IDs     |
 
 ### Calendar Reminders
 
@@ -354,6 +354,7 @@ echo "✅ Database password rotation complete"
 ```
 
 **Zero-Downtime Strategy**:
+
 1. Both old and new passwords valid during transition
 2. Services gradually pick up new password
 3. Old password invalidated after all services updated
@@ -657,6 +658,7 @@ T+4:  Old secret invalidated
 ```
 
 **Implementation**:
+
 ```bash
 # 1. Generate new secret (old still valid)
 NEW_SECRET=$(generate_secret)
@@ -704,6 +706,7 @@ T+4:  Old secret invalidated
 ```
 
 **Implementation**:
+
 ```typescript
 // Dual-secret validation
 function validateToken(token: string): boolean {
@@ -801,6 +804,7 @@ echo "✅ Emergency rotation complete"
 ```
 
 **Usage**:
+
 ```bash
 # Emergency rotate JWT_SECRET
 ./emergency-rotation.sh JWT_SECRET "Exposed in public commit abc123"

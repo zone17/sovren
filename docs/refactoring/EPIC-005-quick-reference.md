@@ -5,6 +5,7 @@
 ### By Phase
 
 #### Phase 1: Design & Interface Definition (Stories 1-6)
+
 - **#1**: Analyze service dependencies
 - **#2**: Define bounded contexts and interfaces
 - **#3**: Setup DI container
@@ -13,12 +14,14 @@
 - **#6**: Create migration strategy
 
 #### Phase 2: Shared Services (Stories 7-10)
+
 - **#7**: EmailService
 - **#8**: NotificationService
 - **#9**: AuditLogService
 - **#10**: CacheService
 
 #### Phase 3: Content Services (Stories 11-17)
+
 - **#11**: ContentCreationService
 - **#12**: ContentPublishingService
 - **#13**: ContentModerationService
@@ -28,6 +31,7 @@
 - **#17**: ContentVersioningService
 
 #### Phase 4: User Services (Stories 18-23)
+
 - **#18**: UserAuthenticationService
 - **#19**: UserProfileService
 - **#20**: UserPreferencesService
@@ -36,6 +40,7 @@
 - **#23**: UserAnalyticsService
 
 #### Phase 5: Payment Services (Stories 24-31) - CRITICAL
+
 - **#24**: InvoiceService
 - **#25**: PaymentProcessingService
 - **#26**: SubscriptionService
@@ -46,6 +51,7 @@
 - **#31**: Payment Integration Tests
 
 #### Phase 6: Integration & Testing (Stories 32-36)
+
 - **#32**: Wire all services through DI
 - **#33**: Update API routes
 - **#34**: Run integration tests
@@ -53,6 +59,7 @@
 - **#36**: Fix issues
 
 #### Phase 7: Documentation (Stories 37-42)
+
 - **#37**: Architecture diagrams
 - **#38**: API documentation
 - **#39**: Developer guide
@@ -228,7 +235,7 @@ export const TYPES = {
   // Infrastructure
   EventBus: Symbol.for('EventBus'),
   Database: Symbol.for('Database'),
-  Cache: Symbol.for('Cache')
+  Cache: Symbol.for('Cache'),
 };
 ```
 
@@ -249,21 +256,34 @@ const container = new Container();
 
 // Shared Services (Singleton)
 container.bind<IEmailService>(TYPES.EmailService).to(EmailService).inSingletonScope();
-container.bind<INotificationService>(TYPES.NotificationService).to(NotificationService).inSingletonScope();
+container
+  .bind<INotificationService>(TYPES.NotificationService)
+  .to(NotificationService)
+  .inSingletonScope();
 container.bind<IAuditLogService>(TYPES.AuditLogService).to(AuditLogService).inSingletonScope();
 container.bind<ICacheService>(TYPES.CacheService).to(CacheService).inSingletonScope();
 
 // Content Services (Request scope)
 container.bind<IContentCreationService>(TYPES.ContentCreationService).to(ContentCreationService);
-container.bind<IContentPublishingService>(TYPES.ContentPublishingService).to(ContentPublishingService);
-container.bind<IContentModerationService>(TYPES.ContentModerationService).to(ContentModerationService);
+container
+  .bind<IContentPublishingService>(TYPES.ContentPublishingService)
+  .to(ContentPublishingService);
+container
+  .bind<IContentModerationService>(TYPES.ContentModerationService)
+  .to(ContentModerationService);
 container.bind<IContentSearchService>(TYPES.ContentSearchService).to(ContentSearchService);
-container.bind<IContentRecommendationService>(TYPES.ContentRecommendationService).to(ContentRecommendationService);
+container
+  .bind<IContentRecommendationService>(TYPES.ContentRecommendationService)
+  .to(ContentRecommendationService);
 container.bind<IContentAnalyticsService>(TYPES.ContentAnalyticsService).to(ContentAnalyticsService);
-container.bind<IContentVersioningService>(TYPES.ContentVersioningService).to(ContentVersioningService);
+container
+  .bind<IContentVersioningService>(TYPES.ContentVersioningService)
+  .to(ContentVersioningService);
 
 // User Services (Request scope)
-container.bind<IUserAuthenticationService>(TYPES.UserAuthenticationService).to(UserAuthenticationService);
+container
+  .bind<IUserAuthenticationService>(TYPES.UserAuthenticationService)
+  .to(UserAuthenticationService);
 container.bind<IUserProfileService>(TYPES.UserProfileService).to(UserProfileService);
 container.bind<IUserPreferencesService>(TYPES.UserPreferencesService).to(UserPreferencesService);
 container.bind<IUserActivityService>(TYPES.UserActivityService).to(UserActivityService);
@@ -272,7 +292,9 @@ container.bind<IUserAnalyticsService>(TYPES.UserAnalyticsService).to(UserAnalyti
 
 // Payment Services (Request scope)
 container.bind<IInvoiceService>(TYPES.InvoiceService).to(InvoiceService);
-container.bind<IPaymentProcessingService>(TYPES.PaymentProcessingService).to(PaymentProcessingService);
+container
+  .bind<IPaymentProcessingService>(TYPES.PaymentProcessingService)
+  .to(PaymentProcessingService);
 container.bind<ISubscriptionService>(TYPES.SubscriptionService).to(SubscriptionService);
 container.bind<IRefundService>(TYPES.RefundService).to(RefundService);
 container.bind<IPaymentAnalyticsService>(TYPES.PaymentAnalyticsService).to(PaymentAnalyticsService);
@@ -297,7 +319,9 @@ export class ContentRoutes {
 
   constructor() {
     this.creationService = container.get<IContentCreationService>(TYPES.ContentCreationService);
-    this.publishingService = container.get<IContentPublishingService>(TYPES.ContentPublishingService);
+    this.publishingService = container.get<IContentPublishingService>(
+      TYPES.ContentPublishingService
+    );
   }
 
   async createContent(req: Request, res: Response) {
@@ -425,6 +449,7 @@ describe('PaymentProcessingService', () => {
 ## Common Service Responsibilities
 
 ### EmailService
+
 - Send transactional emails
 - Send bulk emails
 - Template management
@@ -432,36 +457,42 @@ describe('PaymentProcessingService', () => {
 - Email tracking
 
 ### NotificationService
+
 - Multi-channel notifications (email, push, in-app)
 - User preference management
 - Notification batching
 - Delivery tracking
 
 ### AuditLogService
+
 - Log all critical operations
 - Immutable storage
 - Query capabilities
 - Compliance support
 
 ### CacheService
+
 - Redis-based caching
 - TTL management
 - Cache invalidation
 - Cache-aside pattern
 
 ### ContentCreationService
+
 - Create drafts
 - Validate content
 - Save drafts
 - Auto-save support
 
 ### ContentPublishingService
+
 - Publish content
 - Schedule publishing
 - Unpublish content
 - Distribution to Nostr
 
 ### PaymentProcessingService
+
 - Process payments
 - Verify payments
 - Retry failed payments
@@ -488,12 +519,10 @@ export class ServiceError extends Error {
 }
 
 // Usage
-throw new ServiceError(
-  'Payment processing failed',
-  'PAYMENT_PROCESSING_ERROR',
-  402,
-  { transactionId, reason: 'Insufficient funds' }
-);
+throw new ServiceError('Payment processing failed', 'PAYMENT_PROCESSING_ERROR', 402, {
+  transactionId,
+  reason: 'Insufficient funds',
+});
 ```
 
 ### Error Handling in Services
@@ -631,6 +660,7 @@ async updateWithTransaction(data: UpdateData): Promise<Result> {
 ## Code Review Checklist
 
 ### General
+
 - [ ] Follows TypeScript best practices
 - [ ] Proper error handling
 - [ ] No hardcoded values
@@ -638,6 +668,7 @@ async updateWithTransaction(data: UpdateData): Promise<Result> {
 - [ ] Comments for complex logic
 
 ### Service-Specific
+
 - [ ] Implements interface correctly
 - [ ] Dependencies injected properly
 - [ ] Single responsibility maintained
@@ -645,6 +676,7 @@ async updateWithTransaction(data: UpdateData): Promise<Result> {
 - [ ] No business logic in constructors
 
 ### Testing
+
 - [ ] Tests cover happy path
 - [ ] Tests cover edge cases
 - [ ] Tests cover error scenarios
@@ -652,12 +684,14 @@ async updateWithTransaction(data: UpdateData): Promise<Result> {
 - [ ] No flaky tests
 
 ### Performance
+
 - [ ] No N+1 queries
 - [ ] Appropriate caching
 - [ ] Batch operations where applicable
 - [ ] No memory leaks
 
 ### Security
+
 - [ ] Input validation
 - [ ] Output sanitization
 - [ ] No SQL injection risk
@@ -671,11 +705,13 @@ async updateWithTransaction(data: UpdateData): Promise<Result> {
 ### DI Container Issues
 
 **Problem**: Service not found in container
+
 ```
 Error: No matching bindings found for serviceIdentifier: Symbol(ServiceName)
 ```
 
 **Solution**:
+
 1. Check service is bound in `container.ts`
 2. Verify TYPES constant matches
 3. Ensure `reflect-metadata` is imported
@@ -684,11 +720,13 @@ Error: No matching bindings found for serviceIdentifier: Symbol(ServiceName)
 ### Circular Dependency
 
 **Problem**: Circular dependency detected
+
 ```
 Error: Circular dependency found: ServiceA -> ServiceB -> ServiceA
 ```
 
 **Solution**:
+
 1. Extract shared logic to new service
 2. Use event bus for async communication
 3. Inject factory instead of service
@@ -697,11 +735,13 @@ Error: Circular dependency found: ServiceA -> ServiceB -> ServiceA
 ### Test Coverage Issues
 
 **Problem**: Coverage below 95%
+
 ```
 Uncovered Lines: 15-20, 45-50
 ```
 
 **Solution**:
+
 1. Add tests for uncovered lines
 2. Test error paths
 3. Test edge cases
@@ -710,11 +750,13 @@ Uncovered Lines: 15-20, 45-50
 ### Performance Degradation
 
 **Problem**: Service slower than expected
+
 ```
 Response time: 500ms (expected < 100ms)
 ```
 
 **Solution**:
+
 1. Add caching
 2. Optimize database queries
 3. Use batch operations
@@ -726,6 +768,7 @@ Response time: 500ms (expected < 100ms)
 ## Quick Commands
 
 ### Run Tests
+
 ```bash
 # All tests
 npm test
@@ -741,6 +784,7 @@ npm test -- --watch
 ```
 
 ### Build
+
 ```bash
 # Development
 npm run build:dev
@@ -750,6 +794,7 @@ npm run build:prod
 ```
 
 ### Lint
+
 ```bash
 # Check
 npm run lint
@@ -759,6 +804,7 @@ npm run lint:fix
 ```
 
 ### Type Check
+
 ```bash
 npm run type-check
 ```
@@ -774,8 +820,8 @@ npm run type-check
 export const FEATURE_FLAGS = {
   NEW_PAYMENT_SERVICES: {
     enabled: process.env.ENABLE_NEW_PAYMENT_SERVICES === 'true',
-    rolloutPercentage: parseInt(process.env.PAYMENT_ROLLOUT_PERCENTAGE || '0')
-  }
+    rolloutPercentage: parseInt(process.env.PAYMENT_ROLLOUT_PERCENTAGE || '0'),
+  },
 };
 
 // Usage in route
@@ -806,16 +852,19 @@ Day 10: 100% traffic → Full rollout
 ### If Critical Issue Found
 
 1. **Immediately**: Set feature flag to 0%
+
    ```bash
    kubectl set env deployment/backend ENABLE_NEW_PAYMENT_SERVICES=false
    ```
 
 2. **Verify**: Check rollback successful
+
    ```bash
    kubectl logs -f deployment/backend | grep "Using old payment service"
    ```
 
 3. **Investigate**: Check logs and metrics
+
    ```bash
    kubectl logs deployment/backend --tail=1000 | grep ERROR
    ```
@@ -829,18 +878,21 @@ Day 10: 100% traffic → Full rollout
 ## Contacts & Resources
 
 ### Team Contacts
+
 - **Technical Lead**: [Name] - For architecture decisions
 - **Payment Expert**: [Name] - For payment service questions
 - **DevOps**: [Name] - For deployment issues
 - **QA Lead**: [Name] - For testing questions
 
 ### Documentation
+
 - [Architecture Decision Records](./ADRs/)
 - [API Documentation](./api-docs/)
 - [Developer Guide](./developer-guide.md)
 - [Testing Guide](./testing-guide.md)
 
 ### Tools
+
 - **DI Framework**: [InversifyJS Docs](https://inversify.io/)
 - **Testing**: [Jest Docs](https://jestjs.io/)
 - **TypeScript**: [TS Handbook](https://www.typescriptlang.org/docs/)

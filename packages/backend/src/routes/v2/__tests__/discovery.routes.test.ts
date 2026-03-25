@@ -1,6 +1,9 @@
 /**
  * Discovery API Routes Tests (v2)
  * Tests route handler behavior, request validation, and response format.
+ *
+ * The route delegates to DiscoveryService via DI container (Todo #568).
+ * Route-level tests mock the service; service-level tests mock the DB.
  */
 
 import { Request, Response, NextFunction } from 'express';
@@ -69,43 +72,29 @@ vi.mock('../../../utils/api-response', () => ({
   })),
 }));
 
-// --- Mock database ---
-
-const mockSelect = vi.fn();
-const mockOr = vi.fn();
-const mockContains = vi.fn();
-const mockOrder = vi.fn();
-const mockRange = vi.fn();
-
-function buildChain() {
-  const chain = {
-    select: mockSelect,
-    or: mockOr,
-    contains: mockContains,
-    order: mockOrder,
-    range: mockRange,
-  };
-  mockSelect.mockReturnValue(chain);
-  mockOr.mockReturnValue(chain);
-  mockContains.mockReturnValue(chain);
-  mockOrder.mockReturnValue(chain);
-  return chain;
-}
-
-const mockFrom = vi.fn();
-
-vi.mock('../../../config/database', () => ({
-  getDatabase: () => ({
-    client: { from: mockFrom },
-  }),
-}));
-
 vi.mock('../../../utils/asyncHandler', () => ({
   asyncHandler: (fn: HandlerFn) => fn,
 }));
 
+// --- Mock DI container (route delegates to DiscoveryService via container.resolve) ---
+
+const mockSearchCreators = vi.fn();
+
+vi.mock('../../../container', () => ({
+  container: {
+    resolve: vi.fn(() => ({
+      searchCreators: mockSearchCreators,
+    })),
+  },
+}));
+
+vi.mock('../../../container/types', () => ({
+  TYPES: {
+    DiscoveryService: Symbol.for('DiscoveryService'),
+  },
+}));
+
 // --- Import after mocks ---
-// eslint-disable-next-line @typescript-eslint/no-require-imports
 import { escapePostgrestFilter } from '../discovery.routes';
 import '../discovery.routes';
 
@@ -127,32 +116,40 @@ function getCreatorsHandler(): HandlerFn {
   return route.handler;
 }
 
-const mockRows = [
-  {
-    id: 'cp-1',
-    bio: 'Digital art creator',
-    categories: ['Art'],
-    created_at: '2024-01-01T00:00:00Z',
-    user_id: 'u-1',
-    display_name: 'Sophia',
-    username: 'sophia_art',
-    avatar_url: null,
-    nip05_verified: true,
-    follower_count: 1500,
-    content_count: 45,
-    tags: ['bitcoin'],
-    verified: true,
+// Standard DiscoveryResponse shape returned by the service
+const defaultServiceResponse = {
+  creators: [
+    {
+      id: 'cp-1',
+      displayName: 'Sophia',
+      username: 'sophia_art',
+      avatarUrl: null,
+      bio: 'Digital art creator',
+      nip05Verified: true,
+      categories: ['Art'],
+      tags: ['bitcoin'],
+      followerCount: 1500,
+      contentCount: 45,
+      verified: true,
+      createdAt: '2024-01-01T00:00:00Z',
+    },
+  ],
+  pagination: {
+    page: 1,
+    limit: 20,
+    total: 1,
+    totalPages: 1,
+    hasNext: false,
+    hasPrev: false,
   },
-];
+};
 
 // --- Tests ---
 
 describe('Discovery Routes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    const chain = buildChain();
-    mockFrom.mockReturnValue(chain);
-    mockRange.mockResolvedValue({ data: mockRows, count: 1, error: null });
+    mockSearchCreators.mockResolvedValue(defaultServiceResponse);
   });
 
   describe('GET /creators', () => {
@@ -183,59 +180,67 @@ describe('Discovery Routes', () => {
       });
     });
 
-    it('queries discovery_creators view with flat select', async () => {
+    it('forwards query params to DiscoveryService.searchCreators', async () => {
       const handler = getCreatorsHandler();
       const req = makeRequest({ sortBy: 'relevance', page: 1, limit: 20 });
       const { res } = makeResponse();
 
       await handler(req, res, vi.fn());
 
-      expect(mockFrom).toHaveBeenCalledWith('discovery_creators');
-      expect(mockSelect).toHaveBeenCalledWith('*', { count: 'exact' });
+      expect(mockSearchCreators).toHaveBeenCalledTimes(1);
     });
 
-    it('applies text search with escaped filter', async () => {
+    it('forwards text search param to service', async () => {
       const handler = getCreatorsHandler();
       const req = makeRequest({ q: 'test,inject', sortBy: 'relevance', page: 1, limit: 20 });
       const { res } = makeResponse();
 
       await handler(req, res, vi.fn());
 
-      expect(mockOr).toHaveBeenCalledWith(expect.stringContaining('test\\,inject'));
+      expect(mockSearchCreators).toHaveBeenCalledWith(
+        expect.objectContaining({ q: 'test,inject' })
+      );
     });
 
-    it('applies category filter via contains', async () => {
+    it('forwards category param to service', async () => {
       const handler = getCreatorsHandler();
       const req = makeRequest({ category: 'Art', sortBy: 'relevance', page: 1, limit: 20 });
       const { res } = makeResponse();
 
       await handler(req, res, vi.fn());
 
-      expect(mockContains).toHaveBeenCalledWith('categories', ['Art']);
+      expect(mockSearchCreators).toHaveBeenCalledWith(expect.objectContaining({ category: 'Art' }));
     });
 
-    it('sorts by created_at when sortBy is newest', async () => {
+    it('forwards sortBy newest to service', async () => {
       const handler = getCreatorsHandler();
       const req = makeRequest({ sortBy: 'newest', page: 1, limit: 20 });
       const { res } = makeResponse();
 
       await handler(req, res, vi.fn());
 
-      expect(mockOrder).toHaveBeenCalledWith('created_at', { ascending: false });
+      expect(mockSearchCreators).toHaveBeenCalledWith(
+        expect.objectContaining({ sortBy: 'newest' })
+      );
     });
 
-    it('sorts by follower_count for relevance and followers', async () => {
+    it('forwards sortBy followers to service', async () => {
       const handler = getCreatorsHandler();
       const req = makeRequest({ sortBy: 'followers', page: 1, limit: 20 });
       const { res } = makeResponse();
 
       await handler(req, res, vi.fn());
 
-      expect(mockOrder).toHaveBeenCalledWith('follower_count', { ascending: false });
+      expect(mockSearchCreators).toHaveBeenCalledWith(
+        expect.objectContaining({ sortBy: 'followers' })
+      );
     });
 
     it('returns hasNext true and hasPrev true for middle page', async () => {
-      mockRange.mockResolvedValue({ data: mockRows, count: 60, error: null });
+      mockSearchCreators.mockResolvedValue({
+        creators: defaultServiceResponse.creators,
+        pagination: { page: 2, limit: 20, total: 60, totalPages: 3, hasNext: true, hasPrev: true },
+      });
 
       const handler = getCreatorsHandler();
       const req = makeRequest({ sortBy: 'relevance', page: 2, limit: 20 });
@@ -248,8 +253,8 @@ describe('Discovery Routes', () => {
       expect(pagination.hasPrev).toBe(true);
     });
 
-    it('throws ServiceError on database error', async () => {
-      mockRange.mockResolvedValue({ data: null, count: null, error: new Error('DB error') });
+    it('throws ServiceError on service error', async () => {
+      mockSearchCreators.mockRejectedValue(new Error('Discovery search failed'));
 
       const handler = getCreatorsHandler();
       const req = makeRequest({ sortBy: 'relevance', page: 1, limit: 20 });
@@ -259,7 +264,10 @@ describe('Discovery Routes', () => {
     });
 
     it('returns empty creators with correct pagination on no results', async () => {
-      mockRange.mockResolvedValue({ data: [], count: 0, error: null });
+      mockSearchCreators.mockResolvedValue({
+        creators: [],
+        pagination: { page: 1, limit: 20, total: 0, totalPages: 0, hasNext: false, hasPrev: false },
+      });
 
       const handler = getCreatorsHandler();
       const req = makeRequest({ sortBy: 'relevance', page: 1, limit: 20 });

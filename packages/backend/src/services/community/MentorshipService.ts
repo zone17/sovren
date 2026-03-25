@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Mentorship Service
  * EPIC-010: Creator Network — Mentor registration, matching, and relationship management
@@ -7,7 +6,18 @@
 import type { IMentorshipService } from '../../interfaces/community/IMentorshipService';
 import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
-import { ConflictError } from '../../utils/errors';
+import type { IEventBus } from '../../interfaces/shared/IEventBus';
+import type { MentorProfile, Mentorship } from '@shared/types/community';
+import {
+  AuthorizationError,
+  ConflictError,
+  DatabaseError,
+  NotFoundError,
+  ValidationError,
+} from '../../utils/errors';
+import { DomainEventType } from '../../interfaces/shared/IEventBus';
+import { stripControlChars } from '../../utils/stripControlChars';
+import { emitDomainEvent } from '../../utils/emitDomainEvent';
 
 interface MentorProfileRow {
   id: string;
@@ -32,13 +42,58 @@ interface MentorshipRow {
   created_at: string;
 }
 
+function rowToMentorProfile(row: MentorProfileRow): MentorProfile {
+  return {
+    id: row.id,
+    creatorId: row.creator_id,
+    niche: row.niche,
+    audienceSizeRange: row.audience_size_range as MentorProfile['audienceSizeRange'],
+    bio: row.bio ?? undefined,
+    maxMentees: row.max_mentees,
+    active: row.active,
+    createdAt: row.created_at,
+  };
+}
+
+function rowToMentorship(row: MentorshipRow): Mentorship {
+  return {
+    id: row.id,
+    mentorId: row.mentor_id,
+    menteeId: row.mentee_id,
+    niche: row.niche ?? undefined,
+    goals: row.goals,
+    status: row.status as Mentorship['status'],
+    startedAt: row.started_at ?? undefined,
+    completedAt: row.completed_at ?? undefined,
+    createdAt: row.created_at,
+  };
+}
+
 export class MentorshipService implements IMentorshipService {
   private readonly db: ISupabaseClient;
   private readonly logger: ILogger;
+  private readonly eventBus: IEventBus;
 
-  constructor(db: ISupabaseClient, logger: ILogger) {
+  constructor(db: ISupabaseClient, logger: ILogger, eventBus: IEventBus) {
     this.db = db;
     this.logger = logger;
+    this.eventBus = eventBus;
+  }
+
+  private emitEvent(
+    type: DomainEventType,
+    aggregateId: string,
+    payload: Record<string, unknown>
+  ): void {
+    emitDomainEvent(
+      this.eventBus,
+      this.logger,
+      type,
+      aggregateId,
+      'mentorship',
+      payload,
+      'MentorshipService'
+    );
   }
 
   async registerMentor(
@@ -49,7 +104,7 @@ export class MentorshipService implements IMentorshipService {
     // Only business-rule validation (capacity limits, DB-state checks) remains here.
     const maxMentees = data.maxMentees ?? 3;
     if (maxMentees < 1 || maxMentees > 10) {
-      throw new Error('max_mentees must be between 1 and 10');
+      throw new ValidationError('max_mentees must be between 1 and 10');
     }
 
     // Upsert: if creator already has a profile, update it
@@ -58,9 +113,9 @@ export class MentorshipService implements IMentorshipService {
       .upsert(
         {
           creator_id: creatorId,
-          niche: data.niche.trim(),
+          niche: stripControlChars(data.niche.trim()),
           audience_size_range: data.audienceSizeRange,
-          bio: data.bio ?? null,
+          bio: data.bio != null ? stripControlChars(data.bio) : null,
           max_mentees: maxMentees,
           active: true,
         },
@@ -71,7 +126,7 @@ export class MentorshipService implements IMentorshipService {
 
     if (error || !rows) {
       this.logger.error('Failed to register mentor', { error, creatorId });
-      throw new Error(`Failed to register mentor: ${error?.message}`);
+      throw new DatabaseError('Failed to register mentor');
     }
 
     this.logger.info('Mentor registered', { mentorProfileId: rows.id, creatorId });
@@ -81,7 +136,7 @@ export class MentorshipService implements IMentorshipService {
   async getMentors(filters?: {
     niche?: string;
     audienceSizeRange?: string;
-  }): Promise<MentorProfileRow[]> {
+  }): Promise<MentorProfile[]> {
     let query = this.db
       .from<MentorProfileRow>('mentor_profiles')
       .select('id, creator_id, niche, audience_size_range, bio, max_mentees, active, created_at')
@@ -99,10 +154,10 @@ export class MentorshipService implements IMentorshipService {
 
     if (error) {
       this.logger.error('Failed to get mentors', { error, filters });
-      throw new Error(`Failed to get mentors: ${error.message}`);
+      throw new DatabaseError('Failed to get mentors');
     }
 
-    return data ?? [];
+    return (data ?? []).map(rowToMentorProfile);
   }
 
   async requestMentorship(
@@ -111,7 +166,7 @@ export class MentorshipService implements IMentorshipService {
     data: { niche?: string; goals?: string[] }
   ): Promise<{ id: string }> {
     if (menteeId === mentorId) {
-      throw new Error('Cannot request mentorship from yourself');
+      throw new ValidationError('Cannot request mentorship from yourself');
     }
 
     // Verify mentor profile exists and is active
@@ -123,21 +178,7 @@ export class MentorshipService implements IMentorshipService {
       .maybeSingle();
 
     if (profileError || !mentorProfile) {
-      throw new Error('Mentor not found or not accepting requests');
-    }
-
-    // Check mentor has capacity (count active mentorships)
-    const { count: activeCount, error: countError } = await this.db
-      .from<MentorshipRow>('mentorships')
-      .select('id', { count: 'exact', head: true })
-      .eq('mentor_id', mentorId)
-      .eq('status', 'active');
-
-    if (countError) {
-      throw new Error(`Failed to count active mentorships: ${countError.message}`);
-    }
-    if ((activeCount ?? 0) >= mentorProfile.max_mentees) {
-      throw new Error('Mentor has reached their maximum mentee capacity');
+      throw new NotFoundError('Mentor not found or not accepting requests');
     }
 
     // Check no pending/active mentorship already exists
@@ -150,16 +191,22 @@ export class MentorshipService implements IMentorshipService {
       .maybeSingle();
 
     if (existingRequest) {
-      throw new Error(`Mentorship request already ${existingRequest.status}`);
+      throw new ConflictError(`Mentorship request already ${existingRequest.status}`);
     }
 
+    // Strip control characters from goals
+    const sanitizedGoals = (data.goals ?? []).map((g) => stripControlChars(g));
+
+    // #TOCTOU fix (critical-patterns.md #1a): INSERT first, then count active mentorships.
+    // If over capacity, DELETE the just-inserted row and return 409.
+    // This eliminates the race window between SELECT count and INSERT.
     const { data: rows, error } = await this.db
       .from<MentorshipRow>('mentorships')
       .insert({
         mentor_id: mentorId,
         mentee_id: menteeId,
-        niche: data.niche ?? null,
-        goals: data.goals ?? [],
+        niche: data.niche != null ? stripControlChars(data.niche) : null,
+        goals: sanitizedGoals,
         status: 'pending',
       })
       .select('id')
@@ -167,30 +214,80 @@ export class MentorshipService implements IMentorshipService {
 
     if (error || !rows) {
       this.logger.error('Failed to create mentorship request', { error, menteeId, mentorId });
-      throw new Error(`Failed to request mentorship: ${error?.message}`);
+      throw new DatabaseError('Failed to request mentorship');
+    }
+
+    // Count active+pending mentorships AFTER insert — if over capacity, rollback.
+    // #727: pending requests also consume capacity (mentor hasn't rejected yet).
+    const { count: activeCount, error: countError } = await this.db
+      .from<MentorshipRow>('mentorships')
+      .select('id', { count: 'exact', head: true })
+      .eq('mentor_id', mentorId)
+      .in('status', ['active', 'pending']);
+
+    if (countError) {
+      // Cleanup the just-inserted row on count failure
+      const { error: compensationError } = await this.db
+        .from<MentorshipRow>('mentorships')
+        .delete()
+        .eq('id', rows.id);
+      if (compensationError) {
+        this.logger.error('requestMentorship: compensation DELETE failed', {
+          compensationError,
+          mentorshipId: rows.id,
+          menteeId,
+          mentorId,
+          originalError: countError,
+        });
+      }
+      throw new DatabaseError('Failed to count active mentorships');
+    }
+
+    if ((activeCount ?? 0) > mentorProfile.max_mentees) {
+      // Over capacity — remove the just-inserted request and return 409
+      const { error: compensationError } = await this.db
+        .from<MentorshipRow>('mentorships')
+        .delete()
+        .eq('id', rows.id);
+      if (compensationError) {
+        this.logger.error('requestMentorship: compensation DELETE failed (over capacity)', {
+          compensationError,
+          mentorshipId: rows.id,
+          menteeId,
+          mentorId,
+        });
+      }
+      throw new ConflictError('Mentor has reached their maximum mentee capacity');
     }
 
     this.logger.info('Mentorship requested', { mentorshipId: rows.id, menteeId, mentorId });
+
+    this.emitEvent(DomainEventType.COMMUNITY_MENTORSHIP_REQUESTED, rows.id, {
+      mentorId,
+      menteeId,
+      mentorshipId: rows.id,
+    });
+
     return { id: rows.id };
   }
 
   async respondToRequest(mentorshipId: string, creatorId: string, accept: boolean): Promise<void> {
     const { data: mentorship, error: findError } = await this.db
       .from<MentorshipRow>('mentorships')
-      .select('id, mentor_id, status')
+      .select('id, mentor_id, mentee_id, status')
       .eq('id', mentorshipId)
       .single();
 
     if (findError || !mentorship) {
-      throw new Error('Mentorship not found');
+      throw new NotFoundError('Mentorship');
     }
 
     if (mentorship.mentor_id !== creatorId) {
-      throw new Error('Only the mentor can respond to mentorship requests');
+      throw new AuthorizationError('Only the mentor can respond to mentorship requests');
     }
 
     if (mentorship.status !== 'pending') {
-      throw new Error(`Cannot respond to a mentorship in '${mentorship.status}' status`);
+      throw new ConflictError(`Cannot respond to a mentorship in '${mentorship.status}' status`);
     }
 
     const newStatus = accept ? 'active' : 'declined';
@@ -206,7 +303,7 @@ export class MentorshipService implements IMentorshipService {
 
     if (error) {
       this.logger.error('Failed to respond to mentorship', { error, mentorshipId, accept });
-      throw new Error(`Failed to respond to mentorship: ${error.message}`);
+      throw new DatabaseError('Failed to respond to mentorship');
     }
 
     // #362: Accept-then-verify to prevent TOCTOU race on mentor capacity.
@@ -221,13 +318,21 @@ export class MentorshipService implements IMentorshipService {
         .maybeSingle();
 
       if (profileError || !mentorProfile) {
-        // Revert: mentor profile disappeared — roll back acceptance
-        await this.db
+        // #714: Revert: mentor profile disappeared — roll back acceptance.
+        // Check compensation result and log if it fails (critical-patterns.md #4c).
+        const { error: compensateError } = await this.db
           .from<MentorshipRow>('mentorships')
           .update({ status: 'pending', started_at: null })
           .eq('id', mentorshipId)
           .eq('status', 'active');
-        throw new Error('Mentor profile not found — acceptance reverted');
+        if (compensateError) {
+          this.logger.error('respondToRequest: revert on missing profile failed', {
+            compensateError,
+            mentorshipId,
+            creatorId,
+          });
+        }
+        throw new NotFoundError('Mentor profile not found — acceptance reverted');
       }
 
       const { count: activeCount, error: countError } = await this.db
@@ -237,34 +342,67 @@ export class MentorshipService implements IMentorshipService {
         .eq('status', 'active');
 
       if (countError) {
-        // Revert on count failure
-        await this.db
+        // #714: Revert on count failure — check compensation result.
+        const { error: compensateError } = await this.db
           .from<MentorshipRow>('mentorships')
           .update({ status: 'pending', started_at: null })
           .eq('id', mentorshipId)
           .eq('status', 'active');
-        throw new Error(`Failed to verify mentor capacity: ${countError.message}`);
+        if (compensateError) {
+          this.logger.error('respondToRequest: revert on count failure failed', {
+            compensateError,
+            mentorshipId,
+            creatorId,
+            originalError: countError,
+          });
+        }
+        throw new DatabaseError('Failed to verify mentor capacity');
       }
 
       if ((activeCount ?? 0) > mentorProfile.max_mentees) {
-        // Over capacity — revert acceptance and return 409
-        await this.db
+        // Over capacity — revert acceptance.
+        // #714: Check compensation result and log if it fails.
+        const { error: compensateError } = await this.db
           .from<MentorshipRow>('mentorships')
           .update({ status: 'pending', started_at: null })
           .eq('id', mentorshipId)
           .eq('status', 'active');
+        if (compensateError) {
+          this.logger.error('respondToRequest: revert on capacity exceeded failed', {
+            compensateError,
+            mentorshipId,
+            creatorId,
+          });
+        }
         throw new ConflictError('Mentor has reached their maximum mentee capacity');
       }
     }
 
     this.logger.info('Mentorship response recorded', { mentorshipId, accept, newStatus });
+
+    const eventType = accept
+      ? DomainEventType.COMMUNITY_MENTORSHIP_ACCEPTED
+      : DomainEventType.COMMUNITY_MENTORSHIP_DECLINED;
+
+    this.emitEvent(eventType, mentorshipId, {
+      mentorId: creatorId,
+      menteeId: mentorship.mentee_id,
+      mentorshipId,
+    });
   }
 
-  async getMyMentorships(creatorId: string): Promise<MentorshipRow[]> {
-    // #260: Validate creatorId format to prevent .or() filter injection
-    if (!/^[a-zA-Z0-9_-]+$/.test(creatorId)) {
-      throw new Error('Invalid creator ID format');
+  async getMyMentorships(
+    creatorId: string,
+    pagination?: { offset?: number; limit?: number }
+  ): Promise<Mentorship[]> {
+    // #260: Validate creatorId format to prevent .or() filter injection.
+    // creatorId is now always a UUID (resolved at route layer after #721 fix).
+    if (!/^[0-9a-f-]+$/i.test(creatorId)) {
+      throw new ValidationError('Invalid creator ID format');
     }
+
+    const offset = pagination?.offset ?? 0;
+    const limit = Math.min(pagination?.limit ?? 50, 100); // #713: default 50, cap 100
 
     const { data, error } = await this.db
       .from<MentorshipRow>('mentorships')
@@ -273,14 +411,14 @@ export class MentorshipService implements IMentorshipService {
       )
       .or(`mentor_id.eq.${creatorId},mentee_id.eq.${creatorId}`)
       .order('created_at', { ascending: false })
-      .limit(100);
+      .range(offset, offset + limit - 1);
 
     if (error) {
       this.logger.error('Failed to get mentorships', { error, creatorId });
-      throw new Error(`Failed to get mentorships: ${error.message}`);
+      throw new DatabaseError('Failed to get mentorships');
     }
 
-    return data ?? [];
+    return (data ?? []).map(rowToMentorship);
   }
 
   async updateMentorProfile(
@@ -291,12 +429,12 @@ export class MentorshipService implements IMentorshipService {
     this.logger.info('MentorshipService.updateMentorProfile', { profileId, creatorId });
 
     const updates: Record<string, unknown> = {};
-    if (data.niche !== undefined) updates.niche = data.niche.trim();
+    if (data.niche !== undefined) updates.niche = stripControlChars(data.niche.trim());
     if (data.audienceSizeRange !== undefined) updates.audience_size_range = data.audienceSizeRange;
-    if (data.bio !== undefined) updates.bio = data.bio;
+    if (data.bio !== undefined) updates.bio = stripControlChars(data.bio);
     if (data.maxMentees !== undefined) {
       if (data.maxMentees < 1 || data.maxMentees > 10) {
-        throw new Error('max_mentees must be between 1 and 10');
+        throw new ValidationError('max_mentees must be between 1 and 10');
       }
       updates.max_mentees = data.maxMentees;
     }
@@ -309,7 +447,7 @@ export class MentorshipService implements IMentorshipService {
 
     if (error) {
       this.logger.error('Failed to update mentor profile', { error, profileId, creatorId });
-      throw new Error('Failed to update mentor profile');
+      throw new DatabaseError('Failed to update mentor profile');
     }
   }
 }

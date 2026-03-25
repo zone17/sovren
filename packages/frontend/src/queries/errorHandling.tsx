@@ -221,8 +221,8 @@ class QueryErrorBoundary extends Component<QueryErrorBoundaryProps, QueryErrorBo
           <div className="flex flex-col items-center justify-center min-h-[400px] p-8">
             <div className="text-center max-w-md">
               <span className="text-6xl">❌</span>
-              <h2 className="mt-4 text-2xl font-semibold text-gray-900">Something went wrong</h2>
-              <p className="mt-2 text-gray-600">
+              <h2 className="mt-4 text-2xl font-semibold text-foreground">Something went wrong</h2>
+              <p className="mt-2 text-muted-foreground">
                 We encountered an error loading this content. Please try again.
               </p>
               <button
@@ -251,8 +251,8 @@ export const ReactQueryErrorBoundary: React.FC<{ children: ReactNode }> = ({ chi
             <div className="flex flex-col items-center justify-center min-h-[400px] p-8">
               <div className="text-center max-w-md">
                 <span className="text-6xl">🔄</span>
-                <h2 className="mt-4 text-2xl font-semibold text-gray-900">Loading Error</h2>
-                <p className="mt-2 text-gray-600">
+                <h2 className="mt-4 text-2xl font-semibold text-foreground">Loading Error</h2>
+                <p className="mt-2 text-muted-foreground">
                   We had trouble loading this data. Let's try again.
                 </p>
                 <button
@@ -279,9 +279,9 @@ export const LoadingSkeleton: React.FC<{ type?: 'text' | 'card' | 'list' }> = ({
   if (type === 'card') {
     return (
       <div className="animate-pulse">
-        <div className="bg-gray-200 rounded-lg h-48 mb-4"></div>
-        <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-        <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+        <div className="bg-muted rounded-lg h-48 mb-4"></div>
+        <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+        <div className="h-4 bg-muted rounded w-1/2"></div>
       </div>
     );
   }
@@ -291,10 +291,10 @@ export const LoadingSkeleton: React.FC<{ type?: 'text' | 'card' | 'list' }> = ({
       <div className="animate-pulse space-y-4">
         {[1, 2, 3].map((i) => (
           <div key={i} className="flex space-x-4">
-            <div className="h-10 w-10 bg-gray-200 rounded-full"></div>
+            <div className="h-10 w-10 bg-muted rounded-full"></div>
             <div className="flex-1 space-y-2 py-1">
-              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+              <div className="h-4 bg-muted rounded w-3/4"></div>
+              <div className="h-4 bg-muted rounded w-1/2"></div>
             </div>
           </div>
         ))}
@@ -304,9 +304,9 @@ export const LoadingSkeleton: React.FC<{ type?: 'text' | 'card' | 'list' }> = ({
 
   return (
     <div className="animate-pulse space-y-2">
-      <div className="h-4 bg-gray-200 rounded w-full"></div>
-      <div className="h-4 bg-gray-200 rounded w-5/6"></div>
-      <div className="h-4 bg-gray-200 rounded w-4/6"></div>
+      <div className="h-4 bg-muted rounded w-full"></div>
+      <div className="h-4 bg-muted rounded w-5/6"></div>
+      <div className="h-4 bg-muted rounded w-4/6"></div>
     </div>
   );
 };

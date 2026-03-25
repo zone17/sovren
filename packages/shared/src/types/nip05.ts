@@ -71,12 +71,12 @@ export interface NIP05WellKnownResponse {
 export const NIP05WellKnownResponseSchema = z.object({
   names: z.record(
     z.string(),
-    z.string().length(64, 'Public key must be 64 characters').regex(/^[a-f0-9]{64}$/, 'Invalid hex pubkey')
+    z
+      .string()
+      .length(64, 'Public key must be 64 characters')
+      .regex(/^[a-f0-9]{64}$/, 'Invalid hex pubkey')
   ),
-  relays: z.record(
-    z.string(),
-    z.array(z.string().url('Invalid relay URL'))
-  ).optional(),
+  relays: z.record(z.string(), z.array(z.string().url('Invalid relay URL'))).optional(),
 });
 
 export type ValidatedNIP05WellKnownResponse = z.infer<typeof NIP05WellKnownResponseSchema>;
@@ -142,8 +142,15 @@ export const NIP05VerificationResultSchema = z.object({
   success: z.boolean(),
   verified: z.boolean(),
   identifier: NIP05IdentifierSchema,
-  expectedPubkey: z.string().length(64).regex(/^[a-f0-9]{64}$/),
-  actualPubkey: z.string().length(64).regex(/^[a-f0-9]{64}$/).optional(),
+  expectedPubkey: z
+    .string()
+    .length(64)
+    .regex(/^[a-f0-9]{64}$/),
+  actualPubkey: z
+    .string()
+    .length(64)
+    .regex(/^[a-f0-9]{64}$/)
+    .optional(),
   status: z.nativeEnum(NIP05VerificationStatus),
   relays: z.array(z.string().url()).optional(),
   verifiedAt: z.number().optional(),
@@ -179,12 +186,14 @@ export interface NIP05VerificationOptions {
 /**
  * NIP-05 Verification Options Schema
  */
-export const NIP05VerificationOptionsSchema = z.object({
-  timeout: z.number().positive().max(60000).optional(),
-  useCache: z.boolean().optional(),
-  forceRefresh: z.boolean().optional(),
-  validateCORS: z.boolean().optional(),
-}).strict();
+export const NIP05VerificationOptionsSchema = z
+  .object({
+    timeout: z.number().positive().max(60000).optional(),
+    useCache: z.boolean().optional(),
+    forceRefresh: z.boolean().optional(),
+    validateCORS: z.boolean().optional(),
+  })
+  .strict();
 
 export type ValidatedNIP05VerificationOptions = z.infer<typeof NIP05VerificationOptionsSchema>;
 

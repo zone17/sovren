@@ -21,6 +21,7 @@ import {
   SearchResults,
   TrendingContent,
 } from '../types/supporterExperience';
+import { Spinner } from '../../../components/ui/spinner';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 import { useSupporterExperienceService } from '../services/supporterExperienceService';
 
@@ -56,11 +57,11 @@ const PersonalizedFeedComponent: React.FC<{
       {/* Feed Header */}
       <div className="feed-header mb-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold text-gray-900">Your Feed</h2>
+          <h2 className="text-2xl font-bold text-foreground">Your Feed</h2>
           <div className="flex space-x-2">
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-blue-100 text-blue-600' : 'text-gray-500'}`}
+              className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-blue-100 text-blue-600' : 'text-muted-foreground'}`}
               aria-label="Grid view"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -69,7 +70,7 @@ const PersonalizedFeedComponent: React.FC<{
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-blue-100 text-blue-600' : 'text-gray-500'}`}
+              className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-blue-100 text-blue-600' : 'text-muted-foreground'}`}
               aria-label="List view"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -84,7 +85,7 @@ const PersonalizedFeedComponent: React.FC<{
           <select
             value={filters.sortBy}
             onChange={(e) => handleFilterUpdate({ ...filters, sortBy: e.target.value })}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            className="px-3 py-2 border border-border rounded-md focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="recent">Most Recent</option>
             <option value="trending">Trending</option>
@@ -95,7 +96,7 @@ const PersonalizedFeedComponent: React.FC<{
           <select
             value={filters.timeframe}
             onChange={(e) => handleFilterUpdate({ ...filters, timeframe: e.target.value })}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            className="px-3 py-2 border border-border rounded-md focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="24h">Last 24 Hours</option>
             <option value="7d">Last 7 Days</option>
@@ -110,9 +111,9 @@ const PersonalizedFeedComponent: React.FC<{
               onChange={(e) =>
                 handleFilterUpdate({ ...filters, showFollowedOnly: e.target.checked })
               }
-              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              className="w-4 h-4 text-blue-600 border-border rounded focus:ring-blue-500"
             />
-            <span className="text-sm text-gray-700">Following only</span>
+            <span className="text-sm text-foreground">Following only</span>
           </label>
         </div>
 
@@ -160,7 +161,7 @@ const PersonalizedFeedComponent: React.FC<{
       )}
 
       {/* Pagination Info */}
-      <div className="pagination-info mt-4 text-center text-sm text-gray-500">
+      <div className="pagination-info mt-4 text-center text-sm text-muted-foreground">
         Page {feed.pagination.page} of {feed.pagination.totalPages}({feed.pagination.totalItems}{' '}
         total items)
       </div>
@@ -197,7 +198,7 @@ const CategoryBrowsingComponent: React.FC<{
     <div className="category-browsing">
       {/* Header */}
       <div className="category-header mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Browse Categories</h2>
+        <h2 className="text-2xl font-bold text-foreground mb-4">Browse Categories</h2>
 
         {/* Search */}
         <div className="relative">
@@ -206,10 +207,10 @@ const CategoryBrowsingComponent: React.FC<{
             placeholder="Search categories..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+            className="w-full pl-10 pr-4 py-3 border border-border rounded-lg focus:ring-blue-500 focus:border-blue-500"
           />
           <svg
-            className="absolute left-3 top-3.5 w-5 h-5 text-gray-400"
+            className="absolute left-3 top-3.5 w-5 h-5 text-muted-foreground"
             fill="currentColor"
             viewBox="0 0 20 20"
           >
@@ -224,7 +225,7 @@ const CategoryBrowsingComponent: React.FC<{
 
       {/* Featured Categories */}
       <div className="featured-categories mb-8">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">Featured & Trending</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-4">Featured & Trending</h3>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {featuredCategories.map((category) => (
             <CategoryCard
@@ -239,7 +240,7 @@ const CategoryBrowsingComponent: React.FC<{
 
       {/* All Categories */}
       <div className="all-categories">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">All Categories</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-4">All Categories</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredCategories.map((category) => (
             <CategoryCard
@@ -306,10 +307,10 @@ const SearchComponent: React.FC<{
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyPress={handleKeyPress}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+              className="w-full pl-10 pr-4 py-3 border border-border rounded-lg focus:ring-blue-500 focus:border-blue-500"
             />
             <svg
-              className="absolute left-3 top-3.5 w-5 h-5 text-gray-400"
+              className="absolute left-3 top-3.5 w-5 h-5 text-muted-foreground"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -339,14 +340,16 @@ const SearchComponent: React.FC<{
 
         {/* Advanced Filters */}
         {showAdvancedFilters && (
-          <div className="advanced-filters mt-4 p-4 bg-gray-50 rounded-lg">
+          <div className="advanced-filters mt-4 p-4 bg-muted rounded-lg">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* Content Type Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Content Type</label>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Content Type
+                </label>
                 <select
                   multiple
-                  className="w-full border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border border-border rounded-md focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="text">Text</option>
                   <option value="video">Video</option>
@@ -358,8 +361,8 @@ const SearchComponent: React.FC<{
 
               {/* Date Range Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
-                <select className="w-full border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                <label className="block text-sm font-medium text-foreground mb-2">Date Range</label>
+                <select className="w-full border border-border rounded-md focus:ring-blue-500 focus:border-blue-500">
                   <option value="">Any time</option>
                   <option value="24h">Last 24 hours</option>
                   <option value="7d">Last week</option>
@@ -373,9 +376,9 @@ const SearchComponent: React.FC<{
                 <label className="flex items-center space-x-2">
                   <input
                     type="checkbox"
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    className="w-4 h-4 text-blue-600 border-border rounded focus:ring-blue-500"
                   />
-                  <span className="text-sm text-gray-700">Premium content only</span>
+                  <span className="text-sm text-foreground">Premium content only</span>
                 </label>
               </div>
             </div>
@@ -387,7 +390,7 @@ const SearchComponent: React.FC<{
       {searchResults && (
         <div className="search-results">
           <div className="results-header mb-4">
-            <p className="text-gray-600">
+            <p className="text-muted-foreground">
               Found {searchResults.pagination.totalResults} results in{' '}
               {searchResults.analytics.searchTime}ms
             </p>
@@ -408,7 +411,7 @@ const SearchComponent: React.FC<{
                   className={`px-3 py-2 rounded-md ${
                     searchResults.pagination.page === i + 1
                       ? 'bg-blue-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      : 'bg-muted text-foreground hover:bg-accent'
                   }`}
                 >
                   {i + 1}
@@ -452,7 +455,7 @@ const TrendingContentComponent: React.FC<{
     <div className="trending-content">
       {/* Header */}
       <div className="trending-header mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Trending Now</h2>
+        <h2 className="text-2xl font-bold text-foreground mb-4">Trending Now</h2>
 
         {/* Timeframe Selector */}
         <div className="timeframe-selector flex flex-wrap gap-2 mb-4">
@@ -463,7 +466,7 @@ const TrendingContentComponent: React.FC<{
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 activeTimeframe === option.value
                   ? 'bg-orange-100 text-orange-600 border-2 border-orange-200'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  : 'bg-muted text-muted-foreground hover:bg-accent'
               }`}
             >
               {option.icon} {option.label}
@@ -478,25 +481,25 @@ const TrendingContentComponent: React.FC<{
               <div className="text-2xl font-bold text-orange-600">
                 {trendingContent.globalStats.totalTrendingContent}
               </div>
-              <div className="text-sm text-gray-600">Trending Items</div>
+              <div className="text-sm text-muted-foreground">Trending Items</div>
             </div>
             <div className="stat-item text-center">
               <div className="text-2xl font-bold text-red-600">
                 {trendingContent.globalStats.averageTrendingScore.toFixed(1)}%
               </div>
-              <div className="text-sm text-gray-600">Avg Score</div>
+              <div className="text-sm text-muted-foreground">Avg Score</div>
             </div>
             <div className="stat-item text-center">
               <div className="text-2xl font-bold text-purple-600">
                 {trendingContent.globalStats.topCategory}
               </div>
-              <div className="text-sm text-gray-600">Top Category</div>
+              <div className="text-sm text-muted-foreground">Top Category</div>
             </div>
             <div className="stat-item text-center">
               <div className="text-2xl font-bold text-green-600">
                 +{(trendingContent.globalStats.engagementIncrease * 100).toFixed(1)}%
               </div>
-              <div className="text-sm text-gray-600">Engagement</div>
+              <div className="text-sm text-muted-foreground">Engagement</div>
             </div>
           </div>
         </div>
@@ -516,15 +519,17 @@ const TrendingContentComponent: React.FC<{
 
       {/* Category Breakdown */}
       <div className="category-breakdown mt-8">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">Trending by Category</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-4">Trending by Category</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {trendingContent.categories.map((category) => (
-            <div key={category.categoryId} className="category-stat bg-white p-4 rounded-lg border">
+            <div key={category.categoryId} className="category-stat bg-card p-4 rounded-lg border">
               <div className="flex justify-between items-center">
-                <h4 className="font-medium text-gray-900">{category.name}</h4>
+                <h4 className="font-medium text-foreground">{category.name}</h4>
                 <span
                   className={`text-sm px-2 py-1 rounded ${
-                    category.growth > 0 ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+                    category.growth > 0
+                      ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
+                      : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
                   }`}
                 >
                   {category.growth > 0 ? '+' : ''}
@@ -532,7 +537,7 @@ const TrendingContentComponent: React.FC<{
                 </span>
               </div>
               <div className="text-2xl font-bold text-blue-600 mt-2">{category.trendingCount}</div>
-              <div className="text-sm text-gray-500">trending items</div>
+              <div className="text-sm text-muted-foreground">trending items</div>
             </div>
           ))}
         </div>
@@ -613,7 +618,7 @@ const SupporterExperience: React.FC<SupporterExperienceProps> = ({
     return (
       <div className="supporter-experience-error p-8 text-center">
         <div className="text-red-600 text-lg font-medium mb-2">Something went wrong</div>
-        <div className="text-gray-600 mb-4">{error}</div>
+        <div className="text-muted-foreground mb-4">{error}</div>
         <button
           onClick={() => window.location.reload()}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
@@ -628,7 +633,7 @@ const SupporterExperience: React.FC<SupporterExperienceProps> = ({
     <div className={`supporter-experience ${className}`}>
       {/* Navigation Tabs */}
       <div className="navigation-tabs mb-8">
-        <div className="border-b border-gray-200">
+        <div className="border-b border-border">
           <nav className="-mb-px flex space-x-8">
             {tabs.map((tab) => (
               <button
@@ -637,7 +642,7 @@ const SupporterExperience: React.FC<SupporterExperienceProps> = ({
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === tab.id
                     ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
                 }`}
               >
                 {tab.icon} {tab.label}
@@ -688,9 +693,9 @@ const SupporterExperience: React.FC<SupporterExperienceProps> = ({
       {/* Loading State */}
       {isLoading && (
         <div className="loading-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <div className="text-gray-600">Loading amazing content...</div>
+          <div className="bg-card p-6 rounded-lg">
+            <Spinner size="lg" className="mx-auto mb-4" />
+            <div className="text-muted-foreground">Loading amazing content...</div>
           </div>
         </div>
       )}
@@ -709,14 +714,14 @@ const ContentCard: React.FC<{
   return (
     <div
       onClick={onClick}
-      className={`content-card bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer ${
+      className={`content-card bg-card rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer ${
         viewMode === 'list' ? 'flex space-x-4 p-4' : 'p-4'
       }`}
     >
       {/* Thumbnail */}
       {content.thumbnailUrl && (
         <div
-          className={`thumbnail ${viewMode === 'list' ? 'w-32 h-20' : 'w-full h-40'} bg-gray-200 rounded-lg mb-3 overflow-hidden`}
+          className={`thumbnail ${viewMode === 'list' ? 'w-32 h-20' : 'w-full h-40'} bg-muted rounded-lg mb-3 overflow-hidden`}
         >
           <img
             src={content.thumbnailUrl}
@@ -729,15 +734,15 @@ const ContentCard: React.FC<{
       {/* Content */}
       <div className="flex-1">
         <div className="flex items-start justify-between mb-2">
-          <h3 className="font-semibold text-gray-900 line-clamp-2">{content.title}</h3>
+          <h3 className="font-semibold text-foreground line-clamp-2">{content.title}</h3>
           {content.isPremium && (
-            <span className="ml-2 bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">
+            <span className="ml-2 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 text-xs px-2 py-1 rounded-full">
               Premium
             </span>
           )}
         </div>
 
-        <p className="text-gray-600 text-sm mb-3 line-clamp-2">{content.description}</p>
+        <p className="text-muted-foreground text-sm mb-3 line-clamp-2">{content.description}</p>
 
         {/* Creator Info */}
         <div className="flex items-center mb-3">
@@ -748,11 +753,11 @@ const ContentCard: React.FC<{
               className="w-6 h-6 rounded-full mr-2"
             />
           )}
-          <span className="text-sm text-gray-700">{content.creatorName}</span>
+          <span className="text-sm text-foreground">{content.creatorName}</span>
         </div>
 
         {/* Engagement Stats */}
-        <div className="flex items-center justify-between text-sm text-gray-500">
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
           <div className="flex space-x-4">
             <span>👁 {content.engagement.views}</span>
             <span>❤️ {content.engagement.likes}</span>
@@ -774,20 +779,20 @@ const CategoryCard: React.FC<{
   return (
     <div
       onClick={onClick}
-      className={`category-card bg-white rounded-lg p-4 border-2 cursor-pointer transition-all ${
+      className={`category-card bg-card rounded-lg p-4 border-2 cursor-pointer transition-all ${
         isSelected
           ? 'border-blue-500 bg-blue-50'
-          : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
+          : 'border-border hover:border-accent hover:shadow-md'
       } ${isFeatured ? 'bg-gradient-to-br from-blue-50 to-purple-50' : ''}`}
     >
       <div className="flex items-center justify-between mb-2">
-        <h3 className="font-semibold text-gray-900">{category.name}</h3>
+        <h3 className="font-semibold text-foreground">{category.name}</h3>
         {category.isTrending && <span className="text-orange-500">🔥</span>}
       </div>
 
-      <p className="text-gray-600 text-sm mb-3">{category.description}</p>
+      <p className="text-muted-foreground text-sm mb-3">{category.description}</p>
 
-      <div className="flex justify-between text-sm text-gray-500">
+      <div className="flex justify-between text-sm text-muted-foreground">
         <span>{category.metadata.contentCount} items</span>
         <span>{category.metadata.creatorCount} creators</span>
       </div>
@@ -803,10 +808,10 @@ const CategoryCard: React.FC<{
 
 const SearchResultCard: React.FC<{ content: FeedContentItem }> = ({ content }) => {
   return (
-    <div className="search-result-card bg-white rounded-lg p-4 border border-gray-200 hover:border-gray-300 transition-colors">
+    <div className="search-result-card bg-card rounded-lg p-4 border border-border hover:border-accent transition-colors">
       <div className="flex space-x-4">
         {content.thumbnailUrl && (
-          <div className="thumbnail w-24 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+          <div className="thumbnail w-24 h-16 bg-muted rounded-lg overflow-hidden flex-shrink-0">
             <img
               src={content.thumbnailUrl}
               alt={content.title}
@@ -816,10 +821,10 @@ const SearchResultCard: React.FC<{ content: FeedContentItem }> = ({ content }) =
         )}
 
         <div className="flex-1">
-          <h3 className="font-semibold text-gray-900 mb-1">{content.title}</h3>
-          <p className="text-gray-600 text-sm mb-2">{content.description}</p>
+          <h3 className="font-semibold text-foreground mb-1">{content.title}</h3>
+          <p className="text-muted-foreground text-sm mb-2">{content.description}</p>
 
-          <div className="flex items-center justify-between text-sm text-gray-500">
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
             <div className="flex items-center space-x-4">
               <span>{content.creatorName}</span>
               <span>👁 {content.engagement.views}</span>
@@ -838,12 +843,12 @@ const TrendingContentCard: React.FC<{
   onClick: () => void;
 }> = ({ item, rank, onClick }) => {
   const trendingColor =
-    rank <= 3 ? 'text-orange-500' : rank <= 10 ? 'text-yellow-500' : 'text-gray-500';
+    rank <= 3 ? 'text-orange-500' : rank <= 10 ? 'text-yellow-500' : 'text-muted-foreground';
 
   return (
     <div
       onClick={onClick}
-      className="trending-content-card bg-white rounded-lg p-4 border border-gray-200 hover:border-orange-300 hover:shadow-md transition-all cursor-pointer"
+      className="trending-content-card bg-card rounded-lg p-4 border border-border hover:border-orange-300 hover:shadow-md transition-all cursor-pointer"
     >
       <div className="flex items-center space-x-4">
         {/* Rank */}
@@ -853,7 +858,7 @@ const TrendingContentCard: React.FC<{
 
         {/* Thumbnail */}
         {item.content.thumbnailUrl && (
-          <div className="thumbnail w-20 h-12 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+          <div className="thumbnail w-20 h-12 bg-muted rounded-lg overflow-hidden flex-shrink-0">
             <img
               src={item.content.thumbnailUrl}
               alt={item.content.title}
@@ -864,8 +869,8 @@ const TrendingContentCard: React.FC<{
 
         {/* Content Info */}
         <div className="flex-1">
-          <h3 className="font-semibold text-gray-900 mb-1">{item.content.title}</h3>
-          <div className="flex items-center space-x-4 text-sm text-gray-600">
+          <h3 className="font-semibold text-foreground mb-1">{item.content.title}</h3>
+          <div className="flex items-center space-x-4 text-sm text-muted-foreground">
             <span>{item.content.creatorName}</span>
             <span>👁 {item.content.engagement.views}</span>
             <span className="text-orange-600 font-medium">

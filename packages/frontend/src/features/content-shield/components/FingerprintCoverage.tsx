@@ -29,7 +29,7 @@ export const FingerprintCoverage: React.FC<FingerprintCoverageProps> = ({ creato
         <CardHeader>
           <CardTitle className="text-base font-semibold">Fingerprint Coverage</CardTitle>
         </CardHeader>
-        <CardContent className="py-6 text-center text-sm text-gray-500">
+        <CardContent className="py-6 text-center text-sm text-muted-foreground">
           Failed to load fingerprint coverage.
         </CardContent>
       </Card>
@@ -73,25 +73,25 @@ export const FingerprintCoverage: React.FC<FingerprintCoverageProps> = ({ creato
               />
             </svg>
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-xl font-bold text-gray-800">{coverage.toFixed(0)}%</span>
+              <span className="text-xl font-bold text-foreground">{coverage.toFixed(0)}%</span>
             </div>
           </div>
 
           {/* Stats */}
           <div className="space-y-3">
             <div>
-              <p className="text-sm font-medium text-gray-700">{data.total_fingerprinted}</p>
-              <p className="text-xs text-gray-500">Fingerprinted</p>
+              <p className="text-sm font-medium text-foreground">{data.total_fingerprinted}</p>
+              <p className="text-xs text-muted-foreground">Fingerprinted</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-700">{data.total_content}</p>
-              <p className="text-xs text-gray-500">Total Content</p>
+              <p className="text-sm font-medium text-foreground">{data.total_content}</p>
+              <p className="text-xs text-muted-foreground">Total Content</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-700">
+              <p className="text-sm font-medium text-foreground">
                 {data.total_content - data.total_fingerprinted}
               </p>
-              <p className="text-xs text-gray-500">Unprotected</p>
+              <p className="text-xs text-muted-foreground">Unprotected</p>
             </div>
           </div>
         </div>

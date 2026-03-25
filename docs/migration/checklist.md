@@ -10,21 +10,25 @@ Use this checklist to ensure a smooth, successful migration.
 ### Environment Preparation
 
 - [ ] Node.js 20+ installed and verified
+
   ```bash
   node --version  # Should be >= 20.0.0
   ```
 
 - [ ] All dependencies installed
+
   ```bash
   npm install
   ```
 
 - [ ] Project builds successfully
+
   ```bash
   npm run build
   ```
 
 - [ ] Tests passing
+
   ```bash
   npm test
   ```
@@ -45,17 +49,20 @@ Use this checklist to ensure a smooth, successful migration.
 ### Backup Verification
 
 - [ ] Backup directory accessible
+
   ```bash
   mkdir -p .migration-backups
   ls -la .migration-backups
   ```
 
 - [ ] Sufficient disk space (minimum 2GB free)
+
   ```bash
   df -h .
   ```
 
 - [ ] Write permissions verified
+
   ```bash
   touch .migration-backups/test && rm .migration-backups/test
   ```
@@ -79,6 +86,7 @@ Use this checklist to ensure a smooth, successful migration.
 ### Migration Status Check
 
 - [ ] Current migration status known
+
   ```bash
   npm run migrate -- --status
   ```
@@ -91,6 +99,7 @@ Use this checklist to ensure a smooth, successful migration.
 ### Initial Test
 
 - [ ] Dry run completed successfully
+
   ```bash
   npm run migrate -- --all --dry-run
   ```
@@ -131,6 +140,7 @@ Use this checklist to ensure a smooth, successful migration.
 ### Execution
 
 - [ ] Migration command prepared
+
   ```bash
   npm run migrate -- --all --verbose
   ```
@@ -159,6 +169,7 @@ Use this checklist to ensure a smooth, successful migration.
 - [ ] Environment variables to be updated noted
 
 **Post-Migration**:
+
 - [ ] Relay config file exists
   ```bash
   cat packages/shared/src/config/relays.ts
@@ -180,11 +191,13 @@ Use this checklist to ensure a smooth, successful migration.
 - [ ] Dry run shows correct key count
 
 **During Migration**:
+
 - [ ] Password entered correctly
 - [ ] Password confirmation matches
 - [ ] Encryption progress visible
 
 **Post-Migration**:
+
 - [ ] Keys encrypted successfully
 - [ ] Keys accessible with password
 - [ ] Key validation passes
@@ -202,6 +215,7 @@ Use this checklist to ensure a smooth, successful migration.
 - [ ] Index strategy selected
 
 **Post-Migration**:
+
 - [ ] Events migrated count matches
 - [ ] No duplicate events
 - [ ] Event signatures valid
@@ -216,6 +230,7 @@ Use this checklist to ensure a smooth, successful migration.
 - [ ] Connection pool settings reviewed
 
 **Post-Migration**:
+
 - [ ] Subscriptions active
 - [ ] Filters working correctly
 - [ ] Events being received
@@ -227,6 +242,7 @@ Use this checklist to ensure a smooth, successful migration.
 ### Automated Validation
 
 - [ ] Migration validation runs successfully
+
   ```bash
   npm run validate:migration
   ```
@@ -239,6 +255,7 @@ Use this checklist to ensure a smooth, successful migration.
 ### Manual Validation
 
 - [ ] Application starts successfully
+
   ```bash
   npm run dev
   ```
@@ -253,20 +270,20 @@ Use this checklist to ensure a smooth, successful migration.
 ### Data Verification
 
 - [ ] Key counts match pre-migration
-  - Before: ___ keys
-  - After: ___ keys
+  - Before: \_\_\_ keys
+  - After: \_\_\_ keys
 
 - [ ] Event counts match (or explain difference)
-  - Before: ___ events
-  - After: ___ events
+  - Before: \_\_\_ events
+  - After: \_\_\_ events
 
 - [ ] Subscription counts match
-  - Before: ___ subscriptions
-  - After: ___ subscriptions
+  - Before: \_\_\_ subscriptions
+  - After: \_\_\_ subscriptions
 
 - [ ] Relay counts match
-  - Before: ___ relays
-  - After: ___ relays
+  - Before: \_\_\_ relays
+  - After: \_\_\_ relays
 
 ### Functional Testing
 
@@ -283,6 +300,7 @@ Use this checklist to ensure a smooth, successful migration.
 ### Immediate Actions
 
 - [ ] Migration report reviewed
+
   ```bash
   cat .migration-backups/*/migration-report.json
   ```
@@ -320,6 +338,7 @@ Use this checklist to ensure a smooth, successful migration.
 ### When to Rollback
 
 Rollback immediately if:
+
 - [ ] Critical functionality broken
 - [ ] Data loss detected
 - [ ] Performance severely degraded
@@ -392,6 +411,7 @@ Rollback immediately if:
 ### Optional Cleanup
 
 - [ ] Old backups archived
+
   ```bash
   tar -czf old-backups-$(date +%Y%m%d).tar.gz .migration-backups/migration-*
   ```
@@ -412,7 +432,7 @@ Rollback immediately if:
 - [ ] Security audit passed (if required)
 - [ ] Code review completed (if required)
 
-**Signed**: _______________ **Date**: _______________
+**Signed**: **\*\***\_\_\_**\*\*** **Date**: **\*\***\_\_\_**\*\***
 
 ### Stakeholder Sign-Off
 
@@ -422,7 +442,7 @@ Rollback immediately if:
 - [ ] Training completed (if required)
 - [ ] Support handoff complete
 
-**Signed**: _______________ **Date**: _______________
+**Signed**: **\*\***\_\_\_**\*\*** **Date**: **\*\***\_\_\_**\*\***
 
 ## Migration Report Template
 
@@ -430,12 +450,14 @@ Rollback immediately if:
 # Migration Report: [Date]
 
 ## Overview
+
 - **Date**: YYYY-MM-DD HH:MM
 - **Duration**: X hours Y minutes
 - **Components**: Relay Config, Keys, Events, Subscriptions
 - **Environment**: Development / Staging / Production
 
 ## Results
+
 - **Status**: Success / Partial / Failed
 - **Items Migrated**: X / Y (Z%)
 - **Errors**: 0
@@ -444,48 +466,58 @@ Rollback immediately if:
 ## Components
 
 ### Relay Configuration
+
 - Discovered: X relays
 - Migrated: Y relays
 - Time: Z minutes
 - Status: ✅ Success
 
 ### Key Storage
+
 - Discovered: X keys
 - Migrated: Y keys
 - Time: Z minutes
 - Status: ✅ Success
 
 ### Event Cache
+
 - Discovered: X events
 - Migrated: Y events
 - Time: Z minutes
 - Status: ✅ Success
 
 ### Subscriptions
+
 - Discovered: X subscriptions
 - Migrated: Y subscriptions
 - Time: Z minutes
 - Status: ✅ Success
 
 ## Validation
+
 - Data integrity: ✅ Pass
 - No data loss: ✅ Pass
 - Performance: ✅ Pass
 - Security: ✅ Pass
 
 ## Issues
+
 None / [List any issues]
 
 ## Recommendations
+
 [Any recommendations for future]
 
 ## Backup Location
+
 .migration-backups/migration-YYYY-MM-DDTHH-MM-SS/
 
 ## Notes
+
 [Any additional notes]
 
 ---
+
 Report generated: YYYY-MM-DD HH:MM:SS
 ```
 

@@ -13,6 +13,8 @@
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
+import apiClient from '@/services/api/apiClient';
+import { useBtcPrice } from '@/hooks/useBtcPrice';
 import { Button } from '../../../components/ui';
 import { Alert, AlertDescription, AlertTitle } from '../../../components/ui/alert';
 import { Badge } from '../../../components/ui/badge';
@@ -44,6 +46,7 @@ import { Skeleton } from '../../../components/ui/skeleton';
 import { Switch } from '../../../components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui/tabs';
 import { Textarea } from '../../../components/ui/textarea';
+import { ConfirmDialog } from '../../../components/ui/confirm-dialog';
 
 // 🎭 **ICONS**
 import {
@@ -124,6 +127,7 @@ const PricingTierCard: React.FC<{
   onDelete: (tier: SubscriptionTier) => void;
   onToggleActive: (tier: SubscriptionTier) => void;
 }> = ({ tier, onEdit, onDelete, onToggleActive }) => {
+  const { priceUsd: btcPriceUsd } = useBtcPrice();
   const formatPrice = (sats: number) => {
     if (sats >= 1000000) return `${(sats / 1000000).toFixed(1)}M`;
     if (sats >= 1000) return `${(sats / 1000).toFixed(1)}K`;
@@ -148,15 +152,15 @@ const PricingTierCard: React.FC<{
       return <Crown className="h-5 w-5 text-yellow-500" />;
     }
     if (name.toLowerCase().includes('basic') || name.toLowerCase().includes('starter')) {
-      return <Star className="h-5 w-5 text-blue-500" />;
+      return <Star className="h-5 w-5 text-violet-500" />;
     }
     return <Shield className="h-5 w-5 text-purple-500" />;
   };
 
   return (
     <Card
-      className={`relative transition-all duration-200 hover:shadow-lg ${
-        tier.is_active ? 'border-green-200 bg-green-50/50' : 'border-gray-200 bg-gray-50/50'
+      className={`relative transition-all duration-150 glass-hover ${
+        tier.is_active ? 'border-green-500/30' : 'border-border'
       }`}
     >
       {/* Active/Inactive Badge */}
@@ -174,13 +178,17 @@ const PricingTierCard: React.FC<{
         {/* Pricing */}
         <div className="pt-2">
           <div className="flex items-baseline gap-1">
-            <span className="text-2xl font-bold text-gray-900">
-              ⚡ {formatPrice(tier.price_sats)}
+            <span className="text-2xl font-bold text-foreground">
+              {formatPrice(tier.price_sats)}
             </span>
-            <span className="text-sm text-gray-600">{getBillingLabel(tier.billing_period)}</span>
+            <span className="text-sm text-muted-foreground">
+              {getBillingLabel(tier.billing_period)}
+            </span>
           </div>
-          <div className="text-xs text-gray-500 mt-1">
-            ≈ ${((tier.price_sats / 100000000) * 30000).toFixed(2)} USD
+          <div className="text-xs text-muted-foreground mt-1">
+            {btcPriceUsd != null
+              ? `≈ $${((tier.price_sats / 100000000) * btcPriceUsd).toFixed(2)} USD`
+              : ''}
           </div>
         </div>
       </CardHeader>
@@ -188,10 +196,10 @@ const PricingTierCard: React.FC<{
       <CardContent className="space-y-4">
         {/* Features */}
         <div>
-          <h4 className="text-sm font-medium text-gray-700 mb-2">Features:</h4>
+          <h4 className="text-sm font-medium text-foreground mb-2">Features:</h4>
           <ul className="space-y-1">
             {tier.features.map((feature, index) => (
-              <li key={index} className="flex items-center gap-2 text-sm text-gray-600">
+              <li key={index} className="flex items-center gap-2 text-sm text-muted-foreground">
                 <CheckCircle className="h-3 w-3 text-green-500 flex-shrink-0" />
                 {feature}
               </li>
@@ -202,27 +210,29 @@ const PricingTierCard: React.FC<{
         {/* Stats */}
         <div className="grid grid-cols-2 gap-4 pt-4 border-t">
           <div>
-            <div className="text-lg font-semibold text-gray-900">{tier.subscriber_count}</div>
-            <div className="text-xs text-gray-500">Subscribers</div>
+            <div className="text-lg font-semibold text-foreground">{tier.subscriber_count}</div>
+            <div className="text-xs text-muted-foreground">Subscribers</div>
           </div>
           <div>
-            <div className="text-lg font-semibold text-gray-900">
+            <div className="text-lg font-semibold text-foreground">
               {tier.conversion_rate.toFixed(1)}%
             </div>
-            <div className="text-xs text-gray-500">Conversion</div>
+            <div className="text-xs text-muted-foreground">Conversion</div>
           </div>
         </div>
 
         {/* Revenue */}
-        <div className="bg-blue-50 p-3 rounded-md">
+        <div className="glass p-3 rounded-md">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-blue-700">Total Revenue</span>
-            <span className="text-sm font-bold text-blue-900">
-              ⚡ {formatPrice(tier.total_revenue_sats)}
+            <span className="text-sm font-medium text-purple-400">Total Revenue</span>
+            <span className="text-sm font-bold text-foreground">
+              {formatPrice(tier.total_revenue_sats)}
             </span>
           </div>
-          <div className="text-xs text-blue-600 mt-1">
-            ≈ ${((tier.total_revenue_sats / 100000000) * 30000).toFixed(2)} USD
+          <div className="text-xs text-muted-foreground mt-1">
+            {btcPriceUsd != null
+              ? `$${((tier.total_revenue_sats / 100000000) * btcPriceUsd).toFixed(2)} USD`
+              : ''}
           </div>
         </div>
       </CardContent>
@@ -287,7 +297,7 @@ const SubscriberCard: React.FC<{
       case 'cancelled':
         return 'bg-red-100 text-red-800';
       case 'expired':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-muted text-foreground';
     }
   };
 
@@ -305,12 +315,12 @@ const SubscriberCard: React.FC<{
   };
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="glass-hover transition-all duration-150">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
             {/* Avatar */}
-            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-medium">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-violet-600 to-purple-600 flex items-center justify-center text-white font-medium">
               {subscriber.supporter_info.avatar_url ? (
                 <img
                   src={subscriber.supporter_info.avatar_url}
@@ -324,14 +334,14 @@ const SubscriberCard: React.FC<{
 
             {/* Subscriber Info */}
             <div>
-              <h4 className="font-medium text-gray-900">
+              <h4 className="font-medium text-foreground">
                 {subscriber.supporter_info.name || 'Anonymous Supporter'}
               </h4>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted-foreground">
                 {subscriber.supporter_info.email || 'No email provided'}
               </p>
               {subscriber.supporter_info.nostr_pubkey && (
-                <p className="text-xs text-gray-400 font-mono">
+                <p className="text-xs text-muted-foreground font-mono">
                   {subscriber.supporter_info.nostr_pubkey.slice(0, 20)}...
                 </p>
               )}
@@ -350,11 +360,11 @@ const SubscriberCard: React.FC<{
         {/* Subscription Details */}
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
-            <span className="text-gray-500">Tier:</span>
+            <span className="text-muted-foreground">Tier:</span>
             <span className="ml-2 font-medium">{tier?.name || 'Unknown'}</span>
           </div>
           <div>
-            <span className="text-gray-500">Payment:</span>
+            <span className="text-muted-foreground">Payment:</span>
             <span className="ml-2 font-medium flex items-center gap-1">
               {subscriber.payment_method === 'lightning' ? (
                 <>
@@ -370,13 +380,13 @@ const SubscriberCard: React.FC<{
             </span>
           </div>
           <div>
-            <span className="text-gray-500">Since:</span>
+            <span className="text-muted-foreground">Since:</span>
             <span className="ml-2 font-medium">
               {new Date(subscriber.started_at).toLocaleDateString()}
             </span>
           </div>
           <div>
-            <span className="text-gray-500">Expires:</span>
+            <span className="text-muted-foreground">Expires:</span>
             <span
               className={`ml-2 font-medium ${daysLeft <= 7 ? 'text-orange-600' : daysLeft <= 0 ? 'text-red-600' : ''}`}
             >
@@ -386,22 +396,22 @@ const SubscriberCard: React.FC<{
         </div>
 
         {/* Revenue Stats */}
-        <div className="bg-blue-50 p-3 rounded-md">
+        <div className="glass p-3 rounded-md">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-blue-700">Total Contribution</span>
-            <span className="text-sm font-bold text-blue-900">
-              ⚡ {subscriber.total_payments.toLocaleString()}
+            <span className="text-sm font-medium text-purple-400">Total Contribution</span>
+            <span className="text-sm font-bold text-foreground">
+              {subscriber.total_payments.toLocaleString()}
             </span>
           </div>
-          <div className="text-xs text-blue-600 mt-1">
+          <div className="text-xs text-muted-foreground mt-1">
             Last payment: {new Date(subscriber.last_payment_at).toLocaleDateString()}
           </div>
         </div>
 
         {/* Auto-renew Status */}
         {isActive && (
-          <div className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
-            <span className="text-sm text-gray-700">Auto-renew</span>
+          <div className="flex items-center justify-between p-2 glass rounded-md">
+            <span className="text-sm text-foreground">Auto-renew</span>
             <Badge variant={subscriber.auto_renew ? 'default' : 'secondary'}>
               {subscriber.auto_renew ? 'Enabled' : 'Disabled'}
             </Badge>
@@ -449,6 +459,7 @@ const TierDialog: React.FC<{
   onOpenChange: (open: boolean) => void;
   onSave: (tier: Partial<SubscriptionTier>) => void;
 }> = ({ tier, open, onOpenChange, onSave }) => {
+  const { priceUsd: btcPriceUsd } = useBtcPrice();
   const [formData, setFormData] = useState<Partial<SubscriptionTier>>({
     name: '',
     description: '',
@@ -570,8 +581,10 @@ const TierDialog: React.FC<{
                 min="1"
               />
             </div>
-            <p className="text-xs text-gray-500">
-              ≈ ${(((formData.price_sats || 0) / 100000000) * 30000).toFixed(2)} USD
+            <p className="text-xs text-muted-foreground">
+              {btcPriceUsd != null
+                ? `$${(((formData.price_sats || 0) / 100000000) * btcPriceUsd).toFixed(2)} USD`
+                : ''}
             </p>
           </div>
 
@@ -624,7 +637,12 @@ const TierDialog: React.FC<{
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSave}>{tier ? 'Update Tier' : 'Create Tier'}</Button>
+          <Button
+            onClick={handleSave}
+            className="bg-gradient-to-r from-violet-600 to-purple-600 shadow-[0_4px_16px_rgba(139,92,246,0.3)] text-white"
+          >
+            {tier ? 'Update Tier' : 'Create Tier'}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
@@ -641,6 +659,7 @@ export const SubscriptionManager: React.FC = () => {
   const [tierDialogOpen, setTierDialogOpen] = useState(false);
   const [selectedSubscriber, setSelectedSubscriber] = useState<Subscriber | null>(null);
   const [subscriberDetailsOpen, setSubscriberDetailsOpen] = useState(false);
+  const [deleteTierConfirm, setDeleteTierConfirm] = useState<SubscriptionTier | null>(null);
 
   // 🔄 **DATA LOADING**
   const loadSubscriptionData = useCallback(async () => {
@@ -648,108 +667,13 @@ export const SubscriptionManager: React.FC = () => {
       setIsLoading(true);
       setError(null);
 
-      // Mock data for demonstration
-      const mockTiers: SubscriptionTier[] = [
-        {
-          id: 'tier_1',
-          name: 'Basic Support',
-          description: 'Support my content creation with basic perks',
-          price_sats: 10000,
-          billing_period: 'monthly',
-          features: [
-            'Access to subscriber-only posts',
-            'Monthly newsletter',
-            'Discord community access',
-          ],
-          is_active: true,
-          created_at: new Date().toISOString(),
-          subscriber_count: 45,
-          total_revenue_sats: 450000,
-          conversion_rate: 12.5,
-        },
-        {
-          id: 'tier_2',
-          name: 'Premium Creator',
-          description: 'Premium support with exclusive content and perks',
-          price_sats: 25000,
-          billing_period: 'monthly',
-          features: [
-            'All Basic Support features',
-            'Exclusive video content',
-            'Monthly live Q&A sessions',
-            'Early access to new content',
-            'Direct messaging privileges',
-          ],
-          is_active: true,
-          created_at: new Date().toISOString(),
-          subscriber_count: 18,
-          total_revenue_sats: 450000,
-          conversion_rate: 8.3,
-        },
-        {
-          id: 'tier_3',
-          name: 'Elite Supporter',
-          description: 'Maximum support with VIP treatment and exclusive access',
-          price_sats: 50000,
-          billing_period: 'monthly',
-          features: [
-            'All Premium Creator features',
-            '1-on-1 monthly video call',
-            'Custom content requests',
-            'Behind-the-scenes content',
-            'Priority support and feedback',
-            'Physical merchandise',
-          ],
-          is_active: true,
-          created_at: new Date().toISOString(),
-          subscriber_count: 5,
-          total_revenue_sats: 250000,
-          conversion_rate: 15.0,
-        },
-      ];
+      const [tiersData, subscribersData] = await Promise.all([
+        apiClient.get<SubscriptionTier[]>('/api/subscriptions/tiers'),
+        apiClient.get<Subscriber[]>('/api/subscriptions/subscribers'),
+      ]);
 
-      const mockSubscribers: Subscriber[] = [
-        {
-          id: 'sub_1',
-          user_id: 'user_1',
-          tier_id: 'tier_1',
-          status: 'active',
-          started_at: '2024-01-15T00:00:00Z',
-          expires_at: '2024-02-15T00:00:00Z',
-          auto_renew: true,
-          payment_method: 'lightning',
-          total_payments: 30000,
-          last_payment_at: '2024-01-15T00:00:00Z',
-          supporter_info: {
-            name: 'Alice Johnson',
-            email: 'alice@example.com',
-            nostr_pubkey: 'npub1abc123def456ghi789jkl012mno345pqr678stu901vwx234yz567890',
-            total_tips: 5000,
-            join_date: '2024-01-15T00:00:00Z',
-          },
-        },
-        {
-          id: 'sub_2',
-          user_id: 'user_2',
-          tier_id: 'tier_2',
-          status: 'active',
-          started_at: '2024-01-10T00:00:00Z',
-          expires_at: '2024-02-10T00:00:00Z',
-          auto_renew: false,
-          payment_method: 'lightning',
-          total_payments: 75000,
-          last_payment_at: '2024-01-10T00:00:00Z',
-          supporter_info: {
-            name: 'Bob Smith',
-            email: 'bob@example.com',
-            total_tips: 12000,
-            join_date: '2024-01-10T00:00:00Z',
-          },
-        },
-      ];
-
-      setTiers(mockTiers);
-      setSubscribers(mockSubscribers);
+      setTiers(tiersData ?? []);
+      setSubscribers(subscribersData ?? []);
     } catch (err) {
       console.error('Failed to load subscription data:', err);
       setError('Failed to load subscription data. Please try again.');
@@ -798,8 +722,13 @@ export const SubscriptionManager: React.FC = () => {
   };
 
   const handleDeleteTier = (tier: SubscriptionTier) => {
-    if (window.confirm(`Are you sure you want to delete "${tier.name}"?`)) {
-      setTiers((prev) => prev.filter((t) => t.id !== tier.id));
+    setDeleteTierConfirm(tier);
+  };
+
+  const handleConfirmDeleteTier = () => {
+    if (deleteTierConfirm) {
+      setTiers((prev) => prev.filter((t) => t.id !== deleteTierConfirm.id));
+      setDeleteTierConfirm(null);
     }
   };
 
@@ -860,69 +789,76 @@ export const SubscriptionManager: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-6 space-y-6 bg-background min-h-screen">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">💳 Subscription Management</h1>
-          <p className="text-gray-600 mt-1">Manage your subscription tiers and subscribers</p>
+          <h1 className="text-3xl font-bold text-foreground font-display">
+            Subscription Management
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Manage your subscription tiers and subscribers
+          </p>
         </div>
 
-        <Button onClick={handleCreateTier}>
+        <Button
+          onClick={handleCreateTier}
+          className="bg-gradient-to-r from-violet-600 to-purple-600 shadow-[0_4px_16px_rgba(139,92,246,0.3)] text-white"
+        >
           <Plus className="h-4 w-4 mr-2" />
           Create Tier
         </Button>
       </div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 reveal-stagger">
+        <Card className="glass glass-hover">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-blue-700">Total Subscribers</CardTitle>
-            <Users className="h-4 w-4 text-blue-600" />
+            <CardTitle className="text-sm font-medium text-purple-400">Total Subscribers</CardTitle>
+            <Users className="h-4 w-4 text-purple-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-900">{totalSubscribers}</div>
-            <p className="text-xs text-blue-700 mt-2">{activeSubscribers} active</p>
+            <div className="text-2xl font-bold text-foreground">{totalSubscribers}</div>
+            <p className="text-xs text-muted-foreground mt-2">{activeSubscribers} active</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+        <Card className="glass glass-hover">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-green-700">Total Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-green-600" />
+            <CardTitle className="text-sm font-medium text-green-400">Total Revenue</CardTitle>
+            <DollarSign className="h-4 w-4 text-green-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-900">
-              ⚡ {(totalRevenue / 1000).toFixed(0)}K
+            <div className="text-2xl font-bold text-foreground">
+              {(totalRevenue / 1000).toFixed(0)}K
             </div>
-            <p className="text-xs text-green-700 mt-2">All time earnings</p>
+            <p className="text-xs text-muted-foreground mt-2">All time earnings</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+        <Card className="glass glass-hover">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-purple-700">Avg Revenue</CardTitle>
-            <TrendingUp className="h-4 w-4 text-purple-600" />
+            <CardTitle className="text-sm font-medium text-violet-400">Avg Revenue</CardTitle>
+            <TrendingUp className="h-4 w-4 text-violet-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-900">
-              ⚡ {(averageRevenue / 1000).toFixed(1)}K
+            <div className="text-2xl font-bold text-foreground">
+              {(averageRevenue / 1000).toFixed(1)}K
             </div>
-            <p className="text-xs text-purple-700 mt-2">Per subscriber</p>
+            <p className="text-xs text-muted-foreground mt-2">Per subscriber</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+        <Card className="glass glass-hover">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-orange-700">Active Tiers</CardTitle>
-            <Settings className="h-4 w-4 text-orange-600" />
+            <CardTitle className="text-sm font-medium text-amber-400">Active Tiers</CardTitle>
+            <Settings className="h-4 w-4 text-amber-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-900">
+            <div className="text-2xl font-bold text-foreground">
               {tiers.filter((t) => t.is_active).length}
             </div>
-            <p className="text-xs text-orange-700 mt-2">{tiers.length} total tiers</p>
+            <p className="text-xs text-muted-foreground mt-2">{tiers.length} total tiers</p>
           </CardContent>
         </Card>
       </div>
@@ -969,6 +905,17 @@ export const SubscriptionManager: React.FC = () => {
         open={tierDialogOpen}
         onOpenChange={setTierDialogOpen}
         onSave={handleSaveTier}
+      />
+
+      <ConfirmDialog
+        open={deleteTierConfirm !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTierConfirm(null);
+        }}
+        title="Delete subscription tier"
+        description={`Are you sure you want to delete "${deleteTierConfirm?.name}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        onConfirm={handleConfirmDeleteTier}
       />
     </div>
   );

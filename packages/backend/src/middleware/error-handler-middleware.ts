@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Global Error Handler Middleware
  *
@@ -54,7 +53,7 @@ export interface ErrorResponse {
   details?: Record<string, unknown> | string | Array<Record<string, unknown>>;
   stack?: string;
   metadata: {
-    correlationId: string;
+    requestId: string;
     timestamp: string;
     path: string;
     method: string;

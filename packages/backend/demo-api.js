@@ -17,7 +17,7 @@ const app = createApp();
 const PORT = process.env.PORT || 3004;
 const server = app.listen(PORT, () => {
   console.log('\n✅ SOVREN BACKEND DEPLOYMENT SUCCESSFUL');
-  console.log('=' .repeat(50));
+  console.log('='.repeat(50));
   console.log(`📍 Server URL: http://localhost:${PORT}`);
   console.log(`🏥 Health Check: http://localhost:${PORT}/health`);
   console.log(`📚 API Info: http://localhost:${PORT}/api`);
@@ -42,7 +42,7 @@ const server = app.listen(PORT, () => {
   console.log('   ✅ TypeScript Type Safety');
   console.log('');
   console.log('🏆 ELITE ENGINEERING STANDARDS ACHIEVED');
-  console.log('=' .repeat(50));
+  console.log('='.repeat(50));
 
   // Graceful shutdown demo
   setTimeout(() => {

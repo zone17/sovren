@@ -18,11 +18,7 @@ async function publishBasicNote() {
   // Step 1: Initialize Relay Pool
   const relayPool = RelayPoolManager.getInstance();
   await relayPool.initialize({
-    relays: [
-      'wss://relay.damus.io',
-      'wss://relay.nostr.band',
-      'wss://nos.lol',
-    ],
+    relays: ['wss://relay.damus.io', 'wss://relay.nostr.band', 'wss://nos.lol'],
   });
 
   // Connect to all relays

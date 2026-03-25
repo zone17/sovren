@@ -95,12 +95,9 @@ export const NostrFeed: React.FC = () => {
         await nostrService.initialize();
 
         // Subscribe to text notes
-        nostrService.subscribe(
-          [{ kinds: [1], limit: 50 }],
-          (event) => {
-            setEvents(prev => [event, ...prev].slice(0, 50));
-          }
-        );
+        nostrService.subscribe([{ kinds: [1], limit: 50 }], (event) => {
+          setEvents((prev) => [event, ...prev].slice(0, 50));
+        });
       } catch (error) {
         console.error('Failed to initialize NOSTR:', error);
       } finally {
@@ -115,7 +112,7 @@ export const NostrFeed: React.FC = () => {
 
   return (
     <div className="nostr-feed">
-      {events.map(event => (
+      {events.map((event) => (
         <div key={event.id} className="event-card">
           <p>{event.content}</p>
           <small>By: {event.pubkey.slice(0, 8)}...</small>
@@ -151,7 +148,7 @@ const featureFlags = {
   enableNostrEventPublishing: true,
   enableNostrEventSubscription: true,
   enableNostrDirectMessages: false, // NIP-04
-  enableNostrContactList: true,     // NIP-02
+  enableNostrContactList: true, // NIP-02
   enableNostrEventCaching: true,
   enableNostrRelay: true,
   enableNostrAIContentDiscovery: false,
@@ -163,10 +160,10 @@ const featureFlags = {
 
 ```typescript
 const defaultRelays = [
-  'wss://relay.damus.io',      // Damus relay
-  'wss://nos.lol',             // nos.lol relay
-  'wss://relay.nostr.info',    // Generic relay
-  'wss://nostr-pub.wellorder.net' // Well-ordered relay
+  'wss://relay.damus.io', // Damus relay
+  'wss://nos.lol', // nos.lol relay
+  'wss://relay.nostr.info', // Generic relay
+  'wss://nostr-pub.wellorder.net', // Well-ordered relay
 ];
 ```
 
@@ -180,7 +177,7 @@ const keyPair = await nostrService.generateKeyPair();
 
 // Keys are 64-character hex strings
 console.log('Private Key:', keyPair.privateKey); // Keep secret!
-console.log('Public Key:', keyPair.publicKey);   // Share publicly
+console.log('Public Key:', keyPair.publicKey); // Share publicly
 ```
 
 ### Import Existing Keys
@@ -209,7 +206,10 @@ const event = await nostrService.publishNote('Hello NOSTR!');
 // Text note with tags
 const taggedEvent = await nostrService.publishNote(
   'Tagged message',
-  [['t', 'sovren'], ['t', 'nostr']] // Hashtags
+  [
+    ['t', 'sovren'],
+    ['t', 'nostr'],
+  ] // Hashtags
 );
 ```
 
@@ -223,7 +223,7 @@ const profile = {
   banner: 'https://example.com/banner.jpg',
   website: 'https://alice.creator.com',
   nip05: 'alice@example.com',
-  lud16: 'alice@getalby.com' // Lightning address
+  lud16: 'alice@getalby.com', // Lightning address
 };
 
 const profileEvent = await nostrService.publishProfile(profile);
@@ -236,12 +236,12 @@ const contacts = [
   {
     pubkey: 'contact1_64char_pubkey...',
     relay: 'wss://their-relay.com',
-    petname: 'Alice'
+    petname: 'Alice',
   },
   {
     pubkey: 'contact2_64char_pubkey...',
-    petname: 'Bob'
-  }
+    petname: 'Bob',
+  },
 ];
 
 const contactEvent = await nostrService.publishContactList(contacts);
@@ -264,11 +264,13 @@ const dmEvent = await nostrService.sendDirectMessage(recipientPubkey, message);
 ```typescript
 // Subscribe to text notes from specific authors
 const subscriptionId = nostrService.subscribe(
-  [{
-    kinds: [1], // Text notes
-    authors: ['author1_pubkey...', 'author2_pubkey...'],
-    limit: 20
-  }],
+  [
+    {
+      kinds: [1], // Text notes
+      authors: ['author1_pubkey...', 'author2_pubkey...'],
+      limit: 20,
+    },
+  ],
   (event) => {
     console.log('New event:', event);
   }
@@ -286,7 +288,7 @@ const filters = [
     until: Math.floor(Date.now() / 1000),
     limit: 100,
     '#t': ['sovren', 'nostr'], // Hashtag filter
-  }
+  },
 ];
 
 const subscriptionId = nostrService.subscribe(filters, handleEvent);
@@ -312,7 +314,7 @@ const cachedEvents = nostrService.getCachedEvents();
 // Get cached events with filters
 const filteredEvents = nostrService.getCachedEvents({
   kinds: [1], // Only text notes
-  authors: ['specific_author_pubkey...']
+  authors: ['specific_author_pubkey...'],
 });
 ```
 
@@ -326,7 +328,7 @@ const cacheTtl = 300000; // 5 minutes
 const mobileConfig = {
   cacheStrategy: 'conservative', // 'aggressive' | 'conservative' | 'minimal'
   batchSize: 50,
-  backgroundSyncInterval: 30000
+  backgroundSyncInterval: 30000,
 };
 ```
 
@@ -336,10 +338,10 @@ const mobileConfig = {
 
 ```typescript
 const mobileConfig = {
-  connectionPoolSize: 3,        // Limit concurrent connections
-  batchSize: 50,               // Process events in batches
+  connectionPoolSize: 3, // Limit concurrent connections
+  batchSize: 50, // Process events in batches
   backgroundSyncInterval: 30000, // Sync every 30 seconds
-  offlineMode: false           // Handle offline scenarios
+  offlineMode: false, // Handle offline scenarios
 };
 ```
 
@@ -432,13 +434,14 @@ describe('NOSTR Event Publishing', () => {
 ```yaml
 # vercel.json
 {
-  "env": {
-    "NOSTR_RELAYS": "wss://relay.damus.io,wss://nos.lol,wss://relay.nostr.info",
-    "NOSTR_AUTO_CONNECT": "true",
-    "NOSTR_CONNECTION_TIMEOUT": "5000",
-    "NOSTR_MAX_RELAYS": "10",
-    "NOSTR_CACHE_TTL": "300000"
-  }
+  'env':
+    {
+      'NOSTR_RELAYS': 'wss://relay.damus.io,wss://nos.lol,wss://relay.nostr.info',
+      'NOSTR_AUTO_CONNECT': 'true',
+      'NOSTR_CONNECTION_TIMEOUT': '5000',
+      'NOSTR_MAX_RELAYS': '10',
+      'NOSTR_CACHE_TTL': '300000',
+    },
 }
 ```
 
@@ -469,6 +472,7 @@ console.log('Cached Events:', nostrService.getCachedEventCount());
 ### Common Issues
 
 **Connection Failures**
+
 ```typescript
 // Check relay connectivity
 await nostrService.connectToRelays();
@@ -477,6 +481,7 @@ console.log('Connected to:', connectedRelays.length, 'relays');
 ```
 
 **Key Management Issues**
+
 ```typescript
 // Verify key pair
 const publicKey = nostrService.getPublicKey();
@@ -486,6 +491,7 @@ if (!publicKey) {
 ```
 
 **Event Publishing Failures**
+
 ```typescript
 try {
   await nostrService.publishNote('Test message');
@@ -537,32 +543,32 @@ featureFlags.debugMode = true;
 ```typescript
 class NostrService {
   // Initialization
-  async initialize(config?: Partial<NostrServiceConfig>): Promise<void>
+  async initialize(config?: Partial<NostrServiceConfig>): Promise<void>;
 
   // Key Management
-  async generateKeyPair(): Promise<NostrKeyPair>
-  async importKeyPair(privateKey: string): Promise<NostrKeyPair>
-  getPublicKey(): string | null
+  async generateKeyPair(): Promise<NostrKeyPair>;
+  async importKeyPair(privateKey: string): Promise<NostrKeyPair>;
+  getPublicKey(): string | null;
 
   // Connection Management
-  async connectToRelays(): Promise<void>
-  async disconnect(): Promise<void>
+  async connectToRelays(): Promise<void>;
+  async disconnect(): Promise<void>;
 
   // Event Publishing
-  async publishNote(content: string, tags?: string[][]): Promise<NostrEvent>
-  async publishProfile(profile: NostrUserProfile): Promise<NostrEvent>
-  async publishContactList(contacts: NostrContact[]): Promise<NostrEvent>
-  async sendDirectMessage(recipientPubkey: string, content: string): Promise<NostrEvent>
+  async publishNote(content: string, tags?: string[][]): Promise<NostrEvent>;
+  async publishProfile(profile: NostrUserProfile): Promise<NostrEvent>;
+  async publishContactList(contacts: NostrContact[]): Promise<NostrEvent>;
+  async sendDirectMessage(recipientPubkey: string, content: string): Promise<NostrEvent>;
 
   // Event Subscription
-  subscribe(filters: NostrFilter[], onEvent: (event: NostrEvent) => void): string
-  unsubscribe(subscriptionId: string): void
+  subscribe(filters: NostrFilter[], onEvent: (event: NostrEvent) => void): string;
+  unsubscribe(subscriptionId: string): void;
 
   // Data Retrieval
-  getCachedEvents(filter?: Partial<NostrFilter>): NostrEvent[]
-  getUserProfile(): NostrUserProfile | null
-  getContacts(): NostrContact[]
-  getDirectMessages(): NostrDirectMessage[]
+  getCachedEvents(filter?: Partial<NostrFilter>): NostrEvent[];
+  getUserProfile(): NostrUserProfile | null;
+  getContacts(): NostrContact[];
+  getDirectMessages(): NostrDirectMessage[];
 }
 ```
 

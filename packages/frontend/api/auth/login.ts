@@ -16,7 +16,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({
       error: 'Method not allowed',
       message: 'Only POST requests are accepted',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -28,7 +28,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         error: 'Rate limit exceeded',
         message: 'Too many login attempts. Please try again later.',
         retryAfter: rateLimitResult.retryAfter,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
@@ -39,7 +39,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         error: 'Validation failed',
         message: 'Invalid request data',
         details: validation.errors,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
@@ -61,7 +61,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           ? 'Invalid email or password'
           : 'Authentication service unavailable',
         code: isInvalidCredentials ? 'INVALID_CREDENTIALS' : 'SERVICE_ERROR',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
@@ -93,16 +93,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           refreshToken: data.session.refresh_token,
           expiresAt: data.session.expires_at,
           tokenType: data.session.token_type,
-        }
+        },
       },
       timestamp: new Date().toISOString(),
       metadata: {
         loginMethod: 'email',
         ipAddress: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
         userAgent: req.headers['user-agent'],
-      }
+      },
     });
-
   } catch (error) {
     console.error('Login error:', error);
 
@@ -110,7 +109,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       error: 'Internal server error',
       message: 'An unexpected error occurred during login',
       timestamp: new Date().toISOString(),
-      requestId: req.headers['x-vercel-id'] || 'unknown'
+      requestId: req.headers['x-vercel-id'] || 'unknown',
     });
   }
 }

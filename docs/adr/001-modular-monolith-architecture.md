@@ -31,7 +31,6 @@ The team is small (5-7 people) and needs to ship an MVP within 12-16 weeks. The 
 1. **Dependency Injection Container** (`ServiceContainer` with `TYPES` registry) to manage 29+ services across 5 domains with explicit lifetime management (singleton, scoped, transient).
 
 2. **Domain-based Service Organization** with clear boundaries:
-
    - Infrastructure (6 services): Container, EventBus, Cache, Logger, Config, Database
    - Shared (4 services): Email, Notification, AuditLog, Cache
    - Content (7 services): Publishing, Moderation, Search, Recommendation, Analytics, Versioning, Creation

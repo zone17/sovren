@@ -114,17 +114,13 @@
       "type": "size",
       "priority": "high",
       "message": "1 assets exceed 250KB threshold",
-      "assets": [
-        "assets/images/Sovren-icon-d0bd48d5.png"
-      ]
+      "assets": ["assets/images/Sovren-icon-d0bd48d5.png"]
     },
     {
       "type": "image",
       "priority": "medium",
       "message": "1 images exceed 100KB threshold",
-      "assets": [
-        "assets/images/Sovren-icon-d0bd48d5.png"
-      ]
+      "assets": ["assets/images/Sovren-icon-d0bd48d5.png"]
     }
   ]
 }

@@ -8,6 +8,7 @@
 ## Context and Problem Statement
 
 The Sovren platform had evolved organically with multiple overlapping state management patterns:
+
 - Redux managing both server and client state (causing unnecessary re-renders)
 - Multiple custom hooks with redundant data fetching logic
 - Inconsistent caching strategies across different features
@@ -28,18 +29,22 @@ We needed to establish clear boundaries between server state and client UI state
 ## Considered Options
 
 ### Option 1: Pure Redux with RTK Query
+
 - **Pros**: Single state management solution, good TypeScript support
 - **Cons**: Heavy boilerplate, complex for server state, difficult cache invalidation
 
 ### Option 2: MobX for Everything
+
 - **Pros**: Less boilerplate, reactive programming model
 - **Cons**: Learning curve, less ecosystem support, magic can be confusing
 
 ### Option 3: Zustand + SWR
+
 - **Pros**: Lightweight, simple API
 - **Cons**: Less mature, limited middleware support, smaller community
 
 ### Option 4: React Query for Server + Redux for Client (CHOSEN) ✅
+
 - **Pros**: Clear separation, optimal for each use case, mature ecosystems
 - **Cons**: Two libraries to maintain, initial migration effort
 
@@ -48,6 +53,7 @@ We needed to establish clear boundaries between server state and client UI state
 We will use **React Query (TanStack Query)** for all server state management and **Redux Toolkit** for client UI state, with clear boundaries:
 
 ### Server State (React Query Domain)
+
 ```typescript
 // All data that comes from or goes to the server
 - User profiles and authentication
@@ -59,6 +65,7 @@ We will use **React Query (TanStack Query)** for all server state management and
 ```
 
 ### Client UI State (Redux Domain)
+
 ```typescript
 // All state that exists only in the browser
 - UI preferences (theme, layout, sidebar state)
@@ -115,26 +122,31 @@ graph TB
 ## Implementation Strategy
 
 ### Phase 1: Audit and Guidelines (Complete)
+
 - Documented all state usage patterns
 - Created migration guidelines
 - Identified 127 state management instances
 
 ### Phase 2: Server Data Migration (Complete)
+
 - Migrated 45 API endpoints to React Query
 - Implemented query invalidation strategies
 - Achieved 96.2% test coverage
 
 ### Phase 3: Client State Consolidation (Complete)
+
 - Consolidated 23 Redux slices to 8 focused slices
 - Removed server data from Redux
 - Reduced bundle size by 34KB
 
 ### Phase 4: Testing and Validation (Complete)
+
 - 60% reduction in component re-renders
 - Performance metrics exceed targets
 - All integration tests passing
 
 ### Phase 5: Documentation (Current)
+
 - Developer guidelines
 - Training materials
 - This ADR
@@ -179,25 +191,28 @@ graph TB
 
 ## Validation Metrics
 
-| Metric | Target | Achieved | Status |
-|--------|--------|----------|--------|
-| Component Re-renders | <100/interaction | 42/interaction | ✅ |
-| API Response Caching | >90% hit rate | 94.3% hit rate | ✅ |
-| Bundle Size Change | <+20KB | -34KB | ✅ |
-| Test Coverage | >95% | 96.2% | ✅ |
-| Page Load Time | <2s | 1.2s | ✅ |
-| Memory Usage | <50MB | 31MB | ✅ |
+| Metric               | Target           | Achieved       | Status |
+| -------------------- | ---------------- | -------------- | ------ |
+| Component Re-renders | <100/interaction | 42/interaction | ✅     |
+| API Response Caching | >90% hit rate    | 94.3% hit rate | ✅     |
+| Bundle Size Change   | <+20KB           | -34KB          | ✅     |
+| Test Coverage        | >95%             | 96.2%          | ✅     |
+| Page Load Time       | <2s              | 1.2s           | ✅     |
+| Memory Usage         | <50MB            | 31MB           | ✅     |
 
 ## Migration Examples
 
 ### Before: Mixed Redux Pattern
+
 ```typescript
 // ❌ Old Pattern - Redux managing server state
 const postsSlice = createSlice({
   name: 'posts',
   initialState: { data: [], loading: false, error: null },
   reducers: {
-    fetchPostsStart: (state) => { state.loading = true; },
+    fetchPostsStart: (state) => {
+      state.loading = true;
+    },
     fetchPostsSuccess: (state, action) => {
       state.data = action.payload;
       state.loading = false;
@@ -205,12 +220,13 @@ const postsSlice = createSlice({
     fetchPostsError: (state, action) => {
       state.error = action.payload;
       state.loading = false;
-    }
-  }
+    },
+  },
 });
 ```
 
 ### After: Clear Separation
+
 ```typescript
 // ✅ New Pattern - React Query for server state
 export const usePosts = () => {
@@ -227,9 +243,13 @@ const uiSlice = createSlice({
   name: 'ui',
   initialState: { selectedPostId: null, filterVisible: false },
   reducers: {
-    selectPost: (state, action) => { state.selectedPostId = action.payload; },
-    toggleFilter: (state) => { state.filterVisible = !state.filterVisible; }
-  }
+    selectPost: (state, action) => {
+      state.selectedPostId = action.payload;
+    },
+    toggleFilter: (state) => {
+      state.filterVisible = !state.filterVisible;
+    },
+  },
 });
 ```
 
@@ -249,16 +269,16 @@ const uiSlice = createSlice({
 
 ## Appendix: Boundary Decision Matrix
 
-| Data Type | React Query | Redux | Rationale |
-|-----------|------------|-------|-----------|
-| User Profile | ✅ | ❌ | Server source of truth |
-| Theme Preference | ❌ | ✅ | Client-only preference |
-| NOSTR Events | ✅ | ❌ | External data source |
-| Form Drafts | ❌ | ✅ | Temporary client state |
-| Payment Invoices | ✅ | ❌ | Server-generated |
-| Modal Visibility | ❌ | ✅ | UI-only state |
-| Search Results | ✅ | ❌ | Server query results |
-| Selected Items | ❌ | ✅ | Client selection state |
+| Data Type        | React Query | Redux | Rationale              |
+| ---------------- | ----------- | ----- | ---------------------- |
+| User Profile     | ✅          | ❌    | Server source of truth |
+| Theme Preference | ❌          | ✅    | Client-only preference |
+| NOSTR Events     | ✅          | ❌    | External data source   |
+| Form Drafts      | ❌          | ✅    | Temporary client state |
+| Payment Invoices | ✅          | ❌    | Server-generated       |
+| Modal Visibility | ❌          | ✅    | UI-only state          |
+| Search Results   | ✅          | ❌    | Server query results   |
+| Selected Items   | ❌          | ✅    | Client selection state |
 
 ---
 

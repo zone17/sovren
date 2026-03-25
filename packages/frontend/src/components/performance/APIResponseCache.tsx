@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
+import { useToast } from '@/components/providers/NotificationProvider';
 import {
   BarChart3,
   CheckCircle,
@@ -625,6 +626,7 @@ export default function APIResponseCache({
   const [isTestingPerformance, setIsTestingPerformance] = useState(false);
   const [performanceResults, setPerformanceResults] = useState<any>(null);
   const [purgePattern, setPurgePattern] = useState('');
+  const toast = useToast();
 
   // Analytics Monitoring
   useEffect(() => {
@@ -667,9 +669,9 @@ export default function APIResponseCache({
   // Cache Purging
   const handlePurge = useCallback(async () => {
     const purgedCount = await cacheManager.purge(purgePattern || undefined);
-    alert(`Purged ${purgedCount} cache entries`);
+    toast.success(`Purged ${purgedCount} cache entries`);
     setPurgePattern('');
-  }, [cacheManager, purgePattern]);
+  }, [cacheManager, purgePattern, toast]);
 
   // Cache Effectiveness Score
   const cacheEffectivenessScore = useMemo(() => {
@@ -718,7 +720,7 @@ export default function APIResponseCache({
             <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-lg border">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Hit Ratio</p>
+                  <p className="text-sm font-medium text-muted-foreground">Hit Ratio</p>
                   <p className="text-2xl font-bold text-green-600">
                     {analytics?.hitRatio.toFixed(1) || 0}%
                   </p>
@@ -730,7 +732,7 @@ export default function APIResponseCache({
             <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-lg border">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Cache Entries</p>
+                  <p className="text-sm font-medium text-muted-foreground">Cache Entries</p>
                   <p className="text-2xl font-bold text-blue-600">{cacheEntries.length}</p>
                 </div>
                 <Database className="h-8 w-8 text-blue-500" />
@@ -740,7 +742,7 @@ export default function APIResponseCache({
             <div className="bg-gradient-to-br from-purple-50 to-violet-50 p-4 rounded-lg border">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Avg Response</p>
+                  <p className="text-sm font-medium text-muted-foreground">Avg Response</p>
                   <p className="text-2xl font-bold text-purple-600">
                     {analytics?.avgResponseTime.toFixed(0) || 0}ms
                   </p>
@@ -752,7 +754,7 @@ export default function APIResponseCache({
             <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-4 rounded-lg border">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Bandwidth Saved</p>
+                  <p className="text-sm font-medium text-muted-foreground">Bandwidth Saved</p>
                   <p className="text-2xl font-bold text-orange-600">
                     {analytics ? (analytics.bandwidthSaved / 1024 / 1024).toFixed(1) : 0}MB
                   </p>
@@ -776,7 +778,7 @@ export default function APIResponseCache({
               <h4 className="font-medium">Response Time Comparison</h4>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Cache Hit</span>
+                  <span className="text-sm text-muted-foreground">Cache Hit</span>
                   <div className="flex items-center gap-2">
                     <Progress
                       value={
@@ -797,7 +799,7 @@ export default function APIResponseCache({
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Cache Miss</span>
+                  <span className="text-sm text-muted-foreground">Cache Miss</span>
                   <div className="flex items-center gap-2">
                     <Progress value={analytics?.cacheMissResponseTime ? 100 : 0} className="w-24" />
                     <span className="text-sm font-medium text-red-600">
@@ -843,7 +845,7 @@ export default function APIResponseCache({
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h4 className="font-medium">Performance Testing</h4>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     Test cache performance with sample requests
                   </p>
                 </div>
@@ -867,22 +869,22 @@ export default function APIResponseCache({
               </div>
 
               {performanceResults && (
-                <div className="bg-gray-50 p-4 rounded border">
+                <div className="bg-muted p-4 rounded border">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div>
-                      <p className="text-gray-600">Total Time</p>
+                      <p className="text-muted-foreground">Total Time</p>
                       <p className="font-semibold">{performanceResults.totalTime.toFixed(0)}ms</p>
                     </div>
                     <div>
-                      <p className="text-gray-600">Avg Time</p>
+                      <p className="text-muted-foreground">Avg Time</p>
                       <p className="font-semibold">{performanceResults.avgTime.toFixed(0)}ms</p>
                     </div>
                     <div>
-                      <p className="text-gray-600">Hit Rate</p>
+                      <p className="text-muted-foreground">Hit Rate</p>
                       <p className="font-semibold">{performanceResults.hitRate.toFixed(1)}%</p>
                     </div>
                     <div>
-                      <p className="text-gray-600">Cache Benefit</p>
+                      <p className="text-muted-foreground">Cache Benefit</p>
                       <p className="font-semibold text-green-600">
                         {performanceResults.cacheMissTime > 0
                           ? (
@@ -905,7 +907,7 @@ export default function APIResponseCache({
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h4 className="font-medium">Cache Purging</h4>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     Remove specific cache entries or clear all
                   </p>
                 </div>
@@ -941,7 +943,7 @@ export default function APIResponseCache({
             <div className="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-blue-600">
               {cacheEffectivenessScore}
             </div>
-            <div className="text-lg text-gray-600">API Cache Effectiveness Score</div>
+            <div className="text-lg text-muted-foreground">API Cache Effectiveness Score</div>
             <Progress value={cacheEffectivenessScore} className="w-full" />
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
               <div className="bg-green-50 p-3 rounded">
@@ -986,7 +988,7 @@ export default function APIResponseCache({
               <div key={entry.key} className="flex items-center justify-between p-3 border rounded">
                 <div className="flex-1">
                   <p className="font-medium truncate">{entry.url}</p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     {entry.method} • Version {entry.version} • {entry.hitCount} hits
                   </p>
                 </div>
@@ -994,8 +996,8 @@ export default function APIResponseCache({
                   <Badge variant={Date.now() > entry.expires ? 'secondary' : 'default'}>
                     {Date.now() > entry.expires ? 'Expired' : 'Active'}
                   </Badge>
-                  <span className="text-gray-600">{(entry.size / 1024).toFixed(1)}KB</span>
-                  <span className="text-gray-600">
+                  <span className="text-muted-foreground">{(entry.size / 1024).toFixed(1)}KB</span>
+                  <span className="text-muted-foreground">
                     {Math.floor((Date.now() - entry.timestamp) / 1000)}s ago
                   </span>
                 </div>

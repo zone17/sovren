@@ -14,16 +14,16 @@ export const PlatformComparison: React.FC = () => {
   };
 
   return (
-    <div className="rounded-lg border bg-white p-6">
-      <h3 className="text-lg font-semibold text-gray-900">Content Comparison</h3>
-      <p className="mt-1 text-sm text-gray-500">
+    <div className="rounded-lg border bg-card p-6">
+      <h3 className="text-lg font-semibold text-foreground">Content Comparison</h3>
+      <p className="mt-1 text-sm text-muted-foreground">
         See how a piece of content performs across all platforms.
       </p>
 
       <form className="mt-3 flex gap-2" onSubmit={handleSubmit} aria-label="Compare content">
         <input
           type="text"
-          className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="flex-1 rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
           placeholder="Paste content ID..."
           value={contentId}
           onChange={(e) => setContentId(e.target.value)}
@@ -40,9 +40,9 @@ export const PlatformComparison: React.FC = () => {
 
       {isLoading && (
         <div className="mt-4 animate-pulse space-y-2">
-          <div className="h-10 rounded bg-gray-100" />
-          <div className="h-10 rounded bg-gray-100" />
-          <div className="h-10 rounded bg-gray-100" />
+          <div className="h-10 rounded bg-muted" />
+          <div className="h-10 rounded bg-muted" />
+          <div className="h-10 rounded bg-muted" />
         </div>
       )}
 
@@ -56,7 +56,7 @@ export const PlatformComparison: React.FC = () => {
         <div className="mt-4 overflow-x-auto">
           <table className="w-full text-sm" aria-label="Content performance by platform">
             <thead>
-              <tr className="border-b text-left text-gray-500">
+              <tr className="border-b text-left text-muted-foreground">
                 <th className="pb-2 pr-4 font-medium">Platform</th>
                 <th className="pb-2 pr-4 font-medium">Views</th>
                 <th className="pb-2 pr-4 font-medium">Engagement</th>
@@ -92,7 +92,9 @@ export const PlatformComparison: React.FC = () => {
       )}
 
       {comparison && comparison.length === 0 && submittedId && (
-        <p className="mt-3 text-sm text-gray-500">No cross-platform data found for this content.</p>
+        <p className="mt-3 text-sm text-muted-foreground">
+          No cross-platform data found for this content.
+        </p>
       )}
     </div>
   );

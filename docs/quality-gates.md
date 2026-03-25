@@ -52,13 +52,11 @@ graph TD
 These gates run locally before code is committed to the repository:
 
 - **Linting & Formatting**:
-
   - Zero ESLint errors
   - Code formatted according to project standards
   - Import order validation
 
 - **Unit Tests**:
-
   - All unit tests must pass
   - New code must have unit tests
   - Test coverage must meet thresholds
@@ -73,19 +71,16 @@ These gates run locally before code is committed to the repository:
 These gates run in the CI/CD pipeline when code is pushed:
 
 - **Integration Tests**:
-
   - All integration tests must pass
   - API contract tests must pass
   - Database migration tests must pass
 
 - **Security Scans**:
-
   - Dependency vulnerability scan
   - SAST (Static Application Security Testing)
   - Secret detection
 
 - **Performance Tests**:
-
   - Performance regression tests
   - Load testing for critical paths
   - Memory leak detection
@@ -100,13 +95,11 @@ These gates run in the CI/CD pipeline when code is pushed:
 These gates are part of the pull request review process:
 
 - **Code Review**:
-
   - Minimum 1 approving review
   - No unresolved comments
   - Code follows best practices
 
 - **Architecture Review**:
-
   - Follows architectural patterns
   - Properly integrates with existing systems
   - Considers scalability and performance
@@ -121,7 +114,6 @@ These gates are part of the pull request review process:
 These gates run after code is merged but before deployment:
 
 - **E2E Tests**:
-
   - All end-to-end tests pass
   - Cross-browser compatibility
   - Mobile responsiveness
@@ -160,25 +152,21 @@ graph TD
 **EVERY** user story implementation MUST include the following diagrams:
 
 1. **Architecture Overview Diagram**:
-
    - Shows the components involved in the implementation
    - Illustrates the relationship between components
    - Places the changes within the broader system context
 
 2. **Component Interaction Diagram**:
-
    - Details how components interact with each other
    - Shows the sequence of operations
    - Illustrates API calls and data exchange patterns
 
 3. **Data Flow Diagram**:
-
    - Visualizes how data moves through the system
    - Shows data transformation steps
    - Illustrates storage points and persistence mechanisms
 
 4. **Process Flow Diagram**:
-
    - Provides step-by-step visualization of user interactions
    - Shows system processes and decision points
    - Illustrates error handling paths

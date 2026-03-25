@@ -79,32 +79,32 @@ npm start
 ```yaml
 name: sovren-backend
 services:
-- name: api
-  source_dir: packages/backend
-  github:
-    repo: your-org/sovren
-    branch: main
-    deploy_on_push: true
-  build_command: npm ci && npm run build
-  run_command: npm start
-  environment_slug: node-js
-  instance_count: 2
-  instance_size_slug: basic-xxs
-  routes:
-  - path: /
-  envs:
-  - key: NODE_ENV
-    value: production
-  - key: PORT
-    value: "8080"
-  - key: SUPABASE_URL
-    value: ${SUPABASE_URL}
-  - key: SUPABASE_ANON_KEY
-    value: ${SUPABASE_ANON_KEY}
-  - key: JWT_SECRET
-    value: ${JWT_SECRET}
-  health_check:
-    http_path: /health
+  - name: api
+    source_dir: packages/backend
+    github:
+      repo: your-org/sovren
+      branch: main
+      deploy_on_push: true
+    build_command: npm ci && npm run build
+    run_command: npm start
+    environment_slug: node-js
+    instance_count: 2
+    instance_size_slug: basic-xxs
+    routes:
+      - path: /
+    envs:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: '8080'
+      - key: SUPABASE_URL
+        value: ${SUPABASE_URL}
+      - key: SUPABASE_ANON_KEY
+        value: ${SUPABASE_ANON_KEY}
+      - key: JWT_SECRET
+        value: ${JWT_SECRET}
+    health_check:
+      http_path: /health
 ```
 
 #### 2. Deploy Command
@@ -237,30 +237,21 @@ CMD ["npm", "start"]
 ```yaml
 # Task Definition (task-definition.json)
 {
-  "family": "sovren-backend",
-  "networkMode": "awsvpc",
-  "requiresCompatibilities": ["FARGATE"],
-  "cpu": "256",
-  "memory": "512",
-  "executionRoleArn": "arn:aws:iam::account:role/ecsTaskExecutionRole",
-  "containerDefinitions": [
-    {
-      "name": "sovren-backend",
-      "image": "your-account.dkr.ecr.region.amazonaws.com/sovren-backend:latest",
-      "portMappings": [
-        {
-          "containerPort": 3001,
-          "protocol": "tcp"
-        }
-      ],
-      "environment": [
-        {
-          "name": "NODE_ENV",
-          "value": "production"
-        }
-      ]
-    }
-  ]
+  'family': 'sovren-backend',
+  'networkMode': 'awsvpc',
+  'requiresCompatibilities': ['FARGATE'],
+  'cpu': '256',
+  'memory': '512',
+  'executionRoleArn': 'arn:aws:iam::account:role/ecsTaskExecutionRole',
+  'containerDefinitions':
+    [
+      {
+        'name': 'sovren-backend',
+        'image': 'your-account.dkr.ecr.region.amazonaws.com/sovren-backend:latest',
+        'portMappings': [{ 'containerPort': 3001, 'protocol': 'tcp' }],
+        'environment': [{ 'name': 'NODE_ENV', 'value': 'production' }],
+      },
+    ],
 }
 ```
 
@@ -333,7 +324,7 @@ services:
   sovren-backend:
     image: sovren-backend:1.0.0
     ports:
-      - "3001:3001"
+      - '3001:3001'
     environment:
       - NODE_ENV=production
       - SUPABASE_URL=${SUPABASE_URL}
@@ -341,7 +332,7 @@ services:
       - JWT_SECRET=${JWT_SECRET}
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:3001/health']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -358,8 +349,8 @@ services:
   nginx:
     image: nginx:alpine
     ports:
-      - "80:80"
-      - "443:443"
+      - '80:80'
+      - '443:443'
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
       - ./ssl:/etc/nginx/ssl
@@ -389,9 +380,9 @@ metadata:
   name: sovren-backend-config
   namespace: sovren
 data:
-  NODE_ENV: "production"
-  PORT: "3001"
-  LOG_LEVEL: "info"
+  NODE_ENV: 'production'
+  PORT: '3001'
+  LOG_LEVEL: 'info'
 ```
 
 ### 2. Secret Management
@@ -430,34 +421,34 @@ spec:
         app: sovren-backend
     spec:
       containers:
-      - name: sovren-backend
-        image: sovren-backend:1.0.0
-        ports:
-        - containerPort: 3001
-        envFrom:
-        - configMapRef:
-            name: sovren-backend-config
-        - secretRef:
-            name: sovren-backend-secret
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 3001
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: 3001
-          initialDelaySeconds: 5
-          periodSeconds: 5
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "250m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
+        - name: sovren-backend
+          image: sovren-backend:1.0.0
+          ports:
+            - containerPort: 3001
+          envFrom:
+            - configMapRef:
+                name: sovren-backend-config
+            - secretRef:
+                name: sovren-backend-secret
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3001
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3001
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              memory: '256Mi'
+              cpu: '250m'
+            limits:
+              memory: '512Mi'
+              cpu: '500m'
 
 ---
 # service.yaml
@@ -470,9 +461,9 @@ spec:
   selector:
     app: sovren-backend
   ports:
-  - protocol: TCP
-    port: 80
-    targetPort: 3001
+    - protocol: TCP
+      port: 80
+      targetPort: 3001
   type: ClusterIP
 
 ---
@@ -483,24 +474,24 @@ metadata:
   name: sovren-backend-ingress
   namespace: sovren
   annotations:
-    kubernetes.io/ingress.class: "nginx"
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    kubernetes.io/ingress.class: 'nginx'
+    cert-manager.io/cluster-issuer: 'letsencrypt-prod'
 spec:
   tls:
-  - hosts:
-    - api.sovren.com
-    secretName: sovren-backend-tls
+    - hosts:
+        - api.sovren.com
+      secretName: sovren-backend-tls
   rules:
-  - host: api.sovren.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: sovren-backend-service
-            port:
-              number: 80
+    - host: api.sovren.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: sovren-backend-service
+                port:
+                  number: 80
 ```
 
 ### 4. Deploy to Kubernetes
@@ -908,4 +899,4 @@ node --inspect dist/server.js
 
 ---
 
-*Deployment Guide v1.0.0 - Last Updated: Phase 1 Completion*
+_Deployment Guide v1.0.0 - Last Updated: Phase 1 Completion_

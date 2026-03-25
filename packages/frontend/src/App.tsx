@@ -12,6 +12,7 @@ import { NostrErrorBoundary } from './features/nostr/ErrorBoundary';
 import { WellnessErrorBoundary } from './features/wellness/ErrorBoundary';
 import { ContentShieldErrorBoundary } from './features/content-shield/ErrorBoundary';
 import { BusinessErrorBoundary } from './features/business/ErrorBoundary';
+import { CreatorNetworkErrorBoundary } from './features/creator-network/ErrorBoundary';
 
 // 🎯 **LAZY LOADING**
 const Home = React.lazy(() =>
@@ -46,6 +47,9 @@ const MonitoringDashboard = React.lazy(() =>
   import('./features/dashboard/components/MonitoringDashboard').then((module) => ({
     default: module.default,
   }))
+);
+const NotFound = React.lazy(() =>
+  import('./pages/NotFound').then((module) => ({ default: module.default }))
 );
 
 // 🚀 **ONBOARDING COMPONENTS**
@@ -101,6 +105,13 @@ const BusinessManagerDashboard = React.lazy(() =>
   }))
 );
 
+// Creator Network (Community Hub)
+const CreatorNetworkDashboard = React.lazy(() =>
+  import('./features/creator-network/components/CreatorNetworkDashboard').then((module) => ({
+    default: module.default,
+  }))
+);
+
 // Phase 7: Creator Safety Net
 const WellnessDashboard = React.lazy(() =>
   import('./features/wellness/components/WellnessDashboard').then((module) => ({
@@ -116,7 +127,7 @@ const ShieldDashboard = React.lazy(() =>
 function App(): React.ReactElement {
   const LoadingSpinner = () => (
     <div className="flex justify-center items-center h-64">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
     </div>
   );
 
@@ -336,6 +347,20 @@ function App(): React.ReactElement {
               }
             />
 
+            {/* Community Hub (Creator Network) */}
+            <Route
+              path="/community"
+              element={
+                <Layout>
+                  <ProtectedRoute requireRole="creator" showAccessDenied={true}>
+                    <CreatorNetworkErrorBoundary>
+                      <CreatorNetworkDashboard />
+                    </CreatorNetworkErrorBoundary>
+                  </ProtectedRoute>
+                </Layout>
+              }
+            />
+
             {/* Business Manager — creators only */}
             <Route
               path="/business"
@@ -363,6 +388,9 @@ function App(): React.ReactElement {
                 </Layout>
               }
             />
+
+            {/* 404 catch-all */}
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
       </AuthProvider>

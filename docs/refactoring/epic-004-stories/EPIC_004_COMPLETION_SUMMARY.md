@@ -13,9 +13,11 @@
 ## Deliverables Created
 
 ### 1. Story Breakdown Document ✅
+
 **File**: `STORY_BREAKDOWN.md`
 
 Complete decomposition of Epic 004 into 25 granular 1-point user stories:
+
 - **Phase 1 (Stories 1-5)**: Audit & Guidelines
 - **Phase 2 (Stories 6-12)**: Server Data Migration
 - **Phase 3 (Stories 13-17)**: Client State Consolidation
@@ -23,6 +25,7 @@ Complete decomposition of Epic 004 into 25 granular 1-point user stories:
 - **Phase 5 (Stories 23-25)**: Documentation & Training
 
 Each story includes:
+
 - User story format (As a... I want... So that...)
 - Detailed acceptance criteria (Given-When-Then)
 - Complete technical implementation with code examples
@@ -34,9 +37,11 @@ Each story includes:
 - Performance targets
 
 ### 2. Story Map Document ✅
+
 **File**: `STORY_MAP.md`
 
 Strategic overview and execution plan:
+
 - Sprint organization with detailed breakdown
 - Work allocation scenarios (2, 3, and 4 developer teams)
 - Timeline estimates for each scenario
@@ -47,9 +52,11 @@ Strategic overview and execution plan:
 - Rollback strategy
 
 ### 3. Quick Reference Guide ✅
+
 **File**: `QUICK_REFERENCE.md`
 
 Developer-friendly guide for daily use:
+
 - Story lookup table with durations and dependencies
 - **Decision Tree**: Visual flowchart for Redux vs React Query choice
 - Code examples cheat sheet (React Query, Redux, Local State)
@@ -63,6 +70,7 @@ Developer-friendly guide for daily use:
 ### 4. Mermaid Diagrams ✅
 
 **4a. Dependency Graph** - `dependency-graph.mmd`
+
 - Shows all 25 stories organized by sprint
 - Sequential dependencies (solid lines)
 - Parallel work opportunities (dashed lines)
@@ -74,6 +82,7 @@ Developer-friendly guide for daily use:
   - 🟣 Documentation (Sprint 2B)
 
 **4b. Decision Tree** - `decision-tree.mmd`
+
 - Interactive decision flowchart
 - Guides developers through state management choice
 - Shows 4 decision points:
@@ -85,6 +94,7 @@ Developer-friendly guide for daily use:
 - Includes code examples for each path
 
 **4c. Architecture Overview** - `architecture-overview.mmd`
+
 - Complete system architecture
 - Data flow from external sources → React Query → Components
 - Redux store structure and slices
@@ -94,9 +104,11 @@ Developer-friendly guide for daily use:
 - Shows separation of concerns
 
 ### 5. Text-Based Dependency Chain ✅
+
 **File**: `dependencies.txt`
 
 Fallback visualization for teams without Mermaid support:
+
 - ASCII-formatted dependency tree
 - Story-by-story breakdown with dependencies
 - Work stream summaries
@@ -105,9 +117,11 @@ Fallback visualization for teams without Mermaid support:
 - Timeline estimates
 
 ### 6. README Document ✅
+
 **File**: `README.md`
 
 Central hub for all Epic 004 documentation:
+
 - Quick links to all resources
 - Epic summary and metrics
 - Sprint structure overview
@@ -129,9 +143,11 @@ Central hub for all Epic 004 documentation:
 ## Sprint Breakdown
 
 ### Sprint 0: Foundation (Stories 1-5, Duration: 2-3 days)
+
 **Goal**: Establish technical foundation and guidelines
 
 **Stories**:
+
 1. Audit Redux store structure
 2. Audit React Query usage
 3. Create state management decision tree
@@ -139,6 +155,7 @@ Central hub for all Epic 004 documentation:
 5. Team guidelines review session
 
 **Deliverables**:
+
 - Redux audit report (JSON + markdown)
 - React Query audit report (JSON + markdown)
 - Decision tree document and diagram
@@ -148,9 +165,11 @@ Central hub for all Epic 004 documentation:
 **Critical**: Blocks all Sprint 1 work
 
 ### Sprint 1: Core Migration (Stories 6-17, Duration: 4-5 days)
+
 **Goal**: Implement state management refactoring
 
 **Backend Stream (Stories 6-12)**:
+
 - Create React Query hooks for creators, content, payments
 - Remove server data from Redux
 - Update components to React Query
@@ -158,6 +177,7 @@ Central hub for all Epic 004 documentation:
 - Add comprehensive error handling
 
 **Frontend Stream (Stories 13-17)** - Parallel with Backend:
+
 - Consolidate UI state in Redux
 - Remove UI state from React Query
 - Update theme and modal management
@@ -165,6 +185,7 @@ Central hub for all Epic 004 documentation:
 - Update form state management
 
 **Deliverables**:
+
 - All server data migrated to React Query
 - All client state consolidated in Redux
 - Zero duplicate state
@@ -172,9 +193,11 @@ Central hub for all Epic 004 documentation:
 - Robust error handling
 
 ### Sprint 2: Quality & Training (Stories 18-25, Duration: 3-4 days)
+
 **Goal**: Validate implementation and enable team
 
 **Testing Stream (Stories 18-22)**:
+
 - Integration tests for data flow
 - Performance benchmarking
 - Cache hit rate validation
@@ -182,11 +205,13 @@ Central hub for all Epic 004 documentation:
 - E2E test coverage
 
 **Documentation Stream (Stories 23-25)** - Can start during testing:
+
 - Developer guidelines document
 - Training workshop materials
 - Architecture Decision Record (ADR)
 
 **Deliverables**:
+
 - Comprehensive test suite (80%+ coverage)
 - Performance benchmarks showing improvement
 - Complete developer documentation
@@ -200,16 +225,19 @@ Central hub for all Epic 004 documentation:
 ### Maximum Parallelization (4 Developers)
 
 **Sprint 0 (2 days)**:
+
 - 2 developers on parallel audits (#001, #002)
 - Collaborate on #003, #004
 - Team review #005
 
 **Sprint 1 (4 days)**:
+
 - 2 developers on Backend Stream (#006-012)
 - 2 developers on Frontend Stream (#013-017)
 - Streams work completely independently
 
 **Sprint 2 (3 days)**:
+
 - 1 QA engineer on testing (#018-022)
 - 1 Technical Writer on documentation (#023-025)
 - 2 developers assisting both streams
@@ -219,13 +247,16 @@ Central hub for all Epic 004 documentation:
 ### Comfortable Team (3 Developers)
 
 **Sprint 0 (3 days)**:
+
 - 1 architect leads, team participates in review
 
 **Sprint 1 (5 days)**:
+
 - 2 developers on Backend Stream
 - 1 developer on Frontend Stream
 
 **Sprint 2 (3 days)**:
+
 - 1 QA engineer on testing
 - 1 developer on documentation
 - 1 developer alternating between streams
@@ -235,13 +266,16 @@ Central hub for all Epic 004 documentation:
 ### Minimum Team (2 Developers)
 
 **Sprint 0 (3 days)**:
+
 - 1 developer works sequentially through stories
 
 **Sprint 1 (5 days)**:
+
 - 1 developer on Backend Stream
 - 1 developer on Frontend Stream
 
 **Sprint 2 (4 days)**:
+
 - Developers alternate between testing and documentation
 
 **Total Duration**: 12 days
@@ -251,6 +285,7 @@ Central hub for all Epic 004 documentation:
 ## Success Metrics
 
 ### Technical Targets
+
 - ✅ Cache hit rate > 80%
 - ✅ Redux state updates < 16ms (60fps)
 - ✅ Bundle size increase < 5KB
@@ -259,12 +294,14 @@ Central hub for all Epic 004 documentation:
 - ✅ Zero duplicate state between Redux and React Query
 
 ### Team Impact
+
 - ✅ Developer velocity: 20% improvement
 - ✅ Onboarding time: < 1 day for new developers
 - ✅ Bug reduction: 30% fewer state-related bugs
 - ✅ Developer satisfaction: > 4/5 rating
 
 ### Business Value
+
 - 💰 Faster feature development with clear patterns
 - 🚀 Improved application performance
 - 📚 Better long-term maintainability
@@ -276,6 +313,7 @@ Central hub for all Epic 004 documentation:
 ## Key Architectural Decisions
 
 ### Use React Query For:
+
 - ✅ All API data fetching
 - ✅ Server state caching
 - ✅ NOSTR event streams (real-time)
@@ -284,6 +322,7 @@ Central hub for all Epic 004 documentation:
 - ✅ Automatic cache invalidation
 
 ### Use Redux For:
+
 - ✅ User authentication/session
 - ✅ UI state (theme, modals, notifications)
 - ✅ Client-side preferences
@@ -292,6 +331,7 @@ Central hub for all Epic 004 documentation:
 - ✅ State persistence (with localStorage)
 
 ### Use Local State For:
+
 - ✅ Simple form inputs
 - ✅ Component-specific UI toggles
 - ✅ Temporary interaction state
@@ -335,6 +375,7 @@ Central hub for all Epic 004 documentation:
 ### Story Completion Requirements
 
 Each story is only considered complete when:
+
 - [ ] All acceptance criteria met (Given-When-Then)
 - [ ] Technical implementation matches specifications
 - [ ] Unit tests written with 80%+ coverage
@@ -348,6 +389,7 @@ Each story is only considered complete when:
 ### Code Review Checklist
 
 For every PR:
+
 - [ ] Correct state management tool used (Redux vs React Query)
 - [ ] No duplicate state between tools
 - [ ] Proper error handling implemented
@@ -362,12 +404,14 @@ For every PR:
 ## Development Workflow
 
 ### Phase 1: Preparation
+
 1. ✅ Review all documentation in this directory
 2. ✅ Understand the decision tree
 3. ✅ Review architecture diagrams
 4. ✅ Assign developers to work streams
 
 ### Phase 2: Sprint 0 (Foundation)
+
 1. ✅ Execute stories #001-005 sequentially
 2. ✅ Generate audit reports
 3. ✅ Create guidelines and diagrams
@@ -375,6 +419,7 @@ For every PR:
 5. ✅ Get team sign-off before proceeding
 
 ### Phase 3: Sprint 1 (Implementation)
+
 1. ✅ Launch parallel work streams
 2. ✅ Backend stream: Stories #006-012
 3. ✅ Frontend stream: Stories #013-017
@@ -382,6 +427,7 @@ For every PR:
 5. ✅ Continuous integration and testing
 
 ### Phase 4: Sprint 2 (Validation)
+
 1. ✅ Execute testing stories #018-022
 2. ✅ Validate all metrics meet targets
 3. ✅ Create documentation stories #023-025
@@ -389,6 +435,7 @@ For every PR:
 5. ✅ Complete ADR
 
 ### Phase 5: Launch
+
 1. ✅ Final integration testing
 2. ✅ Gradual rollout with feature flags
 3. ✅ Monitor performance metrics
@@ -402,6 +449,7 @@ For every PR:
 ### Mermaid Diagram Rendering
 
 To view the `.mmd` diagram files:
+
 - **Online**: [Mermaid Live Editor](https://mermaid.live/)
 - **VS Code**: Install "Mermaid Preview" extension
 - **CLI**: Install `@mermaid-js/mermaid-cli` and run:
@@ -412,16 +460,19 @@ To view the `.mmd` diagram files:
   ```
 
 ### State Management Libraries
+
 - **React Query**: v4+ (TanStack Query)
 - **Redux Toolkit**: v1.9+
 - **React Redux**: v8+
 
 ### Testing Tools
+
 - **Jest**: Unit and integration tests
 - **React Testing Library**: Component tests
 - **Playwright**: E2E tests
 
 ### DevTools
+
 - React Query DevTools
 - Redux DevTools Extension
 
@@ -447,6 +498,7 @@ epic-004-stories/
 ## Next Steps
 
 ### Immediate Actions
+
 1. ✅ Review all created documentation
 2. ✅ Schedule Sprint 0 kickoff meeting
 3. ✅ Assign developers to work streams:
@@ -458,16 +510,19 @@ epic-004-stories/
 5. ✅ Begin Story #001: Audit Redux Store Structure
 
 ### Week 1
+
 - Complete Sprint 0 (Foundation)
 - Get team approval on guidelines
 - Begin Sprint 1 parallel work streams
 
 ### Week 2
+
 - Complete Sprint 1 (Migration)
 - Begin Sprint 2 (Testing & Documentation)
 - Deliver training workshop
 
 ### Week 3
+
 - Finalize documentation
 - Complete ADR
 - Launch with feature flags
@@ -507,6 +562,7 @@ This Epic is considered complete when:
 ## Acknowledgments
 
 This story breakdown follows industry best practices for:
+
 - Vertical slicing for 1-point stories
 - Autonomous agent-ready specifications
 - Parallel work stream optimization

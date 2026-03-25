@@ -431,7 +431,7 @@ describe('📱 Mobile Responsive Layout Test Suite', () => {
       );
 
       const section = document.querySelector('section');
-      expect(section).toHaveClass('bg-white');
+      expect(section).toHaveClass('bg-background');
 
       rerender(
         <ResponsiveSection background="gradient">

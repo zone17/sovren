@@ -51,7 +51,7 @@ export const SustainableScheduler: React.FC = () => {
   if (error) {
     return (
       <Card>
-        <CardContent className="py-6 text-center text-sm text-gray-500">
+        <CardContent className="py-6 text-center text-sm text-muted-foreground">
           Failed to load schedule recommendations.
         </CardContent>
       </Card>
@@ -64,7 +64,7 @@ export const SustainableScheduler: React.FC = () => {
         <CardHeader className="pb-2">
           <CardTitle className="text-base font-semibold">Sustainable Schedule</CardTitle>
         </CardHeader>
-        <CardContent className="py-6 text-center text-sm text-gray-500">
+        <CardContent className="py-6 text-center text-sm text-muted-foreground">
           Schedule insights coming soon. Start posting to receive recommendations.
         </CardContent>
       </Card>
@@ -81,10 +81,10 @@ export const SustainableScheduler: React.FC = () => {
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Pace indicator */}
-        <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
+        <div className="flex items-center justify-between p-3 rounded-lg bg-muted">
           <div>
-            <p className="text-sm font-medium text-gray-700">Posting Pace</p>
-            <p className="text-xs text-gray-500 mt-0.5">
+            <p className="text-sm font-medium text-foreground">Posting Pace</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
               {data.current_posts_per_week}/week (recommended: {data.recommended_posts_per_week}
               /week)
             </p>
@@ -98,7 +98,7 @@ export const SustainableScheduler: React.FC = () => {
 
         {/* Optimal days */}
         <div>
-          <p className="text-xs font-medium text-gray-600 mb-2">Best Days to Post</p>
+          <p className="text-xs font-medium text-muted-foreground mb-2">Best Days to Post</p>
           <div className="flex gap-1">
             {ALL_DAYS.map((day) => {
               const isOptimal = data.optimal_days.includes(day);
@@ -106,7 +106,9 @@ export const SustainableScheduler: React.FC = () => {
                 <div
                   key={day}
                   className={`flex-1 py-1.5 text-center text-xs rounded ${
-                    isOptimal ? 'bg-blue-100 text-blue-700 font-medium' : 'bg-gray-50 text-gray-400'
+                    isOptimal
+                      ? 'bg-blue-100 text-blue-700 font-medium'
+                      : 'bg-muted text-muted-foreground/60'
                   }`}
                 >
                   {DAY_LABELS[day]}
@@ -119,20 +121,22 @@ export const SustainableScheduler: React.FC = () => {
         {/* Optimal hours */}
         {data.optimal_hours.length > 0 && (
           <div>
-            <p className="text-xs font-medium text-gray-600 mb-1">Best Times</p>
-            <p className="text-sm text-gray-700">{data.optimal_hours.map(formatHour).join(', ')}</p>
+            <p className="text-xs font-medium text-muted-foreground mb-1">Best Times</p>
+            <p className="text-sm text-foreground">
+              {data.optimal_hours.map(formatHour).join(', ')}
+            </p>
           </div>
         )}
 
         {/* Content buffer */}
         <div className={`p-3 rounded-lg ${bufferLow ? 'bg-red-50' : 'bg-green-50'}`}>
           <div className="flex items-center justify-between mb-1">
-            <span className="text-xs font-medium text-gray-600">Content Buffer</span>
+            <span className="text-xs font-medium text-muted-foreground">Content Buffer</span>
             <span className={`text-sm font-bold ${bufferLow ? 'text-red-600' : 'text-green-600'}`}>
               {data.content_buffer_days} days
             </span>
           </div>
-          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+          <div className="h-2 bg-muted rounded-full overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-500 ${bufferLow ? 'bg-red-500' : 'bg-green-500'}`}
               style={{
@@ -140,21 +144,23 @@ export const SustainableScheduler: React.FC = () => {
               }}
             />
           </div>
-          <p className="text-[10px] text-gray-400 mt-1">Threshold: {data.buffer_threshold} days</p>
+          <p className="text-[10px] text-muted-foreground/60 mt-1">
+            Threshold: {data.buffer_threshold} days
+          </p>
         </div>
 
         {/* Productive windows */}
         {data.productive_windows.length > 0 && (
           <div>
-            <p className="text-xs font-medium text-gray-600 mb-2">Productive Windows</p>
+            <p className="text-xs font-medium text-muted-foreground mb-2">Productive Windows</p>
             <div className="space-y-1">
               {data.productive_windows.slice(0, 3).map((window, i) => (
                 <div
                   key={i}
-                  className="flex items-center justify-between text-xs p-2 bg-gray-50 rounded"
+                  className="flex items-center justify-between text-xs p-2 bg-muted rounded"
                 >
-                  <span className="text-gray-700 capitalize">{window.day}</span>
-                  <span className="text-gray-500">
+                  <span className="text-foreground capitalize">{window.day}</span>
+                  <span className="text-muted-foreground">
                     {window.start} - {window.end}
                   </span>
                   <Badge variant="outline" className="text-[10px]">

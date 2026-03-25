@@ -231,6 +231,7 @@ The current codebase uses a single-invoice model via `LightningService` backed b
 **Goal**: If regulatory and business conditions warrant it, add optional platform custody for creators who prefer asynchronous payout over direct Lightning payments.
 
 **This phase is intentionally deferred.** It should only proceed if:
+
 - Legal counsel confirms Money Transmitter License requirements are met or exemptions apply
 - Creator demand for asynchronous payouts justifies the compliance cost
 - The platform has sufficient operational maturity for secure fund management

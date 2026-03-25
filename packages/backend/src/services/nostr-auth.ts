@@ -1,15 +1,11 @@
-// @ts-nocheck
 import { createHash, randomBytes } from 'crypto';
 import jwt from 'jsonwebtoken';
-import {
-  getEventHash,
-  verifyEvent,
-  type Event as NostrEvent,
-  type UnsignedEvent,
-} from 'nostr-tools/pure';
+import { getEventHash, verifyEvent } from 'nostr-tools/pure';
+import type { NostrEvent, UnsignedEvent } from 'nostr-tools/lib/types/core';
 import { z } from 'zod';
 import { createSignatureMessage as sharedCreateSignatureMessage } from '@shared/types/nostr/auth';
 import logger from '../lib/logger';
+import { getRedisClient, isRedisAvailable } from '../lib/redis';
 
 // 🌐 NOSTR Authentication Schemas (from shared package)
 export const NostrChallengeSchema = z.object({
@@ -45,6 +41,7 @@ export class NostrAuthService {
   private readonly challenges: Map<string, NostrChallenge>;
   private cleanupInterval?: NodeJS.Timeout;
   private usedSignatures: Map<string, number>;
+  private revokedTokens: Map<string, number>; // token hash -> expiry timestamp
   private userRoleFetcher?: (pubkey: string) => Promise<string | undefined>;
 
   constructor(
@@ -73,6 +70,7 @@ export class NostrAuthService {
     this.CHALLENGE_TTL = challengeTTL;
     this.challenges = new Map();
     this.usedSignatures = new Map();
+    this.revokedTokens = new Map();
     this.userRoleFetcher = userRoleFetcher;
 
     // Clean up expired challenges and signatures every minute (only in production)
@@ -80,6 +78,7 @@ export class NostrAuthService {
       this.cleanupInterval = setInterval(() => {
         this.cleanupExpiredChallenges();
         this.cleanupExpiredSignatures();
+        this.cleanupExpiredRevokedTokens();
       }, 60000);
     }
   }
@@ -244,6 +243,65 @@ export class NostrAuthService {
   }
 
   /**
+   * Revoke a JWT token so it can no longer be used.
+   *
+   * Primary store: Redis with TTL matching the token's natural expiry.
+   * Fallback: in-memory Map (single instance only — loses revocations on restart).
+   */
+  async revokeToken(token: string): Promise<void> {
+    const decoded = jwt.decode(token) as JWTPayload | null;
+    const tokenHash = createHash('sha256').update(token).digest('hex');
+    const fallbackTtlMs = 24 * 60 * 60 * 1000;
+    const expiresAt = decoded?.exp ? decoded.exp * 1000 : Date.now() + fallbackTtlMs;
+    const ttlSeconds = Math.max(1, Math.ceil((expiresAt - Date.now()) / 1000));
+
+    if (isRedisAvailable()) {
+      try {
+        const redis = getRedisClient();
+        await redis.set(`revoked:${tokenHash}`, '1', 'EX', ttlSeconds);
+        return;
+      } catch (err) {
+        logger.warn('[NostrAuth] Redis revocation failed — falling back to in-memory', {
+          error: (err as Error).message,
+        });
+      }
+    }
+
+    // Fallback: in-memory (not shared across instances)
+    this.revokedTokens.set(tokenHash, expiresAt);
+  }
+
+  /**
+   * Check if a token has been revoked.
+   *
+   * Checks Redis first (shared across instances), falls back to in-memory Map.
+   */
+  async isTokenRevoked(token: string): Promise<boolean> {
+    const tokenHash = createHash('sha256').update(token).digest('hex');
+
+    if (isRedisAvailable()) {
+      try {
+        const redis = getRedisClient();
+        const result = await redis.get(`revoked:${tokenHash}`);
+        return result !== null;
+      } catch (err) {
+        logger.warn('[NostrAuth] Redis revocation check failed — falling back to in-memory', {
+          error: (err as Error).message,
+        });
+      }
+    }
+
+    // Fallback: in-memory check
+    const expiresAt = this.revokedTokens.get(tokenHash);
+    if (expiresAt === undefined) return false;
+    if (Date.now() > expiresAt) {
+      this.revokedTokens.delete(tokenHash);
+      return false;
+    }
+    return true;
+  }
+
+  /**
    * 🔓 Verify JWT token and extract NOSTR identity
    */
   async verifyJWT(token: string): Promise<{
@@ -252,6 +310,14 @@ export class NostrAuthService {
     error?: string;
   }> {
     try {
+      // Check if token has been revoked before verifying
+      if (await this.isTokenRevoked(token)) {
+        return {
+          valid: false,
+          error: 'Token has been revoked',
+        };
+      }
+
       const decoded = jwt.verify(token, this.JWT_SECRET, {
         algorithms: ['HS256'],
       });
@@ -371,6 +437,18 @@ export class NostrAuthService {
   }
 
   /**
+   * 🧹 Clean up expired revoked tokens
+   */
+  private cleanupExpiredRevokedTokens(): void {
+    const now = Date.now();
+    for (const [tokenHash, expiresAt] of this.revokedTokens.entries()) {
+      if (now > expiresAt) {
+        this.revokedTokens.delete(tokenHash);
+      }
+    }
+  }
+
+  /**
    * 📝 Create signature message for verification
    * Delegates to shared package — single source of truth.
    */
@@ -461,6 +539,7 @@ export class NostrAuthService {
     }
     this.challenges.clear();
     this.usedSignatures.clear();
+    this.revokedTokens.clear();
   }
 }
 
@@ -479,7 +558,7 @@ export const nostrAuth = new NostrAuthService(
         .eq('nostr_pubkey', pubkey)
         .single();
       const VALID_JWT_ROLES = new Set(['creator', 'supporter']);
-      return VALID_JWT_ROLES.has(data?.role) ? data.role : 'supporter';
+      return data && VALID_JWT_ROLES.has(data.role) ? data.role : 'supporter';
     } catch (err) {
       logger.error('Failed to fetch user role from DB, defaulting to supporter', { pubkey, err });
       return 'supporter';

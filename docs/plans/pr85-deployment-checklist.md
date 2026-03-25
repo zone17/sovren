@@ -48,29 +48,29 @@ Missing any of these will cause runtime failures.
 
 **Critical (App will crash without these):**
 
-| Variable | Format | Validation | Used By |
-|----------|--------|------------|---------|
-| `PLATFORM_TOKEN_ENCRYPTION_KEY` | 64-char hex string | `echo -n "$PLATFORM_TOKEN_ENCRYPTION_KEY" \| wc -c` must equal 64 | `crypto.ts` - AES-256-GCM encryption |
-| `API_BASE_URL` | URL (e.g. `https://api.sovren.dev`) | Must be publicly reachable for OAuth callbacks | `PlatformConnectionService` - OAuth callback URLs |
-| `REDIS_URL` or `REDIS_HOST`+`REDIS_PORT` | Redis connection string | `redis-cli ping` must return PONG | `lib/redis.ts` - BullMQ queues |
+| Variable                                 | Format                              | Validation                                                        | Used By                                           |
+| ---------------------------------------- | ----------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------- |
+| `PLATFORM_TOKEN_ENCRYPTION_KEY`          | 64-char hex string                  | `echo -n "$PLATFORM_TOKEN_ENCRYPTION_KEY" \| wc -c` must equal 64 | `crypto.ts` - AES-256-GCM encryption              |
+| `API_BASE_URL`                           | URL (e.g. `https://api.sovren.dev`) | Must be publicly reachable for OAuth callbacks                    | `PlatformConnectionService` - OAuth callback URLs |
+| `REDIS_URL` or `REDIS_HOST`+`REDIS_PORT` | Redis connection string             | `redis-cli ping` must return PONG                                 | `lib/redis.ts` - BullMQ queues                    |
 
 **Platform OAuth Credentials (graceful degradation if missing -- adapter skipped):**
 
-| Variable | Format | Required For |
-|----------|--------|-------------|
-| `MASTODON_CLIENT_ID` | String | Mastodon OAuth connect |
-| `MASTODON_CLIENT_SECRET` | String | Mastodon OAuth connect |
-| `BLUESKY_CLIENT_ID` | String | Bluesky OAuth connect |
-| `BLUESKY_CLIENT_SECRET` | String | Bluesky OAuth connect |
-| `TWITTER_CLIENT_ID` | String | Twitter/X OAuth connect |
-| `TWITTER_CLIENT_SECRET` | String | Twitter/X OAuth connect |
-| `YOUTUBE_CLIENT_ID` | String | YouTube OAuth connect |
-| `YOUTUBE_CLIENT_SECRET` | String | YouTube OAuth connect |
+| Variable                 | Format | Required For            |
+| ------------------------ | ------ | ----------------------- |
+| `MASTODON_CLIENT_ID`     | String | Mastodon OAuth connect  |
+| `MASTODON_CLIENT_SECRET` | String | Mastodon OAuth connect  |
+| `BLUESKY_CLIENT_ID`      | String | Bluesky OAuth connect   |
+| `BLUESKY_CLIENT_SECRET`  | String | Bluesky OAuth connect   |
+| `TWITTER_CLIENT_ID`      | String | Twitter/X OAuth connect |
+| `TWITTER_CLIENT_SECRET`  | String | Twitter/X OAuth connect |
+| `YOUTUBE_CLIENT_ID`      | String | YouTube OAuth connect   |
+| `YOUTUBE_CLIENT_SECRET`  | String | YouTube OAuth connect   |
 
 **Optional (defaults exist):**
 
-| Variable | Default | Purpose |
-|----------|---------|---------|
+| Variable       | Default                 | Purpose                                                        |
+| -------------- | ----------------------- | -------------------------------------------------------------- |
 | `FRONTEND_URL` | `http://localhost:3000` | OAuth redirect after callback, backlinks in repurposed content |
 
 **Verification commands:**
@@ -96,6 +96,7 @@ curl -s -o /dev/null -w "%{http_code}" "$API_BASE_URL/api/v2/platforms/callback/
 ```
 
 **BLOCKING FINDING: `.env.example` was NOT updated in this PR.** The following variables are missing from `packages/backend/.env.example`:
+
 - `PLATFORM_TOKEN_ENCRYPTION_KEY`
 - `API_BASE_URL`
 - `MASTODON_CLIENT_ID` / `MASTODON_CLIENT_SECRET`
@@ -185,14 +186,14 @@ WHERE schemaname = 'public';
 
 Migrations MUST be run in this exact sequence. Each depends on the previous.
 
-| Step | Migration File | What It Does | Estimated Runtime | Rollback SQL |
-|------|---------------|--------------|-------------------|--------------|
-| 1 | `20260216200000_epic009_platform_connections.sql` | Creates `platform_connections` table, 3 indexes, RLS policy | < 1 sec | `DROP TABLE IF EXISTS platform_connections CASCADE;` |
-| 2 | `20260216200100_epic009_cross_posts.sql` | Creates `cross_posts` table, 4 indexes, RLS policy | < 1 sec | `DROP TABLE IF EXISTS cross_posts CASCADE;` |
-| 3 | `20260216200200_epic009_repurposed_content.sql` | Creates `repurposed_content` table, 2 indexes, RLS policy | < 1 sec | `DROP TABLE IF EXISTS repurposed_content CASCADE;` |
-| 4 | `20260216200300_epic009_inbox_messages.sql` | Creates `inbox_messages` table, 4 indexes, RLS policy | < 1 sec | `DROP TABLE IF EXISTS inbox_messages CASCADE;` |
-| 5 | `20260216200400_epic009_platform_metrics_history.sql` | Creates `platform_metrics_history` table, 2 indexes, RLS policy | < 1 sec | `DROP TABLE IF EXISTS platform_metrics_history CASCADE;` |
-| 6 | `20260216200500_add_refresh_token_iv_columns.sql` | Adds `refresh_token_iv` + `refresh_token_auth_tag` BYTEA columns to `platform_connections` | < 1 sec | `ALTER TABLE platform_connections DROP COLUMN IF EXISTS refresh_token_iv, DROP COLUMN IF EXISTS refresh_token_auth_tag;` |
+| Step | Migration File                                        | What It Does                                                                               | Estimated Runtime | Rollback SQL                                                                                                             |
+| ---- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------ | ----------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| 1    | `20260216200000_epic009_platform_connections.sql`     | Creates `platform_connections` table, 3 indexes, RLS policy                                | < 1 sec           | `DROP TABLE IF EXISTS platform_connections CASCADE;`                                                                     |
+| 2    | `20260216200100_epic009_cross_posts.sql`              | Creates `cross_posts` table, 4 indexes, RLS policy                                         | < 1 sec           | `DROP TABLE IF EXISTS cross_posts CASCADE;`                                                                              |
+| 3    | `20260216200200_epic009_repurposed_content.sql`       | Creates `repurposed_content` table, 2 indexes, RLS policy                                  | < 1 sec           | `DROP TABLE IF EXISTS repurposed_content CASCADE;`                                                                       |
+| 4    | `20260216200300_epic009_inbox_messages.sql`           | Creates `inbox_messages` table, 4 indexes, RLS policy                                      | < 1 sec           | `DROP TABLE IF EXISTS inbox_messages CASCADE;`                                                                           |
+| 5    | `20260216200400_epic009_platform_metrics_history.sql` | Creates `platform_metrics_history` table, 2 indexes, RLS policy                            | < 1 sec           | `DROP TABLE IF EXISTS platform_metrics_history CASCADE;`                                                                 |
+| 6    | `20260216200500_add_refresh_token_iv_columns.sql`     | Adds `refresh_token_iv` + `refresh_token_auth_tag` BYTEA columns to `platform_connections` | < 1 sec           | `ALTER TABLE platform_connections DROP COLUMN IF EXISTS refresh_token_iv, DROP COLUMN IF EXISTS refresh_token_auth_tag;` |
 
 **Execution command:**
 
@@ -298,14 +299,14 @@ curl -s -H "Authorization: Bearer $TEST_TOKEN" \
 
 **Services that must resolve:**
 
-| DI Token | Service Class | Depends On |
-|----------|--------------|------------|
-| `TYPES.PlatformConnectionService` | `PlatformConnectionService` | Database, Logger |
-| `TYPES.CrossPostService` | `CrossPostService` | Database, QueueService, PlatformConnectionService, Logger |
-| `TYPES.RepurposingService` | `RepurposingService` | Database, Logger |
-| `TYPES.UnifiedInboxService` | `UnifiedInboxService` | Database, PlatformConnectionService, Logger |
-| `TYPES.CrossPlatformAnalyticsService` | `CrossPlatformAnalyticsService` | Database, PlatformConnectionService, Logger |
-| `TYPES.QueueService` | `QueueService` | Logger (+ Redis at runtime) |
+| DI Token                              | Service Class                   | Depends On                                                |
+| ------------------------------------- | ------------------------------- | --------------------------------------------------------- |
+| `TYPES.PlatformConnectionService`     | `PlatformConnectionService`     | Database, Logger                                          |
+| `TYPES.CrossPostService`              | `CrossPostService`              | Database, QueueService, PlatformConnectionService, Logger |
+| `TYPES.RepurposingService`            | `RepurposingService`            | Database, Logger                                          |
+| `TYPES.UnifiedInboxService`           | `UnifiedInboxService`           | Database, PlatformConnectionService, Logger               |
+| `TYPES.CrossPlatformAnalyticsService` | `CrossPlatformAnalyticsService` | Database, PlatformConnectionService, Logger               |
+| `TYPES.QueueService`                  | `QueueService`                  | Logger (+ Redis at runtime)                               |
 
 ### 5.3 BullMQ Queue Health
 
@@ -516,18 +517,18 @@ ORDER BY table_name, conname;
 
 ### 7.1 Metrics and Alerts
 
-| Metric / Log | Alert Condition | Where to Check |
-|-------------|-----------------|----------------|
-| Backend error rate (5xx) | > 1% for 5 minutes | Application logs, error monitoring |
-| `/health/detailed` status | != "healthy" for 2 minutes | Health check monitoring |
-| Redis connection errors | Any `[Redis] Connection error` log | Application logs |
-| QueueService errors | Any `[QueueService] Worker error` log | Application logs |
-| BullMQ queue depth (cross-publish) | > 1000 waiting jobs for 10 min | Bull Board admin or `/health/detailed` |
-| OAuth state store size | `oauthStateStore.size >= 10000` logged | Application logs (DoS eviction) |
-| Token decryption failures | Any `Encryption key must be 32 bytes` error | Application logs |
-| DI resolution failures | Any `Cannot resolve` in startup logs | Application logs |
-| Platform adapter errors | Any `Platform "X" is not configured` | Application logs |
-| Database migration drift | Tables missing or columns wrong | Run CHECK queries from Section 6 |
+| Metric / Log                       | Alert Condition                             | Where to Check                         |
+| ---------------------------------- | ------------------------------------------- | -------------------------------------- |
+| Backend error rate (5xx)           | > 1% for 5 minutes                          | Application logs, error monitoring     |
+| `/health/detailed` status          | != "healthy" for 2 minutes                  | Health check monitoring                |
+| Redis connection errors            | Any `[Redis] Connection error` log          | Application logs                       |
+| QueueService errors                | Any `[QueueService] Worker error` log       | Application logs                       |
+| BullMQ queue depth (cross-publish) | > 1000 waiting jobs for 10 min              | Bull Board admin or `/health/detailed` |
+| OAuth state store size             | `oauthStateStore.size >= 10000` logged      | Application logs (DoS eviction)        |
+| Token decryption failures          | Any `Encryption key must be 32 bytes` error | Application logs                       |
+| DI resolution failures             | Any `Cannot resolve` in startup logs        | Application logs                       |
+| Platform adapter errors            | Any `Platform "X" is not configured`        | Application logs                       |
+| Database migration drift           | Tables missing or columns wrong             | Run CHECK queries from Section 6       |
 
 ### 7.2 Scheduled Verification Cadence
 
@@ -604,14 +605,14 @@ try {
 
 ### 8.2 Rollback Decision Matrix
 
-| Symptom | Severity | Action |
-|---------|----------|--------|
-| Migration fails partway | CRITICAL | Roll back completed migrations in reverse order |
-| Server won't start after deploy | CRITICAL | Deploy previous commit, then assess if migration rollback needed |
-| Redis unreachable | HIGH | Server starts degraded; fix Redis. No migration rollback needed |
-| OAuth callbacks returning 500 | MEDIUM | Check env vars. No migration rollback needed |
-| One platform adapter fails | LOW | Missing env var for that platform. Other platforms unaffected |
-| Encryption key invalid | CRITICAL | Fix `PLATFORM_TOKEN_ENCRYPTION_KEY`. No migration rollback needed |
+| Symptom                         | Severity | Action                                                            |
+| ------------------------------- | -------- | ----------------------------------------------------------------- |
+| Migration fails partway         | CRITICAL | Roll back completed migrations in reverse order                   |
+| Server won't start after deploy | CRITICAL | Deploy previous commit, then assess if migration rollback needed  |
+| Redis unreachable               | HIGH     | Server starts degraded; fix Redis. No migration rollback needed   |
+| OAuth callbacks returning 500   | MEDIUM   | Check env vars. No migration rollback needed                      |
+| One platform adapter fails      | LOW      | Missing env var for that platform. Other platforms unaffected     |
+| Encryption key invalid          | CRITICAL | Fix `PLATFORM_TOKEN_ENCRYPTION_KEY`. No migration rollback needed |
 
 ### 8.3 Rollback Steps (Full)
 
@@ -707,6 +708,7 @@ git revert <merge-commit-sha>
 If the server restarts during an active OAuth flow, all pending state tokens are lost and those OAuth flows will fail.
 
 **Mitigation:**
+
 - The state tokens have a 10-minute TTL, limiting the blast radius.
 - A DoS eviction guard caps the store at 10,000 entries (line 99).
 - For multi-instance deployments, this MUST be migrated to Redis-backed state storage. File a follow-up ticket.
@@ -716,6 +718,7 @@ If the server restarts during an active OAuth flow, all pending state tokens are
 **Risk:** If `PLATFORM_TOKEN_ENCRYPTION_KEY` is changed after tokens are stored, ALL existing encrypted tokens become undecryptable. Users must re-authorize all platforms.
 
 **Mitigation:**
+
 - Document the current key hash (NOT the key itself) in the secrets vault.
 - NEVER rotate this key without a migration plan that re-encrypts existing tokens.
 - Consider adding a `key_version` column to `platform_connections` for future key rotation support.
@@ -765,23 +768,23 @@ YOUTUBE_CLIENT_SECRET=
 
 Before proceeding, ALL of the following must be true:
 
-| # | Criterion | Status |
-|---|-----------|--------|
-| 1 | `PLATFORM_TOKEN_ENCRYPTION_KEY` is set and is 64 hex chars | [ ] |
-| 2 | `API_BASE_URL` is set and reachable | [ ] |
-| 3 | Redis is running and `PING` returns `PONG` | [ ] |
-| 4 | Database backup taken within last hour | [ ] |
-| 5 | Pre-deploy SQL baselines recorded | [ ] |
-| 6 | Staging deployment succeeded with all 6 migrations | [ ] |
-| 7 | Unit tests passing | [ ] |
-| 8 | Rollback plan reviewed by deploying engineer | [ ] |
-| 9 | At least one platform OAuth credential pair is configured | [ ] |
-| 10 | `.env.example` updated (or follow-up ticket created) | [ ] |
+| #   | Criterion                                                  | Status |
+| --- | ---------------------------------------------------------- | ------ |
+| 1   | `PLATFORM_TOKEN_ENCRYPTION_KEY` is set and is 64 hex chars | [ ]    |
+| 2   | `API_BASE_URL` is set and reachable                        | [ ]    |
+| 3   | Redis is running and `PING` returns `PONG`                 | [ ]    |
+| 4   | Database backup taken within last hour                     | [ ]    |
+| 5   | Pre-deploy SQL baselines recorded                          | [ ]    |
+| 6   | Staging deployment succeeded with all 6 migrations         | [ ]    |
+| 7   | Unit tests passing                                         | [ ]    |
+| 8   | Rollback plan reviewed by deploying engineer               | [ ]    |
+| 9   | At least one platform OAuth credential pair is configured  | [ ]    |
+| 10  | `.env.example` updated (or follow-up ticket created)       | [ ]    |
 
 **If ANY criterion is not met: NO-GO. Fix the issue and re-evaluate.**
 
 ---
 
-*Generated by Deployment Verification Agent for PR #85 on branch `feature/phase1-epics`*
-*Covers: 6 migrations, 13 backend services, 4 v2 route files, BullMQ queue infrastructure*
-*Protected artifacts (not flagged): `docs/plans/*.md`, `docs/solutions/*.md`*
+_Generated by Deployment Verification Agent for PR #85 on branch `feature/phase1-epics`_
+_Covers: 6 migrations, 13 backend services, 4 v2 route files, BullMQ queue infrastructure_
+_Protected artifacts (not flagged): `docs/plans/_.md`, `docs/solutions/_.md`_

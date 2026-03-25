@@ -16,15 +16,15 @@ Complete documentation of all NIPs implemented in Sovren.
 
 Sovren implements the following NOSTR Implementation Possibilities:
 
-| NIP | Title | Status | Service |
-|-----|-------|--------|---------|
-| [NIP-01](./nip-01.md) | Basic Protocol | ✅ Complete | Core |
-| [NIP-04](./nip-04.md) | Encrypted Direct Messages | ✅ Complete | NIP04Service |
-| [NIP-05](./nip-05.md) | DNS-based Verification | ✅ Complete | NIP05Service |
-| [NIP-19](./nip-19.md) | Bech32-encoded Entities | ✅ Complete | NIP19Service |
-| [NIP-26](./nip-26.md) | Delegated Event Signing | ✅ Complete | NIP26Service |
-| [NIP-65](./nip-65.md) | Relay List Metadata | ✅ Complete | NIP65Service |
-| [30078-30082](./sovren-nips.md) | Sovren Custom NIPs | ✅ Complete | SovrenNIPService |
+| NIP                             | Title                     | Status      | Service          |
+| ------------------------------- | ------------------------- | ----------- | ---------------- |
+| [NIP-01](./nip-01.md)           | Basic Protocol            | ✅ Complete | Core             |
+| [NIP-04](./nip-04.md)           | Encrypted Direct Messages | ✅ Complete | NIP04Service     |
+| [NIP-05](./nip-05.md)           | DNS-based Verification    | ✅ Complete | NIP05Service     |
+| [NIP-19](./nip-19.md)           | Bech32-encoded Entities   | ✅ Complete | NIP19Service     |
+| [NIP-26](./nip-26.md)           | Delegated Event Signing   | ✅ Complete | NIP26Service     |
+| [NIP-65](./nip-65.md)           | Relay List Metadata       | ✅ Complete | NIP65Service     |
+| [30078-30082](./sovren-nips.md) | Sovren Custom NIPs        | ✅ Complete | SovrenNIPService |
 
 ---
 
@@ -37,12 +37,14 @@ Sovren implements the following NOSTR Implementation Possibilities:
 **Implementation**: All services use NIP-01 event structure
 
 **Key Features**:
+
 - Event creation and validation
 - Event signing and verification
 - Filter-based subscriptions
 - Relay message handling (EVENT, REQ, CLOSE, EOSE, OK, NOTICE)
 
 **Code Example**:
+
 ```typescript
 import { NostrEvent, NostrFilter } from '@shared/types/nostr';
 
@@ -77,22 +79,21 @@ const filter: NostrFilter = {
 **Implementation**: `NIP04Service`, `NIP04EnhancedService`
 
 **Key Features**:
+
 - AES-256-CBC encryption with shared secret
 - Conversation threading
 - Read receipts
 - Message history
 
 **Code Example**:
+
 ```typescript
 import { NIP04Service } from '@/services/nostr/NIP04Service';
 
 const nip04 = NIP04Service.getInstance();
 
 // Encrypt message
-const encrypted = await nip04.encryptMessage(
-  recipientPubkey,
-  'Secret message'
-);
+const encrypted = await nip04.encryptMessage(recipientPubkey, 'Secret message');
 
 // Publish encrypted DM
 await publisher.createAndPublish({
@@ -106,6 +107,7 @@ const decrypted = await nip04.decryptMessage(senderPubkey, ciphertext);
 ```
 
 **Security Notes**:
+
 - Uses ECDH for shared secret derivation
 - IV (initialization vector) prepended to ciphertext
 - NOT forward-secure (consider NIP-17 for improved security)
@@ -121,12 +123,14 @@ const decrypted = await nip04.decryptMessage(senderPubkey, ciphertext);
 **Implementation**: `NIP05Service`
 
 **Key Features**:
+
 - Verify `user@domain.com` format identifiers
 - Reverse lookup (pubkey to identifier)
 - Caching for performance
 - Retry logic for failed verifications
 
 **Code Example**:
+
 ```typescript
 import { NIP05Service } from '@/services/nostr/NIP05Service';
 
@@ -146,6 +150,7 @@ console.log('Identifier:', identifier); // alice@example.com
 ```
 
 **How it works**:
+
 1. Query `https://domain.com/.well-known/nostr.json?name=user`
 2. Verify returned pubkey matches expected value
 3. Optional: Extract recommended relays
@@ -161,12 +166,14 @@ console.log('Identifier:', identifier); // alice@example.com
 **Implementation**: `NIP19Service`, `NIP19BatchService`
 
 **Key Features**:
+
 - Encode/decode npub, nsec, note, nevent, nprofile, naddr
 - Batch operations for efficiency
 - Validation and error handling
 - QR code generation support
 
 **Code Example**:
+
 ```typescript
 import { NIP19Service } from '@/services/nostr/NIP19Service';
 
@@ -197,6 +204,7 @@ console.log(decoded); // { type: 'npub', data: '...' }
 ```
 
 **Entity Types**:
+
 - `npub`: Public key
 - `nsec`: Private key (⚠️ handle carefully!)
 - `note`: Event ID
@@ -215,12 +223,14 @@ console.log(decoded); // { type: 'npub', data: '...' }
 **Implementation**: `NIP26Service`
 
 **Key Features**:
+
 - Create delegation tokens with conditions
 - Verify delegated events
 - Revoke delegations
 - Time-limited and kind-limited delegations
 
 **Code Example**:
+
 ```typescript
 import { NIP26Service } from '@/services/nostr/NIP26Service';
 
@@ -240,9 +250,7 @@ const event = await publisher.createAndPublish(
   {
     kind: 1,
     content: 'Posted by bot on behalf of user',
-    tags: [
-      ['delegation', myPubkey, delegation.conditions, delegation.token],
-    ],
+    tags: [['delegation', myPubkey, delegation.conditions, delegation.token]],
   },
   { delegation }
 );
@@ -252,6 +260,7 @@ const isValid = await nip26.verifyDelegation(event);
 ```
 
 **Use Cases**:
+
 - Automated posting bots
 - Scheduled content
 - Team accounts
@@ -268,12 +277,14 @@ const isValid = await nip26.verifyDelegation(event);
 **Implementation**: `NIP65Service`
 
 **Key Features**:
+
 - Publish relay list (read/write preferences)
 - Fetch user's relay preferences
 - Automatic relay discovery
 - Caching for performance
 
 **Code Example**:
+
 ```typescript
 import { NIP65Service } from '@/services/nostr/NIP65Service';
 
@@ -315,6 +326,7 @@ Sovren extends NOSTR with custom event kinds for creator monetization, analytics
 **Purpose**: Extended creator metadata beyond basic NIP-01 profile.
 
 **Features**:
+
 - Lightning address integration
 - Social media links verification
 - Creator categories
@@ -322,15 +334,14 @@ Sovren extends NOSTR with custom event kinds for creator monetization, analytics
 - NIP-05 verification badge
 
 **Example**:
+
 ```typescript
 await sovrenNIP.publishCreatorProfile({
   displayName: 'Alice Creator',
   bio: 'Bitcoin educator',
   categories: ['technology', 'education'],
   lightningAddress: 'alice@getalby.com',
-  links: [
-    { platform: 'twitter', url: 'https://twitter.com/alice', verified: true },
-  ],
+  links: [{ platform: 'twitter', url: 'https://twitter.com/alice', verified: true }],
 });
 ```
 
@@ -341,12 +352,14 @@ await sovrenNIP.publishCreatorProfile({
 **Purpose**: Paywall configuration and pricing for content.
 
 **Features**:
+
 - Multiple pricing tiers
 - Paywall settings (partial/full)
 - Revenue sharing
 - Subscription management
 
 **Example**:
+
 ```typescript
 await sovrenNIP.publishMonetizationSettings(contentId, {
   paywall: { enabled: true, type: 'partial' },
@@ -368,12 +381,14 @@ await sovrenNIP.publishMonetizationSettings(contentId, {
 **Purpose**: Track content performance metrics.
 
 **Features**:
+
 - View counts
 - Engagement metrics
 - Revenue tracking
 - Regional analytics
 
 **Example**:
+
 ```typescript
 await sovrenNIP.trackAnalyticsEvent(analyticsId, {
   eventType: 'view',
@@ -390,12 +405,14 @@ await sovrenNIP.trackAnalyticsEvent(analyticsId, {
 **Purpose**: Define subscription tiers and track subscribers.
 
 **Features**:
+
 - Multiple tiers
 - Subscriber counts
 - MRR tracking
 - Trial periods
 
 **Example**:
+
 ```typescript
 await sovrenNIP.publishSubscriptionTiers({
   tiers: [
@@ -418,12 +435,14 @@ await sovrenNIP.publishSubscriptionTiers({
 **Purpose**: AI-generated personalized content feeds.
 
 **Features**:
+
 - Confidence scoring
 - Explainable recommendations
 - Multiple algorithms
 - Expiring recommendations
 
 **Example**:
+
 ```typescript
 const recommendations = await sovrenNIP.fetchRecommendations(userPubkey);
 

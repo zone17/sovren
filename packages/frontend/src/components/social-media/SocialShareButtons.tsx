@@ -119,9 +119,9 @@ const PLATFORM_CONFIGS: Record<SocialPlatform, PlatformConfig> = {
     icon: MessageSquare,
     label: 'TikTok',
     color: 'bg-black',
-    hoverColor: 'hover:bg-gray-800',
+    hoverColor: 'hover:bg-accent',
     textColor: 'text-white',
-    gradient: 'from-black to-gray-800',
+    gradient: 'from-black to-neutral-800',
   },
   [SocialPlatform.REDDIT]: {
     icon: MessageSquare,
@@ -472,9 +472,9 @@ export const SocialShareButtons: React.FC<SocialShareButtonsProps> = ({
           className={cn(
             'inline-flex items-center justify-center',
             sizeClasses.iconOnly,
-            'rounded-lg border border-gray-300',
-            'bg-white hover:bg-gray-50',
-            'text-gray-600 hover:text-gray-900',
+            'rounded-lg border border-border',
+            'bg-card hover:bg-accent',
+            'text-muted-foreground hover:text-foreground',
             'transition-colors duration-200'
           )}
           whileHover={{ scale: 1.05 }}
@@ -496,9 +496,9 @@ export const SocialShareButtons: React.FC<SocialShareButtonsProps> = ({
             className={cn(
               'inline-flex items-center justify-center',
               sizeClasses.iconOnly,
-              'rounded-lg border border-gray-300',
-              'bg-white hover:bg-gray-50',
-              'text-gray-600 hover:text-gray-900',
+              'rounded-lg border border-border',
+              'bg-card hover:bg-accent',
+              'text-muted-foreground hover:text-foreground',
               'transition-colors duration-200'
             )}
             whileHover={{ scale: 1.05 }}
@@ -518,9 +518,9 @@ export const SocialShareButtons: React.FC<SocialShareButtonsProps> = ({
           className={cn(
             'inline-flex items-center justify-center',
             sizeClasses.iconOnly,
-            'rounded-lg border border-gray-300',
-            'bg-white hover:bg-gray-50',
-            'text-gray-600 hover:text-gray-900',
+            'rounded-lg border border-border',
+            'bg-card hover:bg-accent',
+            'text-muted-foreground hover:text-foreground',
             'transition-colors duration-200'
           )}
           whileHover={{ scale: 1.05 }}
@@ -542,8 +542,8 @@ export const SocialShareButtons: React.FC<SocialShareButtonsProps> = ({
     <div className={cn(containerClasses, className)}>
       {/* Share Header */}
       <div className="flex items-center gap-2 mb-3">
-        <Share2 className={cn(sizeClasses.icon, 'text-gray-600')} />
-        <span className="text-sm font-medium text-gray-900">Share</span>
+        <Share2 className={cn(sizeClasses.icon, 'text-muted-foreground')} />
+        <span className="text-sm font-medium text-foreground">Share</span>
       </div>
 
       {/* Platform Buttons */}
@@ -572,7 +572,7 @@ export const SocialShareButtons: React.FC<SocialShareButtonsProps> = ({
             onClick={() => setShowAnalytics(false)}
           >
             <motion.div
-              className="bg-white rounded-lg p-6 max-w-md w-full m-4"
+              className="bg-card rounded-lg p-6 max-w-md w-full m-4"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
@@ -582,7 +582,7 @@ export const SocialShareButtons: React.FC<SocialShareButtonsProps> = ({
                 <h3 className="text-lg font-semibold">Share Analytics</h3>
                 <button
                   onClick={() => setShowAnalytics(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-muted-foreground hover:text-foreground"
                 >
                   ×
                 </button>
@@ -597,7 +597,7 @@ export const SocialShareButtons: React.FC<SocialShareButtonsProps> = ({
                       })}
                       <span className="text-sm">{PLATFORM_CONFIGS[platform].label}</span>
                     </div>
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm text-muted-foreground">
                       {shareStats[platform] || 0} shares
                     </span>
                   </div>

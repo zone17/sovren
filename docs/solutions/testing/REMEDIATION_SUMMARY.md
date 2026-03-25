@@ -481,7 +481,6 @@ projects: [
 ### Enforcement Points
 
 1. **Code Review**
-
    - Check `Anti-Patterns Catalog` section 4 (detection rules)
    - Verify no `page.route()`, `page.fulfill()`, `vi.mock()`
    - Confirm page objects used for all locators
@@ -498,7 +497,6 @@ projects: [
    ```
 
 3. **CI/CD**
-
    - E2E tests must pass before merge
    - No review approval for `.skip()` tests
    - Coverage check: Page objects for all pages

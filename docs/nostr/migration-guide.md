@@ -16,17 +16,18 @@
 ## Overview
 
 This guide walks you through migrating from legacy NOSTR storage to the new consolidated system with:
+
 - **KeyManagementService** - AES-256-GCM encrypted key storage
 - **EventCacheService** - Optimized event caching with deduplication
 - **SubscriptionManagerService** - Enhanced subscription tracking
 
 ### What Gets Migrated?
 
-| Data Type | From | To | Encryption |
-|-----------|------|----|-----------|
-| Keys | LocalStorage/IndexedDB | SovrenNostrKeys | AES-256-GCM |
-| Events | NostrEvents DB | SovrenEventCache | No (public data) |
-| Subscriptions | NostrSubscriptions DB | SovrenSubscriptionManager | No |
+| Data Type     | From                   | To                        | Encryption       |
+| ------------- | ---------------------- | ------------------------- | ---------------- |
+| Keys          | LocalStorage/IndexedDB | SovrenNostrKeys           | AES-256-GCM      |
+| Events        | NostrEvents DB         | SovrenEventCache          | No (public data) |
+| Subscriptions | NostrSubscriptions DB  | SovrenSubscriptionManager | No               |
 
 ### Estimated Time
 
@@ -65,6 +66,7 @@ npm run migrate:all:dry-run
 ```
 
 Expected output:
+
 ```
 🔍 DRY RUN MODE - No changes will be made
 
@@ -104,6 +106,7 @@ npm run migrate:keys
 3. **Confirm password**: Re-enter password
 
 **Output**:
+
 ```
 ╔══════════════════════════════════════════════════════════╗
 ║       NOSTR KEY MIGRATION TO KEYMANAGEMENTSERVICE       ║
@@ -153,11 +156,13 @@ npm run migrate:events
 ```
 
 **Options**:
+
 - `--skip-verify`: Skip signature verification (faster but less safe)
 - `--no-dedupe`: Migrate all events including duplicates
 - `--verbose`: Show detailed progress
 
 **Output**:
+
 ```
 ╔══════════════════════════════════════════════════════════╗
 ║          NOSTR EVENT MIGRATION TO EVENTCACHE            ║
@@ -206,11 +211,13 @@ npm run migrate:subscriptions
 ```
 
 **Options**:
+
 - `--include-inactive`: Migrate old/inactive subscriptions
 - `--cleanup`: Delete old database after migration
 - `--verbose`: Show detailed progress
 
 **Output**:
+
 ```
 ╔══════════════════════════════════════════════════════════╗
 ║    NOSTR SUBSCRIPTION MIGRATION TO SUBSCRIPTIONMANAGER  ║
@@ -253,12 +260,14 @@ npm run migrate:validate:strict
 ```
 
 **What gets validated**:
+
 1. Count verification (all items migrated)
 2. Data integrity (checksums match)
 3. Structure validation (schema compliance)
 4. Signature verification (strict mode only)
 
 **Expected output**:
+
 ```
 ╔══════════════════════════════════════════════════════════╗
 ║           NOSTR MIGRATION VALIDATION                    ║
@@ -307,6 +316,7 @@ If validation fails, see [Troubleshooting](#troubleshooting).
 **Symptom**: "No legacy keys found to migrate"
 
 **Solutions**:
+
 1. Check browser LocalStorage: DevTools → Application → Local Storage
 2. Verify IndexedDB: DevTools → Application → IndexedDB → NostrKeys
 3. Ensure browser is closed during migration (file locks)
@@ -316,11 +326,13 @@ If validation fails, see [Troubleshooting](#troubleshooting).
 **Symptom**: Lower migrated count than legacy count
 
 **Causes**:
+
 - Deduplication (expected) - duplicates were removed
 - Invalid signatures (if `--skip-verify` not used)
 - Corrupted events in legacy storage
 
 **Solutions**:
+
 1. Re-run with `--skip-verify` to migrate unsigned events
 2. Re-run with `--no-dedupe` to keep all duplicates
 3. Check error log for specific event IDs
@@ -330,6 +342,7 @@ If validation fails, see [Troubleshooting](#troubleshooting).
 **Symptom**: "Migration timed out" or hangs
 
 **Solutions**:
+
 1. Migrate in chunks: Run events migration separately
 2. Increase timeout (modify script)
 3. Close other applications (free up resources)
@@ -339,6 +352,7 @@ If validation fails, see [Troubleshooting](#troubleshooting).
 **Symptom**: Can't decrypt migrated keys
 
 **Solutions**:
+
 1. **Rollback** to legacy storage (see below)
 2. Re-migrate with new password
 3. **No recovery** without password - keys are permanently encrypted
@@ -371,6 +385,7 @@ npm run migrate:rollback -- --delete-new
 ```
 
 **Interactive prompts**:
+
 ```
 ╔══════════════════════════════════════════════════════════╗
 ║              NOSTR MIGRATION ROLLBACK                   ║

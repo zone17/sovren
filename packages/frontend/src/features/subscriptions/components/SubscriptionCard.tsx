@@ -120,9 +120,11 @@ export interface SubscriptionCardProps {
 
 /**
  * Convert satoshis to approximate USD (assumes $30,000 per BTC)
+ * TODO: Replace with live rate from a price feed service
  */
+const HARDCODED_BTC_USD_RATE = 30000; // TODO: Replace with live rate
 const satsToUSD = (sats: number): string => {
-  return ((sats / 100000000) * 30000).toFixed(2);
+  return ((sats / 100000000) * HARDCODED_BTC_USD_RATE).toFixed(2);
 };
 
 /**
@@ -153,11 +155,11 @@ const getStatusColor = (status: SubscriptionStatus): string => {
     case 'cancelled':
       return 'bg-red-100 text-red-800 border-red-200';
     case 'expired':
-      return 'bg-gray-100 text-gray-800 border-gray-200';
+      return 'bg-muted text-foreground border-border';
     case 'pending':
       return 'bg-blue-100 text-blue-800 border-blue-200';
     default:
-      return 'bg-gray-100 text-gray-800 border-gray-200';
+      return 'bg-muted text-foreground border-border';
   }
 };
 
@@ -242,7 +244,7 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
     : null;
 
   const cardClassName = `transition-all duration-200 hover:shadow-lg ${
-    subscription.status === 'active' ? 'border-green-200' : 'border-gray-200'
+    subscription.status === 'active' ? 'border-green-200' : 'border-border'
   } ${className}`;
 
   return (
@@ -300,17 +302,19 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
         </div>
 
         {/* Pricing */}
-        <div className="mt-3 pt-3 border-t border-gray-100">
+        <div className="mt-3 pt-3 border-t border-border">
           <div className="flex items-baseline gap-2">
             <Zap className="h-4 w-4 text-yellow-500" aria-hidden="true" />
-            <span className="text-2xl font-bold text-gray-900">
+            <span className="text-2xl font-bold text-foreground">
               {formatSats(subscription.amount, { abbreviate: true, suffix: false })}
             </span>
-            <span className="text-sm text-gray-600">
+            <span className="text-sm text-muted-foreground">
               {getBillingLabel(subscription.billingInterval)}
             </span>
           </div>
-          <p className="text-xs text-gray-500 mt-1">≈ ${satsToUSD(subscription.amount)} USD</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            ≈ ${satsToUSD(subscription.amount)} USD
+          </p>
         </div>
       </CardHeader>
 
@@ -319,14 +323,14 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
         {/* Subscription Details */}
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
-            <p className="text-gray-600 flex items-center gap-1">
+            <p className="text-muted-foreground flex items-center gap-1">
               <Calendar className="h-3 w-3" aria-hidden="true" />
               Start Date
             </p>
             <p className="font-medium">{new Date(subscription.startDate).toLocaleDateString()}</p>
           </div>
           <div>
-            <p className="text-gray-600 flex items-center gap-1">
+            <p className="text-muted-foreground flex items-center gap-1">
               <Clock className="h-3 w-3" aria-hidden="true" />
               End Date
             </p>
@@ -343,9 +347,9 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
                 : 'bg-blue-50 border border-blue-200'
             }`}
           >
-            <p className="text-sm font-medium text-gray-700">Next Payment</p>
+            <p className="text-sm font-medium text-foreground">Next Payment</p>
             <div className="flex items-center justify-between mt-1">
-              <p className="text-xs text-gray-600">
+              <p className="text-xs text-muted-foreground">
                 {new Date(subscription.nextPaymentDate).toLocaleDateString()}
               </p>
               {daysUntilPayment !== null && (
@@ -360,10 +364,10 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
         {/* Benefits */}
         {subscription.benefits && subscription.benefits.length > 0 && (
           <div>
-            <p className="text-sm font-medium text-gray-700 mb-2">Benefits:</p>
+            <p className="text-sm font-medium text-foreground mb-2">Benefits:</p>
             <ul className="space-y-1">
               {subscription.benefits.slice(0, 3).map((benefit, index) => (
-                <li key={index} className="flex items-start gap-2 text-sm text-gray-600">
+                <li key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
                   <CheckCircle
                     className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5"
                     aria-hidden="true"
@@ -372,7 +376,7 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
                 </li>
               ))}
               {subscription.benefits.length > 3 && (
-                <li className="text-xs text-gray-500 ml-6">
+                <li className="text-xs text-muted-foreground ml-6">
                   +{subscription.benefits.length - 3} more benefits
                 </li>
               )}
@@ -382,13 +386,13 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
 
         {/* Stats (Creator variant) */}
         {variant === 'creator' && showStats && subscription.subscriberCount !== undefined && (
-          <div className="bg-gray-50 rounded-lg p-3">
+          <div className="bg-muted rounded-lg p-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-gray-600" aria-hidden="true" />
-                <span className="text-sm font-medium text-gray-700">Subscribers</span>
+                <Users className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                <span className="text-sm font-medium text-foreground">Subscribers</span>
               </div>
-              <span className="text-lg font-bold text-gray-900">
+              <span className="text-lg font-bold text-foreground">
                 {subscription.subscriberCount}
               </span>
             </div>
@@ -397,8 +401,8 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
 
         {/* Auto-Renew Status */}
         {subscription.status === 'active' && (
-          <div className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
-            <span className="text-sm text-gray-700">Auto-renew</span>
+          <div className="flex items-center justify-between p-2 bg-muted rounded-md">
+            <span className="text-sm text-foreground">Auto-renew</span>
             <Badge variant={subscription.autoRenew ? 'default' : 'secondary'}>
               {subscription.autoRenew ? 'Enabled' : 'Disabled'}
             </Badge>

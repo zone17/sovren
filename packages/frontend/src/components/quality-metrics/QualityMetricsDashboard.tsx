@@ -181,7 +181,7 @@ export const QualityMetricsDashboard: React.FC<QualityMetricsDashboardProps> = (
                       : 'bg-red-500'
                 }
               />
-              <div className="flex justify-between text-xs text-gray-500">
+              <div className="flex justify-between text-xs text-muted-foreground">
                 <span>Min: {coverage.threshold.minimum}%</span>
                 <span>Target: {coverage.threshold.target}%</span>
               </div>
@@ -193,7 +193,7 @@ export const QualityMetricsDashboard: React.FC<QualityMetricsDashboardProps> = (
                 <div key={item.name} className="space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-sm">{item.name}</span>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-muted-foreground">
                       {item.covered}/{item.total}
                     </span>
                   </div>
@@ -516,7 +516,7 @@ export const QualityMetricsDashboard: React.FC<QualityMetricsDashboardProps> = (
     const getBugTrendIcon = (current: number, previous: number) => {
       if (current > previous) return <TrendingUp className="w-4 h-4 text-red-600" />;
       if (current < previous) return <TrendingDown className="w-4 h-4 text-green-600" />;
-      return <Activity className="w-4 h-4 text-gray-600" />;
+      return <Activity className="w-4 h-4 text-muted-foreground" />;
     };
 
     return (
@@ -545,17 +545,17 @@ export const QualityMetricsDashboard: React.FC<QualityMetricsDashboardProps> = (
             <div className="grid grid-cols-3 gap-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-red-600">{bugs.openBugs}</div>
-                <div className="text-xs text-gray-500">Open Bugs</div>
+                <div className="text-xs text-muted-foreground">Open Bugs</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-600">{bugs.resolvedBugs}</div>
-                <div className="text-xs text-gray-500">Resolved</div>
+                <div className="text-xs text-muted-foreground">Resolved</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-blue-600">
                   {bugs.averageResolutionTime.toFixed(1)}h
                 </div>
-                <div className="text-xs text-gray-500">Avg Resolution</div>
+                <div className="text-xs text-muted-foreground">Avg Resolution</div>
               </div>
             </div>
 
@@ -752,7 +752,7 @@ export const QualityMetricsDashboard: React.FC<QualityMetricsDashboardProps> = (
       const change = ((current - baseline) / baseline) * 100;
       const isImprovement = inverse ? change < 0 : change > 0;
 
-      if (Math.abs(change) < 5) return <Activity className="w-4 h-4 text-gray-600" />;
+      if (Math.abs(change) < 5) return <Activity className="w-4 h-4 text-muted-foreground" />;
       return isImprovement ? (
         <TrendingUp className="w-4 h-4 text-green-600" />
       ) : (
@@ -796,7 +796,7 @@ export const QualityMetricsDashboard: React.FC<QualityMetricsDashboardProps> = (
                         </span>
                       </div>
                     </div>
-                    <div className="flex justify-between text-xs text-gray-500">
+                    <div className="flex justify-between text-xs text-muted-foreground">
                       <span>
                         Baseline: {metric.baseline.toFixed(1)}
                         {metric.unit}
@@ -819,25 +819,25 @@ export const QualityMetricsDashboard: React.FC<QualityMetricsDashboardProps> = (
                   <div className="text-lg font-bold">
                     {performance.performance.responseTime.average.toFixed(0)}
                   </div>
-                  <div className="text-xs text-gray-500">Avg</div>
+                  <div className="text-xs text-muted-foreground">Avg</div>
                 </div>
                 <div className="text-center">
                   <div className="text-lg font-bold">
                     {performance.performance.responseTime.p95.toFixed(0)}
                   </div>
-                  <div className="text-xs text-gray-500">P95</div>
+                  <div className="text-xs text-muted-foreground">P95</div>
                 </div>
                 <div className="text-center">
                   <div className="text-lg font-bold">
                     {performance.performance.responseTime.p99.toFixed(0)}
                   </div>
-                  <div className="text-xs text-gray-500">P99</div>
+                  <div className="text-xs text-muted-foreground">P99</div>
                 </div>
                 <div className="text-center">
                   <div className="text-lg font-bold">
                     {performance.performance.responseTime.max.toFixed(0)}
                   </div>
-                  <div className="text-xs text-gray-500">Max</div>
+                  <div className="text-xs text-muted-foreground">Max</div>
                 </div>
               </div>
             </div>
@@ -1006,7 +1006,7 @@ export const QualityMetricsDashboard: React.FC<QualityMetricsDashboardProps> = (
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold">Quality Metrics Dashboard</h1>
-          <p className="text-gray-600">
+          <p className="text-muted-foreground">
             Comprehensive code quality, coverage, bug tracking, and performance monitoring
           </p>
         </div>
@@ -1050,7 +1050,7 @@ export const QualityMetricsDashboard: React.FC<QualityMetricsDashboardProps> = (
         </CardHeader>
         <CardContent>
           <Progress value={dashboard.overallScore} className="h-4" />
-          <div className="flex justify-between text-sm text-gray-500 mt-2">
+          <div className="flex justify-between text-sm text-muted-foreground mt-2">
             <span>Poor (0-40)</span>
             <span>Fair (40-60)</span>
             <span>Good (60-80)</span>
@@ -1131,9 +1131,11 @@ export const QualityMetricsDashboard: React.FC<QualityMetricsDashboardProps> = (
                     <Badge variant="outline">{recommendation.category}</Badge>
                   </div>
                   <h4 className="font-medium text-sm">{recommendation.action}</h4>
-                  <p className="text-xs text-gray-600">{recommendation.impact}</p>
+                  <p className="text-xs text-muted-foreground">{recommendation.impact}</p>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500">Effort: {recommendation.effort}</span>
+                    <span className="text-xs text-muted-foreground">
+                      Effort: {recommendation.effort}
+                    </span>
                     {recommendation.automated && (
                       <Badge variant="outline" className="text-xs">
                         <Zap className="w-3 h-3 mr-1" />

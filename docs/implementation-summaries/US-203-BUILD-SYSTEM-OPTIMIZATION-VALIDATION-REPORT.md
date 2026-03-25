@@ -421,14 +421,12 @@ manualChunks: {
 #### Custom Scripts:
 
 1. **`build-report.js`**: Comprehensive build analysis
-
    - Asset breakdown and categorization
    - Compression ratio analysis
    - Optimization recommendations
    - Performance metrics collection
 
 2. **`bundle-size-check.js`**: Budget enforcement
-
    - Performance budget validation
    - Size violation detection
    - Optimization suggestions

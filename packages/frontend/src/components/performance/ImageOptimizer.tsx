@@ -218,8 +218,8 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
 
   if (error) {
     return (
-      <div className={`bg-gray-200 flex items-center justify-center ${className}`}>
-        <Camera className="h-8 w-8 text-gray-400" />
+      <div className={`bg-muted flex items-center justify-center ${className}`}>
+        <Camera className="h-8 w-8 text-muted-foreground/60" />
       </div>
     );
   }
@@ -230,9 +230,9 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
       {isLoading && (
         <div className="absolute inset-0">
           {placeholder === 'skeleton' ? (
-            <div className="w-full h-full bg-gray-200 animate-pulse" />
+            <div className="w-full h-full bg-muted animate-pulse" />
           ) : (
-            <div className="w-full h-full bg-gray-100" />
+            <div className="w-full h-full bg-muted" />
           )}
         </div>
       )}
@@ -369,21 +369,21 @@ export const ImageOptimizer: React.FC<ImageOptimizerProps> = ({
     return (
       <div className="flex items-center justify-center p-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-2 text-gray-600">Optimizing images...</span>
+        <span className="ml-2 text-muted-foreground">Optimizing images...</span>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6 space-y-6">
+    <div className="bg-card rounded-lg shadow-lg p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <ImageIcon className="h-6 w-6 text-green-600" />
-          <h2 className="text-xl font-semibold text-gray-900">Image Optimizer</h2>
+          <h2 className="text-xl font-semibold text-foreground">Image Optimizer</h2>
         </div>
         <div className="flex items-center space-x-2">
-          <span className="text-sm text-gray-500">Images Optimized:</span>
+          <span className="text-sm text-muted-foreground">Images Optimized:</span>
           <span className="text-lg font-bold text-green-600">{optimizedImages.length}</span>
         </div>
       </div>
@@ -426,24 +426,24 @@ export const ImageOptimizer: React.FC<ImageOptimizerProps> = ({
 
       {/* Supported Formats */}
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Supported Formats</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-4">Supported Formats</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           {supportedFormats.map((format, index) => (
             <div
               key={index}
               className={`p-3 rounded-lg border ${
-                format.supported ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'
+                format.supported ? 'bg-green-50 border-green-200' : 'bg-muted border-border'
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className="font-medium text-gray-900">{format.format.toUpperCase()}</span>
+                <span className="font-medium text-foreground">{format.format.toUpperCase()}</span>
                 <span
-                  className={`text-sm ${format.supported ? 'text-green-600' : 'text-gray-500'}`}
+                  className={`text-sm ${format.supported ? 'text-green-600' : 'text-muted-foreground'}`}
                 >
                   {format.supported ? '✓' : '✗'}
                 </span>
               </div>
-              <p className="text-sm text-gray-600">{format.compression}% smaller</p>
+              <p className="text-sm text-muted-foreground">{format.compression}% smaller</p>
             </div>
           ))}
         </div>
@@ -452,7 +452,7 @@ export const ImageOptimizer: React.FC<ImageOptimizerProps> = ({
       {/* Performance Report */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Performance Report</h3>
+          <h3 className="text-lg font-semibold text-foreground">Performance Report</h3>
           <button
             onClick={generatePerformanceReport}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -465,23 +465,23 @@ export const ImageOptimizer: React.FC<ImageOptimizerProps> = ({
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <h4 className="font-medium text-gray-900">Format Distribution</h4>
+                <h4 className="font-medium text-foreground">Format Distribution</h4>
                 {Object.entries(performanceReport.formatDistribution).map(([format, count]) => (
                   <div key={format} className="flex justify-between">
-                    <span className="text-sm text-gray-600">{format.toUpperCase()}</span>
+                    <span className="text-sm text-muted-foreground">{format.toUpperCase()}</span>
                     <span className="font-mono text-sm">{count as number}</span>
                   </div>
                 ))}
               </div>
 
               <div className="space-y-2">
-                <h4 className="font-medium text-gray-900">Performance Stats</h4>
+                <h4 className="font-medium text-foreground">Performance Stats</h4>
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Total Images</span>
+                  <span className="text-sm text-muted-foreground">Total Images</span>
                   <span className="font-mono text-sm">{performanceReport.totalImages}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Average Load</span>
+                  <span className="text-sm text-muted-foreground">Average Load</span>
                   <span className="font-mono text-sm">
                     {performanceReport.averageLoadTime.toFixed(0)}ms
                   </span>
@@ -494,7 +494,7 @@ export const ImageOptimizer: React.FC<ImageOptimizerProps> = ({
 
       {/* Quick Actions */}
       <div className="border-t pt-4">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           <button
             onClick={optimizePageImages}

@@ -546,11 +546,13 @@ export const NOSTRSessionProtection: React.FC<SessionProtectionProps> = ({
 
   return (
     <div className={`nostr-session-protection ${className}`}>
-      <div className="bg-white rounded-xl shadow-lg p-6 space-y-6">
+      <div className="bg-card rounded-xl shadow-lg p-6 space-y-6">
         {/* Header */}
-        <div className="border-b pb-4">
-          <h2 className="text-2xl font-bold text-gray-900">NOSTR Session Protection</h2>
-          <p className="text-gray-600 mt-1">Monitor and protect your authentication session</p>
+        <div className="border-b border-border pb-4">
+          <h2 className="text-2xl font-bold text-foreground">NOSTR Session Protection</h2>
+          <p className="text-muted-foreground mt-1">
+            Monitor and protect your authentication session
+          </p>
         </div>
 
         {/* Error/Success Messages */}
@@ -607,7 +609,7 @@ export const NOSTRSessionProtection: React.FC<SessionProtectionProps> = ({
         {/* Current Session Info */}
         {currentSession && (
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">Current Session</h3>
+            <h3 className="text-lg font-semibold text-foreground">Current Session</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="bg-blue-50 p-3 rounded-lg">
                 <div className="text-sm text-blue-700 font-medium">Session Age</div>
@@ -636,13 +638,13 @@ export const NOSTRSessionProtection: React.FC<SessionProtectionProps> = ({
             </div>
 
             <div className="space-y-3">
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <div className="text-sm font-medium text-gray-700 mb-1">Session ID:</div>
+              <div className="bg-muted p-3 rounded-lg">
+                <div className="text-sm font-medium text-foreground mb-1">Session ID:</div>
                 <div className="font-mono text-sm break-all">{currentSession.session_id}</div>
               </div>
 
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <div className="text-sm font-medium text-gray-700 mb-1">Public Key:</div>
+              <div className="bg-muted p-3 rounded-lg">
+                <div className="text-sm font-medium text-foreground mb-1">Public Key:</div>
                 <div className="font-mono text-sm break-all">{currentSession.pubkey}</div>
               </div>
             </div>
@@ -651,25 +653,25 @@ export const NOSTRSessionProtection: React.FC<SessionProtectionProps> = ({
 
         {/* Session Configuration */}
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900">Session Configuration</h3>
+          <h3 className="text-lg font-semibold text-foreground">Session Configuration</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-gray-50 p-3 rounded-lg">
-              <div className="text-sm text-gray-700 font-medium">Idle Timeout</div>
-              <div className="text-lg font-bold text-gray-900">{config.idle_timeout / 60}m</div>
+            <div className="bg-muted p-3 rounded-lg">
+              <div className="text-sm text-foreground font-medium">Idle Timeout</div>
+              <div className="text-lg font-bold text-foreground">{config.idle_timeout / 60}m</div>
             </div>
-            <div className="bg-gray-50 p-3 rounded-lg">
-              <div className="text-sm text-gray-700 font-medium">Max Duration</div>
-              <div className="text-lg font-bold text-gray-900">
+            <div className="bg-muted p-3 rounded-lg">
+              <div className="text-sm text-foreground font-medium">Max Duration</div>
+              <div className="text-lg font-bold text-foreground">
                 {config.absolute_timeout / 3600}h
               </div>
             </div>
-            <div className="bg-gray-50 p-3 rounded-lg">
-              <div className="text-sm text-gray-700 font-medium">Warning Time</div>
-              <div className="text-lg font-bold text-gray-900">{config.warning_threshold}s</div>
+            <div className="bg-muted p-3 rounded-lg">
+              <div className="text-sm text-foreground font-medium">Warning Time</div>
+              <div className="text-lg font-bold text-foreground">{config.warning_threshold}s</div>
             </div>
-            <div className="bg-gray-50 p-3 rounded-lg">
-              <div className="text-sm text-gray-700 font-medium">Max Sessions</div>
-              <div className="text-lg font-bold text-gray-900">
+            <div className="bg-muted p-3 rounded-lg">
+              <div className="text-sm text-foreground font-medium">Max Sessions</div>
+              <div className="text-lg font-bold text-foreground">
                 {config.max_concurrent_sessions}
               </div>
             </div>
@@ -679,7 +681,7 @@ export const NOSTRSessionProtection: React.FC<SessionProtectionProps> = ({
         {/* Concurrent Sessions */}
         {concurrentSessions.length > 0 && (
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">Active Sessions</h3>
+            <h3 className="text-lg font-semibold text-foreground">Active Sessions</h3>
             <div className="space-y-2">
               {concurrentSessions.map((session) => (
                 <div
@@ -691,12 +693,12 @@ export const NOSTRSessionProtection: React.FC<SessionProtectionProps> = ({
                       <div className="font-medium">
                         {session.device_info} {session.is_current && '(Current)'}
                       </div>
-                      <div className="text-sm text-gray-600">
+                      <div className="text-sm text-muted-foreground">
                         IP: {session.ip_address} | Last Active:{' '}
                         {new Date(session.last_activity).toLocaleTimeString()}
                       </div>
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-muted-foreground">
                       {Math.floor((Date.now() - session.created_at) / 60000)}m ago
                     </div>
                   </div>
@@ -708,24 +710,26 @@ export const NOSTRSessionProtection: React.FC<SessionProtectionProps> = ({
 
         {/* Recent Activities */}
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900">Recent Activities</h3>
+          <h3 className="text-lg font-semibold text-foreground">Recent Activities</h3>
           <div className="space-y-2 max-h-48 overflow-y-auto">
             {sessionActivities
               .slice(-10)
               .reverse()
               .map((activity, index) => (
-                <div key={index} className="bg-gray-50 p-3 rounded-lg text-sm">
+                <div key={index} className="bg-muted p-3 rounded-lg text-sm">
                   <div className="flex justify-between items-center">
                     <div className="font-medium">{activity.action}</div>
-                    <div className="text-gray-500">
+                    <div className="text-muted-foreground">
                       {new Date(activity.timestamp).toLocaleTimeString()}
                     </div>
                   </div>
-                  <div className="text-gray-600 text-xs">IP: {activity.ip_address}</div>
+                  <div className="text-muted-foreground text-xs">IP: {activity.ip_address}</div>
                 </div>
               ))}
             {sessionActivities.length === 0 && (
-              <div className="text-gray-500 text-center py-4">No activities recorded yet</div>
+              <div className="text-muted-foreground text-center py-4">
+                No activities recorded yet
+              </div>
             )}
           </div>
         </div>
@@ -733,7 +737,7 @@ export const NOSTRSessionProtection: React.FC<SessionProtectionProps> = ({
         {/* Security Threats */}
         {detectedThreats.length > 0 && (
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">Security Threats</h3>
+            <h3 className="text-lg font-semibold text-foreground">Security Threats</h3>
             <div className="space-y-2">
               {detectedThreats
                 .slice(-5)
@@ -768,7 +772,7 @@ export const NOSTRSessionProtection: React.FC<SessionProtectionProps> = ({
                         {threat.severity.toUpperCase()}
                       </div>
                     </div>
-                    <div className="text-xs text-gray-500 mt-1">
+                    <div className="text-xs text-muted-foreground mt-1">
                       Detected: {new Date(threat.detected_at).toLocaleString()}
                     </div>
                   </div>
@@ -779,33 +783,33 @@ export const NOSTRSessionProtection: React.FC<SessionProtectionProps> = ({
 
         {/* Session Actions */}
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900">Session Management</h3>
+          <h3 className="text-lg font-semibold text-foreground">Session Management</h3>
           <div className="flex flex-wrap gap-3">
             <button
               onClick={() => recordActivity('manual_activity')}
               disabled={!currentSession}
-              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg transition-colors"
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-muted disabled:text-muted-foreground text-white px-4 py-2 rounded-lg transition-colors"
             >
               Record Activity
             </button>
             <button
               onClick={validateSession}
               disabled={!currentSession || isValidating}
-              className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg transition-colors"
+              className="bg-green-600 hover:bg-green-700 disabled:bg-muted disabled:text-muted-foreground text-white px-4 py-2 rounded-lg transition-colors"
             >
               {isValidating ? 'Validating...' : 'Validate Session'}
             </button>
             <button
               onClick={extendSession}
               disabled={!currentSession}
-              className="bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg transition-colors"
+              className="bg-yellow-600 hover:bg-yellow-700 disabled:bg-muted disabled:text-muted-foreground text-white px-4 py-2 rounded-lg transition-colors"
             >
               Extend Session
             </button>
             <button
               onClick={cleanupSession}
               disabled={!currentSession}
-              className="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg transition-colors"
+              className="bg-red-600 hover:bg-red-700 disabled:bg-muted disabled:text-muted-foreground text-white px-4 py-2 rounded-lg transition-colors"
             >
               End Session
             </button>

@@ -25,7 +25,7 @@ const ToastDemo: React.FC<{ onShow: () => void }> = ({ onShow }) => {
         >
           Show Toast
         </button>
-        <p className="mt-4 text-sm text-gray-600">
+        <p className="mt-4 text-sm text-muted-foreground">
           Click the button to show the toast notification. Toasts will appear in the top-right
           corner.
         </p>

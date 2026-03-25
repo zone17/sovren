@@ -19,6 +19,7 @@
 This document provides a comprehensive inventory of all secrets required for the Sovren automated deployment pipeline and backend services.
 
 **Security Principles**:
+
 - ✅ No secrets in code (ever)
 - ✅ Use GitHub Secrets for CI/CD
 - ✅ Environment-specific secrets
@@ -31,6 +32,7 @@ This document provides a comprehensive inventory of all secrets required for the
 ### Container Registry
 
 #### `GITHUB_TOKEN`
+
 - **Type**: Automatically provided by GitHub Actions
 - **Purpose**: Authenticate to GitHub Container Registry (GHCR)
 - **Permissions**: `packages:write`, `contents:read`
@@ -45,6 +47,7 @@ This document provides a comprehensive inventory of all secrets required for the
 ### Deployment Infrastructure
 
 #### `DEPLOYMENT_TOKEN`
+
 - **Type**: API token for deployment platform
 - **Purpose**: Authenticate to deployment service (Railway, Render, etc.)
 - **Where to Obtain**:
@@ -56,6 +59,7 @@ This document provides a comprehensive inventory of all secrets required for the
 - **Validation**: Test deployment to staging
 
 **Setup Instructions**:
+
 ```bash
 # Add to GitHub Secrets
 gh secret set DEPLOYMENT_TOKEN --body "your-token-here"
@@ -69,6 +73,7 @@ gh secret list | grep DEPLOYMENT_TOKEN
 ### Database & Cache
 
 #### `DATABASE_URL`
+
 - **Type**: PostgreSQL connection string
 - **Purpose**: Connect to Supabase PostgreSQL database
 - **Format**: `postgresql://[user]:[password]@[host]:[port]/[database]?sslmode=require`
@@ -78,11 +83,13 @@ gh secret list | grep DEPLOYMENT_TOKEN
 - **Validation**: Connection test in health check
 
 **Example**:
+
 ```
 postgresql://postgres.abcdefghij:password@aws-0-us-west-1.pooler.supabase.com:6543/postgres
 ```
 
 **Setup Instructions**:
+
 ```bash
 # Production
 gh secret set DATABASE_URL --body "postgresql://..."
@@ -92,6 +99,7 @@ gh secret set STAGING_DATABASE_URL --body "postgresql://..."
 ```
 
 #### `REDIS_URL`
+
 - **Type**: Redis connection string
 - **Purpose**: Connect to Redis cache
 - **Format**: `redis://[user]:[password]@[host]:[port]/[db]`
@@ -103,11 +111,13 @@ gh secret set STAGING_DATABASE_URL --body "postgresql://..."
 - **Validation**: PING command in health check
 
 **Example**:
+
 ```
 redis://:password@redis-12345.c1.us-west-1.ec2.cloud.redislabs.com:12345
 ```
 
 **Setup Instructions**:
+
 ```bash
 gh secret set REDIS_URL --body "redis://..."
 gh secret set STAGING_REDIS_URL --body "redis://..."
@@ -118,6 +128,7 @@ gh secret set STAGING_REDIS_URL --body "redis://..."
 ### Supabase
 
 #### `SUPABASE_URL`
+
 - **Type**: Project URL
 - **Purpose**: Connect to Supabase services
 - **Format**: `https://[project-id].supabase.co`
@@ -127,11 +138,13 @@ gh secret set STAGING_REDIS_URL --body "redis://..."
 - **Validation**: API reachability test
 
 **Example**:
+
 ```
 https://abcdefghij.supabase.co
 ```
 
 #### `SUPABASE_ANON_KEY`
+
 - **Type**: Public anonymous key
 - **Purpose**: Client-side authentication and RLS-protected queries
 - **Where to Obtain**: Supabase Dashboard → Settings → API → Project API keys (anon public)
@@ -142,6 +155,7 @@ https://abcdefghij.supabase.co
 **Security Note**: This key is safe to use in client-side code as it respects RLS policies.
 
 #### `SUPABASE_SERVICE_ROLE_KEY`
+
 - **Type**: Service role secret key
 - **Purpose**: Server-side operations bypassing RLS
 - **Where to Obtain**: Supabase Dashboard → Settings → API → Project API keys (service_role)
@@ -152,6 +166,7 @@ https://abcdefghij.supabase.co
 **Security Warning**: ⚠️ **NEVER expose this key in client-side code**. Server-side only.
 
 **Setup Instructions**:
+
 ```bash
 gh secret set SUPABASE_URL --body "https://..."
 gh secret set SUPABASE_ANON_KEY --body "eyJhbGci..."
@@ -163,6 +178,7 @@ gh secret set SUPABASE_SERVICE_ROLE_KEY --body "eyJhbGci..."
 ### Lightning Network
 
 #### `LNBITS_API_URL`
+
 - **Type**: LNbits instance URL
 - **Purpose**: Connect to Lightning Network node
 - **Format**: `https://[your-lnbits-instance].com`
@@ -172,11 +188,13 @@ gh secret set SUPABASE_SERVICE_ROLE_KEY --body "eyJhbGci..."
 - **Validation**: Health endpoint check
 
 **Example**:
+
 ```
 https://legend.lnbits.com
 ```
 
 #### `LNBITS_ADMIN_KEY`
+
 - **Type**: Admin API key
 - **Purpose**: Create invoices, check payment status
 - **Where to Obtain**: LNbits → Wallets → Your Wallet → API Info → Admin Key
@@ -187,6 +205,7 @@ https://legend.lnbits.com
 **Security Warning**: ⚠️ Grants full access to Lightning wallet. Protect carefully.
 
 **Setup Instructions**:
+
 ```bash
 gh secret set LNBITS_API_URL --body "https://..."
 gh secret set LNBITS_ADMIN_KEY --body "your-admin-key"
@@ -197,6 +216,7 @@ gh secret set LNBITS_ADMIN_KEY --body "your-admin-key"
 ### NOSTR Protocol
 
 #### `NOSTR_RELAYS`
+
 - **Type**: Comma-separated relay URLs
 - **Purpose**: Connect to NOSTR relay network
 - **Format**: `wss://relay1.com,wss://relay2.com,wss://relay3.com`
@@ -206,11 +226,13 @@ gh secret set LNBITS_ADMIN_KEY --body "your-admin-key"
 - **Validation**: WebSocket connection test
 
 **Recommended Relays**:
+
 ```
 wss://relay.damus.io,wss://relay.snort.social,wss://nos.lol,wss://relay.nostr.band
 ```
 
 **Setup Instructions**:
+
 ```bash
 gh secret set NOSTR_RELAYS --body "wss://relay.damus.io,wss://relay.snort.social"
 ```
@@ -220,6 +242,7 @@ gh secret set NOSTR_RELAYS --body "wss://relay.damus.io,wss://relay.snort.social
 ### Monitoring & Notifications
 
 #### `SLACK_WEBHOOK_URL`
+
 - **Type**: Incoming webhook URL
 - **Purpose**: Send deployment notifications to Slack
 - **Where to Obtain**:
@@ -232,16 +255,19 @@ gh secret set NOSTR_RELAYS --body "wss://relay.damus.io,wss://relay.snort.social
 - **Validation**: Test message in workflow
 
 **Example**:
+
 ```
 https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXX
 ```
 
 **Setup Instructions**:
+
 ```bash
 gh secret set SLACK_WEBHOOK_URL --body "https://hooks.slack.com/..."
 ```
 
 **Testing**:
+
 ```bash
 curl -X POST "$SLACK_WEBHOOK_URL" \
   -H "Content-Type: application/json" \
@@ -253,6 +279,7 @@ curl -X POST "$SLACK_WEBHOOK_URL" \
 ### Application Secrets
 
 #### `JWT_SECRET`
+
 - **Type**: Secret key for JWT signing
 - **Purpose**: Sign and verify authentication tokens
 - **Format**: Random string, minimum 32 characters
@@ -262,6 +289,7 @@ curl -X POST "$SLACK_WEBHOOK_URL" \
 - **Validation**: Token signing test
 
 **Generate New Secret**:
+
 ```bash
 # Generate 64-character random string
 openssl rand -hex 32
@@ -271,6 +299,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
 **Setup Instructions**:
+
 ```bash
 jwt_secret=$(openssl rand -hex 32)
 gh secret set JWT_SECRET --body "$jwt_secret"
@@ -308,6 +337,7 @@ gh secret delete SECRET_NAME
 5. Click **Add secret**
 
 **Environment-Specific Secrets**:
+
 1. Go to **Settings** → **Environments**
 2. Select environment (production/staging)
 3. Click **Add secret**
@@ -330,6 +360,7 @@ nano .env
 ```
 
 **`.env` Example**:
+
 ```env
 # Database
 DATABASE_URL=postgresql://postgres:password@localhost:5432/sovren_dev
@@ -377,6 +408,7 @@ All secrets configured in GitHub Environments → `production`:
 ### Quarterly Rotation (Every 90 Days)
 
 **Secrets to Rotate**:
+
 - `DEPLOYMENT_TOKEN`
 - `DATABASE_URL` (password component)
 - `REDIS_URL` (password component)
@@ -428,6 +460,7 @@ curl https://api.sovren.app/health
 6. **Audit logs** for suspicious activity
 
 **Example (Compromised JWT Secret)**:
+
 ```bash
 # 1. Generate new secret
 new_secret=$(openssl rand -hex 32)
@@ -454,12 +487,14 @@ gh run watch
 ### Secret Generation
 
 ✅ **DO**:
+
 - Use cryptographically secure random generators
 - Minimum 32 characters for secrets
 - Use different secrets for each environment
 - Document secret purpose and permissions
 
 ❌ **DON'T**:
+
 - Use predictable values (e.g., "password123")
 - Reuse secrets across environments
 - Share secrets via email or chat
@@ -468,12 +503,14 @@ gh run watch
 ### Secret Storage
 
 ✅ **DO**:
+
 - Use GitHub Secrets for CI/CD
 - Use environment variables for runtime
 - Encrypt secrets at rest
 - Use secret management services (HashiCorp Vault, AWS Secrets Manager)
 
 ❌ **DON'T**:
+
 - Hardcode secrets in source code
 - Store secrets in configuration files
 - Log secret values
@@ -482,12 +519,14 @@ gh run watch
 ### Access Control
 
 ✅ **DO**:
+
 - Limit access to production secrets
 - Use separate secrets for staging/production
 - Audit secret access regularly
 - Revoke access when team members leave
 
 ❌ **DON'T**:
+
 - Share admin credentials
 - Use same account for multiple services
 - Grant unnecessary permissions
@@ -496,12 +535,14 @@ gh run watch
 ### Rotation
 
 ✅ **DO**:
+
 - Rotate secrets every 90 days
 - Automate rotation where possible
 - Test rotation in staging first
 - Document rotation procedures
 
 ❌ **DON'T**:
+
 - Delay rotation when compromise suspected
 - Rotate without testing
 - Skip staging validation
@@ -514,11 +555,13 @@ gh run watch
 ### Secret Not Found Error
 
 **Symptom**:
+
 ```
 Error: Secret DATABASE_URL not found
 ```
 
 **Solution**:
+
 ```bash
 # 1. Verify secret exists
 gh secret list | grep DATABASE_URL
@@ -536,11 +579,13 @@ gh workflow run backend-deployment.yml
 ### Invalid Secret Value
 
 **Symptom**:
+
 ```
 Error: Connection to database failed - authentication failed
 ```
 
 **Solution**:
+
 ```bash
 # 1. Test secret locally
 export DATABASE_URL="<secret-value>"
@@ -559,11 +604,13 @@ gh workflow run backend-deployment.yml -f environment=staging
 ### Secret Rotation Failed
 
 **Symptom**:
+
 ```
 Deployment failed after secret rotation
 ```
 
 **Solution**:
+
 ```bash
 # 1. Rollback to previous secret value
 # (Use backup of old secret)
@@ -613,11 +660,13 @@ gh workflow run automated-rollback.yml \
 ## Support
 
 **Questions?**
+
 - Slack: `#engineering`
 - Docs: `/docs/deployment/`
 - Escalation: Create incident ticket
 
 **Security Issues?**
+
 - Report immediately to security team
 - Do not discuss in public channels
 - Follow incident response protocol

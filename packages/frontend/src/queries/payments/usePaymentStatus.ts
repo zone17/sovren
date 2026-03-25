@@ -17,11 +17,14 @@ interface PaymentStatusResponse {
  * Fetch payment status
  */
 const fetchPaymentStatus = async (paymentHash: string): Promise<PaymentStatusResponse> => {
-  const response = await fetch(`/api/payments/status/${paymentHash}`, {
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
+  const response = await fetch(
+    `/api/v1/payments/invoices?paymentHash=${encodeURIComponent(paymentHash)}`,
+    {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }
+  );
 
   if (!response.ok) {
     if (response.status === 404) {

@@ -30,14 +30,14 @@ Successfully implemented comprehensive automatic invoice expiration handling wit
 
 ### Files Created
 
-| File | Lines | Purpose |
-|------|-------|---------|
-| `packages/backend/src/services/payment/InvoiceExpirationService.ts` | 480+ | Core expiration service with scheduling |
-| `packages/backend/src/services/payment/__tests__/InvoiceExpirationService.test.ts` | 685+ | Comprehensive test suite (100% coverage) |
-| `packages/backend/src/templates/invoice-expired.html` | 120+ | Professional HTML email template |
-| `supabase/migrations/20251023_add_invoice_expiration.sql` | 50+ | Database indexes for performance |
-| `docs/architecture/diagrams/payment/invoice-expiration-flow.mmd` | 60+ | Expiration flow diagram |
-| `docs/architecture/diagrams/payment/invoice-expiration-sequence.mmd` | 40+ | Sequence diagram |
+| File                                                                               | Lines | Purpose                                  |
+| ---------------------------------------------------------------------------------- | ----- | ---------------------------------------- |
+| `packages/backend/src/services/payment/InvoiceExpirationService.ts`                | 480+  | Core expiration service with scheduling  |
+| `packages/backend/src/services/payment/__tests__/InvoiceExpirationService.test.ts` | 685+  | Comprehensive test suite (100% coverage) |
+| `packages/backend/src/templates/invoice-expired.html`                              | 120+  | Professional HTML email template         |
+| `supabase/migrations/20251023_add_invoice_expiration.sql`                          | 50+   | Database indexes for performance         |
+| `docs/architecture/diagrams/payment/invoice-expiration-flow.mmd`                   | 60+   | Expiration flow diagram                  |
+| `docs/architecture/diagrams/payment/invoice-expiration-sequence.mmd`               | 40+   | Sequence diagram                         |
 
 **Total Lines of Code**: 1,435+ lines
 **Test Coverage**: 100%
@@ -203,11 +203,13 @@ CREATE INDEX idx_payments_pending_expired
 ### Test Suites (100% Coverage)
 
 #### 1. Initialization Tests
+
 - ✅ Default configuration
 - ✅ Custom configuration
 - ✅ Auto-start behavior
 
 #### 2. Expiration Detection Tests
+
 - ✅ Find and expire single invoice
 - ✅ Handle multiple expired invoices
 - ✅ Handle no expired invoices
@@ -216,28 +218,34 @@ CREATE INDEX idx_payments_pending_expired
 - ✅ Email notification errors
 
 #### 3. Concurrent Check Prevention
+
 - ✅ Skip check when already running
 - ✅ Lock release after check completes
 
 #### 4. Batch Processing Tests
+
 - ✅ Respect batch size limits
 - ✅ Process large batches efficiently
 
 #### 5. Scheduler Tests
+
 - ✅ Start scheduler
 - ✅ Stop scheduler
 - ✅ Prevent duplicate schedulers
 
 #### 6. Manual Expiration Tests
+
 - ✅ Expire specific payment
 - ✅ Error handling for non-existent payments
 - ✅ Error handling for non-PENDING payments
 
 #### 7. Metrics Tests
+
 - ✅ Accurate metric tracking
 - ✅ Metric updates after checks
 
 #### 8. Shutdown Tests
+
 - ✅ Clean shutdown process
 
 **Total Test Cases**: 25+
@@ -249,30 +257,30 @@ CREATE INDEX idx_payments_pending_expired
 
 ### Performance
 
-| Metric | Target | Actual | Status |
-|--------|--------|--------|--------|
-| Expiration check (10k invoices) | <5s | <5s | ✅ |
-| Transition time (p95) | <100ms | <100ms | ✅ |
-| Email send time | async | async | ✅ |
-| Memory usage (batch) | <100MB | <50MB | ✅ |
+| Metric                          | Target | Actual | Status |
+| ------------------------------- | ------ | ------ | ------ |
+| Expiration check (10k invoices) | <5s    | <5s    | ✅     |
+| Transition time (p95)           | <100ms | <100ms | ✅     |
+| Email send time                 | async  | async  | ✅     |
+| Memory usage (batch)            | <100MB | <50MB  | ✅     |
 
 ### Reliability
 
-| Metric | Target | Actual | Status |
-|--------|--------|--------|--------|
-| State transition atomicity | 100% | 100% | ✅ |
-| Idempotency | 100% | 100% | ✅ |
-| Error recovery | Graceful | Graceful | ✅ |
-| Audit trail | Complete | Complete | ✅ |
+| Metric                     | Target   | Actual   | Status |
+| -------------------------- | -------- | -------- | ------ |
+| State transition atomicity | 100%     | 100%     | ✅     |
+| Idempotency                | 100%     | 100%     | ✅     |
+| Error recovery             | Graceful | Graceful | ✅     |
+| Audit trail                | Complete | Complete | ✅     |
 
 ### Code Quality
 
-| Metric | Target | Actual | Status |
-|--------|--------|--------|--------|
-| Test coverage | 95% | 100% | ✅ |
-| TypeScript strict mode | Yes | Yes | ✅ |
-| Documentation | Complete | Complete | ✅ |
-| Linting errors | 0 | 0 | ✅ |
+| Metric                 | Target   | Actual   | Status |
+| ---------------------- | -------- | -------- | ------ |
+| Test coverage          | 95%      | 100%     | ✅     |
+| TypeScript strict mode | Yes      | Yes      | ✅     |
+| Documentation          | Complete | Complete | ✅     |
+| Linting errors         | 0        | 0        | ✅     |
 
 ---
 
@@ -323,25 +331,25 @@ CREATE INDEX idx_payments_pending_expired
 
 ```yaml
 Alerts:
-  - name: "High Expiration Failure Rate"
-    condition: "(totalFailed / totalExpired) > 0.1"
+  - name: 'High Expiration Failure Rate'
+    condition: '(totalFailed / totalExpired) > 0.1'
     severity: WARNING
-    action: "Investigate email service or database issues"
+    action: 'Investigate email service or database issues'
 
-  - name: "Expiration Service Down"
-    condition: "isRunning == false"
+  - name: 'Expiration Service Down'
+    condition: 'isRunning == false'
     severity: CRITICAL
-    action: "Restart service immediately"
+    action: 'Restart service immediately'
 
-  - name: "Slow Expiration Checks"
-    condition: "lastCheckDuration > 10000"
+  - name: 'Slow Expiration Checks'
+    condition: 'lastCheckDuration > 10000'
     severity: WARNING
-    action: "Check database performance and batch size"
+    action: 'Check database performance and batch size'
 
-  - name: "No Checks Running"
-    condition: "lastCheckAt < (now - 10 minutes)"
+  - name: 'No Checks Running'
+    condition: 'lastCheckAt < (now - 10 minutes)'
     severity: CRITICAL
-    action: "Service may be crashed or hung"
+    action: 'Service may be crashed or hung'
 ```
 
 ---
@@ -350,11 +358,11 @@ Alerts:
 
 ### Story #003 Acceptance Criteria
 
-| # | Criteria | Status | Evidence |
-|---|----------|--------|----------|
-| 1 | Invoice with expiresAt in past transitions to EXPIRED | ✅ | `checkExpiredInvoices()` method |
-| 2 | User receives email notification | ✅ | `sendInvoiceExpiredEmail()` call |
-| 3 | Expired invoice removed from active queue | ✅ | State transition to EXPIRED |
+| #   | Criteria                                              | Status | Evidence                         |
+| --- | ----------------------------------------------------- | ------ | -------------------------------- |
+| 1   | Invoice with expiresAt in past transitions to EXPIRED | ✅     | `checkExpiredInvoices()` method  |
+| 2   | User receives email notification                      | ✅     | `sendInvoiceExpiredEmail()` call |
+| 3   | Expired invoice removed from active queue             | ✅     | State transition to EXPIRED      |
 
 All acceptance criteria met with comprehensive implementation.
 
@@ -408,19 +416,16 @@ import { createInvoiceExpirationService } from './services/payment/InvoiceExpira
 import { createPaymentStateMachine } from './services/payment/PaymentStateMachine';
 import { emailService } from './services/email';
 
-const stateMachine = createPaymentStateMachine(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_KEY
-);
+const stateMachine = createPaymentStateMachine(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
 const expirationService = createInvoiceExpirationService({
   supabase,
   stateMachine,
   emailService,
-  logger: console,  // Or your structured logger
-  checkIntervalMs: 5 * 60 * 1000,  // 5 minutes
+  logger: console, // Or your structured logger
+  checkIntervalMs: 5 * 60 * 1000, // 5 minutes
   batchSize: 100,
-  autoSchedule: true  // Start automatically
+  autoSchedule: true, // Start automatically
 });
 
 // Service starts automatically if autoSchedule: true
@@ -435,7 +440,7 @@ app.get('/health/invoice-expiration', (req, res) => {
   const metrics = expirationService.getMetrics();
   res.json({
     healthy: metrics.isRunning,
-    metrics
+    metrics,
   });
 });
 ```
@@ -512,6 +517,7 @@ app.get('/health/invoice-expiration', (req, res) => {
 ### Ready for Sprint 1
 
 All foundation work complete. Payment state machine is fully operational with:
+
 - Complete type system
 - Atomic state transitions
 - Automatic invoice expiration

@@ -19,6 +19,7 @@ import { getClientIP } from '../utils/client-ip';
 import { z } from 'zod';
 import { DatabaseSessionManager } from '../services/DatabaseSessionManager';
 import { SessionMetadata } from '@shared/services/UnifiedSessionManager';
+import { authenticate, requireAuth } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -684,10 +685,10 @@ router.get(
 router.post(
   '/cleanup',
   revokeRateLimit,
+  authenticate,
+  requireAuth,
   asyncHandler(async (req: Request, res: Response) => {
     try {
-      // TODO: Add admin authentication middleware here
-
       const cleanedCount = await sessionManager.cleanExpiredSessions();
 
       return res.status(200).json({

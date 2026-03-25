@@ -172,12 +172,12 @@ export interface CreatorProfileExtendedEvent extends NostrEvent {
   kind: SovrenEventKind.CREATOR_PROFILE_EXTENDED;
   content: string; // JSON stringified CreatorProfileExtendedContent
   tags: Array<
-    | ['d', string]                    // Profile identifier (usually pubkey)
-    | ['name', string]                 // Display name (for indexing)
-    | ['category', string]             // Creator category (multiple allowed)
-    | ['lightning', string]            // Lightning address
-    | ['website', string]              // Website URL
-    | ['l', string, string]            // Language (ISO 639-1)
+    | ['d', string] // Profile identifier (usually pubkey)
+    | ['name', string] // Display name (for indexing)
+    | ['category', string] // Creator category (multiple allowed)
+    | ['lightning', string] // Lightning address
+    | ['website', string] // Website URL
+    | ['l', string, string] // Language (ISO 639-1)
     | string[]
   >;
 }
@@ -253,11 +253,15 @@ export const ContentMonetizationContentSchema = z.object({
   defaultTierId: z.string().uuid(),
 
   // Revenue Sharing
-  revenueShare: z.array(z.object({
-    pubkey: z.string().length(64),
-    percentage: z.number().min(0).max(100),
-    role: z.string().optional(),
-  })).optional(),
+  revenueShare: z
+    .array(
+      z.object({
+        pubkey: z.string().length(64),
+        percentage: z.number().min(0).max(100),
+        role: z.string().optional(),
+      })
+    )
+    .optional(),
 
   // Access Control
   requiresVerification: z.boolean().default(false),
@@ -280,13 +284,13 @@ export interface ContentMonetizationEvent extends NostrEvent {
   kind: SovrenEventKind.CONTENT_MONETIZATION;
   content: string; // JSON stringified ContentMonetizationContent
   tags: Array<
-    | ['d', string]                    // Content identifier
-    | ['title', string]                // Content title
-    | ['type', string]                 // Content type
-    | ['price', string]                // Default price
-    | ['currency', string]             // Default currency
-    | ['e', string]                    // Related content event
-    | ['p', string]                    // Creator pubkey
+    | ['d', string] // Content identifier
+    | ['title', string] // Content title
+    | ['type', string] // Content type
+    | ['price', string] // Default price
+    | ['currency', string] // Default currency
+    | ['e', string] // Related content event
+    | ['p', string] // Creator pubkey
     | string[]
   >;
 }
@@ -379,11 +383,11 @@ export interface AnalyticsEvent extends NostrEvent {
   kind: SovrenEventKind.ANALYTICS_EVENT;
   content: string; // JSON stringified AnalyticsEventContent
   tags: Array<
-    | ['d', string]                    // Analytics event identifier
-    | ['content', string]              // Content ID being tracked
-    | ['type', string]                 // Analytics event type
-    | ['period', string]               // Time period (ISO 8601)
-    | ['p', string]                    // Creator pubkey
+    | ['d', string] // Analytics event identifier
+    | ['content', string] // Content ID being tracked
+    | ['type', string] // Analytics event type
+    | ['period', string] // Time period (ISO 8601)
+    | ['p', string] // Creator pubkey
     | string[]
   >;
 }
@@ -477,11 +481,11 @@ export interface SubscriptionManagementEvent extends NostrEvent {
   kind: SovrenEventKind.SUBSCRIPTION_MANAGEMENT;
   content: string; // JSON stringified SubscriptionManagementContent
   tags: Array<
-    | ['d', string]                    // Subscription config identifier
-    | ['p', string]                    // Creator pubkey
-    | ['tier', string]                 // Tier ID (multiple allowed)
-    | ['price', string]                // Default price
-    | ['currency', string]             // Currency
+    | ['d', string] // Subscription config identifier
+    | ['p', string] // Creator pubkey
+    | ['tier', string] // Tier ID (multiple allowed)
+    | ['price', string] // Default price
+    | ['currency', string] // Currency
     | string[]
   >;
 }
@@ -494,24 +498,24 @@ export interface SubscriptionManagementEvent extends NostrEvent {
  * Recommendation source
  */
 export enum RecommendationSource {
-  AI_COLLABORATIVE = 'ai_collaborative',     // Collaborative filtering
-  AI_CONTENT_BASED = 'ai_content_based',     // Content-based filtering
-  AI_HYBRID = 'ai_hybrid',                   // Hybrid approach
-  TRENDING = 'trending',                     // Trending content
-  FOLLOWING = 'following',                   // From followed creators
-  SIMILAR_USERS = 'similar_users',           // Similar user preferences
-  MANUAL = 'manual',                         // Manually curated
+  AI_COLLABORATIVE = 'ai_collaborative', // Collaborative filtering
+  AI_CONTENT_BASED = 'ai_content_based', // Content-based filtering
+  AI_HYBRID = 'ai_hybrid', // Hybrid approach
+  TRENDING = 'trending', // Trending content
+  FOLLOWING = 'following', // From followed creators
+  SIMILAR_USERS = 'similar_users', // Similar user preferences
+  MANUAL = 'manual', // Manually curated
 }
 
 /**
  * Recommendation confidence and scoring
  */
 export const RecommendationScoreSchema = z.object({
-  confidence: z.number().min(0).max(1),      // 0-1 confidence score
-  relevance: z.number().min(0).max(1),       // 0-1 relevance score
-  quality: z.number().min(0).max(1),         // 0-1 quality score
-  engagement: z.number().min(0).max(1),      // 0-1 predicted engagement
-  overall: z.number().min(0).max(1),         // 0-1 overall score
+  confidence: z.number().min(0).max(1), // 0-1 confidence score
+  relevance: z.number().min(0).max(1), // 0-1 relevance score
+  quality: z.number().min(0).max(1), // 0-1 quality score
+  engagement: z.number().min(0).max(1), // 0-1 predicted engagement
+  overall: z.number().min(0).max(1), // 0-1 overall score
 });
 
 export type RecommendationScore = z.infer<typeof RecommendationScoreSchema>;
@@ -574,11 +578,11 @@ export interface ContentRecommendationsEvent extends NostrEvent {
   kind: SovrenEventKind.CONTENT_RECOMMENDATIONS;
   content: string; // JSON stringified ContentRecommendationsContent
   tags: Array<
-    | ['d', string]                    // Recommendations identifier
-    | ['p', string]                    // Target user pubkey
-    | ['feed', string]                 // Feed type
-    | ['algo', string]                 // Algorithm name
-    | ['expiration', string]           // Expiration timestamp
+    | ['d', string] // Recommendations identifier
+    | ['p', string] // Target user pubkey
+    | ['feed', string] // Feed type
+    | ['algo', string] // Algorithm name
+    | ['expiration', string] // Expiration timestamp
     | string[]
   >;
 }
@@ -648,7 +652,7 @@ export function buildCreatorProfileExtendedTemplate(
   ];
 
   // Add categories
-  content.categories.forEach(category => {
+  content.categories.forEach((category) => {
     tags.push(['category', category]);
   });
 
@@ -676,7 +680,7 @@ export function buildContentMonetizationTemplate(
   // Validate content
   ContentMonetizationContentSchema.parse(content);
 
-  const defaultTier = content.pricingTiers.find(t => t.id === content.defaultTierId);
+  const defaultTier = content.pricingTiers.find((t) => t.id === content.defaultTierId);
 
   const tags: string[][] = [
     ['d', contentId],
@@ -741,7 +745,7 @@ export function buildSubscriptionManagementTemplate(
   ];
 
   // Add tier tags
-  content.tiers.forEach(tier => {
+  content.tiers.forEach((tier) => {
     tags.push(['tier', tier.id]);
   });
 

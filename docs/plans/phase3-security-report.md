@@ -48,6 +48,7 @@ router.post(
 **Risk**: An attacker could submit an extremely large `content_body` (gigabytes) to cause memory exhaustion, or inject unexpected types for `relays` (not guaranteed to be an array of strings). The `signature` field is stored directly without format validation.
 
 **Recommendation**: Add a Zod schema:
+
 ```typescript
 const SignContentSchema = z.object({
   content_id: z.string().uuid(),
@@ -71,7 +72,7 @@ In `storeEncryptedTokens()`, the access token and refresh token are encrypted wi
 ```typescript
 const row: any = {
   access_token_encrypted: accessEncrypted.encrypted,
-  token_iv: accessEncrypted.iv,          // access token IV
+  token_iv: accessEncrypted.iv, // access token IV
   token_auth_tag: accessEncrypted.authTag, // access token auth tag
   refresh_token_encrypted: refreshEncrypted?.encrypted || null,
   // refresh token IV and auth tag are LOST
@@ -83,6 +84,7 @@ In `refreshExpiringTokens()` (line 270-275), the refresh token is decrypted usin
 **Risk**: Token refresh will always fail in production, leaving users with expired connections that cannot be auto-renewed. While this is more of a functionality bug than a direct exploit, it means tokens will accumulate as expired, and the refresh mechanism is effectively broken.
 
 **Recommendation**: Add separate columns `refresh_token_iv` and `refresh_token_auth_tag` to the `platform_connections` table, and store/retrieve them independently:
+
 ```sql
 ALTER TABLE platform_connections ADD COLUMN refresh_token_iv BYTEA;
 ALTER TABLE platform_connections ADD COLUMN refresh_token_auth_tag BYTEA;
@@ -99,7 +101,10 @@ ALTER TABLE platform_connections ADD COLUMN refresh_token_auth_tag BYTEA;
 The OAuth CSRF state store is an unbounded in-memory `Map`:
 
 ```typescript
-const oauthStateStore = new Map<string, { creatorId: string; platform: SupportedPlatform; expiresAt: number }>();
+const oauthStateStore = new Map<
+  string,
+  { creatorId: string; platform: SupportedPlatform; expiresAt: number }
+>();
 ```
 
 While expired entries are cleaned every 5 minutes, an attacker who is authenticated can call `POST /connect/:platform` repeatedly at 10 req/min (rate limit) to create 50 state entries per 5-minute cleanup cycle. With multiple authenticated accounts or a botnet, this could accumulate millions of entries, exhausting Node.js heap memory.
@@ -107,6 +112,7 @@ While expired entries are cleaned every 5 minutes, an attacker who is authentica
 **Risk**: Memory exhaustion leading to process crash (OOM kill).
 
 **Recommendation**:
+
 1. Add a max size check (e.g., 10,000 entries) and reject new connections when full.
 2. Better: Replace with Redis-backed store (already noted as TODO in the code comment on line 23).
 3. The comment says "In production, use Redis-backed session store" — this should be tracked as a pre-production requirement.
@@ -131,6 +137,7 @@ The `platform` parameter is Zod-validated as an enum (good), so XSS via the redi
 More importantly: while the state parameter provides CSRF protection, if a valid state token is somehow leaked (e.g., through browser history, referer headers), an attacker could complete the OAuth flow and bind their external platform account to the victim's Sovren account. The callback should verify the session/IP of the user who initiated the flow.
 
 **Recommendation**:
+
 1. Store the originating session identifier in the state store and verify it during callback.
 2. Ensure `FRONTEND_URL` is required (not optional with localhost default) in production.
 
@@ -161,6 +168,7 @@ body: new URLSearchParams({
 **Risk**: If the provider strictly enforces PKCE (Twitter does), the token exchange will fail. If the provider is lenient, PKCE protection is missing, leaving the OAuth flow vulnerable to authorization code interception attacks.
 
 **Recommendation**:
+
 1. Generate a `code_verifier` (random 43-128 char string) and compute `code_challenge = BASE64URL(SHA256(code_verifier))`.
 2. Store the `code_verifier` alongside the state token in the state store.
 3. Send `code_verifier` in the token exchange request.
@@ -202,9 +210,11 @@ This is documented as a placeholder, but it means the provenance certificate cur
 The `instance_url` is passed as an option to `getAuthorizationUrl` and `exchangeCodeForTokens`, but it defaults to `https://mastodon.social` and is not persisted in the database. When the token needs to be refreshed or revoked, the original instance URL is lost.
 
 Additionally, the `instance_url` from user input is used directly in a `fetch()` URL without SSRF validation:
+
 ```typescript
 const response = await fetch(`${instanceUrl}/oauth/token`, { ... });
 ```
+
 A user could pass `http://169.254.169.254/latest/meta-data` or internal network addresses as `instance_url`, causing SSRF.
 
 **Recommendation**: Validate `instance_url` against an allowlist of known Mastodon instances, or at minimum validate it's a public HTTPS URL and not a private/internal IP.
@@ -246,6 +256,7 @@ The `GetPulseHistoryQuerySchema` already validates but doesn't include `limit`/`
 **Files**: Multiple adapters
 
 Error messages from platform API calls include HTTP status codes:
+
 ```typescript
 throw new Error(`Twitter token exchange failed: ${response.status}`);
 ```
@@ -258,73 +269,74 @@ While these are caught by error handlers, if the global error handler passes thr
 
 ### OAuth Token Security (EPIC-009)
 
-| Check | Status | Notes |
-|-------|--------|-------|
-| Encryption algorithm | PASS | AES-256-GCM (authenticated encryption) |
-| Key source | PASS | Environment variable `PLATFORM_TOKEN_ENCRYPTION_KEY`, validated as 64-char hex |
-| IV generation | PASS | `randomBytes(16)` — cryptographically random, unique per encryption |
-| IV reuse | PASS | No reuse — fresh IV generated each call |
-| Auth tag verification | PASS | `setAuthTag()` called before decryption |
-| Key length validation | PASS | Both encrypt/decrypt validate 32-byte key length |
-| Token in logs | PASS | Comments explicitly warn against logging tokens; log statements only include IDs |
-| Token in API responses | PASS | Encrypted blobs stored; `getStatus()` only returns metadata, not tokens |
-| Token in error messages | PASS | Error messages don't include token values |
-| CSRF state parameter | PASS | 32-byte random state, validated on callback, single-use, 10-min expiry |
-| State token cleanup | PASS | Expired entries cleaned every 5 minutes |
-| Refresh token IV/tag | **FAIL** | P2-002: Refresh token uses wrong IV/auth tag |
-| PKCE implementation | **FAIL** | P2-005: code_challenge_method declared but not implemented |
-| Token refresh locking | INFO | P3-005: No distributed lock for concurrent refresh |
+| Check                   | Status   | Notes                                                                            |
+| ----------------------- | -------- | -------------------------------------------------------------------------------- |
+| Encryption algorithm    | PASS     | AES-256-GCM (authenticated encryption)                                           |
+| Key source              | PASS     | Environment variable `PLATFORM_TOKEN_ENCRYPTION_KEY`, validated as 64-char hex   |
+| IV generation           | PASS     | `randomBytes(16)` — cryptographically random, unique per encryption              |
+| IV reuse                | PASS     | No reuse — fresh IV generated each call                                          |
+| Auth tag verification   | PASS     | `setAuthTag()` called before decryption                                          |
+| Key length validation   | PASS     | Both encrypt/decrypt validate 32-byte key length                                 |
+| Token in logs           | PASS     | Comments explicitly warn against logging tokens; log statements only include IDs |
+| Token in API responses  | PASS     | Encrypted blobs stored; `getStatus()` only returns metadata, not tokens          |
+| Token in error messages | PASS     | Error messages don't include token values                                        |
+| CSRF state parameter    | PASS     | 32-byte random state, validated on callback, single-use, 10-min expiry           |
+| State token cleanup     | PASS     | Expired entries cleaned every 5 minutes                                          |
+| Refresh token IV/tag    | **FAIL** | P2-002: Refresh token uses wrong IV/auth tag                                     |
+| PKCE implementation     | **FAIL** | P2-005: code_challenge_method declared but not implemented                       |
+| Token refresh locking   | INFO     | P3-005: No distributed lock for concurrent refresh                               |
 
 ### Content Shield Security (EPIC-008)
 
-| Check | Status | Notes |
-|-------|--------|-------|
-| Provenance signing input validation | **FAIL** | P2-001: No Zod schema on POST /provenance/sign |
-| Provenance record immutability | PASS | Only status column updatable; revoke is soft-delete |
-| Certificate access control | PASS | Creator pubkey checked before certificate generation |
-| Fingerprint access control | PASS | Route enforces `creatorId === req.user.nostr_pubkey` |
-| Alert status transitions | PASS | Zod enum restricts to valid statuses; no escalation from 'new' to invalid states |
-| Content scanner SSRF | PASS | Relay connection is placeholder (returns []); no actual outbound connections yet |
-| NOSTR key handling | PASS | Keys handled via existing NOSTR service; no private keys stored |
-| DMCA report access control | PASS | Auth + requireCreator middleware on all DMCA endpoints |
+| Check                               | Status   | Notes                                                                            |
+| ----------------------------------- | -------- | -------------------------------------------------------------------------------- |
+| Provenance signing input validation | **FAIL** | P2-001: No Zod schema on POST /provenance/sign                                   |
+| Provenance record immutability      | PASS     | Only status column updatable; revoke is soft-delete                              |
+| Certificate access control          | PASS     | Creator pubkey checked before certificate generation                             |
+| Fingerprint access control          | PASS     | Route enforces `creatorId === req.user.nostr_pubkey`                             |
+| Alert status transitions            | PASS     | Zod enum restricts to valid statuses; no escalation from 'new' to invalid states |
+| Content scanner SSRF                | PASS     | Relay connection is placeholder (returns []); no actual outbound connections yet |
+| NOSTR key handling                  | PASS     | Keys handled via existing NOSTR service; no private keys stored                  |
+| DMCA report access control          | PASS     | Auth + requireCreator middleware on all DMCA endpoints                           |
 
 ### Wellness Data Privacy (EPIC-007)
 
-| Check | Status | Notes |
-|-------|--------|-------|
-| Auth on all endpoints | PASS | All routes have `authenticate` + `requireCreator` (except `/benchmark` which uses `optionalAuth`) |
-| Creator data isolation | PASS | All queries filter by `req.user!.nostr_pubkey` |
-| IDOR prevention | PASS | No user-supplied creator ID in wellness queries — always from auth token |
-| GDPR delete endpoint | PASS | `DELETE /data` calls `deleteAllWellnessData()` |
-| Pulse delete endpoint | PASS | `DELETE /pulse` deletes pulse history |
-| Benchmark anonymity | PASS | Minimum 10 participants required; no individual data exposed |
-| Input validation | PASS | Zod schemas on all mutation endpoints |
-| XSS in auto-response | PASS | `UpdateBoundariesSchema` strips HTML tags, event handlers, and javascript: URIs |
-| Rate limiting | PASS | Read-only + mutation + expensive rate limiters applied appropriately |
+| Check                  | Status | Notes                                                                                             |
+| ---------------------- | ------ | ------------------------------------------------------------------------------------------------- |
+| Auth on all endpoints  | PASS   | All routes have `authenticate` + `requireCreator` (except `/benchmark` which uses `optionalAuth`) |
+| Creator data isolation | PASS   | All queries filter by `req.user!.nostr_pubkey`                                                    |
+| IDOR prevention        | PASS   | No user-supplied creator ID in wellness queries — always from auth token                          |
+| GDPR delete endpoint   | PASS   | `DELETE /data` calls `deleteAllWellnessData()`                                                    |
+| Pulse delete endpoint  | PASS   | `DELETE /pulse` deletes pulse history                                                             |
+| Benchmark anonymity    | PASS   | Minimum 10 participants required; no individual data exposed                                      |
+| Input validation       | PASS   | Zod schemas on all mutation endpoints                                                             |
+| XSS in auto-response   | PASS   | `UpdateBoundariesSchema` strips HTML tags, event handlers, and javascript: URIs                   |
+| Rate limiting          | PASS   | Read-only + mutation + expensive rate limiters applied appropriately                              |
 
 ### Cross-Cutting Security
 
-| Check | Status | Notes |
-|-------|--------|-------|
-| Rate limiting on new endpoints | PASS | All route files apply `readOnlyRateLimiter` globally + `mutationRateLimiter`/`expensiveRateLimiter` on mutations |
-| Input validation (Zod) | PARTIAL | All routes except POST /provenance/sign have Zod validation |
-| CSRF protection | PASS | OAuth state parameter; other mutations require Bearer token (stateless) |
-| SQL injection | PASS | All queries use Supabase client (parameterized); no raw SQL |
-| XSS in API responses | PASS | API returns JSON only; no HTML rendering |
-| Auth middleware | PASS | All protected routes have `authenticate` + `requireCreator` |
-| Error handling | PASS | All handlers use try/catch with `next(err)` |
+| Check                          | Status  | Notes                                                                                                            |
+| ------------------------------ | ------- | ---------------------------------------------------------------------------------------------------------------- |
+| Rate limiting on new endpoints | PASS    | All route files apply `readOnlyRateLimiter` globally + `mutationRateLimiter`/`expensiveRateLimiter` on mutations |
+| Input validation (Zod)         | PARTIAL | All routes except POST /provenance/sign have Zod validation                                                      |
+| CSRF protection                | PASS    | OAuth state parameter; other mutations require Bearer token (stateless)                                          |
+| SQL injection                  | PASS    | All queries use Supabase client (parameterized); no raw SQL                                                      |
+| XSS in API responses           | PASS    | API returns JSON only; no HTML rendering                                                                         |
+| Auth middleware                | PASS    | All protected routes have `authenticate` + `requireCreator`                                                      |
+| Error handling                 | PASS    | All handlers use try/catch with `next(err)`                                                                      |
 
 ### Database Migration Security
 
-| Table | RLS Enabled | Policy Correct | Notes |
-|-------|------------|----------------|-------|
-| platform_connections | YES | YES | `creator_id = current_setting('app.current_user_id', true)` |
-| cross_posts | YES | YES | Same RLS pattern |
-| repurposed_content | YES | YES | Same RLS pattern |
-| inbox_messages | YES | YES | Same RLS pattern |
-| platform_metrics_history | YES | YES | Same RLS pattern |
+| Table                    | RLS Enabled | Policy Correct | Notes                                                       |
+| ------------------------ | ----------- | -------------- | ----------------------------------------------------------- |
+| platform_connections     | YES         | YES            | `creator_id = current_setting('app.current_user_id', true)` |
+| cross_posts              | YES         | YES            | Same RLS pattern                                            |
+| repurposed_content       | YES         | YES            | Same RLS pattern                                            |
+| inbox_messages           | YES         | YES            | Same RLS pattern                                            |
+| platform_metrics_history | YES         | YES            | Same RLS pattern                                            |
 
 All 5 new tables have:
+
 - RLS enabled
 - Consistent `FOR ALL` policy using `current_setting('app.current_user_id', true)`
 - Appropriate indexes

@@ -58,9 +58,7 @@ const DropdownMenuSubTrigger = React.forwardRef<
       // Base: Modern padding and typography
       'flex cursor-default select-none items-center rounded-md px-2 py-1.5 text-[13px] font-medium leading-none tracking-[-0.01em]',
       // Interactive states with smooth transitions
-      'transition-colors duration-150 focus:bg-gray-100 focus:text-gray-900 data-[state=open]:bg-gray-100 data-[state=open]:text-gray-900',
-      // Dark mode support
-      'dark:focus:bg-gray-800 dark:focus:text-gray-50 dark:data-[state=open]:bg-gray-800 dark:data-[state=open]:text-gray-50',
+      'transition-colors duration-150 focus:bg-accent focus:text-accent-foreground data-[state=open]:bg-accent data-[state=open]:text-accent-foreground',
       // Outline focus for accessibility
       'outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1',
       inset && 'pl-8',
@@ -82,13 +80,11 @@ const DropdownMenuSubContent = React.forwardRef<
     ref={ref}
     className={cn(
       // Modern container with sophisticated shadows
-      'z-50 min-w-[12rem] overflow-hidden rounded-lg border border-gray-200 bg-white p-1 shadow-lg',
+      'z-50 min-w-[12rem] overflow-hidden rounded-lg border border-border bg-popover text-popover-foreground p-1 shadow-lg',
       // Smooth entrance animation
       'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
       'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
       'data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
-      // Dark mode support
-      'dark:border-gray-700 dark:bg-gray-800 dark:text-gray-50',
       className
     )}
     {...props}
@@ -106,15 +102,13 @@ const DropdownMenuContent = React.forwardRef<
       sideOffset={sideOffset}
       className={cn(
         // Modern container with sophisticated styling
-        'z-50 min-w-[12rem] overflow-hidden rounded-lg border border-gray-200 bg-white p-1',
+        'z-50 min-w-[12rem] overflow-hidden rounded-lg border border-border bg-popover text-popover-foreground p-1',
         // Elite shadow system for depth perception
         'shadow-[0_4px_12px_rgba(0,0,0,0.1)] backdrop-blur-sm',
         // Smooth entrance animations
         'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
         'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
         'data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
-        // Dark mode support
-        'dark:border-gray-700 dark:bg-gray-800 dark:text-gray-50',
         className
       )}
       {...props}
@@ -135,9 +129,7 @@ const DropdownMenuItem = React.forwardRef<
       // Base: Modern padding and typography
       'relative flex cursor-default select-none items-center rounded-md px-2 py-1.5 text-[13px] font-medium leading-none tracking-[-0.01em]',
       // Interactive states with smooth transitions
-      'transition-colors duration-150 focus:bg-gray-100 focus:text-gray-900 data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
-      // Dark mode support
-      'dark:focus:bg-gray-800 dark:focus:text-gray-50',
+      'transition-colors duration-150 focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
       // Outline focus for accessibility
       'outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1',
       inset && 'pl-8',
@@ -158,9 +150,7 @@ const DropdownMenuCheckboxItem = React.forwardRef<
       // Base styling with space for checkbox
       'relative flex cursor-default select-none items-center rounded-md py-1.5 pl-8 pr-2 text-[13px] font-medium leading-none tracking-[-0.01em]',
       // Interactive states
-      'transition-colors duration-150 focus:bg-gray-100 focus:text-gray-900 data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
-      // Dark mode support
-      'dark:focus:bg-gray-800 dark:focus:text-gray-50',
+      'transition-colors duration-150 focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
       // Outline focus for accessibility
       'outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1',
       className
@@ -188,9 +178,7 @@ const DropdownMenuRadioItem = React.forwardRef<
       // Base styling with space for radio indicator
       'relative flex cursor-default select-none items-center rounded-md py-1.5 pl-8 pr-2 text-[13px] font-medium leading-none tracking-[-0.01em]',
       // Interactive states
-      'transition-colors duration-150 focus:bg-gray-100 focus:text-gray-900 data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
-      // Dark mode support
-      'dark:focus:bg-gray-800 dark:focus:text-gray-50',
+      'transition-colors duration-150 focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
       // Outline focus for accessibility
       'outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1',
       className
@@ -217,9 +205,7 @@ const DropdownMenuLabel = React.forwardRef<
     ref={ref}
     className={cn(
       // Modern label styling
-      'px-2 py-1.5 text-[11px] font-semibold uppercase tracking-[0.05em] text-gray-500',
-      // Dark mode support
-      'dark:text-gray-400',
+      'px-2 py-1.5 text-[11px] font-semibold uppercase tracking-[0.05em] text-muted-foreground',
       inset && 'pl-8',
       className
     )}
@@ -236,7 +222,7 @@ const DropdownMenuSeparator = React.forwardRef<
     ref={ref}
     className={cn(
       // Subtle separator with modern styling
-      '-mx-1 my-1 h-px bg-gray-200 dark:bg-gray-700',
+      '-mx-1 my-1 h-px bg-border',
       className
     )}
     {...props}
@@ -249,7 +235,7 @@ const DropdownMenuShortcut = ({ className, ...props }: React.HTMLAttributes<HTML
     <span
       className={cn(
         // Modern shortcut styling
-        'ml-auto text-[11px] tracking-widest text-gray-500 dark:text-gray-400',
+        'ml-auto text-[11px] tracking-widest text-muted-foreground',
         className
       )}
       {...props}

@@ -12,8 +12,22 @@ import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const expressPtrDir = join(__dirname, '..', 'node_modules', 'express', 'node_modules', 'path-to-regexp');
-const backendPtrDir = join(__dirname, '..', 'packages', 'backend', 'node_modules', 'path-to-regexp');
+const expressPtrDir = join(
+  __dirname,
+  '..',
+  'node_modules',
+  'express',
+  'node_modules',
+  'path-to-regexp'
+);
+const backendPtrDir = join(
+  __dirname,
+  '..',
+  'packages',
+  'backend',
+  'node_modules',
+  'path-to-regexp'
+);
 const hoistedPtrDir = join(__dirname, '..', 'node_modules', 'path-to-regexp');
 
 function getVersion(dir) {
@@ -53,7 +67,7 @@ function run() {
 
   console.warn(
     'Warning: Express may have an incompatible path-to-regexp version. ' +
-    'If routing fails, run: npm install path-to-regexp@0.1.12 --save --workspace=packages/backend'
+      'If routing fails, run: npm install path-to-regexp@0.1.12 --save --workspace=packages/backend'
   );
 }
 

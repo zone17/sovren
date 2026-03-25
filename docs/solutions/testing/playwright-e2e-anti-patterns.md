@@ -555,7 +555,6 @@ grep -r "test.skip\|test.only\|\.skip()" packages/frontend/e2e/
 ### How to Fix
 
 1. For each skipped test:
-
    - Find reason it was skipped (check git blame, comments)
    - Is feature implemented now? → Unskip and test
    - Is feature cancelled? → Delete test

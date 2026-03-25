@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'react-hot-toast';
 import { marketplaceApi } from '../services/marketplaceApi';
 import type { ServiceType } from '@shared/types/community';
 
@@ -20,7 +21,7 @@ export function useCreateListing() {
       queryClient.invalidateQueries({ queryKey: ['creator-network', 'marketplace', 'listings'] });
     },
     onError: (error) => {
-      console.error('Create listing failed:', error);
+      toast.error(error instanceof Error ? error.message : 'Operation failed');
     },
   });
 }
@@ -35,7 +36,7 @@ export function usePlaceOrder() {
       queryClient.invalidateQueries({ queryKey: ['creator-network', 'marketplace', 'orders'] });
     },
     onError: (error) => {
-      console.error('Place order failed:', error);
+      toast.error(error instanceof Error ? error.message : 'Operation failed');
     },
   });
 }
@@ -49,7 +50,7 @@ export function useStartOrder() {
       queryClient.invalidateQueries({ queryKey: ['creator-network', 'marketplace', 'orders'] });
     },
     onError: (error) => {
-      console.error('Start order failed:', error);
+      toast.error(error instanceof Error ? error.message : 'Operation failed');
     },
   });
 }
@@ -63,7 +64,7 @@ export function useCompleteOrder() {
       queryClient.invalidateQueries({ queryKey: ['creator-network', 'marketplace', 'orders'] });
     },
     onError: (error) => {
-      console.error('Complete order failed:', error);
+      toast.error(error instanceof Error ? error.message : 'Operation failed');
     },
   });
 }
@@ -78,7 +79,7 @@ export function useDisputeOrder() {
       queryClient.invalidateQueries({ queryKey: ['creator-network', 'marketplace', 'orders'] });
     },
     onError: (error) => {
-      console.error('Dispute order failed:', error);
+      toast.error(error instanceof Error ? error.message : 'Operation failed');
     },
   });
 }
@@ -100,7 +101,7 @@ export function useReviewOrder() {
       queryClient.invalidateQueries({ queryKey: ['creator-network', 'marketplace', 'orders'] });
     },
     onError: (error) => {
-      console.error('Review order failed:', error);
+      toast.error(error instanceof Error ? error.message : 'Operation failed');
     },
   });
 }

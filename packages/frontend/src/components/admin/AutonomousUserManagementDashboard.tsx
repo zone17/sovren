@@ -815,7 +815,7 @@ const BulkOperationsPanel: React.FC = () => {
       case 'failed':
         return <AlertCircle className="w-4 h-4 text-red-500" />;
       default:
-        return <Clock className="w-4 h-4 text-gray-500" />;
+        return <Clock className="w-4 h-4 text-muted-foreground" />;
     }
   };
 

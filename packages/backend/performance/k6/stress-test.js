@@ -28,24 +28,24 @@ const degradationMetric = new Trend('degradation_indicator');
 export const options = {
   stages: [
     // Gradual ramp-up to find breaking point
-    { duration: '2m', target: 100 },   // Baseline
-    { duration: '3m', target: 500 },   // Normal
-    { duration: '3m', target: 1000 },  // Peak
-    { duration: '3m', target: 1500 },  // High stress
-    { duration: '3m', target: 2000 },  // Very high stress
-    { duration: '3m', target: 2500 },  // Extreme stress
-    { duration: '3m', target: 3000 },  // Breaking point search
+    { duration: '2m', target: 100 }, // Baseline
+    { duration: '3m', target: 500 }, // Normal
+    { duration: '3m', target: 1000 }, // Peak
+    { duration: '3m', target: 1500 }, // High stress
+    { duration: '3m', target: 2000 }, // Very high stress
+    { duration: '3m', target: 2500 }, // Extreme stress
+    { duration: '3m', target: 3000 }, // Breaking point search
 
     // Recovery test
-    { duration: '2m', target: 500 },   // Drop to normal
-    { duration: '3m', target: 100 },   // Drop to baseline
-    { duration: '1m', target: 0 },     // Complete ramp-down
+    { duration: '2m', target: 500 }, // Drop to normal
+    { duration: '3m', target: 100 }, // Drop to baseline
+    { duration: '1m', target: 0 }, // Complete ramp-down
   ],
   thresholds: {
     // More lenient thresholds for stress testing
-    'http_req_duration': ['p(95)<2000', 'p(99)<5000'],
-    'errors': ['rate<0.05'], // Allow up to 5% error rate under stress
-    'http_req_failed': ['rate<0.05'],
+    http_req_duration: ['p(95)<2000', 'p(99)<5000'],
+    errors: ['rate<0.05'], // Allow up to 5% error rate under stress
+    http_req_failed: ['rate<0.05'],
   },
   noConnectionReuse: false,
   userAgent: 'K6StressTest/1.0',
@@ -61,7 +61,7 @@ const testUsers = [
 function getHeaders(token = null) {
   const headers = {
     'Content-Type': 'application/json',
-    'Accept': 'application/json',
+    Accept: 'application/json',
   };
 
   if (token) {
@@ -186,10 +186,9 @@ function cpuHeavyWorkload(token) {
     degradationMetric.add(recommendationsResponse.timings.duration);
 
     // Content search (indexing)
-    const searchResponse = http.get(
-      `${BASE_URL}${API_VERSION}/content/search?q=test&limit=50`,
-      { headers: getHeaders(token) }
-    );
+    const searchResponse = http.get(`${BASE_URL}${API_VERSION}/content/search?q=test&limit=50`, {
+      headers: getHeaders(token),
+    });
 
     check(searchResponse, {
       'search: completed': (r) => r.status === 200 || r.status === 503,
@@ -243,8 +242,7 @@ function networkHeavyWorkload(token) {
 
     requests.forEach((response, index) => {
       check(response, {
-        [`parallel request ${index}: completed`]: (r) =>
-          r.status === 200 || r.status === 503,
+        [`parallel request ${index}: completed`]: (r) => r.status === 200 || r.status === 503,
       });
 
       apiResponseTime.add(response.timings.duration);
@@ -300,9 +298,11 @@ export function handleSummary(data) {
   const summary = generateStressSummary(data);
 
   return {
-    'stdout': summary.text,
-    '/Users/fp/Desktop/Sovren/packages/backend/performance/reports/stress-test-results.json': JSON.stringify(data, null, 2),
-    '/Users/fp/Desktop/Sovren/packages/backend/performance/reports/stress-test-summary.json': JSON.stringify(summary.analysis, null, 2),
+    stdout: summary.text,
+    '/Users/fp/Desktop/Sovren/packages/backend/performance/reports/stress-test-results.json':
+      JSON.stringify(data, null, 2),
+    '/Users/fp/Desktop/Sovren/packages/backend/performance/reports/stress-test-summary.json':
+      JSON.stringify(summary.analysis, null, 2),
   };
 }
 

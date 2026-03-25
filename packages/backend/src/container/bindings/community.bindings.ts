@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ts-nocheck — DI factory return types require Row↔shared type alignment (separate refactor)
 /**
  * Community Services Binding Module
  * EPIC-010: Creator Network — Circles, Mentorship, Collaboration, Marketplace
@@ -13,6 +13,8 @@ import { CreatorCircleService } from '../../services/community/CreatorCircleServ
 import { MentorshipService } from '../../services/community/MentorshipService';
 import { CollaborativeContentService } from '../../services/community/CollaborativeContentService';
 import { MarketplaceService } from '../../services/community/MarketplaceService';
+import { FollowService } from '../../services/community/FollowService';
+import { NotificationPersistenceService } from '../../services/community/NotificationPersistenceService';
 
 /** Cast container-resolved DB to ISupabaseClient via unknown (safe DI pattern) */
 function asDb(resolved: unknown): ISupabaseClient {
@@ -34,8 +36,30 @@ export class CommunityServicesModule implements IServiceModule {
     registry.registerSingletonFactory(TYPES.CommentsService, (container) => {
       const db = container.resolve(TYPES.Database);
       const logger = container.resolve(TYPES.Logger);
-      return new CommentsService(asDb(db), logger);
+      const eventBus = container.resolve(TYPES.EventBusService);
+      return new CommentsService(asDb(db), logger, eventBus);
     });
+
+    // ===========================
+    // Slice 8: Follow + Notifications
+    // ===========================
+
+    registry.registerSingletonFactory(TYPES.FollowService, (container) => {
+      const db = container.resolve(TYPES.Database);
+      const logger = container.resolve(TYPES.Logger);
+      const eventBus = container.resolve(TYPES.EventBusService);
+      return new FollowService(asDb(db), logger, eventBus);
+    });
+
+    registry.registerSingletonFactory(TYPES.NotificationPersistenceService, (container) => {
+      const db = container.resolve(TYPES.Database);
+      const logger = container.resolve(TYPES.Logger);
+      const eventBus = container.resolve(TYPES.EventBusService);
+      return new NotificationPersistenceService(asDb(db), logger, eventBus);
+    });
+    // NOTE (#702/#728): subscribeToEvents() is called exactly ONCE by server.ts eager init
+    // (container.resolve(TYPES.NotificationPersistenceService) → service.subscribeToEvents()).
+    // Calling it in the factory would cause a double-subscription on every hot-reload or test.
 
     // ===========================
     // Community Services (EPIC-010)
@@ -44,13 +68,15 @@ export class CommunityServicesModule implements IServiceModule {
     registry.registerSingletonFactory(TYPES.CreatorCircleService, (container) => {
       const db = container.resolve(TYPES.Database);
       const logger = container.resolve(TYPES.Logger);
-      return new CreatorCircleService(asDb(db), logger);
+      const eventBus = container.resolve(TYPES.EventBusService);
+      return new CreatorCircleService(asDb(db), logger, eventBus);
     });
 
     registry.registerSingletonFactory(TYPES.MentorshipService, (container) => {
       const db = container.resolve(TYPES.Database);
       const logger = container.resolve(TYPES.Logger);
-      return new MentorshipService(asDb(db), logger);
+      const eventBus = container.resolve(TYPES.EventBusService);
+      return new MentorshipService(asDb(db), logger, eventBus);
     });
 
     registry.registerSingletonFactory(TYPES.CollaborativeContentService, (container) => {

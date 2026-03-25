@@ -3,6 +3,7 @@ import { getUserService } from '@/services/user-service';
 import { Request, Response, Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
+import { asyncHandler } from '../utils/asyncHandler';
 
 const router = Router();
 const userService = getUserService();
@@ -67,8 +68,11 @@ const UpdateRoleSchema = z.object({
 });
 
 // 👤 Create user profile
-router.post('/profile', userRateLimit, authenticate, async (req: Request, res: Response) => {
-  try {
+router.post(
+  '/profile',
+  userRateLimit,
+  authenticate,
+  asyncHandler(async (req: Request, res: Response) => {
     if (!req.user) {
       return res.status(401).json({
         success: false,
@@ -103,29 +107,15 @@ router.post('/profile', userRateLimit, authenticate, async (req: Request, res: R
         user: result.user,
       },
     });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      const firstError = error.errors[0];
-      return res.status(400).json({
-        success: false,
-        error: `Validation failed: ${firstError?.message || 'Invalid data'}`,
-        code: 'VALIDATION_ERROR',
-        details: error.errors,
-      });
-    }
-
-    console.error('User profile creation failed:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Profile creation service error',
-      code: 'SERVICE_ERROR',
-    });
-  }
-});
+  })
+);
 
 // 👤 Get current user profile
-router.get('/profile', userRateLimit, authenticate, async (req: Request, res: Response) => {
-  try {
+router.get(
+  '/profile',
+  userRateLimit,
+  authenticate,
+  asyncHandler(async (req: Request, res: Response) => {
     if (!req.user) {
       return res.status(401).json({
         success: false,
@@ -151,19 +141,15 @@ router.get('/profile', userRateLimit, authenticate, async (req: Request, res: Re
         user: result.user,
       },
     });
-  } catch (error) {
-    console.error('User profile retrieval failed:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Profile retrieval service error',
-      code: 'SERVICE_ERROR',
-    });
-  }
-});
+  })
+);
 
 // 👤 Update user profile
-router.put('/profile', userRateLimit, authenticate, async (req: Request, res: Response) => {
-  try {
+router.put(
+  '/profile',
+  userRateLimit,
+  authenticate,
+  asyncHandler(async (req: Request, res: Response) => {
     if (!req.user) {
       return res.status(401).json({
         success: false,
@@ -202,29 +188,15 @@ router.put('/profile', userRateLimit, authenticate, async (req: Request, res: Re
         user: result.user,
       },
     });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      const firstError = error.errors[0];
-      return res.status(400).json({
-        success: false,
-        error: `Validation failed: ${firstError?.message || 'Invalid data'}`,
-        code: 'VALIDATION_ERROR',
-        details: error.errors,
-      });
-    }
-
-    console.error('User profile update failed:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Profile update service error',
-      code: 'SERVICE_ERROR',
-    });
-  }
-});
+  })
+);
 
 // 🔍 Search users
-router.get('/search', userRateLimit, authenticate, async (req: Request, res: Response) => {
-  try {
+router.get(
+  '/search',
+  userRateLimit,
+  authenticate,
+  asyncHandler(async (req: Request, res: Response) => {
     if (!req.user) {
       return res.status(401).json({
         success: false,
@@ -260,29 +232,15 @@ router.get('/search', userRateLimit, authenticate, async (req: Request, res: Res
         offset: validatedQuery.offset,
       },
     });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      const firstError = error.errors[0];
-      return res.status(400).json({
-        success: false,
-        error: `Validation failed: ${firstError?.message || 'Invalid query'}`,
-        code: 'VALIDATION_ERROR',
-        details: error.errors,
-      });
-    }
-
-    console.error('User search failed:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Search service error',
-      code: 'SERVICE_ERROR',
-    });
-  }
-});
+  })
+);
 
 // 📊 Get user statistics (admin only)
-router.get('/stats', adminRateLimit, authenticate, async (req: Request, res: Response) => {
-  try {
+router.get(
+  '/stats',
+  adminRateLimit,
+  authenticate,
+  asyncHandler(async (req: Request, res: Response) => {
     if (!req.user || req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
@@ -306,19 +264,15 @@ router.get('/stats', adminRateLimit, authenticate, async (req: Request, res: Res
       success: true,
       data: result.stats,
     });
-  } catch (error) {
-    console.error('User statistics retrieval failed:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Statistics service error',
-      code: 'SERVICE_ERROR',
-    });
-  }
-});
+  })
+);
 
 // 🔧 Update user role (admin only)
-router.put('/:id/role', adminRateLimit, authenticate, async (req: Request, res: Response) => {
-  try {
+router.put(
+  '/:id/role',
+  adminRateLimit,
+  authenticate,
+  asyncHandler(async (req: Request, res: Response) => {
     if (!req.user || req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
@@ -356,29 +310,13 @@ router.put('/:id/role', adminRateLimit, authenticate, async (req: Request, res: 
         user: result.user,
       },
     });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      const firstError = error.errors[0];
-      return res.status(400).json({
-        success: false,
-        error: `Validation failed: ${firstError?.message || 'Invalid role'}`,
-        code: 'VALIDATION_ERROR',
-        details: error.errors,
-      });
-    }
-
-    console.error('User role update failed:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Role update service error',
-      code: 'SERVICE_ERROR',
-    });
-  }
-});
+  })
+);
 
 // 🏥 User service health check
-router.get('/health', async (req: Request, res: Response) => {
-  try {
+router.get(
+  '/health',
+  asyncHandler(async (req: Request, res: Response) => {
     // Test user service functionality
     const healthCheck = await userService.healthCheck();
 
@@ -400,14 +338,7 @@ router.get('/health', async (req: Request, res: Response) => {
         ...healthCheck,
       },
     });
-  } catch (error) {
-    console.error('User service health check failed:', error);
-    res.status(503).json({
-      success: false,
-      error: 'Health check failed',
-      code: 'HEALTH_CHECK_ERROR',
-    });
-  }
-});
+  })
+);
 
 export default router;

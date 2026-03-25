@@ -477,21 +477,18 @@ const queryClient = new QueryClient({
 ### **Quiz Questions**
 
 1. **What is the optimal staleTime for analytics data?**
-
    - a) 0 minutes
    - b) 5 minutes
    - c) 30 minutes
    - d) It depends on data freshness requirements
 
 2. **When should you use exact version pinning?**
-
    - a) Always
    - b) Never
    - c) For production dependencies
    - d) Only for major versions
 
 3. **What's the best practice for query keys?**
-
    - a) Use random strings
    - b) Use hierarchical arrays
    - c) Use function names

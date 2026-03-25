@@ -63,7 +63,7 @@ export class PaymentService {
       paymentId: payment.id,
       userId: payment.userId,
       amount: payment.amount,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
 
     return payment;
@@ -72,14 +72,14 @@ export class PaymentService {
   async completePayment(id: string, preimage: string): Promise<void> {
     await this.repository.update(id, {
       status: 'completed',
-      preimage
+      preimage,
     });
 
     await this.eventBus.emit('payment.completed', {
       type: 'payment.completed',
       paymentId: id,
       preimage,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   }
 }
@@ -107,7 +107,7 @@ export class NotificationService {
       to: event.userId,
       subject: 'Payment Created',
       template: 'payment-created',
-      data: event
+      data: event,
     });
   }
 
@@ -116,7 +116,7 @@ export class NotificationService {
       to: event.userId,
       subject: 'Payment Successful',
       template: 'payment-completed',
-      data: event
+      data: event,
     });
   }
 }
@@ -140,7 +140,7 @@ export class EventBusService implements IEventBus {
         this.logger.error('Event handler failed', {
           eventType,
           error: error.message,
-          payload
+          payload,
         });
 
         // Optional: Dead letter queue
@@ -148,7 +148,7 @@ export class EventBusService implements IEventBus {
           eventType,
           payload,
           error: error.message,
-          timestamp: new Date()
+          timestamp: new Date(),
         });
       }
     }

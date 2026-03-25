@@ -5,8 +5,6 @@
 
 import { store, RootState } from './index';
 import { setTheme, openModal, addToast } from './slices/uiSlice';
-import { navigateTo, setBreadcrumbs } from './slices/navigationSlice';
-import { setWorkspaceLayout, setBreakpoint } from './slices/layoutSlice';
 import { setEditing, markDirty } from './slices/cmsUiSlice';
 
 describe('Redux Store Integration', () => {
@@ -16,8 +14,7 @@ describe('Redux Store Integration', () => {
 
       expect(state.ui).toBeDefined();
       expect(state.cmsUi).toBeDefined();
-      expect(state.navigation).toBeDefined();
-      expect(state.layout).toBeDefined();
+      expect(state.pagination).toBeDefined();
       expect(state.user).toBeDefined();
     });
 
@@ -28,6 +25,8 @@ describe('Redux Store Integration', () => {
       expect(state.post).toBeUndefined();
       expect(state.payment).toBeUndefined();
       expect(state.cms).toBeUndefined(); // Content data removed, only UI remains
+      expect(state.navigation).toBeUndefined();
+      expect(state.layout).toBeUndefined();
     });
   });
 
@@ -45,34 +44,6 @@ describe('Redux Store Integration', () => {
       // Toast
       store.dispatch(addToast({ message: 'Test toast', type: 'success' }));
       expect(store.getState().ui.toasts).toHaveLength(1);
-    });
-  });
-
-  describe('Navigation state management', () => {
-    it('should handle navigation state updates', () => {
-      // Navigation
-      store.dispatch(navigateTo('/dashboard'));
-      expect(store.getState().navigation.currentPath).toBe('/dashboard');
-
-      // Breadcrumbs
-      const breadcrumbs = [
-        { label: 'Home', path: '/' },
-        { label: 'Dashboard', path: '/dashboard' },
-      ];
-      store.dispatch(setBreadcrumbs(breadcrumbs));
-      expect(store.getState().navigation.breadcrumbs).toEqual(breadcrumbs);
-    });
-  });
-
-  describe('Layout state management', () => {
-    it('should handle layout state updates', () => {
-      // Workspace layout
-      store.dispatch(setWorkspaceLayout('focus'));
-      expect(store.getState().layout.workspaceLayout).toBe('focus');
-
-      // Responsive breakpoint
-      store.dispatch(setBreakpoint('mobile'));
-      expect(store.getState().layout.breakpoint).toBe('mobile');
     });
   });
 
@@ -123,42 +94,22 @@ describe('Redux Store Integration', () => {
 
       // Type checking (these would fail at compile time if types were wrong)
       const theme: typeof state.ui.theme = 'dark';
-      const layout: typeof state.layout.workspaceLayout = 'default';
-      const path: typeof state.navigation.currentPath = '/';
 
       expect(theme).toBeDefined();
-      expect(layout).toBeDefined();
-      expect(path).toBeDefined();
     });
   });
 
   describe('Selectors', () => {
     it('should export working selectors', () => {
-      // Import selectors from store — use the top-level ESM imports instead of require()
-      const {
-        selectTheme,
-        selectModal,
-        selectCurrentPath,
-        selectBreadcrumbs,
-        selectWorkspaceLayout,
-        selectBreakpoint,
-      } = {
+      const { selectTheme, selectModal } = {
         selectTheme: (s: any) => s.ui.theme,
         selectModal: (s: any) => s.ui.modal,
-        selectCurrentPath: (s: any) => s.navigation.currentPath,
-        selectBreadcrumbs: (s: any) => s.navigation.breadcrumbs,
-        selectWorkspaceLayout: (s: any) => s.layout.workspaceLayout,
-        selectBreakpoint: (s: any) => s.layout.breakpoint,
       };
 
       const state = store.getState();
 
       expect(selectTheme(state)).toBe(state.ui.theme);
       expect(selectModal(state)).toBe(state.ui.modal);
-      expect(selectCurrentPath(state)).toBe(state.navigation.currentPath);
-      expect(selectBreadcrumbs(state)).toBe(state.navigation.breadcrumbs);
-      expect(selectWorkspaceLayout(state)).toBe(state.layout.workspaceLayout);
-      expect(selectBreakpoint(state)).toBe(state.layout.breakpoint);
     });
   });
 });

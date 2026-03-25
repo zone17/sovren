@@ -13,13 +13,13 @@ This review validates the four P1 security pre-requisites identified in the epic
 
 **Overall Security Readiness for v2.0: YELLOW (Needs Remediation First)**
 
-| Category | Findings |
-|----------|----------|
-| Critical Vulnerabilities | 2 confirmed |
-| High Vulnerabilities | 2 confirmed |
-| Medium Vulnerabilities | 3 identified |
-| Low Vulnerabilities | 2 identified |
-| PRD Security Gaps | 4 identified |
+| Category                 | Findings     |
+| ------------------------ | ------------ |
+| Critical Vulnerabilities | 2 confirmed  |
+| High Vulnerabilities     | 2 confirmed  |
+| Medium Vulnerabilities   | 3 identified |
+| Low Vulnerabilities      | 2 identified |
+| PRD Security Gaps        | 4 identified |
 | New Attack Surface Risks | 8 identified |
 
 **Verdict: NEEDS REMEDIATION FIRST** -- The 2 critical and 2 high severity issues must be resolved before any v2.0 epic work begins. The medium/low issues can be addressed in parallel with v2.0 development.
@@ -30,16 +30,16 @@ This review validates the four P1 security pre-requisites identified in the epic
 
 ### PREREQ-1: SQL Injection in Lightning Payment Routes
 
-| Field | Value |
-|-------|-------|
-| **Confirmed** | YES |
-| **Severity** | CRITICAL (CVSS 9.1) |
-| **CWE** | CWE-89: Improper Neutralization of Special Elements used in an SQL Command |
-| **OWASP** | A03:2021 - Injection |
-| **Affected File** | `/Users/fp/Desktop/Sovren/packages/backend/src/services/lightning-payment-service.ts` |
-| **Affected Line** | Line 719 |
-| **Scoping Accuracy** | PARTIALLY CORRECT -- The decomposition says "backend/routes/lightning" but the vulnerability is in the service layer, not the route layer |
-| **Estimated Fix Effort** | 2-3 hours |
+| Field                    | Value                                                                                                                                     |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| **Confirmed**            | YES                                                                                                                                       |
+| **Severity**             | CRITICAL (CVSS 9.1)                                                                                                                       |
+| **CWE**                  | CWE-89: Improper Neutralization of Special Elements used in an SQL Command                                                                |
+| **OWASP**                | A03:2021 - Injection                                                                                                                      |
+| **Affected File**        | `/Users/fp/Desktop/Sovren/packages/backend/src/services/lightning-payment-service.ts`                                                     |
+| **Affected Line**        | Line 719                                                                                                                                  |
+| **Scoping Accuracy**     | PARTIALLY CORRECT -- The decomposition says "backend/routes/lightning" but the vulnerability is in the service layer, not the route layer |
+| **Estimated Fix Effort** | 2-3 hours                                                                                                                                 |
 
 **Evidence:**
 
@@ -59,6 +59,7 @@ This line uses string interpolation inside a `supabase.raw()` call to build a JS
 **Additional SQL Concern**: Line 351 of the same file uses `supabase.raw('priority + 1')` which is a static string and NOT vulnerable. However, the pattern of using `supabase.raw()` across the codebase (found in `subscription-management-service.ts:429,483`, `nip05-verification-service.ts:511`, `transaction-history-service.ts:655`) should be audited for dynamic input injection.
 
 **Recommended Fix**: Replace the raw SQL string interpolation with parameterized JSONB operations:
+
 ```typescript
 // BEFORE (vulnerable):
 metadata: metadata
@@ -75,15 +76,15 @@ metadata: metadata
 
 ### PREREQ-2: Hardcoded Crypto Keys in Vault Handling
 
-| Field | Value |
-|-------|-------|
-| **Confirmed** | YES (with modified scoping) |
-| **Severity** | CRITICAL (CVSS 9.4) |
-| **CWE** | CWE-798: Use of Hard-coded Credentials; CWE-312: Cleartext Storage of Sensitive Information |
-| **OWASP** | A02:2021 - Cryptographic Failures |
-| **Affected Files** | `/Users/fp/Desktop/Sovren/packages/backend/src/services/content/ContentPublishingService.ts` (lines 757-777), `/Users/fp/Desktop/Sovren/packages/backend/src/services/enhanced-nostr-auth.ts` (line 136) |
-| **Scoping Accuracy** | INCORRECT -- There is no "vault service" in the codebase. The decomposition references "backend/services/vault" which does not exist. The actual issues are in ContentPublishingService (unencrypted private key storage) and EnhancedNostrAuthService (auto-generated encryption key) |
-| **Estimated Fix Effort** | 4-6 hours |
+| Field                    | Value                                                                                                                                                                                                                                                                                  |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Confirmed**            | YES (with modified scoping)                                                                                                                                                                                                                                                            |
+| **Severity**             | CRITICAL (CVSS 9.4)                                                                                                                                                                                                                                                                    |
+| **CWE**                  | CWE-798: Use of Hard-coded Credentials; CWE-312: Cleartext Storage of Sensitive Information                                                                                                                                                                                            |
+| **OWASP**                | A02:2021 - Cryptographic Failures                                                                                                                                                                                                                                                      |
+| **Affected Files**       | `/Users/fp/Desktop/Sovren/packages/backend/src/services/content/ContentPublishingService.ts` (lines 757-777), `/Users/fp/Desktop/Sovren/packages/backend/src/services/enhanced-nostr-auth.ts` (line 136)                                                                               |
+| **Scoping Accuracy**     | INCORRECT -- There is no "vault service" in the codebase. The decomposition references "backend/services/vault" which does not exist. The actual issues are in ContentPublishingService (unencrypted private key storage) and EnhancedNostrAuthService (auto-generated encryption key) |
+| **Estimated Fix Effort** | 4-6 hours                                                                                                                                                                                                                                                                              |
 
 **Evidence -- Issue A: NOSTR Private Keys Stored Unencrypted in Database**
 
@@ -105,6 +106,7 @@ private async getNostrKeys(authorId: string): Promise<...> {
 ```
 
 The database schema stores NOSTR private keys as plaintext `VARCHAR(255)`:
+
 ```sql
 -- From US-E5-012-COMPLETION-SUMMARY.md:263
 ALTER TABLE users ADD COLUMN IF NOT EXISTS nostr_private_key VARCHAR(255);
@@ -124,6 +126,7 @@ If no `encryptionKey` is provided in configuration, the service generates a rand
 **Note**: The `SecretsService` itself is well-implemented with proper AWS Secrets Manager integration, caching, and environment fallbacks. The problem is that not all services use it.
 
 **Recommended Fix**:
+
 1. Encrypt NOSTR private keys at rest using AES-256-GCM with a key managed through `SecretsService`
 2. Add a migration to encrypt existing plaintext keys in the `users` table
 3. Wire `EnhancedNostrAuthService` to use `SecretsService` for its encryption key
@@ -133,15 +136,15 @@ If no `encryptionKey` is provided in configuration, the service generates a rand
 
 ### PREREQ-3: XSS Vulnerability in Markdown/RichText Editors
 
-| Field | Value |
-|-------|-------|
-| **Confirmed** | YES |
-| **Severity** | HIGH (CVSS 7.5) |
-| **CWE** | CWE-79: Improper Neutralization of Input During Web Page Generation (XSS) |
-| **OWASP** | A03:2021 - Injection |
-| **Affected Files** | `/Users/fp/Desktop/Sovren/packages/frontend/src/features/content/components/MarkdownEditor.tsx` (line 540), `/Users/fp/Desktop/Sovren/packages/frontend/src/features/content/components/RichTextEditor.tsx` (line 88) |
-| **Scoping Accuracy** | CORRECT -- The decomposition accurately identified "frontend/features/content" |
-| **Estimated Fix Effort** | 3-4 hours |
+| Field                    | Value                                                                                                                                                                                                                 |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Confirmed**            | YES                                                                                                                                                                                                                   |
+| **Severity**             | HIGH (CVSS 7.5)                                                                                                                                                                                                       |
+| **CWE**                  | CWE-79: Improper Neutralization of Input During Web Page Generation (XSS)                                                                                                                                             |
+| **OWASP**                | A03:2021 - Injection                                                                                                                                                                                                  |
+| **Affected Files**       | `/Users/fp/Desktop/Sovren/packages/frontend/src/features/content/components/MarkdownEditor.tsx` (line 540), `/Users/fp/Desktop/Sovren/packages/frontend/src/features/content/components/RichTextEditor.tsx` (line 88) |
+| **Scoping Accuracy**     | CORRECT -- The decomposition accurately identified "frontend/features/content"                                                                                                                                        |
+| **Estimated Fix Effort** | 3-4 hours                                                                                                                                                                                                             |
 
 **Evidence -- MarkdownEditor.tsx (Stored XSS via Markdown Preview)**
 
@@ -168,6 +171,7 @@ The `content` prop is directly assigned to `innerHTML` without any sanitization.
 **Note**: The codebase does have a `ContentTransformationService` (`/Users/fp/Desktop/Sovren/packages/frontend/src/features/content/services/ContentTransformationService.ts`) with a `sanitize()` method (line 202), but this service is NOT used by either editor component. The sanitization is only applied during content import/export, not during rendering.
 
 **Recommended Fix**:
+
 1. Add DOMPurify (or a similar HTML sanitizer library) as a dependency
 2. In `MarkdownEditor.tsx`, sanitize the output of `convertMarkdownToHTML()` before passing to `dangerouslySetInnerHTML`
 3. In `RichTextEditor.tsx`, sanitize `content` before assigning to `innerHTML`
@@ -177,19 +181,20 @@ The `content` prop is directly assigned to `innerHTML` without any sanitization.
 
 ### PREREQ-4: Missing DI Controller Registration
 
-| Field | Value |
-|-------|-------|
-| **Confirmed** | YES |
-| **Severity** | HIGH (CVSS 7.0) |
-| **CWE** | CWE-284: Improper Access Control (architectural issue leading to potential bypasses) |
-| **OWASP** | A04:2021 - Insecure Design |
-| **Affected Files** | `/Users/fp/Desktop/Sovren/packages/backend/src/container/types.ts` (lines 124-126), `/Users/fp/Desktop/Sovren/packages/backend/src/container/bindings/*.bindings.ts` (all binding files) |
-| **Scoping Accuracy** | CORRECT -- The decomposition accurately identified "backend/controllers" |
-| **Estimated Fix Effort** | 2-3 hours |
+| Field                    | Value                                                                                                                                                                                    |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Confirmed**            | YES                                                                                                                                                                                      |
+| **Severity**             | HIGH (CVSS 7.0)                                                                                                                                                                          |
+| **CWE**                  | CWE-284: Improper Access Control (architectural issue leading to potential bypasses)                                                                                                     |
+| **OWASP**                | A04:2021 - Insecure Design                                                                                                                                                               |
+| **Affected Files**       | `/Users/fp/Desktop/Sovren/packages/backend/src/container/types.ts` (lines 124-126), `/Users/fp/Desktop/Sovren/packages/backend/src/container/bindings/*.bindings.ts` (all binding files) |
+| **Scoping Accuracy**     | CORRECT -- The decomposition accurately identified "backend/controllers"                                                                                                                 |
+| **Estimated Fix Effort** | 2-3 hours                                                                                                                                                                                |
 
 **Evidence:**
 
 Three controllers are declared in the DI type registry:
+
 ```typescript
 // types.ts:124-126
 ContentController: new ServiceToken<any>('ContentController', 'Content API controller'),
@@ -198,17 +203,20 @@ PaymentController: new ServiceToken<any>('PaymentController', 'Payment API contr
 ```
 
 Controller implementation files exist:
+
 - `/Users/fp/Desktop/Sovren/packages/backend/src/controllers/content/ContentController.ts`
 - `/Users/fp/Desktop/Sovren/packages/backend/src/controllers/payment/PaymentController.ts`
 - `/Users/fp/Desktop/Sovren/packages/backend/src/controllers/user/UserController.ts`
 
 However, **none of the four binding modules** register these controllers:
+
 - `content.bindings.ts` -- registers 7 content services, 0 controllers
 - `user.bindings.ts` -- registers 5 user services, 0 controllers
 - `payment.bindings.ts` -- registers 7 payment services, 0 controllers
 - `shared.bindings.ts` -- registers 4 shared services, 0 controllers
 
 The v1 route files (`routes/v1/*.routes.ts`) reference `ContentController`, `UserController`, and `PaymentController` from the container. At runtime, any attempt to resolve these controllers from the DI container will throw:
+
 ```
 DI container not initialized. Call initializeContainer() before resolving services.
 ```
@@ -216,6 +224,7 @@ DI container not initialized. Call initializeContainer() before resolving servic
 This means **all v1 controller-based routes are broken**. The existing route files in `routes/` (non-v1) work because they directly import services instead of going through the DI container. Adding new v2.0 routes through the DI container will fail until this is fixed.
 
 **Recommended Fix**:
+
 1. Create a `controller.bindings.ts` file that registers all three controllers
 2. Wire each controller to its service dependencies via the DI container
 3. Add integration tests that verify controller resolution
@@ -238,6 +247,7 @@ AES-256 is the correct algorithm choice for OAuth token encryption at rest. Howe
 - **Token refresh**: The decomposition (US-E9-002) mentions "Token refresh scheduler" but doesn't address what happens if the encryption key is rotated -- old tokens need re-encryption.
 
 **Recommendation**: Add to PRD:
+
 - Mandate AES-256-GCM (not just AES-256)
 - Specify encryption key stored in AWS Secrets Manager via existing SecretsService
 - Define key rotation policy (quarterly recommended)
@@ -256,6 +266,7 @@ The intent is correct. The decomposition (US-E7-001) correctly specifies RLS pol
 - **Anonymous benchmarking** (US-E7-007) creates a privacy risk: if circle sizes are small, aggregate stats could de-anonymize individual creators. The PRD should specify minimum anonymity set sizes (k-anonymity >= 20).
 
 **Recommendation**: Add to PRD:
+
 - Encrypt wellness data columns at rest
 - Define data retention and backup purge policies
 - Specify k-anonymity minimum for benchmark aggregations
@@ -273,6 +284,7 @@ The non-custodial model is the correct approach for a Lightning-native platform.
 - **Withdrawal tracking**: The "withdraw" endpoint (`POST /api/v2/income/emergency-fund/withdraw`) only records a tracking event. A user could "withdraw" without actually moving funds, or move funds without recording a withdrawal.
 
 **Recommendation**:
+
 - Resolve open question #4 in the PRD before EPIC-012 begins
 - Document the trust model explicitly: "Sovren provides planning tools, not financial guarantees"
 - Consider optional wallet balance verification via WebLN or LNURL-balance
@@ -299,38 +311,41 @@ The PRD says "Contract data is private: Contracts and invoices encrypted and acc
 
 ### 3.1 EPIC-007: Creator Wellness System
 
-| Risk | Description | OWASP | Severity |
-|------|-------------|-------|----------|
-| **Health data exposure** | Wellness scores, burnout risk, work patterns are sensitive health-adjacent data. A data breach would expose creator mental health status. | A01:2021 Broken Access Control | Medium |
-| **Boundary bypass** | DND/focus hours could be bypassed via direct NOSTR DM relay access (not routed through Sovren API) | A04:2021 Insecure Design | Low |
+| Risk                     | Description                                                                                                                               | OWASP                          | Severity |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ | -------- |
+| **Health data exposure** | Wellness scores, burnout risk, work patterns are sensitive health-adjacent data. A data breach would expose creator mental health status. | A01:2021 Broken Access Control | Medium   |
+| **Boundary bypass**      | DND/focus hours could be bypassed via direct NOSTR DM relay access (not routed through Sovren API)                                        | A04:2021 Insecure Design       | Low      |
 
 **Required Controls Beyond PRD**:
+
 - Column-level encryption for pulse check-in data (energy, motivation, stress scores)
 - Audit logging for all wellness data access
 - Rate limiting on wellness API to prevent profiling attacks
 
 ### 3.2 EPIC-008: Content Shield (AI Protection)
 
-| Risk | Description | OWASP | Severity |
-|------|-------------|-------|----------|
-| **DMCA report abuse** | One-click DMCA report generation could be weaponized for false takedown requests | A04:2021 Insecure Design | Medium |
-| **Fingerprint poisoning** | An attacker could register fingerprints for content they don't own, claiming prior art | A08:2021 Software/Data Integrity Failures | Medium |
+| Risk                      | Description                                                                            | OWASP                                     | Severity |
+| ------------------------- | -------------------------------------------------------------------------------------- | ----------------------------------------- | -------- |
+| **DMCA report abuse**     | One-click DMCA report generation could be weaponized for false takedown requests       | A04:2021 Insecure Design                  | Medium   |
+| **Fingerprint poisoning** | An attacker could register fingerprints for content they don't own, claiming prior art | A08:2021 Software/Data Integrity Failures | Medium   |
 
 **Required Controls Beyond PRD**:
+
 - Verify content ownership before fingerprint registration (check NOSTR event authorship)
 - Rate limit DMCA report generation
 - Add cooldown period and human review for disputed provenance claims
 
 ### 3.3 EPIC-009: Multi-Platform Hub
 
-| Risk | Description | OWASP | Severity |
-|------|-------------|-------|----------|
-| **OAuth token theft** | Encrypted tokens in database are a high-value target. SQL injection (PREREQ-1) combined with unencrypted storage would be catastrophic | A02:2021 Cryptographic Failures | Critical (if PREREQ-1 not fixed) |
-| **CSRF on OAuth callback** | OAuth callback endpoints must validate state parameter to prevent CSRF | A01:2021 Broken Access Control | High |
-| **Token leakage in logs** | Platform API errors often include tokens in error responses; these must not be logged | A09:2021 Security Logging Failures | Medium |
-| **SSRF via platform adapters** | Platform URLs should be validated to prevent SSRF through cross-posting | A10:2021 SSRF | Medium |
+| Risk                           | Description                                                                                                                            | OWASP                              | Severity                         |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | -------------------------------- |
+| **OAuth token theft**          | Encrypted tokens in database are a high-value target. SQL injection (PREREQ-1) combined with unencrypted storage would be catastrophic | A02:2021 Cryptographic Failures    | Critical (if PREREQ-1 not fixed) |
+| **CSRF on OAuth callback**     | OAuth callback endpoints must validate state parameter to prevent CSRF                                                                 | A01:2021 Broken Access Control     | High                             |
+| **Token leakage in logs**      | Platform API errors often include tokens in error responses; these must not be logged                                                  | A09:2021 Security Logging Failures | Medium                           |
+| **SSRF via platform adapters** | Platform URLs should be validated to prevent SSRF through cross-posting                                                                | A10:2021 SSRF                      | Medium                           |
 
 **Required Controls Beyond PRD**:
+
 - Mandatory OAuth state parameter validation (specified in US-E9-006 security audit items)
 - Structured logging that redacts token values
 - URL validation allowlist for platform API endpoints
@@ -339,13 +354,14 @@ The PRD says "Contract data is private: Contracts and invoices encrypted and acc
 
 ### 3.4 EPIC-010: Creator Network
 
-| Risk | Description | OWASP | Severity |
-|------|-------------|-------|----------|
-| **Lightning escrow abuse** | Marketplace escrow could be exploited if dispute resolution is not robust | A04:2021 Insecure Design | Medium |
-| **Revenue split manipulation** | Co-author revenue splits must be immutable after publication to prevent post-hoc changes | A08:2021 Software/Data Integrity Failures | High |
-| **NOSTR group message encryption** | No standardized NIP for group encryption; custom implementation could be flawed | A02:2021 Cryptographic Failures | Medium |
+| Risk                               | Description                                                                              | OWASP                                     | Severity |
+| ---------------------------------- | ---------------------------------------------------------------------------------------- | ----------------------------------------- | -------- |
+| **Lightning escrow abuse**         | Marketplace escrow could be exploited if dispute resolution is not robust                | A04:2021 Insecure Design                  | Medium   |
+| **Revenue split manipulation**     | Co-author revenue splits must be immutable after publication to prevent post-hoc changes | A08:2021 Software/Data Integrity Failures | High     |
+| **NOSTR group message encryption** | No standardized NIP for group encryption; custom implementation could be flawed          | A02:2021 Cryptographic Failures           | Medium   |
 
 **Required Controls Beyond PRD**:
+
 - Revenue split percentages locked after first payment received
 - Escrow timeout with automatic refund (prevent indefinite fund hold)
 - Group encryption ADR before implementation
@@ -353,12 +369,13 @@ The PRD says "Contract data is private: Contracts and invoices encrypted and acc
 
 ### 3.5 EPIC-011: Business Manager
 
-| Risk | Description | OWASP | Severity |
-|------|-------------|-------|----------|
-| **Contract data exfiltration** | Contracts contain sensitive business terms; must be encrypted not just access-controlled | A02:2021 Cryptographic Failures | Medium |
-| **Invoice payment link hijacking** | Lightning payment links embedded in invoices could be intercepted or replaced | A07:2021 Identification/Auth Failures | Medium |
+| Risk                               | Description                                                                              | OWASP                                 | Severity |
+| ---------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------- | -------- |
+| **Contract data exfiltration**     | Contracts contain sensitive business terms; must be encrypted not just access-controlled | A02:2021 Cryptographic Failures       | Medium   |
+| **Invoice payment link hijacking** | Lightning payment links embedded in invoices could be intercepted or replaced            | A07:2021 Identification/Auth Failures | Medium   |
 
 **Required Controls Beyond PRD**:
+
 - End-to-end encryption for contract text (not just RLS)
 - Invoice payment links should include HMAC verification
 - Rate limit contract analysis endpoint (could be used to probe AI model)
@@ -366,12 +383,13 @@ The PRD says "Contract data is private: Contracts and invoices encrypted and acc
 
 ### 3.6 EPIC-012: Income Stabilizer
 
-| Risk | Description | OWASP | Severity |
-|------|-------------|-------|----------|
-| **Forecast data manipulation** | If subscriber health scores are accessible, they could reveal subscriber behavior patterns | A01:2021 Broken Access Control | Low |
-| **Emergency fund tracking accuracy** | Non-custodial model means tracking can diverge from reality | A04:2021 Insecure Design | Low |
+| Risk                                 | Description                                                                                | OWASP                          | Severity |
+| ------------------------------------ | ------------------------------------------------------------------------------------------ | ------------------------------ | -------- |
+| **Forecast data manipulation**       | If subscriber health scores are accessible, they could reveal subscriber behavior patterns | A01:2021 Broken Access Control | Low      |
+| **Emergency fund tracking accuracy** | Non-custodial model means tracking can diverge from reality                                | A04:2021 Insecure Design       | Low      |
 
 **Required Controls Beyond PRD**:
+
 - Subscriber health data accessible only to the creator (not to subscribers)
 - Forecast confidence intervals should be validated to prevent misleading financial decisions
 - Clear disclaimers that emergency fund tracking is informational, not financial advice
@@ -382,24 +400,26 @@ The PRD says "Contract data is private: Contracts and invoices encrypted and acc
 
 ### Recommended Fix Order
 
-| Order | Issue | Severity | Blocks | Estimated Effort | Approach |
-|-------|-------|----------|--------|------------------|----------|
-| 1 | SQL Injection in Lightning Service (PREREQ-1) | CRITICAL | EPIC-012, all payment features | 2-3 hours | Parameterize `supabase.raw()` calls; audit all `supabase.raw()` usage across codebase |
-| 2 | Unencrypted NOSTR Private Keys (PREREQ-2) | CRITICAL | EPIC-008, EPIC-011 | 4-6 hours | Add AES-256-GCM encryption layer for private keys; migration to encrypt existing keys; wire SecretsService |
-| 3 | XSS in Editors (PREREQ-3) | HIGH | EPIC-009 | 3-4 hours | Add DOMPurify; sanitize all dangerouslySetInnerHTML and innerHTML assignments |
-| 4 | DI Controller Registration (PREREQ-4) | HIGH | All new v2 routes | 2-3 hours | Create controller bindings module; integration tests |
+| Order | Issue                                         | Severity | Blocks                         | Estimated Effort | Approach                                                                                                   |
+| ----- | --------------------------------------------- | -------- | ------------------------------ | ---------------- | ---------------------------------------------------------------------------------------------------------- |
+| 1     | SQL Injection in Lightning Service (PREREQ-1) | CRITICAL | EPIC-012, all payment features | 2-3 hours        | Parameterize `supabase.raw()` calls; audit all `supabase.raw()` usage across codebase                      |
+| 2     | Unencrypted NOSTR Private Keys (PREREQ-2)     | CRITICAL | EPIC-008, EPIC-011             | 4-6 hours        | Add AES-256-GCM encryption layer for private keys; migration to encrypt existing keys; wire SecretsService |
+| 3     | XSS in Editors (PREREQ-3)                     | HIGH     | EPIC-009                       | 3-4 hours        | Add DOMPurify; sanitize all dangerouslySetInnerHTML and innerHTML assignments                              |
+| 4     | DI Controller Registration (PREREQ-4)         | HIGH     | All new v2 routes              | 2-3 hours        | Create controller bindings module; integration tests                                                       |
 
 **Total Estimated Effort**: 11-16 hours (1.5-2 developer days)
 
 ### Implementation Recommendations
 
 **PREREQ-1 (SQL Injection)**:
+
 1. Fix the direct vulnerability at `lightning-payment-service.ts:719`
 2. Run a codebase-wide audit of all `supabase.raw()` calls (found 6 instances)
 3. Also audit `transaction-history-service.ts:655` which uses `supabase.raw()` with dynamic input
 4. Add a lint rule to flag `supabase.raw()` usage for security review
 
 **PREREQ-2 (Crypto Keys)**:
+
 1. Create an encryption utility module that wraps AES-256-GCM with key from SecretsService
 2. Add `encrypted_nostr_private_key` column to users table
 3. Create migration: encrypt all existing `nostr_private_key` values, clear plaintext column
@@ -407,6 +427,7 @@ The PRD says "Contract data is private: Contracts and invoices encrypted and acc
 5. Wire `EnhancedNostrAuthService` to use SecretsService for encryption key
 
 **PREREQ-3 (XSS)**:
+
 1. `npm install dompurify @types/dompurify`
 2. Create sanitization wrapper: `sanitizeHTML(html: string): string`
 3. Apply to `MarkdownEditor.tsx:540` and `RichTextEditor.tsx:88`
@@ -414,6 +435,7 @@ The PRD says "Contract data is private: Contracts and invoices encrypted and acc
 5. Consider replacing custom markdown regex with `react-markdown` + `rehype-sanitize`
 
 **PREREQ-4 (DI Registration)**:
+
 1. Create `controller.bindings.ts` in `/packages/backend/src/container/bindings/`
 2. Register `ContentController`, `UserController`, `PaymentController` with scoped lifetime
 3. Wire dependencies from existing service bindings
@@ -476,22 +498,22 @@ Despite the issues above, several security patterns in the codebase are well-imp
 
 ## Appendix: Files Reviewed
 
-| File | Purpose | Findings |
-|------|---------|----------|
-| `packages/backend/src/routes/lightning.ts` | Lightning API routes | CLEAN - Uses auth middleware, Zod validation |
-| `packages/backend/src/routes/lightning-receipts.ts` | Receipt API routes | CLEAN - Zod validation, rate limiting |
-| `packages/backend/src/services/lightning/lightningService.ts` | Lightning core service | LOW RISK - Currently mock data, no DB queries |
-| `packages/backend/src/services/lightning-payment-service.ts` | Payment processing | CRITICAL - SQL injection at line 719 |
-| `packages/backend/src/services/SecretsService.ts` | Secret management | CLEAN - Well-implemented AWS integration |
-| `packages/backend/src/config/secrets.config.ts` | Secret configuration | CLEAN - Proper env/AWS mapping |
-| `packages/backend/src/services/enhanced-nostr-auth.ts` | Enhanced NOSTR auth | MEDIUM - Auto-generated encryption key |
-| `packages/backend/src/services/content/ContentPublishingService.ts` | Content publishing | CRITICAL - Plaintext private key storage |
-| `packages/frontend/src/features/content/components/MarkdownEditor.tsx` | Markdown editor | HIGH - XSS via unsanitized dangerouslySetInnerHTML |
-| `packages/frontend/src/features/content/components/RichTextEditor.tsx` | Rich text editor | HIGH - XSS via unsanitized innerHTML |
-| `packages/backend/src/container/types.ts` | DI type registry | N/A - Documents the gap |
-| `packages/backend/src/container/bindings/*.bindings.ts` | DI bindings | HIGH - Missing controller registrations |
-| `packages/backend/src/container/index.ts` | DI container entry | CLEAN - Proper lazy initialization |
+| File                                                                   | Purpose                | Findings                                           |
+| ---------------------------------------------------------------------- | ---------------------- | -------------------------------------------------- |
+| `packages/backend/src/routes/lightning.ts`                             | Lightning API routes   | CLEAN - Uses auth middleware, Zod validation       |
+| `packages/backend/src/routes/lightning-receipts.ts`                    | Receipt API routes     | CLEAN - Zod validation, rate limiting              |
+| `packages/backend/src/services/lightning/lightningService.ts`          | Lightning core service | LOW RISK - Currently mock data, no DB queries      |
+| `packages/backend/src/services/lightning-payment-service.ts`           | Payment processing     | CRITICAL - SQL injection at line 719               |
+| `packages/backend/src/services/SecretsService.ts`                      | Secret management      | CLEAN - Well-implemented AWS integration           |
+| `packages/backend/src/config/secrets.config.ts`                        | Secret configuration   | CLEAN - Proper env/AWS mapping                     |
+| `packages/backend/src/services/enhanced-nostr-auth.ts`                 | Enhanced NOSTR auth    | MEDIUM - Auto-generated encryption key             |
+| `packages/backend/src/services/content/ContentPublishingService.ts`    | Content publishing     | CRITICAL - Plaintext private key storage           |
+| `packages/frontend/src/features/content/components/MarkdownEditor.tsx` | Markdown editor        | HIGH - XSS via unsanitized dangerouslySetInnerHTML |
+| `packages/frontend/src/features/content/components/RichTextEditor.tsx` | Rich text editor       | HIGH - XSS via unsanitized innerHTML               |
+| `packages/backend/src/container/types.ts`                              | DI type registry       | N/A - Documents the gap                            |
+| `packages/backend/src/container/bindings/*.bindings.ts`                | DI bindings            | HIGH - Missing controller registrations            |
+| `packages/backend/src/container/index.ts`                              | DI container entry     | CLEAN - Proper lazy initialization                 |
 
 ---
 
-*Review generated by Security Auditor Agent on 2026-02-12. This review should be validated by a human security engineer before acting on remediations.*
+_Review generated by Security Auditor Agent on 2026-02-12. This review should be validated by a human security engineer before acting on remediations._

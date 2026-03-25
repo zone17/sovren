@@ -42,13 +42,13 @@ try {
 const epicRegex = /##\s*Epic\s+(\d+):\s*(.+)/gi;
 const epicMatches = [...prdContent.matchAll(epicRegex)];
 
-const epics = epicMatches.map(match => ({
+const epics = epicMatches.map((match) => ({
   number: match[1].padStart(3, '0'),
-  name: match[2].trim()
+  name: match[2].trim(),
 }));
 
 console.log(`\n📊 Found ${epics.length} epics:`);
-epics.forEach(epic => {
+epics.forEach((epic) => {
   console.log(`   - Epic ${epic.number}: ${epic.name}`);
 });
 
@@ -56,7 +56,7 @@ epics.forEach(epic => {
 const storyRegex = /-\s*\[.\]\s*US-(\d+):\s*(.+)/gi;
 const storyMatches = [...prdContent.matchAll(storyRegex)];
 
-const stories = storyMatches.map(match => {
+const stories = storyMatches.map((match) => {
   const storyNum = match[1];
   const storyTitle = match[2].trim();
 
@@ -89,7 +89,7 @@ const stories = storyMatches.map(match => {
     completed_at: null,
     epic_label: epicLabel,
     priority: 'P2',
-    subtasks: []
+    subtasks: [],
   };
 });
 
@@ -97,7 +97,7 @@ console.log(`\n📝 Found ${stories.length} user stories`);
 
 // Group stories by epic
 const storiesByEpic = {};
-stories.forEach(story => {
+stories.forEach((story) => {
   const epicLabel = story.epic_label || 'No Epic';
   if (!storiesByEpic[epicLabel]) {
     storiesByEpic[epicLabel] = [];
@@ -111,12 +111,13 @@ Object.entries(storiesByEpic).forEach(([epicLabel, epicStories]) => {
 });
 
 // Create epic parent tasks
-const epicParentTasks = epics.map(epic => {
+const epicParentTasks = epics.map((epic) => {
   const epicLabel = `Epic ${epic.number}: ${epic.name}`;
   const epicStories = storiesByEpic[epicLabel] || [];
-  const completedStories = epicStories.filter(s => s.status === 'completed').length;
+  const completedStories = epicStories.filter((s) => s.status === 'completed').length;
   const totalStories = epicStories.length;
-  const progressPercent = totalStories > 0 ? Math.round((completedStories / totalStories) * 100) : 0;
+  const progressPercent =
+    totalStories > 0 ? Math.round((completedStories / totalStories) * 100) : 0;
 
   return {
     id: `epic-${epic.number}-parent`,
@@ -127,7 +128,7 @@ const epicParentTasks = epics.map(epic => {
     status: completedStories === totalStories ? 'completed' : 'pending',
     progress_percent: progressPercent,
     started_at: null,
-    completed_at: null
+    completed_at: null,
   };
 });
 
@@ -140,20 +141,22 @@ const taskData = {
     'active-development': {
       status: 'in_progress',
       started_at: new Date().toISOString(),
-      tasks: [
-        ...epicParentTasks,
-        ...stories
-      ]
-    }
+      tasks: [...epicParentTasks, ...stories],
+    },
   },
   summary: {
     total_tasks: stories.length,
-    completed: stories.filter(s => s.status === 'completed').length,
-    in_progress: stories.filter(s => s.status === 'in_progress').length,
-    blocked: stories.filter(s => s.status === 'blocked').length,
-    queued: stories.filter(s => s.status === 'pending').length,
-    completion_percent: stories.length > 0 ? Math.round((stories.filter(s => s.status === 'completed').length / stories.length) * 100) : 0
-  }
+    completed: stories.filter((s) => s.status === 'completed').length,
+    in_progress: stories.filter((s) => s.status === 'in_progress').length,
+    blocked: stories.filter((s) => s.status === 'blocked').length,
+    queued: stories.filter((s) => s.status === 'pending').length,
+    completion_percent:
+      stories.length > 0
+        ? Math.round(
+            (stories.filter((s) => s.status === 'completed').length / stories.length) * 100
+          )
+        : 0,
+  },
 };
 
 // Ensure data directory exists

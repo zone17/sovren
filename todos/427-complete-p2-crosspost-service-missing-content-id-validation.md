@@ -2,7 +2,7 @@
 id: 427
 severity: P2
 status: complete
-title: "CrossPostService.publish: no validation that content_id exists before queueing"
+title: 'CrossPostService.publish: no validation that content_id exists before queueing'
 file: packages/backend/src/services/distribution/CrossPostService.ts
 found_in: PR #89
 reviewer: review-backend

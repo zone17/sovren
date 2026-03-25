@@ -105,10 +105,7 @@ export const productionConfig: EnvironmentConfig = {
   },
 
   security: {
-    corsOrigins: [
-      'https://sovren.dev',
-      'https://www.sovren.dev',
-    ],
+    corsOrigins: ['https://sovren.dev', 'https://www.sovren.dev'],
     secureCookies: true,
     helmetEnabled: true,
     rateLimitEnabled: true,

@@ -1,11 +1,12 @@
 ---
-title: "PR #91 — SSRF IPv4-Compatible Bypass + DNS TOCTOU Pinning"
+title: 'PR #91 — SSRF IPv4-Compatible Bypass + DNS TOCTOU Pinning'
 date: '2026-02-21'
 category: security
 pr: 91
 findings: ['#423', '#424']
 severity: P1
-files_changed: ['packages/backend/src/utils/ssrf.ts', 'packages/backend/src/utils/__tests__/ssrf.test.ts']
+files_changed:
+  ['packages/backend/src/utils/ssrf.ts', 'packages/backend/src/utils/__tests__/ssrf.test.ts']
 lines: '+270/-6'
 sprint_type: solo
 ---
@@ -25,10 +26,12 @@ Two P1 SSRF vulnerabilities in `validateSsrfUrl()` fixed in a solo sprint. Both 
 ### Problem
 
 `isPrivateIPv6()` handled two forms of IPv4-in-IPv6:
+
 - IPv4-mapped `::ffff:x.x.x.x` (dotted-decimal)
 - IPv4-mapped `::ffff:HHHH:HHHH` (hex, after URL parser normalization)
 
 But it did NOT handle **IPv4-compatible** addresses (deprecated RFC 4291 section 2.5.5.1):
+
 - `::x.x.x.x` (dotted-decimal form)
 - `::HHHH:HHHH` (hex form, without the `ffff:` prefix)
 
@@ -117,9 +120,7 @@ export async function validateSsrfUrl(url: string): Promise<SsrfValidationResult
 **2. Export DNS-pinning agent factory:**
 
 ```typescript
-export function createSsrfSafeAgent(
-  resolvedIps: SsrfValidationResult['resolvedIps']
-): https.Agent {
+export function createSsrfSafeAgent(resolvedIps: SsrfValidationResult['resolvedIps']): https.Agent {
   let callIndex = 0;
   return new https.Agent({
     lookup: (_hostname, _options, callback) => {
@@ -142,6 +143,7 @@ const response = await fetch(url, { agent });
 ### Non-Breaking Guarantee
 
 Changing the return type from `Promise<void>` to `Promise<SsrfValidationResult>` is safe because:
+
 - All existing callers use `await validateSsrfUrl(url)` without destructuring
 - Awaiting a Promise that resolves to an object (vs void) is valid — the object is simply ignored
 - No caller checks `=== undefined` on the return value
@@ -186,13 +188,13 @@ The last two are the dangerous ones — dotted-decimal regexes miss the hex norm
 
 ```typescript
 // WRONG — TOCTOU gap between validate and fetch
-await validateSsrfUrl(url);     // DNS resolves to 93.x (public)
-await fetch(url);                // DNS may now resolve to 127.x (rebinding)
+await validateSsrfUrl(url); // DNS resolves to 93.x (public)
+await fetch(url); // DNS may now resolve to 127.x (rebinding)
 
 // RIGHT — pin resolved IPs
 const { resolvedIps } = await validateSsrfUrl(url);
 const agent = createSsrfSafeAgent(resolvedIps);
-await fetch(url, { agent });     // Uses pre-validated IPs, no re-resolution
+await fetch(url, { agent }); // Uses pre-validated IPs, no re-resolution
 ```
 
 **Non-breaking migration:** Changing `void` to object return is safe when callers `await` without destructuring. Ship the return type change first, update callers to use pinning in follow-up PRs.
@@ -205,24 +207,24 @@ This PR validates the spec-based testing pattern from R6 sprint. The OWASP-organ
 
 ## Decision Log
 
-| Decision | Rationale |
-|----------|-----------|
-| Add IPv4-compatible checks despite RFC deprecation | Deprecated != unsupported. Node.js URL parser still normalizes these. Defense-in-depth. |
-| Return-value approach vs. callback approach | Non-breaking for existing callers. Callback would require all callers to change signature. |
-| `https.Agent` with custom `lookup` | Standard Node.js API. No external dependencies. Works with `fetch`, `axios`, `http.get`. |
-| Round-robin IP selection in agent | Simple, handles multi-record DNS. Production callers can override with affinity if needed. |
-| Not changing InboxPollingService now | It's a stub behind feature flag. Document the pattern; apply when platform adapters land. |
+| Decision                                           | Rationale                                                                                  |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Add IPv4-compatible checks despite RFC deprecation | Deprecated != unsupported. Node.js URL parser still normalizes these. Defense-in-depth.    |
+| Return-value approach vs. callback approach        | Non-breaking for existing callers. Callback would require all callers to change signature. |
+| `https.Agent` with custom `lookup`                 | Standard Node.js API. No external dependencies. Works with `fetch`, `axios`, `http.get`.   |
+| Round-robin IP selection in agent                  | Simple, handles multi-record DNS. Production callers can override with affinity if needed. |
+| Not changing InboxPollingService now               | It's a stub behind feature flag. Document the pattern; apply when platform adapters land.  |
 
 ---
 
 ## Metrics
 
-| Metric | Value |
-|--------|-------|
-| Files changed | 2 |
-| Lines added | +270 |
-| Lines removed | -6 |
-| Tests | 78/78 pass |
-| Sprint type | Solo |
-| Time | ~30 min |
+| Metric                    | Value                          |
+| ------------------------- | ------------------------------ |
+| Files changed             | 2                              |
+| Lines added               | +270                           |
+| Lines removed             | -6                             |
+| Tests                     | 78/78 pass                     |
+| Sprint type               | Solo                           |
+| Time                      | ~30 min                        |
 | Review findings generated | 0 (targeted fix for known P1s) |

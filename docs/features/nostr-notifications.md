@@ -69,11 +69,11 @@ import { NotificationCenter } from '@/features/nostr/notifications';
 function Header() {
   return (
     <NotificationCenter
-      position="right"        // Panel position: 'left' | 'right'
-      maxHeight="600px"       // Maximum panel height
-      showSettings={true}     // Show settings button
-      playSound={true}        // Play notification sounds
-      autoMarkRead={true}     // Auto-mark as read on view
+      position="right" // Panel position: 'left' | 'right'
+      maxHeight="600px" // Maximum panel height
+      showSettings={true} // Show settings button
+      playSound={true} // Play notification sounds
+      autoMarkRead={true} // Auto-mark as read on view
       onNotificationClick={(notification) => {
         // Handle notification click
         console.log('Clicked:', notification);
@@ -84,6 +84,7 @@ function Header() {
 ```
 
 **Features**:
+
 - Bell icon with unread count badge
 - Slide-out panel (400px width, configurable height)
 - Filter tabs (All, Mentions, Replies, Reactions, Messages, Zaps)
@@ -121,6 +122,7 @@ function NotificationList({ notifications }) {
 ```
 
 **Features**:
+
 - Author avatar or type icon
 - Unique icon per notification type
 - Formatted content message
@@ -139,12 +141,12 @@ import { NotificationBadge } from '@/features/nostr/notifications';
 
 <NotificationBadge
   count={12}
-  max={99}                    // Show "99+" if exceeded
-  variant="danger"            // Color variant
-  size="md"                   // Size: 'sm' | 'md' | 'lg'
-  dot={false}                 // Dot mode (no count)
-  showZero={false}            // Show when count is 0
-/>
+  max={99} // Show "99+" if exceeded
+  variant="danger" // Color variant
+  size="md" // Size: 'sm' | 'md' | 'lg'
+  dot={false} // Dot mode (no count)
+  showZero={false} // Show when count is 0
+/>;
 ```
 
 #### React Hooks
@@ -152,19 +154,20 @@ import { NotificationBadge } from '@/features/nostr/notifications';
 Three hooks provide access to notification functionality:
 
 **useNotifications**:
+
 ```tsx
 import { useNotifications } from '@/features/nostr/notifications';
 
 function MyComponent() {
   const {
-    notifications,        // Array of notifications
-    unreadCount,         // Unread count
-    loading,             // Loading state
-    error,               // Error state
-    markAsRead,          // Mark notification as read
-    markAllAsRead,       // Mark all as read
-    deleteNotification,  // Delete notification
-    refresh,             // Refresh notifications
+    notifications, // Array of notifications
+    unreadCount, // Unread count
+    loading, // Loading state
+    error, // Error state
+    markAsRead, // Mark notification as read
+    markAllAsRead, // Mark all as read
+    deleteNotification, // Delete notification
+    refresh, // Refresh notifications
   } = useNotifications({
     types: [NotificationType.MENTION, NotificationType.REPLY],
     read: false,
@@ -183,6 +186,7 @@ function MyComponent() {
 ```
 
 **useUnreadCount**:
+
 ```tsx
 import { useUnreadCount } from '@/features/nostr/notifications';
 
@@ -193,6 +197,7 @@ function UnreadCounter() {
 ```
 
 **useNotificationSound**:
+
 ```tsx
 import { useNotificationSound } from '@/features/nostr/notifications';
 
@@ -201,12 +206,8 @@ function SoundDemo() {
 
   return (
     <div>
-      <button onClick={() => playSound(NotificationType.MENTION)}>
-        Play Mention Sound
-      </button>
-      <button onClick={() => playBeep(600, 0.3)}>
-        Play Beep
-      </button>
+      <button onClick={() => playSound(NotificationType.MENTION)}>Play Mention Sound</button>
+      <button onClick={() => playBeep(600, 0.3)}>Play Beep</button>
       <button onClick={playSuccess}>Success Sound</button>
       <button onClick={playError}>Error Sound</button>
     </div>
@@ -220,18 +221,18 @@ Users can configure notification behavior via `NotificationSettings`:
 
 ```typescript
 interface NotificationPreferences {
-  enableMentions: boolean;              // Show mention notifications
-  enableReplies: boolean;               // Show reply notifications
-  enableReactions: boolean;             // Show reaction notifications
-  enableReposts: boolean;               // Show repost notifications
-  enableDMs: boolean;                   // Show DM notifications
-  enableFollows: boolean;               // Show follow notifications
-  enableZaps: boolean;                  // Show zap notifications
-  playSound: boolean;                   // Play sounds
-  showDesktopNotifications: boolean;    // Show desktop notifications
-  soundVolume: number;                  // Volume (0-1)
-  groupByDate: boolean;                 // Group by date
-  autoMarkRead: boolean;                // Auto-mark as read
+  enableMentions: boolean; // Show mention notifications
+  enableReplies: boolean; // Show reply notifications
+  enableReactions: boolean; // Show reaction notifications
+  enableReposts: boolean; // Show repost notifications
+  enableDMs: boolean; // Show DM notifications
+  enableFollows: boolean; // Show follow notifications
+  enableZaps: boolean; // Show zap notifications
+  playSound: boolean; // Play sounds
+  showDesktopNotifications: boolean; // Show desktop notifications
+  soundVolume: number; // Volume (0-1)
+  groupByDate: boolean; // Group by date
+  autoMarkRead: boolean; // Auto-mark as read
 }
 ```
 
@@ -268,6 +269,7 @@ if (Notification.permission === 'default') {
 ```
 
 Desktop notifications feature:
+
 - Notification title with author name
 - Notification body with content
 - Author avatar as icon
@@ -308,20 +310,21 @@ IndexedDB stores notifications with this schema:
 
 ```typescript
 interface NotificationStorageSchema {
-  id: string;                  // Primary key
-  type: NotificationType;      // Indexed
+  id: string; // Primary key
+  type: NotificationType; // Indexed
   eventId: string;
-  eventJson: string;           // Serialized NOSTR event
-  authorPubkey: string;        // Indexed
+  eventJson: string; // Serialized NOSTR event
+  authorPubkey: string; // Indexed
   content: string;
-  createdAt: number;           // Indexed
-  read: boolean;               // Indexed
+  createdAt: number; // Indexed
+  read: boolean; // Indexed
   url?: string;
   metadataJson?: string;
 }
 ```
 
 Indexes:
+
 - `type`: For filtering by notification type
 - `read`: For querying unread notifications
 - `createdAt`: For sorting and date filtering
@@ -396,6 +399,7 @@ npm run storybook
 ```
 
 Stories include:
+
 - All notification types
 - Read/unread states
 - Different sizes and variants
@@ -420,10 +424,12 @@ const notificationService = getNotificationService();
 
 // Subscribe to mentions (kind 1 with p-tag)
 subscriptionManager.subscribe({
-  filters: [{
-    kinds: [1],
-    '#p': [userPubkey],
-  }],
+  filters: [
+    {
+      kinds: [1],
+      '#p': [userPubkey],
+    },
+  ],
   onEvent: (event) => {
     // Create mention notification
     const notification = {
@@ -499,6 +505,7 @@ See TypeScript interfaces in `/src/features/nostr/notifications/types/index.ts` 
 ## Support
 
 For issues, questions, or contributions:
+
 - GitHub Issues: [sovren/issues](https://github.com/sovren/sovren/issues)
 - Documentation: `/docs/features/nostr-notifications.md`
 - Storybook: `npm run storybook`

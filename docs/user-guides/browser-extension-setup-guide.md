@@ -55,7 +55,6 @@ This guide will help you set up and use NOSTR browser extensions with Sovren for
 #### **Step 1: Install nos2x**
 
 1. **Chrome/Edge Users**:
-
    - Go to [Chrome Web Store](https://chrome.google.com/webstore)
    - Search for "nos2x"
    - Click "Add to Chrome"
@@ -90,7 +89,6 @@ This guide will help you set up and use NOSTR browser extensions with Sovren for
 #### **Step 1: Install Alby**
 
 1. **Chrome/Edge Users**:
-
    - Go to [Chrome Web Store](https://chrome.google.com/webstore)
    - Search for "Alby"
    - Click "Add to Chrome"
@@ -106,7 +104,6 @@ This guide will help you set up and use NOSTR browser extensions with Sovren for
 
 1. **Click the Alby extension icon** in your browser toolbar
 2. **Choose Setup Option**:
-
    - **New to Lightning**: Follow guided setup for new wallet
    - **Existing Wallet**: Connect your existing Lightning wallet
    - **Alby Account**: Sign up for Alby account (recommended)

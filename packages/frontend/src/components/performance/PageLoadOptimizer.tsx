@@ -700,21 +700,21 @@ export const PageLoadOptimizer: React.FC<PageLoadOptimizerProps> = ({
     return (
       <div className="flex items-center justify-center p-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-2 text-gray-600">Optimizing performance...</span>
+        <span className="ml-2 text-muted-foreground">Optimizing performance...</span>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6 space-y-6">
+    <div className="bg-card rounded-lg shadow-lg p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <Zap className="h-6 w-6 text-blue-600" />
-          <h2 className="text-xl font-semibold text-gray-900">Page Load Optimizer</h2>
+          <h2 className="text-xl font-semibold text-foreground">Page Load Optimizer</h2>
         </div>
         <div className="flex items-center space-x-2">
-          <span className="text-sm text-gray-500">Overall Score:</span>
+          <span className="text-sm text-muted-foreground">Overall Score:</span>
           <span className={`text-lg font-bold ${getScoreColor(getOverallScore)}`}>
             {getOverallScore}/100
           </span>
@@ -764,7 +764,7 @@ export const PageLoadOptimizer: React.FC<PageLoadOptimizerProps> = ({
       {/* Audit Results */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Performance Audit</h3>
+          <h3 className="text-lg font-semibold text-foreground">Performance Audit</h3>
           <button
             onClick={runPerformanceAudit}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -775,9 +775,9 @@ export const PageLoadOptimizer: React.FC<PageLoadOptimizerProps> = ({
 
         <div className="space-y-4">
           {auditResults.map((result, index) => (
-            <div key={index} className="border border-gray-200 rounded-lg p-4">
+            <div key={index} className="border border-border rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
-                <h4 className="font-medium text-gray-900">{result.category}</h4>
+                <h4 className="font-medium text-foreground">{result.category}</h4>
                 <span className={`font-bold ${getScoreColor(result.score)}`}>
                   {result.score}/100
                 </span>
@@ -795,7 +795,7 @@ export const PageLoadOptimizer: React.FC<PageLoadOptimizerProps> = ({
                             : 'text-green-500'
                       }`}
                     />
-                    <span className="text-sm text-gray-700">{rec}</span>
+                    <span className="text-sm text-foreground">{rec}</span>
                   </div>
                 ))}
               </div>
@@ -807,17 +807,17 @@ export const PageLoadOptimizer: React.FC<PageLoadOptimizerProps> = ({
       {/* Dashboard Data */}
       {dashboardData && (
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Performance Dashboard</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-4">Performance Dashboard</h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
-              <h4 className="font-medium text-gray-900 flex items-center">
+              <h4 className="font-medium text-foreground flex items-center">
                 <Monitor className="h-4 w-4 mr-2" />
                 Core Web Vitals
               </h4>
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">First Contentful Paint</span>
+                  <span className="text-sm text-muted-foreground">First Contentful Paint</span>
                   <span className="font-mono text-sm">
                     {dashboardData.coreWebVitals.fcp.toFixed(0)}ms
                   </span>
@@ -826,19 +826,19 @@ export const PageLoadOptimizer: React.FC<PageLoadOptimizerProps> = ({
             </div>
 
             <div className="space-y-4">
-              <h4 className="font-medium text-gray-900 flex items-center">
+              <h4 className="font-medium text-foreground flex items-center">
                 <TrendingUp className="h-4 w-4 mr-2" />
                 Resource Analysis
               </h4>
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Total Resources</span>
+                  <span className="text-sm text-muted-foreground">Total Resources</span>
                   <span className="font-mono text-sm">
                     {dashboardData.resourceTiming.totalResources}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Average Load Time</span>
+                  <span className="text-sm text-muted-foreground">Average Load Time</span>
                   <span className="font-mono text-sm">
                     {dashboardData.resourceTiming.averageLoadTime.toFixed(0)}ms
                   </span>
@@ -852,7 +852,7 @@ export const PageLoadOptimizer: React.FC<PageLoadOptimizerProps> = ({
       {/* Network Tests */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Network Performance</h3>
+          <h3 className="text-lg font-semibold text-foreground">Network Performance</h3>
           <button
             onClick={runNetworkTests}
             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
@@ -866,10 +866,10 @@ export const PageLoadOptimizer: React.FC<PageLoadOptimizerProps> = ({
             {networkTestResults.map((result, index) => (
               <div
                 key={index}
-                className="flex justify-between items-center p-3 bg-gray-50 rounded-lg"
+                className="flex justify-between items-center p-3 bg-muted rounded-lg"
               >
-                <span className="font-medium text-gray-900">{result.condition}</span>
-                <span className="font-mono text-sm text-gray-700">
+                <span className="font-medium text-foreground">{result.condition}</span>
+                <span className="font-mono text-sm text-foreground">
                   {result.loadTime.toFixed(0)}ms
                 </span>
               </div>
@@ -880,7 +880,7 @@ export const PageLoadOptimizer: React.FC<PageLoadOptimizerProps> = ({
 
       {/* Quick Actions */}
       <div className="border-t pt-4">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           <button
             onClick={() => preloader.preloadCriticalResources()}

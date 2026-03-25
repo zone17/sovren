@@ -23,11 +23,7 @@
       "- [ ] Documentation updated in CHANGELOG.md"
     ],
     "epic": "EPIC-IMMEDIATE",
-    "labels": [
-      "user-story",
-      "epic:immediate",
-      "priority:critical"
-    ]
+    "labels": ["user-story", "epic:immediate", "priority:critical"]
   },
   {
     "id": "IMMED-002",
@@ -35,9 +31,7 @@
     "priority": "CRITICAL",
     "estimated_hours": 1.0,
     "agent": "None (direct fix)",
-    "dependencies": [
-      "IMMED-001"
-    ],
+    "dependencies": ["IMMED-001"],
     "description": "Fix syntax error in database pool test file that's causing test failures. Ensure proper TypeScript typing and test structure.",
     "subtasks": [
       "- [ ] Locate syntax error in `packages/backend/src/database/__tests__/pool.test.ts`",
@@ -56,12 +50,7 @@
       "- [ ] Documentation updated in CHANGELOG.md"
     ],
     "epic": "EPIC-IMMEDIATE",
-    "labels": [
-      "user-story",
-      "epic:immediate",
-      "priority:critical",
-      "testing"
-    ]
+    "labels": ["user-story", "epic:immediate", "priority:critical", "testing"]
   },
   {
     "id": "IMMED-003",
@@ -90,11 +79,7 @@
       "- [ ] CHANGELOG.md updated with security fix entry"
     ],
     "epic": "EPIC-IMMEDIATE",
-    "labels": [
-      "user-story",
-      "epic:immediate",
-      "priority:critical"
-    ]
+    "labels": ["user-story", "epic:immediate", "priority:critical"]
   },
   {
     "id": "IMMED-004",
@@ -126,12 +111,7 @@
       "- [ ] CHANGELOG.md updated"
     ],
     "epic": "EPIC-IMMEDIATE",
-    "labels": [
-      "user-story",
-      "epic:immediate",
-      "priority:critical",
-      "backend"
-    ]
+    "labels": ["user-story", "epic:immediate", "priority:critical", "backend"]
   },
   {
     "id": "IMMED-005",
@@ -139,10 +119,7 @@
     "priority": "HIGH",
     "estimated_hours": 3.0,
     "agent": "None (direct fix with testing)",
-    "dependencies": [
-      "IMMED-001",
-      "IMMED-002"
-    ],
+    "dependencies": ["IMMED-001", "IMMED-002"],
     "description": "Update npm dependencies to resolve 6 moderate vulnerabilities in esbuild and vite packages. Ensure no breaking changes affect build process.",
     "subtasks": [
       "- [ ] Run `npm audit` to identify exact vulnerable packages",
@@ -168,12 +145,7 @@
       "- [ ] CHANGELOG.md updated with dependency updates"
     ],
     "epic": "EPIC-IMMEDIATE",
-    "labels": [
-      "user-story",
-      "epic:immediate",
-      "priority:high",
-      "security"
-    ]
+    "labels": ["user-story", "epic:immediate", "priority:high", "security"]
   },
   {
     "id": "IMMED-006",
@@ -181,10 +153,7 @@
     "priority": "HIGH",
     "estimated_hours": 3.0,
     "agent": "code-review-specialist",
-    "dependencies": [
-      "IMMED-001",
-      "IMMED-002"
-    ],
+    "dependencies": ["IMMED-001", "IMMED-002"],
     "description": "Comprehensive code review of 77 staged files for US-007 error boundaries implementation. Verify quality gates, test coverage, and implementation correctness before merge.",
     "subtasks": [
       "- [ ] Run `git diff --cached --stat` to list all 77 staged files",
@@ -213,11 +182,7 @@
       "- [ ] PR ready for merge or issues documented for fixes"
     ],
     "epic": "EPIC-IMMEDIATE",
-    "labels": [
-      "user-story",
-      "epic:immediate",
-      "priority:high"
-    ]
+    "labels": ["user-story", "epic:immediate", "priority:high"]
   },
   {
     "id": "IMMED-007",
@@ -225,9 +190,7 @@
     "priority": "HIGH",
     "estimated_hours": 1.0,
     "agent": "None (direct merge)",
-    "dependencies": [
-      "IMMED-006"
-    ],
+    "dependencies": ["IMMED-006"],
     "description": "Create PR, verify CI/CD checks pass, and merge US-007 error boundaries implementation to main branch. Ensure staging deployment succeeds.",
     "subtasks": [
       "- [ ] Create PR: `gh pr create --title \"feat(US-007): Error boundaries with Sentry integration\"`",
@@ -253,11 +216,7 @@
       "- [ ] Team notified of merge (Slack/GitHub Discussions)"
     ],
     "epic": "EPIC-IMMEDIATE",
-    "labels": [
-      "user-story",
-      "epic:immediate",
-      "priority:high"
-    ]
+    "labels": ["user-story", "epic:immediate", "priority:high"]
   },
   {
     "id": "FE-001",
@@ -287,13 +246,7 @@
       "- [ ] CHANGELOG.md updated with design deliverable"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:critical",
-      "design",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:critical", "design", "frontend"]
   },
   {
     "id": "FE-002",
@@ -301,9 +254,7 @@
     "priority": "CRITICAL",
     "estimated_hours": 6.0,
     "agent": "design-ux-specialist",
-    "dependencies": [
-      "FE-001"
-    ],
+    "dependencies": ["FE-001"],
     "description": "Create low-fidelity wireframes for all NOSTR authentication screens including extension detection, manual key input, role selection, and error states.",
     "subtasks": [
       "- [ ] Wireframe: Auth modal component (container structure)",
@@ -327,13 +278,7 @@
       "- [ ] CHANGELOG.md updated"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:critical",
-      "design",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:critical", "design", "frontend"]
   },
   {
     "id": "FE-003",
@@ -341,9 +286,7 @@
     "priority": "CRITICAL",
     "estimated_hours": 8.0,
     "agent": "design-ux-specialist",
-    "dependencies": [
-      "FE-002"
-    ],
+    "dependencies": ["FE-002"],
     "description": "Create high-fidelity mockups with visual design, typography, colors, and micro-interactions for NOSTR authentication UI. Design for light/dark modes and mobile responsiveness.",
     "subtasks": [
       "- [ ] High-fidelity mockup: Auth modal (light and dark modes)",
@@ -371,13 +314,7 @@
       "- [ ] CHANGELOG.md updated"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:critical",
-      "design",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:critical", "design", "frontend"]
   },
   {
     "id": "FE-004",
@@ -385,9 +322,7 @@
     "priority": "HIGH",
     "estimated_hours": 3.0,
     "agent": "design-ux-specialist",
-    "dependencies": [
-      "FE-003"
-    ],
+    "dependencies": ["FE-003"],
     "description": "Create Mermaid diagrams documenting component hierarchy, data flow, state management, and service integration for NOSTR authentication feature.",
     "subtasks": [
       "- [ ] Create component hierarchy diagram (parent-child relationships)",
@@ -410,12 +345,7 @@
       "- [ ] CHANGELOG.md updated"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:high",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:high", "frontend"]
   },
   {
     "id": "FE-005",
@@ -423,9 +353,7 @@
     "priority": "CRITICAL",
     "estimated_hours": 4.0,
     "agent": "elite-frontend-dev",
-    "dependencies": [
-      "FE-004"
-    ],
+    "dependencies": ["FE-004"],
     "description": "Implement the main authentication button component with automatic extension detection (Alby, nos2x), loading states, and error handling.",
     "subtasks": [
       "- [ ] Create component file: packages/frontend/src/features/auth/components/NOSTRAuthButton.tsx",
@@ -453,12 +381,7 @@
       "- [ ] Component exported from features/auth/index.ts"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:critical",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:critical", "frontend"]
   },
   {
     "id": "FE-006",
@@ -466,9 +389,7 @@
     "priority": "CRITICAL",
     "estimated_hours": 4.0,
     "agent": "elite-frontend-dev",
-    "dependencies": [
-      "FE-005"
-    ],
+    "dependencies": ["FE-005"],
     "description": "Implement modal container component that manages authentication flow state and renders appropriate sub-components (extension auth, manual input, role selection).",
     "subtasks": [
       "- [ ] Create component file: packages/frontend/src/features/auth/components/AuthModal.tsx",
@@ -496,12 +417,7 @@
       "- [ ] Exported from features/auth/index.ts"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:critical",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:critical", "frontend"]
   },
   {
     "id": "FE-007",
@@ -509,9 +425,7 @@
     "priority": "CRITICAL",
     "estimated_hours": 4.0,
     "agent": "elite-frontend-dev",
-    "dependencies": [
-      "FE-006"
-    ],
+    "dependencies": ["FE-006"],
     "description": "Implement browser extension authentication component that detects and authenticates via Alby, nos2x, or Nostrum extensions using NIP-07 protocol.",
     "subtasks": [
       "- [ ] Create: packages/frontend/src/features/auth/components/ExtensionAuth.tsx",
@@ -536,12 +450,7 @@
       "- [ ] JSDoc complete"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:critical",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:critical", "frontend"]
   },
   {
     "id": "FE-008",
@@ -549,9 +458,7 @@
     "priority": "CRITICAL",
     "estimated_hours": 6.0,
     "agent": "elite-frontend-dev",
-    "dependencies": [
-      "FE-006"
-    ],
+    "dependencies": ["FE-006"],
     "description": "Implement manual public/private key input form with real-time validation for npub/nsec formats and security warnings.",
     "subtasks": [
       "- [ ] Create: packages/frontend/src/features/auth/components/ManualKeyInput.tsx",
@@ -576,12 +483,7 @@
       "- [ ] JSDoc complete"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:critical",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:critical", "frontend"]
   },
   {
     "id": "FE-009",
@@ -589,10 +491,7 @@
     "priority": "HIGH",
     "estimated_hours": 3.0,
     "agent": "elite-frontend-dev",
-    "dependencies": [
-      "FE-007",
-      "FE-008"
-    ],
+    "dependencies": ["FE-007", "FE-008"],
     "description": "Implement role selection component allowing users to choose Creator or Supporter role after authentication.",
     "subtasks": [
       "- [ ] Create: packages/frontend/src/features/auth/components/RoleSelector.tsx",
@@ -616,12 +515,7 @@
       "- [ ] JSDoc complete"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:high",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:high", "frontend"]
   },
   {
     "id": "FE-010",
@@ -629,11 +523,7 @@
     "priority": "CRITICAL",
     "estimated_hours": 4.0,
     "agent": "elite-frontend-dev",
-    "dependencies": [
-      "FE-007",
-      "FE-008",
-      "FE-009"
-    ],
+    "dependencies": ["FE-007", "FE-008", "FE-009"],
     "description": "Integrate NOSTR authentication UI with backend API endpoints, Redux store, and session management.",
     "subtasks": [
       "- [ ] Connect ExtensionAuth to backend /api/auth/authenticate endpoint",
@@ -657,13 +547,7 @@
       "- [ ] Integration tests passing"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:critical",
-      "frontend",
-      "backend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:critical", "frontend", "backend"]
   },
   {
     "id": "FE-011",
@@ -671,9 +555,7 @@
     "priority": "CRITICAL",
     "estimated_hours": 6.0,
     "agent": "test-automation-engineer",
-    "dependencies": [
-      "FE-010"
-    ],
+    "dependencies": ["FE-010"],
     "description": "Create comprehensive unit tests for all NOSTR authentication components and services with 95%+ coverage.",
     "subtasks": [
       "- [ ] Test: NOSTRAuthButton extension detection logic",
@@ -698,13 +580,7 @@
       "- [ ] Test report generated"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:critical",
-      "testing",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:critical", "testing", "frontend"]
   },
   {
     "id": "FE-012",
@@ -712,9 +588,7 @@
     "priority": "HIGH",
     "estimated_hours": 4.0,
     "agent": "test-automation-engineer",
-    "dependencies": [
-      "FE-011"
-    ],
+    "dependencies": ["FE-011"],
     "description": "Create integration tests for complete NOSTR authentication flows including extension auth, manual auth, and role selection.",
     "subtasks": [
       "- [ ] Integration test: Extension-based auth flow (end-to-end)",
@@ -738,13 +612,7 @@
       "- [ ] Test coverage maintained at 95%+"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:high",
-      "testing",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:high", "testing", "frontend"]
   },
   {
     "id": "FE-013",
@@ -773,13 +641,7 @@
       "- [ ] CHANGELOG.md updated"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:critical",
-      "design",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:critical", "design", "frontend"]
   },
   {
     "id": "FE-014",
@@ -787,9 +649,7 @@
     "priority": "CRITICAL",
     "estimated_hours": 6.0,
     "agent": "design-ux-specialist",
-    "dependencies": [
-      "FE-013"
-    ],
+    "dependencies": ["FE-013"],
     "description": "Create wireframes for content editor interface including rich text editor, media uploader, premium toggle, and publishing options.",
     "subtasks": [
       "- [ ] Wireframe: Content editor main interface",
@@ -811,13 +671,7 @@
       "- [ ] CHANGELOG.md updated"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:critical",
-      "design",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:critical", "design", "frontend"]
   },
   {
     "id": "FE-015",
@@ -825,9 +679,7 @@
     "priority": "CRITICAL",
     "estimated_hours": 8.0,
     "agent": "design-ux-specialist",
-    "dependencies": [
-      "FE-014"
-    ],
+    "dependencies": ["FE-014"],
     "description": "Create high-fidelity mockups for content editor with visual design, typography, and responsive layouts for desktop and mobile.",
     "subtasks": [
       "- [ ] High-fidelity: Editor main interface (light/dark mode)",
@@ -853,13 +705,7 @@
       "- [ ] CHANGELOG.md updated"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:critical",
-      "design",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:critical", "design", "frontend"]
   },
   {
     "id": "FE-016",
@@ -867,9 +713,7 @@
     "priority": "HIGH",
     "estimated_hours": 3.0,
     "agent": "design-ux-specialist",
-    "dependencies": [
-      "FE-015"
-    ],
+    "dependencies": ["FE-015"],
     "description": "Create Mermaid diagrams for content editor architecture including component hierarchy, data flow, auto-save mechanism, and NOSTR publishing.",
     "subtasks": [
       "- [ ] Diagram: Component hierarchy (editor, toolbar, uploader)",
@@ -892,12 +736,7 @@
       "- [ ] CHANGELOG.md updated"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:high",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:high", "frontend"]
   },
   {
     "id": "FE-017",
@@ -905,9 +744,7 @@
     "priority": "CRITICAL",
     "estimated_hours": 8.0,
     "agent": "elite-frontend-dev",
-    "dependencies": [
-      "FE-016"
-    ],
+    "dependencies": ["FE-016"],
     "description": "Implement main content editor component with rich text editing using Draft.js or Slate, markdown support, and auto-save functionality.",
     "subtasks": [
       "- [ ] Evaluate and choose: Draft.js vs Slate.js for rich text",
@@ -934,12 +771,7 @@
       "- [ ] JSDoc complete"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:critical",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:critical", "frontend"]
   },
   {
     "id": "FE-018",
@@ -947,9 +779,7 @@
     "priority": "CRITICAL",
     "estimated_hours": 6.0,
     "agent": "elite-frontend-dev",
-    "dependencies": [
-      "FE-017"
-    ],
+    "dependencies": ["FE-017"],
     "description": "Implement drag-and-drop media uploader for images, videos, and audio with progress indicators and Supabase Storage integration.",
     "subtasks": [
       "- [ ] Create: packages/frontend/src/features/content/components/MediaUploader.tsx",
@@ -979,12 +809,7 @@
       "- [ ] JSDoc complete"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:critical",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:critical", "frontend"]
   },
   {
     "id": "FE-019",
@@ -992,9 +817,7 @@
     "priority": "HIGH",
     "estimated_hours": 3.0,
     "agent": "elite-frontend-dev",
-    "dependencies": [
-      "FE-017"
-    ],
+    "dependencies": ["FE-017"],
     "description": "Implement premium content toggle component allowing creators to designate content as free or premium with pricing display.",
     "subtasks": [
       "- [ ] Create: packages/frontend/src/features/content/components/PremiumToggle.tsx",
@@ -1020,12 +843,7 @@
       "- [ ] JSDoc complete"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:high",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:high", "frontend"]
   },
   {
     "id": "FE-020",
@@ -1033,10 +851,7 @@
     "priority": "HIGH",
     "estimated_hours": 4.0,
     "agent": "elite-frontend-dev",
-    "dependencies": [
-      "FE-017",
-      "FE-018"
-    ],
+    "dependencies": ["FE-017", "FE-018"],
     "description": "Implement content preview modal showing how content will appear to readers before publishing.",
     "subtasks": [
       "- [ ] Create: packages/frontend/src/features/content/components/ContentPreview.tsx",
@@ -1062,12 +877,7 @@
       "- [ ] JSDoc complete"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:high",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:high", "frontend"]
   },
   {
     "id": "FE-021",
@@ -1075,9 +885,7 @@
     "priority": "MEDIUM",
     "estimated_hours": 4.0,
     "agent": "elite-frontend-dev",
-    "dependencies": [
-      "FE-017"
-    ],
+    "dependencies": ["FE-017"],
     "description": "Implement tag selector with autocomplete for content categorization and tagging.",
     "subtasks": [
       "- [ ] Create: packages/frontend/src/features/content/components/TagSelector.tsx",
@@ -1103,12 +911,7 @@
       "- [ ] JSDoc complete"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:medium",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:medium", "frontend"]
   },
   {
     "id": "FE-022",
@@ -1116,12 +919,7 @@
     "priority": "CRITICAL",
     "estimated_hours": 6.0,
     "agent": "elite-frontend-dev",
-    "dependencies": [
-      "FE-017",
-      "FE-018",
-      "FE-019",
-      "FE-020"
-    ],
+    "dependencies": ["FE-017", "FE-018", "FE-019", "FE-020"],
     "description": "Integrate content editor with backend NOSTR publishing service and content management API.",
     "subtasks": [
       "- [ ] Connect editor to backend /api/content-management endpoints",
@@ -1146,12 +944,7 @@
       "- [ ] Integration tests passing"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:critical",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:critical", "frontend"]
   },
   {
     "id": "FE-023",
@@ -1159,9 +952,7 @@
     "priority": "CRITICAL",
     "estimated_hours": 6.0,
     "agent": "test-automation-engineer",
-    "dependencies": [
-      "FE-022"
-    ],
+    "dependencies": ["FE-022"],
     "description": "Create comprehensive unit tests for content editor components with 95%+ coverage.",
     "subtasks": [
       "- [ ] Test: ContentEditor formatting functionality",
@@ -1186,13 +977,7 @@
       "- [ ] Test report generated"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:critical",
-      "testing",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:critical", "testing", "frontend"]
   },
   {
     "id": "FE-024",
@@ -1200,9 +985,7 @@
     "priority": "HIGH",
     "estimated_hours": 4.0,
     "agent": "test-automation-engineer",
-    "dependencies": [
-      "FE-023"
-    ],
+    "dependencies": ["FE-023"],
     "description": "Create integration tests for complete content creation and publishing flows.",
     "subtasks": [
       "- [ ] Integration test: Create content \u2192 save draft",
@@ -1225,13 +1008,7 @@
       "- [ ] Test coverage maintained at 95%+"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:high",
-      "testing",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:high", "testing", "frontend"]
   },
   {
     "id": "FE-025",
@@ -1260,13 +1037,7 @@
       "- [ ] CHANGELOG.md updated"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:critical",
-      "design",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:critical", "design", "frontend"]
   },
   {
     "id": "FE-026",
@@ -1274,9 +1045,7 @@
     "priority": "CRITICAL",
     "estimated_hours": 6.0,
     "agent": "design-ux-specialist",
-    "dependencies": [
-      "FE-025"
-    ],
+    "dependencies": ["FE-025"],
     "description": "Create wireframes for Lightning payment interface including wallet connection, invoice display, QR codes, and transaction history.",
     "subtasks": [
       "- [ ] Wireframe: Wallet connection button/modal",
@@ -1298,13 +1067,7 @@
       "- [ ] CHANGELOG.md updated"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:critical",
-      "design",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:critical", "design", "frontend"]
   },
   {
     "id": "FE-027",
@@ -1312,9 +1075,7 @@
     "priority": "CRITICAL",
     "estimated_hours": 8.0,
     "agent": "design-ux-specialist",
-    "dependencies": [
-      "FE-026"
-    ],
+    "dependencies": ["FE-026"],
     "description": "Create high-fidelity mockups for Lightning payment UI with Bitcoin branding, QR codes, and mobile-optimized payment flow.",
     "subtasks": [
       "- [ ] High-fidelity: Wallet connection UI (WebLN, manual)",
@@ -1340,13 +1101,7 @@
       "- [ ] CHANGELOG.md updated"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:critical",
-      "design",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:critical", "design", "frontend"]
   },
   {
     "id": "FE-028",
@@ -1354,9 +1109,7 @@
     "priority": "HIGH",
     "estimated_hours": 3.0,
     "agent": "design-ux-specialist",
-    "dependencies": [
-      "FE-027"
-    ],
+    "dependencies": ["FE-027"],
     "description": "Create Mermaid diagrams for Lightning payment architecture including WebLN integration, invoice generation, payment verification, and webhook handling.",
     "subtasks": [
       "- [ ] Diagram: Component hierarchy (wallet, invoice, status)",
@@ -1379,12 +1132,7 @@
       "- [ ] CHANGELOG.md updated"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:high",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:high", "frontend"]
   },
   {
     "id": "FE-029",
@@ -1392,9 +1140,7 @@
     "priority": "CRITICAL",
     "estimated_hours": 5.0,
     "agent": "elite-frontend-dev",
-    "dependencies": [
-      "FE-028"
-    ],
+    "dependencies": ["FE-028"],
     "description": "Implement Lightning wallet connection component with WebLN support and fallback to manual invoice payment.",
     "subtasks": [
       "- [ ] Create: packages/frontend/src/features/payments/components/LightningWalletConnect.tsx",
@@ -1419,12 +1165,7 @@
       "- [ ] JSDoc complete"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:critical",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:critical", "frontend"]
   },
   {
     "id": "FE-030",
@@ -1432,9 +1173,7 @@
     "priority": "CRITICAL",
     "estimated_hours": 5.0,
     "agent": "elite-frontend-dev",
-    "dependencies": [
-      "FE-029"
-    ],
+    "dependencies": ["FE-029"],
     "description": "Implement BOLT11 invoice display component with QR code generation, copy-to-clipboard, and amount display in sats and fiat.",
     "subtasks": [
       "- [ ] Create: packages/frontend/src/features/payments/components/InvoiceDisplay.tsx",
@@ -1462,12 +1201,7 @@
       "- [ ] JSDoc complete"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:critical",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:critical", "frontend"]
   },
   {
     "id": "FE-031",
@@ -1475,9 +1209,7 @@
     "priority": "CRITICAL",
     "estimated_hours": 4.0,
     "agent": "elite-frontend-dev",
-    "dependencies": [
-      "FE-030"
-    ],
+    "dependencies": ["FE-030"],
     "description": "Implement real-time payment status component showing pending, confirmed, and failed states with polling and webhook support.",
     "subtasks": [
       "- [ ] Create: packages/frontend/src/features/payments/components/PaymentStatus.tsx",
@@ -1504,12 +1236,7 @@
       "- [ ] JSDoc complete"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:critical",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:critical", "frontend"]
   },
   {
     "id": "FE-032",
@@ -1517,9 +1244,7 @@
     "priority": "HIGH",
     "estimated_hours": 4.0,
     "agent": "elite-frontend-dev",
-    "dependencies": [
-      "FE-031"
-    ],
+    "dependencies": ["FE-031"],
     "description": "Implement transaction history component showing past Lightning payments with filters and sorting.",
     "subtasks": [
       "- [ ] Create: packages/frontend/src/features/payments/components/TransactionHistory.tsx",
@@ -1546,12 +1271,7 @@
       "- [ ] JSDoc complete"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:high",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:high", "frontend"]
   },
   {
     "id": "FE-033",
@@ -1584,12 +1304,7 @@
       "- [ ] JSDoc complete"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:medium",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:medium", "frontend"]
   },
   {
     "id": "FE-034",
@@ -1597,11 +1312,7 @@
     "priority": "CRITICAL",
     "estimated_hours": 6.0,
     "agent": "elite-frontend-dev + lightning-network-specialist",
-    "dependencies": [
-      "FE-029",
-      "FE-030",
-      "FE-031"
-    ],
+    "dependencies": ["FE-029", "FE-030", "FE-031"],
     "description": "Integrate Lightning payment UI with backend Lightning service, invoice generation, and payment verification endpoints.",
     "subtasks": [
       "- [ ] Connect wallet to backend /api/lightning/connect endpoint",
@@ -1627,13 +1338,7 @@
       "- [ ] Integration tests passing"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:critical",
-      "frontend",
-      "backend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:critical", "frontend", "backend"]
   },
   {
     "id": "FE-035",
@@ -1641,9 +1346,7 @@
     "priority": "CRITICAL",
     "estimated_hours": 8.0,
     "agent": "test-automation-engineer",
-    "dependencies": [
-      "FE-034"
-    ],
+    "dependencies": ["FE-034"],
     "description": "Create comprehensive unit tests for Lightning payment components with 100% coverage (financial critical code).",
     "subtasks": [
       "- [ ] Test: LightningWalletConnect WebLN integration",
@@ -1669,13 +1372,7 @@
       "- [ ] Test report generated"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:critical",
-      "testing",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:critical", "testing", "frontend"]
   },
   {
     "id": "FE-036",
@@ -1683,9 +1380,7 @@
     "priority": "CRITICAL",
     "estimated_hours": 5.0,
     "agent": "test-automation-engineer",
-    "dependencies": [
-      "FE-035"
-    ],
+    "dependencies": ["FE-035"],
     "description": "Create integration tests for complete Lightning payment flows including subscription payment and one-time payment.",
     "subtasks": [
       "- [ ] Integration test: Subscribe to creator (full flow)",
@@ -1710,13 +1405,7 @@
       "- [ ] Test coverage maintained at 100%"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:critical",
-      "testing",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:critical", "testing", "frontend"]
   },
   {
     "id": "FE-037",
@@ -1742,13 +1431,7 @@
       "- [ ] CHANGELOG.md updated"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:high",
-      "design",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:high", "design", "frontend"]
   },
   {
     "id": "FE-038",
@@ -1756,9 +1439,7 @@
     "priority": "HIGH",
     "estimated_hours": 5.0,
     "agent": "design-ux-specialist",
-    "dependencies": [
-      "FE-037"
-    ],
+    "dependencies": ["FE-037"],
     "description": "Create wireframes and high-fidelity mockups for subscription tier CRUD interface.",
     "subtasks": [
       "- [ ] Wireframe: Tier management dashboard",
@@ -1777,13 +1458,7 @@
       "- [ ] CHANGELOG.md updated"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:high",
-      "design",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:high", "design", "frontend"]
   },
   {
     "id": "FE-039",
@@ -1791,9 +1466,7 @@
     "priority": "HIGH",
     "estimated_hours": 6.0,
     "agent": "elite-frontend-dev",
-    "dependencies": [
-      "FE-038"
-    ],
+    "dependencies": ["FE-038"],
     "description": "Implement subscription tier management interface with CRUD operations for tiers.",
     "subtasks": [
       "- [ ] Create: packages/frontend/src/features/subscriptions/components/SubscriptionTierManager.tsx",
@@ -1818,12 +1491,7 @@
       "- [ ] JSDoc complete"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:high",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:high", "frontend"]
   },
   {
     "id": "FE-040",
@@ -1831,9 +1499,7 @@
     "priority": "HIGH",
     "estimated_hours": 4.0,
     "agent": "test-automation-engineer",
-    "dependencies": [
-      "FE-039"
-    ],
+    "dependencies": ["FE-039"],
     "description": "Create unit tests for subscription tier management with 95%+ coverage.",
     "subtasks": [
       "- [ ] Test: Tier create form validation",
@@ -1851,13 +1517,7 @@
       "- [ ] Test report generated"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:high",
-      "testing",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:high", "testing", "frontend"]
   },
   {
     "id": "FE-041",
@@ -1865,9 +1525,7 @@
     "priority": "MEDIUM",
     "estimated_hours": 3.0,
     "agent": "test-automation-engineer",
-    "dependencies": [
-      "FE-040"
-    ],
+    "dependencies": ["FE-040"],
     "description": "Create integration tests for tier management flows.",
     "subtasks": [
       "- [ ] Integration test: Create tier \u2192 verify in list",
@@ -1883,13 +1541,7 @@
       "- [ ] Test coverage maintained at 95%+"
     ],
     "epic": "EPIC-FRONTEND",
-    "labels": [
-      "user-story",
-      "epic:frontend",
-      "priority:medium",
-      "testing",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:frontend", "priority:medium", "testing", "frontend"]
   },
   {
     "id": "INT-001",
@@ -1897,10 +1549,7 @@
     "priority": "CRITICAL",
     "estimated_hours": 4.0,
     "agent": "e2e-testing-specialist",
-    "dependencies": [
-      "FE-036",
-      "FE-041"
-    ],
+    "dependencies": ["FE-036", "FE-041"],
     "description": "Set up Playwright test infrastructure with proper configuration for Chromium, Firefox, and WebKit.",
     "subtasks": [
       "- [ ] Install Playwright: npm install -D @playwright/test",
@@ -1922,12 +1571,7 @@
       "- [ ] Documentation complete"
     ],
     "epic": "EPIC-INTEGRATION",
-    "labels": [
-      "user-story",
-      "epic:integration",
-      "priority:critical",
-      "testing"
-    ]
+    "labels": ["user-story", "epic:integration", "priority:critical", "testing"]
   },
   {
     "id": "INT-002",
@@ -1935,9 +1579,7 @@
     "priority": "CRITICAL",
     "estimated_hours": 6.0,
     "agent": "e2e-testing-specialist",
-    "dependencies": [
-      "INT-001"
-    ],
+    "dependencies": ["INT-001"],
     "description": "Create end-to-end test for complete creator onboarding flow from authentication to first content publish.",
     "subtasks": [
       "- [ ] Create test file: e2e/creator-onboarding.spec.ts",
@@ -1963,12 +1605,7 @@
       "- [ ] Test documented"
     ],
     "epic": "EPIC-INTEGRATION",
-    "labels": [
-      "user-story",
-      "epic:integration",
-      "priority:critical",
-      "testing"
-    ]
+    "labels": ["user-story", "epic:integration", "priority:critical", "testing"]
   },
   {
     "id": "INT-003",
@@ -1976,9 +1613,7 @@
     "priority": "CRITICAL",
     "estimated_hours": 6.0,
     "agent": "e2e-testing-specialist",
-    "dependencies": [
-      "INT-001"
-    ],
+    "dependencies": ["INT-001"],
     "description": "Create end-to-end test for supporter discovering creator, subscribing with Lightning, and accessing premium content.",
     "subtasks": [
       "- [ ] Create test file: e2e/supporter-subscription.spec.ts",
@@ -2002,12 +1637,7 @@
       "- [ ] Test documented"
     ],
     "epic": "EPIC-INTEGRATION",
-    "labels": [
-      "user-story",
-      "epic:integration",
-      "priority:critical",
-      "testing"
-    ]
+    "labels": ["user-story", "epic:integration", "priority:critical", "testing"]
   },
   {
     "id": "INT-004",
@@ -2015,9 +1645,7 @@
     "priority": "HIGH",
     "estimated_hours": 5.0,
     "agent": "e2e-testing-specialist",
-    "dependencies": [
-      "INT-001"
-    ],
+    "dependencies": ["INT-001"],
     "description": "Create end-to-end test for content creation workflow including editor, media upload, and NOSTR publishing.",
     "subtasks": [
       "- [ ] Create test file: e2e/content-creation.spec.ts",
@@ -2042,12 +1670,7 @@
       "- [ ] Test documented"
     ],
     "epic": "EPIC-INTEGRATION",
-    "labels": [
-      "user-story",
-      "epic:integration",
-      "priority:high",
-      "testing"
-    ]
+    "labels": ["user-story", "epic:integration", "priority:high", "testing"]
   },
   {
     "id": "INT-005",
@@ -2055,9 +1678,7 @@
     "priority": "CRITICAL",
     "estimated_hours": 6.0,
     "agent": "e2e-testing-specialist",
-    "dependencies": [
-      "INT-001"
-    ],
+    "dependencies": ["INT-001"],
     "description": "Create end-to-end test for Lightning payment flow including WebLN and manual invoice payment.",
     "subtasks": [
       "- [ ] Create test file: e2e/lightning-payment.spec.ts",
@@ -2082,12 +1703,7 @@
       "- [ ] Test documented"
     ],
     "epic": "EPIC-INTEGRATION",
-    "labels": [
-      "user-story",
-      "epic:integration",
-      "priority:critical",
-      "testing"
-    ]
+    "labels": ["user-story", "epic:integration", "priority:critical", "testing"]
   },
   {
     "id": "INT-006",
@@ -2095,9 +1711,7 @@
     "priority": "HIGH",
     "estimated_hours": 5.0,
     "agent": "e2e-testing-specialist",
-    "dependencies": [
-      "INT-001"
-    ],
+    "dependencies": ["INT-001"],
     "description": "Create end-to-end test for error recovery scenarios including network failures, auto-save recovery, and session expiry.",
     "subtasks": [
       "- [ ] Create test file: e2e/error-recovery.spec.ts",
@@ -2119,12 +1733,7 @@
       "- [ ] Test documented"
     ],
     "epic": "EPIC-INTEGRATION",
-    "labels": [
-      "user-story",
-      "epic:integration",
-      "priority:high",
-      "testing"
-    ]
+    "labels": ["user-story", "epic:integration", "priority:high", "testing"]
   },
   {
     "id": "INT-007",
@@ -2156,11 +1765,7 @@
       "- [ ] Recommendations documented"
     ],
     "epic": "EPIC-INTEGRATION",
-    "labels": [
-      "user-story",
-      "epic:integration",
-      "priority:high"
-    ]
+    "labels": ["user-story", "epic:integration", "priority:high"]
   },
   {
     "id": "INT-008",
@@ -2192,13 +1797,7 @@
       "- [ ] Remediation plan documented"
     ],
     "epic": "EPIC-INTEGRATION",
-    "labels": [
-      "user-story",
-      "epic:integration",
-      "priority:high",
-      "testing",
-      "security"
-    ]
+    "labels": ["user-story", "epic:integration", "priority:high", "testing", "security"]
   },
   {
     "id": "INT-009",
@@ -2206,9 +1805,7 @@
     "priority": "HIGH",
     "estimated_hours": 6.0,
     "agent": "accessibility-specialist",
-    "dependencies": [
-      "INT-008"
-    ],
+    "dependencies": ["INT-008"],
     "description": "Perform manual accessibility testing with screen readers (NVDA, JAWS, VoiceOver) and keyboard-only navigation.",
     "subtasks": [
       "- [ ] Test with NVDA (Windows screen reader)",
@@ -2235,13 +1832,7 @@
       "- [ ] WCAG 2.1 AA compliance achieved"
     ],
     "epic": "EPIC-INTEGRATION",
-    "labels": [
-      "user-story",
-      "epic:integration",
-      "priority:high",
-      "testing",
-      "security"
-    ]
+    "labels": ["user-story", "epic:integration", "priority:high", "testing", "security"]
   },
   {
     "id": "INT-010",
@@ -2249,10 +1840,7 @@
     "priority": "HIGH",
     "estimated_hours": 8.0,
     "agent": "elite-frontend-dev",
-    "dependencies": [
-      "INT-008",
-      "INT-009"
-    ],
+    "dependencies": ["INT-008", "INT-009"],
     "description": "Fix all critical accessibility issues identified in audits to achieve WCAG 2.1 AA compliance.",
     "subtasks": [
       "- [ ] Fix color contrast violations",
@@ -2277,11 +1865,7 @@
       "- [ ] Fixes documented in CHANGELOG.md"
     ],
     "epic": "EPIC-INTEGRATION",
-    "labels": [
-      "user-story",
-      "epic:integration",
-      "priority:high"
-    ]
+    "labels": ["user-story", "epic:integration", "priority:high"]
   },
   {
     "id": "PROD-001",
@@ -2314,13 +1898,7 @@
       "- [ ] Score \u226595/100"
     ],
     "epic": "EPIC-PRODUCTION",
-    "labels": [
-      "user-story",
-      "epic:production",
-      "priority:critical",
-      "security",
-      "frontend"
-    ]
+    "labels": ["user-story", "epic:production", "priority:critical", "security", "frontend"]
   },
   {
     "id": "PROD-002",
@@ -2328,9 +1906,7 @@
     "priority": "CRITICAL",
     "estimated_hours": 6.0,
     "agent": "security-engineer",
-    "dependencies": [
-      "PROD-001"
-    ],
+    "dependencies": ["PROD-001"],
     "description": "Perform comprehensive security audit of backend focusing on authentication, authorization, input validation, and SQL injection prevention.",
     "subtasks": [
       "- [ ] Audit authentication endpoints (JWT validation)",
@@ -2356,13 +1932,7 @@
       "- [ ] Score \u226595/100"
     ],
     "epic": "EPIC-PRODUCTION",
-    "labels": [
-      "user-story",
-      "epic:production",
-      "priority:critical",
-      "security",
-      "backend"
-    ]
+    "labels": ["user-story", "epic:production", "priority:critical", "security", "backend"]
   },
   {
     "id": "PROD-003",
@@ -2370,9 +1940,7 @@
     "priority": "CRITICAL",
     "estimated_hours": 4.0,
     "agent": "security-engineer + lightning-network-specialist",
-    "dependencies": [
-      "PROD-002"
-    ],
+    "dependencies": ["PROD-002"],
     "description": "Perform security audit of NOSTR key handling and Lightning payment processing focusing on private key security and payment validation.",
     "subtasks": [
       "- [ ] Audit NOSTR private key handling (never sent to server)",
@@ -2396,12 +1964,7 @@
       "- [ ] 0 critical issues"
     ],
     "epic": "EPIC-PRODUCTION",
-    "labels": [
-      "user-story",
-      "epic:production",
-      "priority:critical",
-      "security"
-    ]
+    "labels": ["user-story", "epic:production", "priority:critical", "security"]
   },
   {
     "id": "PROD-004",
@@ -2433,11 +1996,7 @@
       "- [ ] Bundle analysis report generated"
     ],
     "epic": "EPIC-PRODUCTION",
-    "labels": [
-      "user-story",
-      "epic:production",
-      "priority:high"
-    ]
+    "labels": ["user-story", "epic:production", "priority:high"]
   },
   {
     "id": "PROD-005",
@@ -2445,9 +2004,7 @@
     "priority": "HIGH",
     "estimated_hours": 6.0,
     "agent": "performance-optimization-engineer",
-    "dependencies": [
-      "PROD-004"
-    ],
+    "dependencies": ["PROD-004"],
     "description": "Optimize frontend performance to meet Core Web Vitals targets (LCP <2.5s, FID <100ms, CLS <0.1).",
     "subtasks": [
       "- [ ] Measure baseline Core Web Vitals (Lighthouse)",
@@ -2471,11 +2028,7 @@
       "- [ ] All targets met"
     ],
     "epic": "EPIC-PRODUCTION",
-    "labels": [
-      "user-story",
-      "epic:production",
-      "priority:high"
-    ]
+    "labels": ["user-story", "epic:production", "priority:high"]
   },
   {
     "id": "PROD-006",
@@ -2483,9 +2036,7 @@
     "priority": "MEDIUM",
     "estimated_hours": 5.0,
     "agent": "performance-optimization-engineer",
-    "dependencies": [
-      "PROD-005"
-    ],
+    "dependencies": ["PROD-005"],
     "description": "Optimize React component rendering using React.memo, useMemo, useCallback to eliminate unnecessary re-renders.",
     "subtasks": [
       "- [ ] Profile components with React DevTools Profiler",
@@ -2507,11 +2058,7 @@
       "- [ ] Optimization patterns documented"
     ],
     "epic": "EPIC-PRODUCTION",
-    "labels": [
-      "user-story",
-      "epic:production",
-      "priority:medium"
-    ]
+    "labels": ["user-story", "epic:production", "priority:medium"]
   },
   {
     "id": "PROD-007",
@@ -2544,11 +2091,7 @@
       "- [ ] Runbook documentation complete"
     ],
     "epic": "EPIC-PRODUCTION",
-    "labels": [
-      "user-story",
-      "epic:production",
-      "priority:critical"
-    ]
+    "labels": ["user-story", "epic:production", "priority:critical"]
   },
   {
     "id": "PROD-008",
@@ -2581,12 +2124,7 @@
       "- [ ] Documentation reviewed and approved"
     ],
     "epic": "EPIC-PRODUCTION",
-    "labels": [
-      "user-story",
-      "epic:production",
-      "priority:high",
-      "documentation"
-    ]
+    "labels": ["user-story", "epic:production", "priority:high", "documentation"]
   },
   {
     "id": "PROD-009",
@@ -2622,10 +2160,6 @@
       "- [ ] Production readiness certified OR blocker list documented"
     ],
     "epic": "EPIC-PRODUCTION",
-    "labels": [
-      "user-story",
-      "epic:production",
-      "priority:critical"
-    ]
+    "labels": ["user-story", "epic:production", "priority:critical"]
   }
 ]

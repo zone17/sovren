@@ -1,14 +1,20 @@
 /**
  * Unified Content Library - Consolidated Browsing Interface
+ *
+ * TODO: Migrate to glass morphism design system (glass-dark, bg-background, text-foreground).
+ * Currently uses design token classes (bg-card, text-foreground, hover:bg-accent).
  */
 
 import { Edit, Eye, Grid, List, Plus, Search, Trash2 } from 'lucide-react';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import apiClient from '@/services/api/apiClient';
 import { AuthenticityBadge } from '@/features/content-shield';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
+import { ConfirmDialog } from '../../../components/ui/confirm-dialog';
 import { Input } from '../../../components/ui/input';
+import { useToast } from '../../../components/providers/NotificationProvider';
 
 // Types
 interface ContentItem {
@@ -39,9 +45,9 @@ function getStatusColor(status: string): string {
     case 'draft':
       return 'bg-yellow-100 text-yellow-800';
     case 'archived':
-      return 'bg-gray-100 text-gray-800';
+      return 'bg-muted text-foreground';
     default:
-      return 'bg-gray-100 text-gray-800';
+      return 'bg-muted text-foreground';
   }
 }
 
@@ -75,20 +81,20 @@ const ContentItemCard = React.memo<ContentItemCardProps>(
   ({ item, viewMode, onView, onEdit, onDelete }) => {
     if (viewMode === 'list') {
       return (
-        <div className="flex items-center justify-between p-4 border-b hover:bg-gray-50">
+        <div className="flex items-center justify-between p-4 border-b hover:bg-accent">
           <div className="flex items-center gap-3 flex-1">
             <span className="text-2xl">{getTypeIcon(item.type)}</span>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5">
-                <h3 className="font-semibold text-gray-900 truncate">{item.title}</h3>
+                <h3 className="font-semibold text-foreground truncate">{item.title}</h3>
                 {item.status === 'published' && <AuthenticityBadge contentId={item.id} />}
               </div>
-              <p className="text-sm text-gray-600 truncate">{item.description}</p>
+              <p className="text-sm text-muted-foreground truncate">{item.description}</p>
               <div className="flex items-center gap-2 mt-1">
                 <Badge className={getStatusColor(item.status)}>{item.status}</Badge>
-                <span className="text-xs text-gray-500">{item.author}</span>
-                <span className="text-xs text-gray-500">&bull;</span>
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-muted-foreground">{item.author}</span>
+                <span className="text-xs text-muted-foreground">&bull;</span>
+                <span className="text-xs text-muted-foreground">
                   {new Date(item.updatedAt).toLocaleDateString()}
                 </span>
               </div>
@@ -135,7 +141,7 @@ const ContentItemCard = React.memo<ContentItemCardProps>(
           </div>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-gray-600 mb-3 line-clamp-2">{item.description}</p>
+          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{item.description}</p>
           <div className="flex flex-wrap gap-1 mb-3">
             {item.tags.map((tag) => (
               <Badge key={tag} variant="outline" className="text-xs">
@@ -143,7 +149,7 @@ const ContentItemCard = React.memo<ContentItemCardProps>(
               </Badge>
             ))}
           </div>
-          <div className="flex items-center justify-between text-xs text-gray-500">
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span>{item.author}</span>
             <span>{new Date(item.updatedAt).toLocaleDateString()}</span>
           </div>
@@ -152,34 +158,6 @@ const ContentItemCard = React.memo<ContentItemCardProps>(
     );
   }
 );
-
-// Static mock data — moved to module scope to avoid per-render recreation
-const MOCK_CONTENT: ContentItem[] = [
-  {
-    id: '1',
-    title: 'Getting Started with Lightning Network',
-    type: 'article',
-    status: 'published',
-    description:
-      'A comprehensive guide to understanding and using the Lightning Network for fast Bitcoin payments.',
-    createdAt: '2024-12-01T10:00:00Z',
-    updatedAt: '2024-12-15T14:30:00Z',
-    author: 'John Doe',
-    tags: ['bitcoin', 'lightning', 'tutorial'],
-  },
-  {
-    id: '2',
-    title: 'NOSTR Protocol Deep Dive',
-    type: 'video',
-    status: 'draft',
-    description:
-      'Technical exploration of the NOSTR protocol and its implications for decentralized social media.',
-    createdAt: '2024-12-10T09:15:00Z',
-    updatedAt: '2024-12-20T16:45:00Z',
-    author: 'Jane Smith',
-    tags: ['nostr', 'protocol', 'decentralized'],
-  },
-];
 
 export const ContentLibrary: React.FC<ContentLibraryProps> = ({
   onCreateNew,
@@ -192,9 +170,26 @@ export const ContentLibrary: React.FC<ContentLibraryProps> = ({
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [content, setContent] = useState<ContentItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const toast = useToast();
+
+  useEffect(() => {
+    setIsLoading(true);
+    apiClient
+      .get<ContentItem[]>('/api/v1/content')
+      .then((data) => setContent(data ?? []))
+      .catch((err) => {
+        console.error('Failed to load content library:', err);
+        toast.error('Failed to load content. Please refresh to try again.');
+        setContent([]);
+      })
+      .finally(() => setIsLoading(false));
+  }, []); // fetch once on mount
 
   const filteredContent = useMemo(() => {
-    return MOCK_CONTENT.filter((item) => {
+    return content.filter((item) => {
       const matchesSearch =
         item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -221,21 +216,23 @@ export const ContentLibrary: React.FC<ContentLibraryProps> = ({
     [onEditContent]
   );
 
-  const handleDelete = useCallback(
-    (contentId: string) => {
-      if (window.confirm('Are you sure you want to delete this content?')) {
-        onDeleteContent?.(contentId);
-      }
-    },
-    [onDeleteContent]
-  );
+  const handleDelete = useCallback((contentId: string) => {
+    setDeleteConfirmId(contentId);
+  }, []);
+
+  const handleConfirmDelete = useCallback(() => {
+    if (deleteConfirmId) {
+      onDeleteContent?.(deleteConfirmId);
+      setDeleteConfirmId(null);
+    }
+  }, [deleteConfirmId, onDeleteContent]);
 
   return (
     <div className={`h-full flex flex-col ${className}`}>
       {/* Header */}
-      <div className="p-6 border-b bg-white">
+      <div className="p-6 border-b bg-card">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold text-gray-900">Content Library</h1>
+          <h1 className="text-2xl font-bold text-foreground">Content Library</h1>
           <Button onClick={onCreateNew}>
             <Plus className="h-4 w-4 mr-2" />
             Create New
@@ -245,7 +242,7 @@ export const ContentLibrary: React.FC<ContentLibraryProps> = ({
         {/* Search and Filters */}
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground/60 h-4 w-4" />
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -258,7 +255,7 @@ export const ContentLibrary: React.FC<ContentLibraryProps> = ({
             <select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+              className="px-3 py-2 border border-border rounded-md text-sm"
             >
               <option value="all">All Types</option>
               <option value="article">Articles</option>
@@ -271,7 +268,7 @@ export const ContentLibrary: React.FC<ContentLibraryProps> = ({
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+              className="px-3 py-2 border border-border rounded-md text-sm"
             >
               <option value="all">All Status</option>
               <option value="draft">Draft</option>
@@ -279,7 +276,7 @@ export const ContentLibrary: React.FC<ContentLibraryProps> = ({
               <option value="archived">Archived</option>
             </select>
 
-            <div className="flex border border-gray-300 rounded-md">
+            <div className="flex border border-border rounded-md">
               <Button
                 variant={viewMode === 'grid' ? 'default' : 'ghost'}
                 size="sm"
@@ -303,11 +300,16 @@ export const ContentLibrary: React.FC<ContentLibraryProps> = ({
 
       {/* Content Grid/List */}
       <div className="flex-1 overflow-auto p-6">
-        {filteredContent.length === 0 ? (
+        {isLoading ? (
+          <div className="text-center py-12">
+            <div className="text-4xl mb-4 animate-spin">{'\u{1F504}'}</div>
+            <p className="text-muted-foreground">Loading your content...</p>
+          </div>
+        ) : filteredContent.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-4xl mb-4">{'\u{1F4DA}'}</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No Content Found</h3>
-            <p className="text-gray-600 mb-4">
+            <h3 className="text-xl font-semibold text-foreground mb-2">No Content Found</h3>
+            <p className="text-muted-foreground mb-4">
               {searchQuery || selectedType !== 'all' || selectedStatus !== 'all'
                 ? 'Try adjusting your search criteria or filters.'
                 : 'Create your first piece of content to get started.'}
@@ -324,7 +326,7 @@ export const ContentLibrary: React.FC<ContentLibraryProps> = ({
             className={
               viewMode === 'grid'
                 ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'
-                : 'space-y-0 border border-gray-200 rounded-lg overflow-hidden'
+                : 'space-y-0 border border-border rounded-lg overflow-hidden'
             }
           >
             {filteredContent.map((item) => (
@@ -340,6 +342,17 @@ export const ContentLibrary: React.FC<ContentLibraryProps> = ({
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={deleteConfirmId !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteConfirmId(null);
+        }}
+        title="Delete content"
+        description="Are you sure you want to delete this content? This action cannot be undone."
+        confirmLabel="Delete"
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 };

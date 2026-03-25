@@ -54,18 +54,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    - Integration with existing metrics for Prometheus export
 
 **Test Coverage:**
+
 - 45 new comprehensive tests for PAY-009 features
 - 100% coverage of new jitter and circuit breaker logic
 - Tests verify: exponential calculation, jitter distribution, circuit breaker states, configuration validation
 - All 77 total tests passing (74 passed, 3 skipped integration tests)
 
 **Breaking Changes:**
+
 - Default `baseDelay` changed from 60000ms (1 min) to 1000ms (1 sec) for faster initial retries
 - Default `maxDelay` changed from 21600000ms (6 hrs) to 60000ms (60 sec) for more responsive retries
 - Default `backoffMultiplier` changed from 5 to 2 for gentler exponential growth
 - New error type: `CircuitBreakerOpenError` thrown when circuit breaker blocks retries
 
 **Migration Guide:**
+
 - Existing retry configurations continue to work (backward compatible)
 - To restore old behavior, explicitly configure:
   ```typescript
@@ -78,6 +81,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - To disable circuit breaker: `circuitBreakerThreshold: 0`
 
 **Quality Gates Passed:**
+
 - ✅ Exponential backoff: 2^attempt with configurable base/max
 - ✅ Full jitter: prevents thundering herd
 - ✅ Circuit breaker: opens after threshold, resets on success
@@ -123,6 +127,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    - Prevents illogical state transitions
 
 **Database Schema Changes:**
+
 - **webhook_events table**: Comprehensive webhook logging with idempotency
   - Fields: idempotency_key (unique), payment_hash, event_type, status, timestamps
   - Indexes: idempotency_key (unique), payment_id, payment_hash, status, timestamps
@@ -137,6 +142,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `get_webhook_processing_metrics()`: Performance monitoring (p50/p95/p99)
 
 **Enhanced Webhook Route** (`src/routes/webhooks-race-condition-hardened.ts`):
+
 - Merges PAY-002 (race conditions) + PAY-003 (signature verification)
 - Idempotency: Returns 200 for duplicates but skips processing
 - Atomic processing: Single database transaction for all updates
@@ -148,6 +154,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `GET /api/webhooks/payment/:id/history` - Complete webhook timeline per payment
 
 **Testing** (`src/__tests__/routes/webhooks-race-conditions.test.ts`):
+
 - **Concurrent Processing Tests**:
   - 10 simultaneous identical webhooks → 1 processed, 9 marked duplicate ✅
   - Concurrent different events → All processed, no duplicates ✅
@@ -163,6 +170,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Different events same timestamp → Not duplicates ✅
 
 **Quality Gates Achieved:**
+
 - ✅ Zero duplicate payment processing (database constraint enforced)
 - ✅ All race condition tests passing (10 concurrent webhooks handled correctly)
 - ✅ Atomic database updates (SELECT FOR UPDATE + transactions)
@@ -171,18 +179,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ✅ Idempotency compliance (HTTP 200 for duplicates, no reprocessing)
 
 **Performance Metrics:**
+
 - Webhook processing time: <50ms p95 (with database locking)
 - Duplicate detection: O(1) via unique index lookup
 - Concurrent webhook handling: 100 req/min per IP (rate limited)
 - Database lock timeout: Instant with SKIP LOCKED
 
 **Security:**
+
 - Idempotency keys prevent replay attacks (combined with timestamp validation)
 - Row-level locking prevents race conditions
 - Complete audit trail for forensic analysis
 - IP address logging for security events
 
 **References:**
+
 - Story: PAY-002 (Epic 002 - Payment Processing TODO Resolution)
 - Priority: CRITICAL (Revenue Protection)
 - Dependencies: PAY-001 (Payment Verification), PAY-003 (Webhook Signature Verification)
@@ -194,6 +205,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **CRITICAL**: Revenue Protection - Implemented production-ready Lightning invoice payment verification with comprehensive state handling.
 
 **Implementation Details:**
+
 - **Payment Verification Logic** (`src/services/payment/PaymentRetryService.ts:793-944`): 150+ lines of bulletproof verification
   - Complete Lightning invoice status verification (settled, pending, expired, failed, cancelled)
   - Cryptographic proof validation via preimage (SHA-256 hash verification)
@@ -204,6 +216,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Comprehensive logging for debugging and monitoring
 
 **Payment States Handled:**
+
 - ✅ `SETTLED/PAID` - Invoice paid with preimage proof (returns true)
 - ✅ `PENDING/OPEN` - Invoice awaiting payment (returns false, continues monitoring)
 - ✅ `EXPIRED` - Invoice past expiry time (returns false, terminal state)
@@ -211,6 +224,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ✅ `COMPLETED` - Already verified (optimization, returns true immediately)
 
 **Security Features:**
+
 - Validates payment_hash format to prevent injection attacks
 - Verifies preimage as cryptographic proof of payment receipt
 - Checks invoice expiry to prevent expired payment acceptance
@@ -218,12 +232,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Never throws errors (returns false to trigger safe retry)
 
 **Integration Points:**
+
 - Ready for LND, CLN, and Eclair Lightning implementations
 - Designed for webhook-based payment status updates
 - Compatible with PaymentStateMachine state transitions
 - Integrates with retry exponential backoff mechanism
 
 **Testing:**
+
 - **Comprehensive Test Suite** (`src/services/payment/__tests__/PaymentRetryService.test.ts`): 29 passing tests
   - 100% coverage of all payment states (settled, pending, expired, failed)
   - Edge cases: concurrent verification, malformed data, missing fields
@@ -233,6 +249,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Cryptographic proof: preimage validation, payment hash verification
 
 **Quality Metrics:**
+
 - ✅ All 29 unit tests passing
 - ✅ 100% coverage of verification logic
 - ✅ Zero security vulnerabilities
@@ -242,6 +259,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ✅ Comprehensive logging for monitoring
 
 **Next Steps (Epic 002 Stream A):**
+
 - PAY-002: Fix race conditions with atomic updates
 - PAY-003: Implement webhook HMAC validation
 - PAY-004: Invoice expiration cleanup

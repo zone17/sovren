@@ -19,6 +19,7 @@ The `performCleanup()` gap was fixed in this PR (changed to default no-op), but 
 **File:** `packages/frontend/src/features/content/services/ContentTransformationService.ts`
 
 BaseService declares:
+
 ```typescript
 protected abstract getCustomMetrics(): Promise<Record<string, any>>;
 ```
@@ -28,6 +29,7 @@ ContentTransformationService does NOT implement it. Calling `serviceContainer.ge
 ## Proposed Solutions
 
 ### Option A: Add no-op implementation (Recommended)
+
 - Add `protected async getCustomMetrics() { return {}; }` to ContentTransformationService
 - Pros: Quick fix, consistent with performCleanup approach
 - Cons: Returns empty metrics (may be misleading)
@@ -35,6 +37,7 @@ ContentTransformationService does NOT implement it. Calling `serviceContainer.ge
 - Risk: Low
 
 ### Option B: Add meaningful metrics
+
 - Implement actual transformation metrics (transforms count, cache stats, etc.)
 - Pros: Useful operational data
 - Cons: More effort, may not be needed yet
@@ -56,8 +59,8 @@ Option A — prevents runtime crash.
 
 ## Work Log
 
-| Date | Action | Learnings |
-|------|--------|-----------|
+| Date       | Action                                 | Learnings                                                    |
+| ---------- | -------------------------------------- | ------------------------------------------------------------ |
 | 2026-02-25 | Identified during manual PR #98 review | Pre-existing — masked by TypeScript not enforcing at runtime |
 
 ## Resources

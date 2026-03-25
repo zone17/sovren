@@ -1,7 +1,7 @@
 ---
 status: pending
 priority: p3
-issue_id: "415"
+issue_id: '415'
 tags: [code-review, quality, testing, pr-87]
 dependencies: []
 ---
@@ -26,10 +26,12 @@ The `test-providers.tsx` file redefines `TestUser`, `TestPost`, `TestPayment`, a
 **Approach:** Replace local `TestUser` etc. with imports from `@shared/types`.
 
 **Pros:**
+
 - Single source of truth
 - No drift risk
 
 **Cons:**
+
 - May need `Partial<>` wrapper since test data is often incomplete
 
 **Effort:** 30 minutes
@@ -43,9 +45,11 @@ The `test-providers.tsx` file redefines `TestUser`, `TestPost`, `TestPayment`, a
 **Approach:** Keep local interfaces as test-specific shapes.
 
 **Pros:**
+
 - Test data doesn't need to satisfy all production type constraints
 
 **Cons:**
+
 - Drift risk continues
 
 **Effort:** 0 minutes
@@ -59,6 +63,7 @@ Low priority. Accept for this PR, consider importing shared types in a future te
 ## Technical Details
 
 **Affected files:**
+
 - `packages/frontend/src/test-utils/test-providers.tsx:60-98`
 
 ## Acceptance Criteria

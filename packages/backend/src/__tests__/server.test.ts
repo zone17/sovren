@@ -38,7 +38,7 @@ describe('Sovren API Server', () => {
 
       expect(response.headers['x-content-type-options']).toBe('nosniff');
       expect(response.headers['x-frame-options']).toBe('DENY');
-      expect(response.headers['x-xss-protection']).toBe('1; mode=block');
+      // X-XSS-Protection intentionally removed — deprecated per OWASP, can cause XSS in older browsers
     });
   });
 

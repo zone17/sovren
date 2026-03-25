@@ -257,16 +257,16 @@ All Sovren API responses follow a consistent structure:
 
 The API uses standard HTTP status codes:
 
-| Code | Meaning | Description |
-|------|---------|-------------|
-| 200 | OK | Request successful |
-| 201 | Created | Resource created successfully |
-| 400 | Bad Request | Invalid request parameters |
-| 401 | Unauthorized | Authentication required or invalid token |
-| 403 | Forbidden | Insufficient permissions |
-| 404 | Not Found | Resource doesn't exist |
-| 429 | Too Many Requests | Rate limit exceeded |
-| 500 | Internal Server Error | Server-side error |
+| Code | Meaning               | Description                              |
+| ---- | --------------------- | ---------------------------------------- |
+| 200  | OK                    | Request successful                       |
+| 201  | Created               | Resource created successfully            |
+| 400  | Bad Request           | Invalid request parameters               |
+| 401  | Unauthorized          | Authentication required or invalid token |
+| 403  | Forbidden             | Insufficient permissions                 |
+| 404  | Not Found             | Resource doesn't exist                   |
+| 429  | Too Many Requests     | Rate limit exceeded                      |
+| 500  | Internal Server Error | Server-side error                        |
 
 ## Rate Limiting
 
@@ -317,15 +317,15 @@ async function publishContent(title, content) {
   const response = await fetch(`${API_BASE_URL}/content/publish`, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${AUTH_TOKEN}`,
-      'Content-Type': 'application/json'
+      Authorization: `Bearer ${AUTH_TOKEN}`,
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify({
       title,
       content,
       contentType: 'article',
-      publishToNostr: true
-    })
+      publishToNostr: true,
+    }),
   });
 
   const data = await response.json();
@@ -339,8 +339,8 @@ async function publishContent(title, content) {
 
 // Usage
 publishContent('My Article', 'Article content...')
-  .then(result => console.log('Published:', result.contentId))
-  .catch(error => console.error('Error:', error));
+  .then((result) => console.log('Published:', result.contentId))
+  .catch((error) => console.error('Error:', error));
 ```
 
 ### Python
@@ -453,21 +453,25 @@ Breaking changes will result in a new API version (v2, v3, etc.). Non-breaking c
 ### Common Issues
 
 **401 Unauthorized**
+
 - Check that your token is valid and not expired
 - Ensure the `Authorization` header is correctly formatted
 - Re-authenticate if token has expired
 
 **429 Rate Limit Exceeded**
+
 - Check `X-RateLimit-Reset` header for reset time
 - Implement exponential backoff
 - Consider upgrading your API plan for higher limits
 
 **400 Validation Error**
+
 - Review the `validationErrors` array in error response
 - Check that all required fields are provided
 - Verify data types match API specification
 
 **500 Internal Server Error**
+
 - Retry the request after a brief delay
 - If error persists, contact support with `requestId`
 - Check [status page](https://status.sovren.app) for incidents
@@ -475,6 +479,7 @@ Breaking changes will result in a new API version (v2, v3, etc.). Non-breaking c
 ## Changelog
 
 API changes are documented in:
+
 - **[CHANGELOG.md](/CHANGELOG.md)**: All project changes
 - **[API Changelog](/docs/api/changelog.md)**: API-specific changes
 

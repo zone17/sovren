@@ -134,7 +134,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
   const getIconColor = () => {
     switch (notification.type) {
       case NotificationType.MENTION:
-        return 'text-blue-500';
+        return 'text-purple-500';
       case NotificationType.REPLY:
         return 'text-green-500';
       case NotificationType.REACTION:
@@ -144,11 +144,11 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
       case NotificationType.DM:
         return 'text-yellow-500';
       case NotificationType.FOLLOW:
-        return 'text-indigo-500';
+        return 'text-violet-500';
       case NotificationType.ZAP:
         return 'text-orange-500';
       default:
-        return 'text-gray-500';
+        return 'text-muted-foreground';
     }
   };
 
@@ -160,10 +160,10 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
   return (
     <div
       className={`
-        flex items-start p-4 border-b border-gray-200 dark:border-gray-700
-        cursor-pointer transition-colors
-        hover:bg-gray-50 dark:hover:bg-gray-800
-        ${!notification.read ? 'bg-blue-50 dark:bg-blue-900/10' : 'bg-white dark:bg-gray-900'}
+        flex items-start p-4 border-b border-border
+        cursor-pointer transition-colors duration-150
+        hover:bg-purple-500/5
+        ${!notification.read ? 'bg-purple-500/10' : 'bg-background'}
         ${className}
       `}
       onClick={handleClick}
@@ -180,7 +180,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
       {/* Unread indicator */}
       {!notification.read && (
         <div className="mr-2 mt-1.5">
-          <div className="w-2 h-2 rounded-full bg-blue-500" aria-label="Unread" />
+          <div className="w-2 h-2 rounded-full bg-purple-500" aria-label="Unread" />
         </div>
       )}
 
@@ -196,7 +196,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
           <div
             className={`
               w-10 h-10 rounded-full flex items-center justify-center
-              bg-gray-200 dark:bg-gray-700
+              bg-card
               ${getIconColor()}
             `}
           >
@@ -207,8 +207,8 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-gray-900 dark:text-gray-100 mb-1">{notification.content}</p>
-        <p className="text-xs text-gray-500 dark:text-gray-400">{formattedTime}</p>
+        <p className="text-sm text-foreground mb-1">{notification.content}</p>
+        <p className="text-xs text-muted-foreground">{formattedTime}</p>
       </div>
 
       {/* Actions */}
@@ -217,7 +217,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
           {!notification.read && onRead && (
             <button
               onClick={handleMarkAsRead}
-              className="p-1 text-gray-400 hover:text-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+              className="p-1 text-muted-foreground hover:text-purple-400 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-purple-500 rounded"
               aria-label="Mark as read"
               title="Mark as read"
               type="button"
@@ -235,7 +235,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
           {onDelete && (
             <button
               onClick={handleDelete}
-              className="p-1 text-gray-400 hover:text-red-500 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 rounded"
+              className="p-1 text-muted-foreground hover:text-red-500 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-red-500 rounded"
               aria-label="Delete notification"
               title="Delete"
               type="button"

@@ -44,7 +44,7 @@ export const WellnessTrend: React.FC<WellnessTrendProps> = ({ period: initialPer
   if (error || !data) {
     return (
       <Card>
-        <CardContent className="py-6 text-center text-sm text-gray-500">
+        <CardContent className="py-6 text-center text-sm text-muted-foreground">
           Failed to load wellness trend.
         </CardContent>
       </Card>
@@ -58,8 +58,8 @@ export const WellnessTrend: React.FC<WellnessTrendProps> = ({ period: initialPer
           <CardTitle className="text-base font-semibold">Wellness Trend</CardTitle>
         </CardHeader>
         <CardContent className="py-8 text-center">
-          <p className="text-sm text-gray-500">No check-ins yet.</p>
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-sm text-muted-foreground">No check-ins yet.</p>
+          <p className="text-xs text-muted-foreground/60 mt-1">
             Complete a wellness pulse check-in to start tracking your trend.
           </p>
         </CardContent>
@@ -103,7 +103,7 @@ export const WellnessTrend: React.FC<WellnessTrendProps> = ({ period: initialPer
               className={`px-2 py-1 text-xs rounded ${
                 period === p
                   ? 'bg-blue-100 text-blue-700 font-medium'
-                  : 'text-gray-500 hover:bg-gray-100'
+                  : 'text-muted-foreground hover:bg-accent'
               }`}
               aria-pressed={period === p}
             >
@@ -146,7 +146,7 @@ export const WellnessTrend: React.FC<WellnessTrendProps> = ({ period: initialPer
           </ResponsiveContainer>
         </div>
 
-        <div className="flex items-center justify-between mt-3 text-xs text-gray-500">
+        <div className="flex items-center justify-between mt-3 text-xs text-muted-foreground">
           <span>Avg: {data.trend.average_composite.toFixed(2)}</span>
           <span>
             Change: {data.trend.change_from_previous_period >= 0 ? '+' : ''}

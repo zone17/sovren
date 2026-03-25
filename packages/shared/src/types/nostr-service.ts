@@ -382,7 +382,11 @@ export class NostrServiceError extends Error {
  * Service Connection Error
  */
 export class NostrServiceConnectionError extends NostrServiceError {
-  constructor(message: string, public relay: string, context?: Record<string, unknown>) {
+  constructor(
+    message: string,
+    public relay: string,
+    context?: Record<string, unknown>
+  ) {
     super(message, 'CONNECTION_ERROR', { ...context, relay });
     this.name = 'NostrServiceConnectionError';
   }
@@ -407,7 +411,11 @@ export class NostrPublishError extends NostrServiceError {
  * Service Validation Error
  */
 export class NostrServiceValidationError extends NostrServiceError {
-  constructor(message: string, public event?: Event, context?: Record<string, unknown>) {
+  constructor(
+    message: string,
+    public event?: Event,
+    context?: Record<string, unknown>
+  ) {
     super(message, 'VALIDATION_ERROR', { ...context, event });
     this.name = 'NostrServiceValidationError';
   }
@@ -431,7 +439,11 @@ export class NostrSubscriptionError extends NostrServiceError {
  * Timeout Error
  */
 export class NostrTimeoutError extends NostrServiceError {
-  constructor(message: string, public operation: string, context?: Record<string, unknown>) {
+  constructor(
+    message: string,
+    public operation: string,
+    context?: Record<string, unknown>
+  ) {
     super(message, 'TIMEOUT_ERROR', { ...context, operation });
     this.name = 'NostrTimeoutError';
   }
@@ -467,7 +479,7 @@ export interface NostrServiceEvents {
   'subscription:eose': (subscriptionId: string, relay: string) => void;
   'cache:hit': (key: string) => void;
   'cache:miss': (key: string) => void;
-  'error': (error: NostrServiceError) => void;
+  error: (error: NostrServiceError) => void;
 }
 
 // ========================================
@@ -553,11 +565,7 @@ export interface RelayWithInfo extends Relay {
 // Export All Types
 // ========================================
 
-export type {
-  Event,
-  Filter,
-  Relay,
-} from 'nostr-tools';
+export type { Event, Filter, Relay } from 'nostr-tools';
 
 export const NostrServiceSchemas = {
   Config: NostrServiceConfigSchema,

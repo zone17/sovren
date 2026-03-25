@@ -84,9 +84,12 @@ export function CommentForm({
   // Anonymous state — show sign-in prompt instead of form
   if (isAnonymous) {
     return (
-      <div className="rounded-lg bg-gray-50 border border-gray-200 p-4 text-center">
-        <p className="text-sm text-gray-600">
-          <a href="/login" className="font-medium text-amber-700 hover:text-amber-800 underline">
+      <div className="glass rounded-lg p-4 text-center">
+        <p className="text-sm text-muted-foreground">
+          <a
+            href="/login"
+            className="font-medium text-purple-400 hover:text-purple-300 underline transition-colors duration-150"
+          >
             Sign in to comment
           </a>
         </p>
@@ -100,7 +103,7 @@ export function CommentForm({
   return (
     <form onSubmit={(e) => void handleSubmit(e)} noValidate>
       <div className="flex flex-col gap-2">
-        <label htmlFor={inputId} className="text-sm font-medium text-gray-700">
+        <label htmlFor={inputId} className="text-sm font-medium text-foreground">
           {labelText}
         </label>
 
@@ -118,11 +121,11 @@ export function CommentForm({
             aria-required="true"
             aria-invalid={isOverLimit}
             className={[
-              'w-full rounded-lg border px-3 py-2 text-sm text-gray-900 resize-none',
-              'placeholder:text-gray-400 focus:outline-none focus:ring-2',
+              'w-full rounded-lg border px-3 py-2 text-sm text-foreground bg-background resize-none transition-colors duration-150',
+              'placeholder:text-muted-foreground focus:outline-none focus:ring-2',
               isOverLimit
                 ? 'border-red-400 focus:ring-red-400'
-                : 'border-gray-300 focus:ring-amber-500',
+                : 'border-border focus:ring-purple-500',
             ].join(' ')}
           />
         </div>
@@ -137,8 +140,8 @@ export function CommentForm({
               isOverLimit
                 ? 'text-red-600 font-medium'
                 : charCount > MAX_CHARS * 0.9
-                  ? 'text-amber-600'
-                  : 'text-gray-400'
+                  ? 'text-purple-400'
+                  : 'text-muted-foreground'
             }`}
           >
             {charCount}/{MAX_CHARS}
@@ -150,7 +153,7 @@ export function CommentForm({
               <button
                 type="button"
                 onClick={onCancel}
-                className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors duration-150"
               >
                 Cancel
               </button>
@@ -162,10 +165,10 @@ export function CommentForm({
               aria-busy={isPending}
               aria-label={submitLabel}
               className={[
-                'px-4 py-1.5 text-sm font-medium rounded-lg transition-colors',
+                'px-4 py-1.5 text-sm font-medium rounded-lg transition-all duration-150',
                 canSubmit
-                  ? 'bg-amber-600 text-white hover:bg-amber-700 focus:ring-2 focus:ring-amber-500'
-                  : 'bg-gray-200 text-gray-400 cursor-not-allowed',
+                  ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:from-violet-500 hover:to-purple-500 shadow-[0_4px_16px_rgba(139,92,246,0.3)] focus:ring-2 focus:ring-purple-500'
+                  : 'bg-card text-muted-foreground cursor-not-allowed',
               ].join(' ')}
             >
               {isPending ? 'Posting...' : isReply ? 'Post reply' : 'Post comment'}

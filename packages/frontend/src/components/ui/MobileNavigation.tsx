@@ -148,15 +148,15 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
 
   // 🔍 **Mobile Search Interface**
   const MobileSearch: React.FC = () => (
-    <div className="px-4 py-3 border-b border-gray-200">
+    <div className="px-4 py-3 border-b border-border">
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <input
           type="text"
           placeholder="Search creators, content..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full pl-10 pr-4 py-2 bg-muted border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
           aria-label="Search platform content"
         />
       </div>
@@ -168,17 +168,17 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
     if (!breadcrumbs.length) return null;
 
     return (
-      <nav className="px-4 py-2 bg-gray-50 border-b border-gray-200" aria-label="Breadcrumb">
+      <nav className="px-4 py-2 bg-muted border-b border-border" aria-label="Breadcrumb">
         <ol className="flex items-center space-x-2 text-sm">
           {breadcrumbs.map((crumb, index) => (
             <li key={index} className="flex items-center">
-              {index > 0 && <span className="mx-2 text-gray-400">/</span>}
+              {index > 0 && <span className="mx-2 text-muted-foreground">/</span>}
               {crumb.href ? (
-                <Link to={crumb.href} className="text-blue-600 hover:text-blue-800 font-medium">
+                <Link to={crumb.href} className="text-primary hover:text-primary/80 font-medium">
                   {crumb.label}
                 </Link>
               ) : (
-                <span className="text-gray-900 font-medium">{crumb.label}</span>
+                <span className="text-foreground font-medium">{crumb.label}</span>
               )}
             </li>
           ))}
@@ -207,11 +207,11 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 500 }}
-            className="fixed top-0 left-0 w-80 h-full bg-white shadow-xl z-50"
+            className="fixed top-0 left-0 w-80 h-full bg-card shadow-xl z-50"
           >
             {/* Menu Header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900">Menu</h2>
+            <div className="flex items-center justify-between p-4 border-b border-border">
+              <h2 className="text-lg font-semibold text-foreground">Menu</h2>
               <Button
                 variant="ghost"
                 size="sm"
@@ -239,8 +239,8 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
                     className={cn(
                       'flex items-center px-4 py-3 text-sm font-medium border-l-4 transition-colors',
                       isActive
-                        ? 'bg-blue-50 border-blue-500 text-blue-700'
-                        : 'border-transparent text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                        ? 'bg-primary/10 border-primary text-primary'
+                        : 'border-transparent text-muted-foreground hover:bg-accent/10 hover:text-foreground'
                     )}
                   >
                     <Icon className="w-5 h-5 mr-3" />
@@ -256,11 +256,11 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
             </nav>
 
             {/* Settings */}
-            <div className="absolute bottom-0 w-full p-4 border-t border-gray-200">
+            <div className="absolute bottom-0 w-full p-4 border-t border-border">
               <Link
                 to="/settings"
                 onClick={() => setShowMobileMenu(false)}
-                className="flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors"
+                className="flex items-center px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent/10 hover:text-foreground rounded-lg transition-colors"
               >
                 <Settings className="w-5 h-5 mr-3" />
                 Settings
@@ -280,7 +280,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
 
     return (
       <nav
-        className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-30 safe-area-inset-bottom"
+        className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-30 safe-area-inset-bottom"
         aria-label="Main navigation"
       >
         <div className="flex items-center justify-around">
@@ -295,7 +295,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
                 className={cn(
                   'flex flex-col items-center py-2 px-1 min-h-[60px] transition-colors',
                   'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset',
-                  isActive ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900'
+                  isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
                 )}
                 aria-label={item.label}
               >
@@ -323,7 +323,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
   return (
     <div className={cn('md:hidden', className)}>
       {/* Top Navigation Bar */}
-      <header className="sticky top-0 bg-white border-b border-gray-200 z-20">
+      <header className="sticky top-0 bg-card border-b border-border z-20">
         <div className="flex items-center justify-between px-4 py-3">
           {/* Menu Button */}
           <Button

@@ -10,6 +10,7 @@
  */
 
 import { useState } from 'react';
+import { Spinner } from '../../../components/ui/spinner';
 import { useComments } from '../hooks/useComments';
 import { CommentForm } from './CommentForm';
 import { CommentItem } from './CommentItem';
@@ -22,17 +23,19 @@ interface CommentListProps {
 
 export function CommentList({ contentId, currentUserId, contentCreatorId }: CommentListProps) {
   const [page, setPage] = useState(1);
-  const { data, isLoading, isError, refetch } = useComments(contentId, { page });
+  const { data, isLoading, isFetching, isError, refetch } = useComments(contentId, { page });
 
   const items = data?.items ?? [];
   const pagination = data?.pagination;
 
   return (
     <section aria-labelledby="comments-heading" className="mt-8">
-      <h2 id="comments-heading" className="text-xl font-semibold text-gray-900 mb-4">
+      <h2 id="comments-heading" className="text-xl font-semibold text-foreground mb-4 font-display">
         Comments
         {pagination && pagination.total > 0 && (
-          <span className="ml-2 text-sm font-normal text-gray-500">({pagination.total})</span>
+          <span className="ml-2 text-sm font-normal text-muted-foreground">
+            ({pagination.total})
+          </span>
         )}
       </h2>
 
@@ -46,29 +49,9 @@ export function CommentList({ contentId, currentUserId, contentCreatorId }: Comm
         <div
           role="status"
           aria-label="Loading comments..."
-          className="flex items-center justify-center py-8 text-gray-500"
+          className="flex items-center justify-center py-8 text-muted-foreground"
         >
-          <svg
-            className="animate-spin h-6 w-6 mr-2"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-            />
-          </svg>
+          <Spinner size="md" className="mr-2" />
           <span>Loading comments...</span>
         </div>
       )}
@@ -77,13 +60,15 @@ export function CommentList({ contentId, currentUserId, contentCreatorId }: Comm
       {isError && !isLoading && (
         <div
           role="alert"
-          className="rounded-lg bg-red-50 border border-red-200 p-4 flex items-center gap-3"
+          className="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 flex items-center gap-3"
         >
-          <p className="text-sm text-red-700 flex-1">Failed to load comments. Please try again.</p>
+          <p className="text-sm text-red-700 dark:text-red-400 flex-1">
+            Failed to load comments. Please try again.
+          </p>
           <button
             type="button"
             onClick={() => void refetch()}
-            className="text-sm font-medium text-red-700 underline hover:no-underline"
+            className="text-sm font-medium text-red-700 dark:text-red-400 underline hover:no-underline"
           >
             Retry
           </button>
@@ -92,7 +77,9 @@ export function CommentList({ contentId, currentUserId, contentCreatorId }: Comm
 
       {/* Empty state */}
       {!isLoading && !isError && items.length === 0 && (
-        <p className="text-gray-500 text-sm py-4">No comments yet. Be the first to comment!</p>
+        <p className="text-muted-foreground text-sm py-4">
+          No comments yet. Be the first to comment!
+        </p>
       )}
 
       {/* Comment list */}
@@ -111,15 +98,23 @@ export function CommentList({ contentId, currentUserId, contentCreatorId }: Comm
             ))}
           </ul>
 
+          {/* Background fetch indicator (#638) */}
+          {isFetching && !isLoading && (
+            <div role="status" className="mt-3 flex justify-center">
+              <span className="text-xs text-muted-foreground">Updating comments...</span>
+            </div>
+          )}
+
           {/* Load more pagination */}
           {pagination?.hasNext && (
             <div className="mt-4 flex justify-center">
               <button
                 type="button"
                 onClick={() => setPage((p) => p + 1)}
-                className="px-4 py-2 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors"
+                disabled={isFetching}
+                className="px-4 py-2 text-sm font-medium text-purple-400 bg-purple-500/10 border border-purple-500/20 rounded-lg hover:bg-purple-500/20 disabled:opacity-50 transition-colors duration-150"
               >
-                Load more comments
+                {isFetching ? 'Loading...' : 'Load more comments'}
               </button>
             </div>
           )}

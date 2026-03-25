@@ -62,8 +62,13 @@ export const CoverageReportSchema = z.object({
   visualizations: z.array(
     z.object({
       type: z.enum(['line_chart', 'heatmap', 'treemap', 'gauge']),
-      data: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.array(z.unknown()), z.null()])),
-      config: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])).optional(),
+      data: z.record(
+        z.string(),
+        z.union([z.string(), z.number(), z.boolean(), z.array(z.unknown()), z.null()])
+      ),
+      config: z
+        .record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()]))
+        .optional(),
     })
   ),
   recommendations: z.array(
@@ -604,7 +609,13 @@ export interface PerformanceOptimization {
   issue: string;
   currentMetric: number;
   targetMetric: number;
-  optimizationType: 'caching' | 'lazy_loading' | 'code_splitting' | 'debouncing' | 'database_query' | 'resource_usage';
+  optimizationType:
+    | 'caching'
+    | 'lazy_loading'
+    | 'code_splitting'
+    | 'debouncing'
+    | 'database_query'
+    | 'resource_usage';
   estimatedImprovement: string;
   implementationSteps: string[];
   effort: 'low' | 'medium' | 'high';

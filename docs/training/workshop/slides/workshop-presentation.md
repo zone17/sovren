@@ -5,7 +5,9 @@
 ---
 
 ### Slide 1: Welcome
+
 # State Management Workshop
+
 ## React Query + Redux: Clear Boundaries for Clean Code
 
 **Duration**: 4 hours
@@ -30,12 +32,14 @@ graph LR
 ### Slide 3: The Numbers Don't Lie
 
 ## Before Epic 004
+
 - 🔴 200+ re-renders per interaction
 - 🔴 2,341 lines of boilerplate
 - 🔴 45% test coverage
 - 🔴 Confused developers
 
 ## After Epic 004
+
 - 🟢 60% fewer re-renders
 - 🟢 34KB smaller bundle
 - 🟢 96.2% test coverage
@@ -82,16 +86,16 @@ const { data: stock } = useQuery(['stock'], fetchStock);
 
 ```typescript
 // Theme & appearance
-const theme = useSelector(state => state.ui.theme);
+const theme = useSelector((state) => state.ui.theme);
 
 // Layout & navigation
-const sidebarOpen = useSelector(state => state.ui.sidebar);
+const sidebarOpen = useSelector((state) => state.ui.sidebar);
 
 // User selections
-const selectedIds = useSelector(state => state.selection.ids);
+const selectedIds = useSelector((state) => state.selection.ids);
 
 // Form drafts
-const draft = useSelector(state => state.forms.postDraft);
+const draft = useSelector((state) => state.forms.postDraft);
 ```
 
 **Key Point**: If it only exists in the browser, it belongs in Redux
@@ -135,7 +139,9 @@ const postsSlice = createSlice({
   name: 'posts',
   initialState: { data: [], loading: false, error: null },
   reducers: {
-    fetchStart: (state) => { state.loading = true },
+    fetchStart: (state) => {
+      state.loading = true;
+    },
     fetchSuccess: (state, action) => {
       state.data = action.payload;
       state.loading = false;
@@ -143,8 +149,8 @@ const postsSlice = createSlice({
     fetchError: (state, action) => {
       state.error = action.payload;
       state.loading = false;
-    }
-  }
+    },
+  },
 });
 
 // Plus thunks, selectors, etc...
@@ -160,7 +166,7 @@ const postsSlice = createSlice({
 // 😍 3 lines for the same thing
 const { data, isLoading, error } = useQuery({
   queryKey: ['posts'],
-  queryFn: fetchPosts
+  queryFn: fetchPosts,
 });
 ```
 
@@ -188,7 +194,7 @@ graph LR
 useQuery({
   queryKey: ['data'],
   queryFn: fetchData,
-  staleTime: 5 * 60 * 1000,  // Fresh for 5 min
+  staleTime: 5 * 60 * 1000, // Fresh for 5 min
   cacheTime: 10 * 60 * 1000, // Cache for 10 min
 });
 ```
@@ -210,10 +216,10 @@ const likeMutation = useMutation({
     const previous = queryClient.getQueryData(['post', postId]);
 
     // 3. Optimistic update
-    queryClient.setQueryData(['post', postId], old => ({
+    queryClient.setQueryData(['post', postId], (old) => ({
       ...old,
       likes: old.likes + 1,
-      isLiked: true
+      isLiked: true,
     }));
 
     return { previous };
@@ -221,7 +227,7 @@ const likeMutation = useMutation({
   onError: (err, postId, context) => {
     // Rollback on error
     queryClient.setQueryData(['post', postId], context.previous);
-  }
+  },
 });
 ```
 
@@ -237,7 +243,7 @@ const uiSlice = createSlice({
   initialState: {
     theme: 'light',
     sidebarOpen: true,
-    activeModal: null
+    activeModal: null,
   },
   reducers: {
     toggleTheme: (state) => {
@@ -248,8 +254,8 @@ const uiSlice = createSlice({
     },
     openModal: (state, action) => {
       state.activeModal = action.payload;
-    }
-  }
+    },
+  },
 });
 ```
 
@@ -262,6 +268,7 @@ const uiSlice = createSlice({
 ## ❌ Anti-Patterns to Avoid
 
 ### 1. Duplicating Server State
+
 ```typescript
 // ❌ BAD
 const { data } = useQuery(['user'], fetchUser);
@@ -269,12 +276,14 @@ const [user, setUser] = useState(data); // NO!
 ```
 
 ### 2. Server Data in Redux
+
 ```typescript
 // ❌ BAD
 dispatch(setUserData(apiResponse)); // NO!
 ```
 
 ### 3. UI State in React Query
+
 ```typescript
 // ❌ BAD
 useQuery(['theme'], () => localStorage.getItem('theme')); // NO!
@@ -304,13 +313,13 @@ flowchart TD
 
 ## Measurable Improvements
 
-| Metric | Before | After | Improvement |
-|--------|--------|-------|-------------|
-| Re-renders | 200+ | 80 | **60% ↓** |
-| Bundle Size | 487KB | 453KB | **34KB ↓** |
-| Initial Load | 2.8s | 1.2s | **57% ↓** |
-| Cache Hit Rate | 0% | 94.3% | **∞ ↑** |
-| Test Coverage | 45% | 96.2% | **113% ↑** |
+| Metric         | Before | After | Improvement |
+| -------------- | ------ | ----- | ----------- |
+| Re-renders     | 200+   | 80    | **60% ↓**   |
+| Bundle Size    | 487KB  | 453KB | **34KB ↓**  |
+| Initial Load   | 2.8s   | 1.2s  | **57% ↓**   |
+| Cache Hit Rate | 0%     | 94.3% | **∞ ↑**     |
+| Test Coverage  | 45%    | 96.2% | **113% ↑**  |
 
 ---
 
@@ -319,6 +328,7 @@ flowchart TD
 ## Test Each Layer Appropriately
 
 ### React Query (MSW)
+
 ```typescript
 // Mock the API, not the query
 server.use(
@@ -329,10 +339,10 @@ server.use(
 ```
 
 ### Redux (Pure Functions)
+
 ```typescript
 // Test reducers directly
-expect(uiReducer(initialState, toggleTheme()))
-  .toEqual({ ...initialState, theme: 'dark' });
+expect(uiReducer(initialState, toggleTheme())).toEqual({ ...initialState, theme: 'dark' });
 ```
 
 ---
@@ -382,10 +392,7 @@ function LiveFeed() {
       const update = JSON.parse(event.data);
 
       // Update React Query cache
-      queryClient.setQueryData(
-        ['feed', update.id],
-        update
-      );
+      queryClient.setQueryData(['feed', update.id], update);
 
       // Trigger refetch if needed
       queryClient.invalidateQueries(['feed']);
@@ -434,15 +441,18 @@ function LiveFeed() {
 ## Continue Learning
 
 ### Documentation
+
 - [React Query Docs](https://tanstack.com/query)
 - [Redux Toolkit Docs](https://redux-toolkit.js.org)
 
 ### Our Resources
+
 - [State Management Guidelines](../guidelines/)
 - [ADR-004 Decision Record](../architecture/decisions/)
 - [Workshop Exercises](./exercises/)
 
 ### Support
+
 - Slack: #state-management
 - Office Hours: Tuesdays 2-3pm
 - Pair Programming: Book via Calendar
@@ -468,6 +478,7 @@ Let's begin! 🚀
 # Questions Before We Start?
 
 ## Remember:
+
 - No question is too simple
 - Mistakes are learning opportunities
 - We're here to help

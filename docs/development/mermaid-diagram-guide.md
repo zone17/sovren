@@ -552,19 +552,16 @@ graph TD
 ### Diagram Organization
 
 1. **Keep Diagrams Focused**:
-
    - Each diagram should have a clear purpose
    - Limit complexity to maintain readability
    - Break complex diagrams into multiple simpler diagrams
 
 2. **Use Consistent Styling**:
-
    - Maintain consistent node shapes for similar entities
    - Use consistent color coding across diagrams
    - Follow the project's visual style guide
 
 3. **Provide Context**:
-
    - Include a title for each diagram
    - Add a brief description explaining the diagram's purpose
    - Include legends for color coding and symbols

@@ -119,6 +119,7 @@ Create a unified, centralized service for managing NOSTR keys (generation, stora
 **Source**: `@sovren/shared/types/nostr-key-management`
 
 Leverages comprehensive types from US-308:
+
 - `NostrEnhancedKeyPair` - Full key pair with metadata
 - `NostrKeyManagementConfig` - Service configuration
 - `NostrKeyManagementState` - Service state
@@ -206,23 +207,27 @@ Generate Key → Validate Schema → Encrypt (AES-256-GCM) → Store in IndexedD
 ## 🔐 Security Implementation
 
 ### **1. Entropy Validation**
+
 - Collects entropy from multiple sources (WebCrypto, timestamps, performance)
 - Minimum 128-bit entropy requirement
 - Entropy quality tracking
 
 ### **2. Encrypted Storage**
+
 - AES-256-GCM encryption for IndexedDB
 - PBKDF2 key derivation for password-based encryption
 - 100,000 iterations for key derivation
 - Random salt generation
 
 ### **3. Private Key Protection**
+
 - Never logged or exposed in errors
 - Encryption warnings on export
 - Secure deletion with cleanup
 - No localStorage usage for private keys
 
 ### **4. Compromise Detection**
+
 - Key compromise marking
 - Prevents usage of compromised keys
 - Reason tracking
@@ -344,11 +349,13 @@ const nsec = await keyManagementService.exportKey(keyId, 'nsec');
 ## 🔄 Integration Points
 
 ### **Dependencies**:
+
 - `nostr-tools` - NOSTR protocol implementation
 - `@sovren/shared/types/nostr-key-management` - Type definitions (US-308)
 - Browser APIs: IndexedDB, WebCrypto, window.nostr
 
 ### **Consumers**:
+
 - Authentication components
 - NOSTR event publishing
 - Identity management
@@ -370,6 +377,7 @@ const nsec = await keyManagementService.exportKey(keyId, 'nsec');
 ## 🚀 Future Enhancements
 
 ### **Potential Extensions**:
+
 1. **HD Key Derivation** - Hierarchical deterministic keys
 2. **Mnemonic Backup** - BIP-39 mnemonic phrase backup
 3. **Hardware Wallet Integration** - WebHID support for hardware wallets
@@ -384,11 +392,13 @@ const nsec = await keyManagementService.exportKey(keyId, 'nsec');
 ## 📝 Files Modified
 
 ### **Created**:
+
 1. `/packages/frontend/src/services/nostr/KeyManagementService.ts` (870 lines)
 2. `/packages/frontend/src/services/nostr/__tests__/KeyManagementService.test.ts` (680 lines)
 3. `/packages/frontend/src/services/nostr/__tests__/KeyManagementService.basic.test.ts` (36 lines)
 
 ### **Modified**:
+
 1. `/packages/frontend/src/services/nostr/index.ts` - Added exports
 
 ---

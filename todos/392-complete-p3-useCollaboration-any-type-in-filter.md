@@ -1,7 +1,7 @@
 ---
 status: pending
 priority: p3
-issue_id: "409"
+issue_id: '409'
 tags: [code-review, quality, types, pr-87]
 dependencies: []
 ---
@@ -25,10 +25,12 @@ The `useCollaboration.ts` hook uses `PromiseFulfilledResult<any>` in its type gu
 **Approach:** Import or infer the return type of `inviteCollaborator` and use it: `PromiseFulfilledResult<CollaboratorInviteResult>` (or whatever the actual type is).
 
 **Pros:**
+
 - Full type safety
 - No `any` in source
 
 **Cons:**
+
 - Need to look up the exact return type
 
 **Effort:** 10 minutes
@@ -42,6 +44,7 @@ Replace `any` with the actual return type of `inviteCollaborator`.
 ## Technical Details
 
 **Affected files:**
+
 - `packages/frontend/src/features/creator-network/hooks/useCollaboration.ts:38`
 
 ## Acceptance Criteria

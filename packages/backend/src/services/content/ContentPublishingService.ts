@@ -823,12 +823,18 @@ export class ContentPublishingService implements IContentPublishingService {
       const row = result.rows[0];
       let privateKey = row.nostr_private_key;
 
-      // Decrypt private key if stored encrypted
-      if (isEncrypted(privateKey)) {
-        const secrets = await getSecretsService();
-        const encryptionKey = await secrets.getSecret('NOSTR_KEY_ENCRYPTION_KEY');
-        privateKey = decrypt(privateKey, encryptionKey);
+      // Reject plaintext keys — all keys must be encrypted at rest
+      // Run scripts/encrypt-nostr-keys-migration.ts to encrypt existing keys
+      if (!isEncrypted(privateKey)) {
+        this.logger.error('NOSTR private key is stored in plaintext — refusing to use it', {
+          authorId,
+        });
+        return null;
       }
+
+      const secrets = await getSecretsService();
+      const encryptionKey = await secrets.getSecret('NOSTR_KEY_ENCRYPTION_KEY');
+      privateKey = decrypt(privateKey, encryptionKey);
 
       return {
         publicKey: row.nostr_public_key,

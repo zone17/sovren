@@ -158,7 +158,12 @@ const QuickFeedback: React.FC<{
     { action: 'like', icon: ThumbsUp, label: 'Helpful', color: 'text-green-600 bg-green-50' },
     { action: 'dislike', icon: ThumbsDown, label: 'Not helpful', color: 'text-red-600 bg-red-50' },
     { action: 'save', icon: Heart, label: 'Love it', color: 'text-pink-600 bg-pink-50' },
-    { action: 'hide', icon: XCircle, label: 'Not interested', color: 'text-gray-600 bg-gray-50' },
+    {
+      action: 'hide',
+      icon: XCircle,
+      label: 'Not interested',
+      color: 'text-muted-foreground bg-muted',
+    },
   ];
 
   const handleQuickAction = (action: string) => {
@@ -373,7 +378,12 @@ const FeedbackIncentives: React.FC<{
 }> = ({ feedbackCount, rewardsEarned }) => {
   const milestones = [
     { count: 5, reward: 'Bronze Contributor', icon: Award, color: 'text-orange-600 bg-orange-50' },
-    { count: 20, reward: 'Silver Contributor', icon: Award, color: 'text-gray-600 bg-gray-50' },
+    {
+      count: 20,
+      reward: 'Silver Contributor',
+      icon: Award,
+      color: 'text-muted-foreground bg-muted',
+    },
     { count: 50, reward: 'Gold Contributor', icon: Award, color: 'text-yellow-600 bg-yellow-50' },
     { count: 100, reward: 'Feedback Champion', icon: Award, color: 'text-purple-600 bg-purple-50' },
   ];
@@ -399,14 +409,14 @@ const FeedbackIncentives: React.FC<{
             </span>
           </div>
           <Progress value={progress} className="h-2" />
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-muted-foreground">
             {nextMilestone.count - feedbackCount} more feedback to unlock!
           </p>
         </div>
       )}
 
       <div className="space-y-2">
-        <h5 className="text-xs font-medium text-gray-600">Earned Badges:</h5>
+        <h5 className="text-xs font-medium text-muted-foreground">Earned Badges:</h5>
         <div className="flex flex-wrap gap-2">
           {milestones
             .filter((m) => m.count <= feedbackCount)
@@ -452,7 +462,7 @@ const FeedbackAnalyticsView: React.FC<{ analytics: FeedbackAnalytics }> = ({ ana
               <div className="text-2xl font-bold text-blue-600">
                 {Math.round(analytics.metrics.feedbackRate * 100)}%
               </div>
-              <p className="text-sm text-gray-600">Feedback Rate</p>
+              <p className="text-sm text-muted-foreground">Feedback Rate</p>
             </div>
           </CardContent>
         </Card>
@@ -463,7 +473,7 @@ const FeedbackAnalyticsView: React.FC<{ analytics: FeedbackAnalytics }> = ({ ana
               <div className="text-2xl font-bold text-green-600">
                 {analytics.metrics.avgRating.toFixed(1)}
               </div>
-              <p className="text-sm text-gray-600">Avg Rating</p>
+              <p className="text-sm text-muted-foreground">Avg Rating</p>
             </div>
           </CardContent>
         </Card>
@@ -474,7 +484,7 @@ const FeedbackAnalyticsView: React.FC<{ analytics: FeedbackAnalytics }> = ({ ana
               <div className="text-2xl font-bold text-purple-600">
                 {Math.round(analytics.metrics.satisfactionScore * 100)}%
               </div>
-              <p className="text-sm text-gray-600">Satisfaction</p>
+              <p className="text-sm text-muted-foreground">Satisfaction</p>
             </div>
           </CardContent>
         </Card>
@@ -485,7 +495,7 @@ const FeedbackAnalyticsView: React.FC<{ analytics: FeedbackAnalytics }> = ({ ana
               <div className="text-2xl font-bold text-orange-600">
                 {Math.round(analytics.metrics.clickThroughRate * 100)}%
               </div>
-              <p className="text-sm text-gray-600">Click Rate</p>
+              <p className="text-sm text-muted-foreground">Click Rate</p>
             </div>
           </CardContent>
         </Card>
@@ -507,7 +517,7 @@ const FeedbackAnalyticsView: React.FC<{ analytics: FeedbackAnalytics }> = ({ ana
                     className="h-3"
                   />
                 </div>
-                <span className="text-sm text-gray-600 w-8">{count}</span>
+                <span className="text-sm text-muted-foreground w-8">{count}</span>
               </div>
             ))}
           </div>
@@ -527,7 +537,7 @@ const FeedbackAnalyticsView: React.FC<{ analytics: FeedbackAnalytics }> = ({ ana
                   <span className="text-sm font-medium">{algorithm}</span>
                   <div className="flex items-center gap-2">
                     <Progress value={(rating / 5) * 100} className="h-2 w-20" />
-                    <span className="text-sm text-gray-600">{rating.toFixed(1)}</span>
+                    <span className="text-sm text-muted-foreground">{rating.toFixed(1)}</span>
                   </div>
                 </div>
               )
@@ -687,8 +697,8 @@ export const RecommendationFeedback: React.FC<RecommendationFeedbackProps> = ({
             <CheckCircle className="h-6 w-6 text-green-600" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">Feedback Received!</h3>
-            <p className="text-sm text-gray-600">
+            <h3 className="text-lg font-semibold text-foreground">Feedback Received!</h3>
+            <p className="text-sm text-muted-foreground">
               Thank you for helping us improve our recommendations.
             </p>
           </div>
@@ -713,7 +723,7 @@ export const RecommendationFeedback: React.FC<RecommendationFeedbackProps> = ({
             <MessageSquare className="h-5 w-5 text-blue-600" />
             Share Your Feedback
           </CardTitle>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             Help us improve by sharing your thoughts on this recommendation
           </p>
         </CardHeader>

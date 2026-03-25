@@ -1,14 +1,14 @@
 ---
 status: pending
 priority: p2
-issue_id: "485"
+issue_id: '485'
 tags:
   - code-review
   - msw
   - test-infrastructure
   - phase-9
 dependencies:
-  - "484"
+  - '484'
 ---
 
 # No deprecation path from renderWithProviders to renderWithAll
@@ -30,6 +30,7 @@ Mark `renderWithProviders()` and `renderWithQueryClient()` as `@deprecated` poin
 ## Technical Details
 
 **Affected files:**
+
 - `packages/frontend/src/test-utils/test-providers.tsx`
 - `packages/frontend/src/test-utils/react-query-test-utils.tsx`
 
@@ -40,6 +41,6 @@ Mark `renderWithProviders()` and `renderWithQueryClient()` as `@deprecated` poin
 
 ## Work Log
 
-| Date | Action | Learnings |
-|------|--------|-----------|
+| Date       | Action                          | Learnings                                          |
+| ---------- | ------------------------------- | -------------------------------------------------- |
 | 2026-02-24 | Created from Phase 9 MSW review | Multiple test wrappers need clear deprecation path |

@@ -96,11 +96,7 @@ export const stagingConfig: EnvironmentConfig = {
   },
 
   security: {
-    corsOrigins: [
-      'https://staging.sovren.dev',
-      'http://localhost:3000',
-      'http://localhost:5173',
-    ],
+    corsOrigins: ['https://staging.sovren.dev', 'http://localhost:3000', 'http://localhost:5173'],
     secureCookies: true,
     helmetEnabled: true,
     rateLimitEnabled: true,

@@ -1,4 +1,5 @@
 # Redux Store Audit Report - Epic 004
+
 **Date**: 2025-10-26
 **Epic**: #004 - State Management Boundaries
 **Story**: US-004-001 - Audit Redux Store Structure
@@ -23,6 +24,7 @@ store/
 ## Detailed Slice Analysis
 
 ### 1. userSlice.ts - **MIXED STATE**
+
 ```typescript
 State Structure:
 - currentUser: User | null     → SERVER DATA (from API)
@@ -36,10 +38,12 @@ Classification: MIXED
 ```
 
 **Recommendation**: Split into:
+
 - `authSlice` (Redux): isAuthenticated, token
 - `useUser` hook (React Query): user data fetching
 
 ### 2. postSlice.ts - **PURE SERVER STATE**
+
 ```typescript
 State Structure:
 - posts: Post[]                → SERVER DATA (API response)
@@ -52,6 +56,7 @@ Classification: PURE SERVER STATE
 ```
 
 **Recommendation**: Delete entirely, replace with:
+
 - `usePosts` hook
 - `usePost` hook
 - `useCreatePost` mutation
@@ -59,6 +64,7 @@ Classification: PURE SERVER STATE
 - `useDeletePost` mutation
 
 ### 3. paymentSlice.ts - **PURE SERVER STATE**
+
 ```typescript
 State Structure:
 - payments: Payment[]          → SERVER DATA (API response)
@@ -71,12 +77,14 @@ Classification: PURE SERVER STATE
 ```
 
 **Recommendation**: Delete entirely, replace with:
+
 - `usePayments` hook
 - `usePayment` hook
 - `useCreatePayment` mutation
 - Payment status polling via React Query
 
 ### 4. cmsSlice.ts - **COMPLEX MIXED STATE** ⚠️
+
 ```typescript
 State Structure (890 lines!):
 - content_items: ContentItem[]        → SERVER DATA
@@ -113,6 +121,7 @@ Classification: COMPLEX MIXED
 ```
 
 **Recommendation**: Major refactor needed:
+
 1. Extract all content data to React Query hooks
 2. Keep only editor UI state in Redux
 3. Split AI state (settings vs queue)
@@ -121,16 +130,19 @@ Classification: COMPLEX MIXED
 ## Migration Priority
 
 ### Phase 1: Quick Wins (Pure Server State)
+
 1. **postSlice** → Completely replace with React Query
 2. **paymentSlice** → Completely replace with React Query
 
 ### Phase 2: Complex Refactoring
+
 3. **userSlice** → Split into auth (Redux) + user data (React Query)
 4. **cmsSlice** → Major refactor to extract server data
 
 ## React Query Hooks Needed
 
 ### Content Domain
+
 - `useContents(filters)` - List with pagination
 - `useContent(id)` - Single content item
 - `useCreateContent()` - Create mutation
@@ -141,11 +153,13 @@ Classification: COMPLEX MIXED
 - `useContentSupports(contentId)` - Support/donations
 
 ### User Domain
+
 - `useUser(id)` - User profile data
 - `useCurrentUser()` - Current authenticated user
 - `useUpdateProfile()` - Profile update mutation
 
 ### Post Domain
+
 - `usePosts(filters)` - List with pagination
 - `usePost(id)` - Single post
 - `useCreatePost()` - Create mutation
@@ -153,6 +167,7 @@ Classification: COMPLEX MIXED
 - `useDeletePost()` - Delete mutation
 
 ### Payment Domain
+
 - `usePayments(filters)` - Payment history
 - `usePayment(id)` - Single payment
 - `usePaymentStatus(id)` - Status polling
@@ -162,6 +177,7 @@ Classification: COMPLEX MIXED
 ## Redux Slices to Keep/Create
 
 ### 1. uiSlice (NEW - Consolidate all UI state)
+
 ```typescript
 interface UIState {
   theme: 'light' | 'dark';
@@ -174,6 +190,7 @@ interface UIState {
 ```
 
 ### 2. authSlice (NEW - Extract from userSlice)
+
 ```typescript
 interface AuthState {
   isAuthenticated: boolean;
@@ -183,6 +200,7 @@ interface AuthState {
 ```
 
 ### 3. editorSlice (Extract from cmsSlice)
+
 ```typescript
 interface EditorState {
   isEditing: boolean;
@@ -194,6 +212,7 @@ interface EditorState {
 ```
 
 ### 4. preferencesSlice (NEW - User preferences)
+
 ```typescript
 interface PreferencesState {
   language: string;
@@ -206,6 +225,7 @@ interface PreferencesState {
 ## Statistics
 
 ### Current State Breakdown
+
 - **Total Redux Properties**: 47
 - **Server State Properties**: 32 (68%)
 - **Client State Properties**: 15 (32%)
@@ -213,10 +233,12 @@ interface PreferencesState {
 - **Properties to Keep**: 15
 
 ### Lines of Code
+
 - **Current Total**: ~1,200 lines
 - **After Migration**: ~300 lines (75% reduction)
 
 ### Bundle Size Impact
+
 - **Current Redux slices**: ~45KB
 - **After cleanup**: ~12KB
 - **React Query addition**: ~38KB
@@ -236,20 +258,24 @@ interface PreferencesState {
 ## Risk Assessment
 
 ### High Risk
+
 - **cmsSlice refactor**: 890 lines, complex async thunks
 - **Component updates**: ~50+ components need updates
 
 ### Medium Risk
+
 - **Testing coverage**: Need comprehensive tests before migration
 - **Cache invalidation**: Complex relationships between entities
 
 ### Low Risk
+
 - **postSlice migration**: Simple structure, clean migration path
 - **paymentSlice migration**: Well-defined boundaries
 
 ## Conclusion
 
 The Redux store is currently **heavily polluted with server state** (68% of all properties). This causes:
+
 - Unnecessary re-renders
 - Complex cache management
 - Duplicate data between Redux and API

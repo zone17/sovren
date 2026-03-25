@@ -1,7 +1,7 @@
 ---
 status: pending
 priority: p3
-issue_id: "413"
+issue_id: '413'
 tags: [code-review, quality, api-contract, pr-87]
 dependencies: []
 ---
@@ -11,11 +11,17 @@ dependencies: []
 ## Problem Statement
 
 The `/wellness/benchmark` endpoint previously returned a custom message when data was null:
+
 ```json
-{ "success": true, "data": null, "message": "Insufficient participants for anonymous benchmarking (minimum: 10)" }
+{
+  "success": true,
+  "data": null,
+  "message": "Insufficient participants for anonymous benchmarking (minimum: 10)"
+}
 ```
 
 After the `createApiResponse()` migration, it now returns:
+
 ```json
 { "success": true, "data": null, "metadata": { "requestId": "...", "timestamp": "..." } }
 ```
@@ -56,6 +62,7 @@ Option 2 if there are known frontend consumers of the message field. Otherwise a
 ## Technical Details
 
 **Affected files:**
+
 - `packages/backend/src/routes/v2/wellness.routes.ts` (benchmark endpoint)
 
 ## Acceptance Criteria

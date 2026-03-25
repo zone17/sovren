@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Creator Circle Service
  * EPIC-010: Creator Network — Circle management, membership, and posts
@@ -7,7 +6,19 @@
 import type { ICreatorCircleService } from '../../interfaces/community/ICreatorCircleService';
 import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
-import { AuthorizationError, ConflictError } from '../../utils/errors';
+import type { IEventBus } from '../../interfaces/shared/IEventBus';
+import type { Circle, CirclePost } from '@shared/types/community';
+import {
+  AuthorizationError,
+  ConflictError,
+  DatabaseError,
+  NotFoundError,
+  ValidationError,
+} from '../../utils/errors';
+import { DomainEventType } from '../../interfaces/shared/IEventBus';
+import { stripControlChars } from '../../utils/stripControlChars';
+import { escapePostgrestFilter } from '../../utils/escapePostgrestFilter';
+import { emitDomainEvent } from '../../utils/emitDomainEvent';
 
 interface CircleRow {
   id: string;
@@ -36,13 +47,54 @@ interface CirclePostRow {
   created_at: string;
 }
 
+function rowToCircle(row: CircleRow): Circle {
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description ?? undefined,
+    niche: row.niche ?? undefined,
+    maxMembers: row.max_members,
+    createdBy: row.created_by,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+function rowToCirclePost(row: CirclePostRow): CirclePost {
+  return {
+    id: row.id,
+    circleId: row.circle_id,
+    authorId: row.author_id,
+    content: row.content,
+    createdAt: row.created_at,
+  };
+}
+
 export class CreatorCircleService implements ICreatorCircleService {
   private readonly db: ISupabaseClient;
   private readonly logger: ILogger;
+  private readonly eventBus: IEventBus;
 
-  constructor(db: ISupabaseClient, logger: ILogger) {
+  constructor(db: ISupabaseClient, logger: ILogger, eventBus: IEventBus) {
     this.db = db;
     this.logger = logger;
+    this.eventBus = eventBus;
+  }
+
+  private emitEvent(
+    type: DomainEventType,
+    aggregateId: string,
+    payload: Record<string, unknown>
+  ): void {
+    emitDomainEvent(
+      this.eventBus,
+      this.logger,
+      type,
+      aggregateId,
+      'circle',
+      payload,
+      'CreatorCircleService'
+    );
   }
 
   async createCircle(
@@ -52,7 +104,7 @@ export class CreatorCircleService implements ICreatorCircleService {
     const maxMembers = data.maxMembers ?? 20;
 
     if (maxMembers < 5 || maxMembers > 20) {
-      throw new Error('Circle size must be between 5 and 20 members');
+      throw new ValidationError('Circle size must be between 5 and 20 members');
     }
 
     // #264: Atomic creation via RPC — circle + admin member in one transaction
@@ -66,83 +118,161 @@ export class CreatorCircleService implements ICreatorCircleService {
 
     if (error || !circleId) {
       this.logger.error('Failed to create circle', { error, creatorId });
-      throw new Error(`Failed to create circle: ${error?.message}`);
+      throw new DatabaseError('Failed to create circle');
     }
 
     this.logger.info('Circle created', { circleId, creatorId });
     return { id: circleId };
   }
 
-  async getCircles(creatorId: string): Promise<CircleRow[]> {
-    // #278: Add default limit to prevent unbounded result sets
-    const { data, error } = await this.db
+  async getCircles(creatorId: string): Promise<Circle[]> {
+    // Step 1: Get circle IDs where creatorId is a member
+    const { data: memberships } = await this.db
+      .from<CircleMemberRow>('circle_members')
+      .select('circle_id')
+      .eq('creator_id', creatorId);
+
+    const memberCircleIds = (memberships ?? []).map((m) => m.circle_id);
+
+    // Step 2: Single query — circles created by OR joined by this creator
+    let query = this.db
       .from<CircleRow>('creator_circles')
       .select('id, name, description, niche, max_members, created_by, created_at, updated_at')
       .order('created_at', { ascending: false })
       .limit(100);
 
+    if (memberCircleIds.length > 0) {
+      query = query.or(
+        `created_by.eq.${escapePostgrestFilter(creatorId)},id.in.(${memberCircleIds.map(escapePostgrestFilter).join(',')})`
+      );
+    } else {
+      query = query.eq('created_by', creatorId);
+    }
+
+    const { data, error } = await query;
+
     if (error) {
       this.logger.error('Failed to get circles', { error, creatorId });
-      throw new Error(`Failed to get circles: ${error.message}`);
+      throw new DatabaseError('Failed to get circles');
     }
 
-    return data ?? [];
+    return (data ?? []).map(rowToCircle);
   }
 
-  async getSuggestedCircles(creatorId: string): Promise<CircleRow[]> {
-    // Get creator's niche from their existing circles or mentor profile
-    const { data: myCircles } = await this.db
-      .from<CircleRow>('creator_circles')
-      .select('niche')
-      .eq('created_by', creatorId)
-      .limit(1)
-      .maybeSingle();
-
-    const niche = myCircles?.niche;
-
-    // Suggest circles matching same niche that user hasn't joined
-    if (niche) {
-      const { data, error } = await this.db
+  async getSuggestedCircles(creatorId: string): Promise<Circle[]> {
+    // Parallel: fetch memberships + creator's niche in one round-trip
+    const [membershipsResult, nicheResult] = await Promise.all([
+      this.db
+        .from<CircleMemberRow>('circle_members')
+        .select('circle_id')
+        .eq('creator_id', creatorId),
+      this.db
         .from<CircleRow>('creator_circles')
-        .select('id, name, description, niche, max_members, created_by, created_at, updated_at')
-        .eq('niche', niche)
-        .neq('created_by', creatorId)
-        .limit(10);
+        .select('niche')
+        .eq('created_by', creatorId)
+        .limit(1)
+        .maybeSingle(),
+    ]);
 
-      if (error) {
-        this.logger.error('Failed to get suggested circles', { error, creatorId });
-        throw new Error(`Failed to get suggested circles: ${error.message}`);
-      }
+    const joinedIds = (membershipsResult.data ?? []).map((m) => m.circle_id);
+    const niche = nicheResult.data?.niche;
 
-      return data ?? [];
-    }
-
-    // Fallback: return most recently created circles
-    const { data, error } = await this.db
+    // Build suggestion query
+    let query = this.db
       .from<CircleRow>('creator_circles')
       .select('id, name, description, niche, max_members, created_by, created_at, updated_at')
       .neq('created_by', creatorId)
-      .order('created_at', { ascending: false })
-      .limit(10);
+      .order('created_at', { ascending: false });
 
-    if (error) {
-      this.logger.error('Failed to get suggested circles (fallback)', { error, creatorId });
-      throw new Error(`Failed to get suggested circles: ${error.message}`);
+    if (niche) {
+      query = query.eq('niche', niche);
     }
 
-    return data ?? [];
+    if (joinedIds.length > 0) {
+      query = query.not('id', 'in', `(${joinedIds.join(',')})`);
+    }
+
+    const { data, error } = await query.limit(10);
+
+    if (error) {
+      this.logger.error('Failed to get suggested circles', { error, creatorId });
+      throw new DatabaseError('Failed to get suggested circles');
+    }
+
+    return (data ?? []).map(rowToCircle);
+  }
+
+  async getCircleById(circleId: string): Promise<Circle> {
+    const { data, error } = await this.db
+      .from<CircleRow>('creator_circles')
+      .select('id, name, description, niche, max_members, created_by, created_at, updated_at')
+      .eq('id', circleId)
+      .single();
+
+    if (error || !data) {
+      throw new NotFoundError('Circle');
+    }
+
+    return rowToCircle(data);
+  }
+
+  async leaveCircle(creatorId: string, circleId: string): Promise<void> {
+    // Verify circle exists
+    const { data: circle, error: circleError } = await this.db
+      .from<CircleRow>('creator_circles')
+      .select('created_by')
+      .eq('id', circleId)
+      .single();
+
+    if (circleError || !circle) {
+      throw new NotFoundError('Circle');
+    }
+
+    // Admin cannot leave their own circle (they must delete it)
+    if (circle.created_by === creatorId) {
+      throw new AuthorizationError('Circle admin cannot leave their own circle');
+    }
+
+    // Verify membership exists before attempting delete (idempotent — no throw if already left)
+    const { data: membership } = await this.db
+      .from<CircleMemberRow>('circle_members')
+      .select('id')
+      .eq('circle_id', circleId)
+      .eq('creator_id', creatorId)
+      .maybeSingle();
+
+    if (!membership) {
+      this.logger.warn('leaveCircle: membership not found (already left or never joined)', {
+        circleId,
+        creatorId,
+      });
+      return;
+    }
+
+    const { error } = await this.db
+      .from<CircleMemberRow>('circle_members')
+      .delete()
+      .eq('circle_id', circleId)
+      .eq('creator_id', creatorId);
+
+    if (error) {
+      this.logger.error('Failed to leave circle', { error, circleId, creatorId });
+      throw new DatabaseError('Failed to leave circle');
+    }
+
+    this.logger.info('Creator left circle', { circleId, creatorId });
   }
 
   async joinCircle(creatorId: string, circleId: string): Promise<void> {
     // Check circle exists
     const { data: circle, error: circleError } = await this.db
       .from<CircleRow>('creator_circles')
-      .select('id, max_members')
+      .select('id, max_members, created_by')
       .eq('id', circleId)
       .single();
 
     if (circleError || !circle) {
-      throw new Error('Circle not found');
+      throw new NotFoundError('Circle');
     }
 
     // #361: Atomic insert-then-verify to prevent TOCTOU race on member count.
@@ -158,10 +288,10 @@ export class CreatorCircleService implements ICreatorCircleService {
     if (insertError) {
       // Unique constraint violation means already a member
       if (insertError.code === '23505') {
-        throw new Error('Already a member of this circle');
+        throw new ConflictError('Already a member of this circle');
       }
       this.logger.error('Failed to join circle', { error: insertError, circleId, creatorId });
-      throw new Error(`Failed to join circle: ${insertError.message}`);
+      throw new DatabaseError('Failed to join circle');
     }
 
     // Step 2: Count members AFTER insert — if over capacity, rollback
@@ -172,25 +302,46 @@ export class CreatorCircleService implements ICreatorCircleService {
 
     if (countError) {
       // Cleanup the just-inserted row on count failure
-      await this.db
+      const { error: compensationError } = await this.db
         .from<CircleMemberRow>('circle_members')
         .delete()
         .eq('circle_id', circleId)
         .eq('creator_id', creatorId);
-      throw new Error(`Failed to count circle members: ${countError.message}`);
+      if (compensationError) {
+        this.logger.error('joinCircle: compensation DELETE failed', {
+          compensationError,
+          circleId,
+          creatorId,
+          originalError: countError,
+        });
+      }
+      throw new DatabaseError('Failed to count circle members');
     }
 
     if ((currentCount ?? 0) > circle.max_members) {
       // Over capacity — remove the just-inserted member and return 409
-      await this.db
+      const { error: compensationError } = await this.db
         .from<CircleMemberRow>('circle_members')
         .delete()
         .eq('circle_id', circleId)
         .eq('creator_id', creatorId);
+      if (compensationError) {
+        this.logger.error('joinCircle: compensation DELETE failed (over capacity)', {
+          compensationError,
+          circleId,
+          creatorId,
+        });
+      }
       throw new ConflictError(`Circle is full (max ${circle.max_members} members)`);
     }
 
     this.logger.info('Creator joined circle', { circleId, creatorId });
+
+    this.emitEvent(DomainEventType.COMMUNITY_CIRCLE_JOINED, circleId, {
+      circleAdminId: circle.created_by,
+      joinerId: creatorId,
+      circleId,
+    });
   }
 
   async removeMember(circleId: string, memberId: string, requesterId: string): Promise<void> {
@@ -202,15 +353,15 @@ export class CreatorCircleService implements ICreatorCircleService {
       .single();
 
     if (circleError || !circle) {
-      throw new Error('Circle not found');
+      throw new NotFoundError('Circle');
     }
 
     if (circle.created_by !== requesterId) {
-      throw new Error('Only the circle admin can remove members');
+      throw new AuthorizationError('Only the circle admin can remove members');
     }
 
     if (memberId === requesterId) {
-      throw new Error('Admin cannot remove themselves');
+      throw new AuthorizationError('Admin cannot remove themselves');
     }
 
     const { error } = await this.db
@@ -221,13 +372,20 @@ export class CreatorCircleService implements ICreatorCircleService {
 
     if (error) {
       this.logger.error('Failed to remove member', { error, circleId, memberId });
-      throw new Error(`Failed to remove member: ${error.message}`);
+      throw new DatabaseError('Failed to remove member');
     }
 
     this.logger.info('Member removed from circle', { circleId, memberId, requesterId });
   }
 
-  async getCirclePosts(circleId: string, creatorId: string): Promise<CirclePostRow[]> {
+  async getCirclePosts(
+    circleId: string,
+    creatorId: string,
+    pagination?: { offset?: number; limit?: number }
+  ): Promise<CirclePost[]> {
+    const offset = pagination?.offset ?? 0;
+    const limit = Math.min(pagination?.limit ?? 50, 100); // #713: default 50, cap 100
+
     // #359: Verify requester is the circle creator OR a circle member before returning posts
     const { data: circle, error: circleError } = await this.db
       .from<CircleRow>('creator_circles')
@@ -236,7 +394,7 @@ export class CreatorCircleService implements ICreatorCircleService {
       .single();
 
     if (circleError || !circle) {
-      throw new Error('Circle not found');
+      throw new NotFoundError('Circle');
     }
 
     // Allow circle creator without membership row
@@ -258,34 +416,233 @@ export class CreatorCircleService implements ICreatorCircleService {
       .select('id, circle_id, author_id, content, created_at')
       .eq('circle_id', circleId)
       .order('created_at', { ascending: false })
-      .limit(50);
+      .range(offset, offset + limit - 1);
 
     if (error) {
       this.logger.error('Failed to get circle posts', { error, circleId, creatorId });
-      throw new Error(`Failed to get circle posts: ${error.message}`);
+      throw new DatabaseError('Failed to get circle posts');
     }
 
-    return data ?? [];
+    return (data ?? []).map(rowToCirclePost);
   }
 
   async createPost(circleId: string, authorId: string, content: string): Promise<{ id: string }> {
-    // Input validation (empty, length) is handled by Zod at the route layer.
+    // #723: Verify the author is a member of the circle before allowing post creation.
+    // Circle creator is implicitly authorized; other users must have a membership row.
+    const { data: circle, error: circleError } = await this.db
+      .from<CircleRow>('creator_circles')
+      .select('created_by')
+      .eq('id', circleId)
+      .single();
+
+    if (circleError || !circle) {
+      throw new NotFoundError('Circle');
+    }
+
+    if (circle.created_by !== authorId) {
+      const { data: membership } = await this.db
+        .from<CircleMemberRow>('circle_members')
+        .select('id')
+        .eq('circle_id', circleId)
+        .eq('creator_id', authorId)
+        .maybeSingle();
+
+      if (!membership) {
+        throw new AuthorizationError('You must be a member of this circle to post');
+      }
+    }
+
+    // Input validation (empty, length) handled by Zod at the route layer.
+    // Strip control characters to prevent injection via non-printable chars.
+    const sanitizedContent = stripControlChars(content.trim());
+
     const { data: rows, error } = await this.db
       .from<CirclePostRow>('circle_posts')
       .insert({
         circle_id: circleId,
         author_id: authorId,
-        content: content.trim(),
+        content: sanitizedContent,
       })
       .select('id')
       .single();
 
     if (error || !rows) {
       this.logger.error('Failed to create circle post', { error, circleId, authorId });
-      throw new Error(`Failed to create post: ${error?.message}`);
+      throw new DatabaseError('Failed to create post');
     }
 
     this.logger.info('Circle post created', { postId: rows.id, circleId, authorId });
+
+    // #731: Paginated fan-out — member SELECT uses PAGE_SIZE=500 to avoid unbounded queries.
+    // Fire-and-forget: notification failures must NOT block post creation.
+    void (async () => {
+      try {
+        const PAGE_SIZE = 500;
+        const memberIds: string[] = [];
+        let offset = 0;
+        let hasMore = true;
+
+        while (hasMore) {
+          const { data: members, error } = await this.db
+            .from<CircleMemberRow>('circle_members')
+            .select('creator_id')
+            .eq('circle_id', circleId)
+            .range(offset, offset + PAGE_SIZE - 1);
+
+          if (error) {
+            this.logger.error(
+              'CreatorCircleService: failed to fetch members for event (non-blocking)',
+              { error, circleId, postId: rows.id }
+            );
+            break;
+          }
+
+          const batch = members ?? [];
+          for (const m of batch) memberIds.push(m.creator_id);
+          hasMore = batch.length === PAGE_SIZE;
+          offset += PAGE_SIZE;
+        }
+
+        this.emitEvent(DomainEventType.COMMUNITY_CIRCLE_POST_CREATED, rows.id, {
+          authorId,
+          circleId,
+          postId: rows.id,
+          memberIds,
+        });
+      } catch (err) {
+        this.logger.error(
+          'CreatorCircleService: failed to fetch members for event (non-blocking)',
+          { err, circleId, postId: rows.id }
+        );
+      }
+    })();
+
     return { id: rows.id };
+  }
+
+  async updateCircle(
+    circleId: string,
+    requesterId: string,
+    data: { name?: string; description?: string; niche?: string; maxMembers?: number }
+  ): Promise<void> {
+    // Verify circle exists and requester is the owner
+    const { data: circle, error: circleError } = await this.db
+      .from<CircleRow>('creator_circles')
+      .select('created_by')
+      .eq('id', circleId)
+      .single();
+
+    if (circleError || !circle) {
+      throw new NotFoundError('Circle');
+    }
+
+    if (circle.created_by !== requesterId) {
+      throw new AuthorizationError('Only the circle owner can update this circle');
+    }
+
+    // Build update payload — only include provided fields
+    const updatePayload: Record<string, unknown> = {};
+    if (data.name !== undefined) updatePayload.name = data.name;
+    if (data.description !== undefined) updatePayload.description = data.description;
+    if (data.niche !== undefined) updatePayload.niche = data.niche;
+    if (data.maxMembers !== undefined) updatePayload.max_members = data.maxMembers;
+
+    const { error } = await this.db
+      .from<CircleRow>('creator_circles')
+      .update(updatePayload)
+      .eq('id', circleId);
+
+    if (error) {
+      this.logger.error('Failed to update circle', { error, circleId, requesterId });
+      throw new DatabaseError('Failed to update circle');
+    }
+
+    this.logger.info('Circle updated', {
+      circleId,
+      requesterId,
+      fields: Object.keys(updatePayload),
+    });
+  }
+
+  async deleteCircle(circleId: string, requesterId: string): Promise<void> {
+    // Verify circle exists and requester is the owner
+    const { data: circle, error: circleError } = await this.db
+      .from<CircleRow>('creator_circles')
+      .select('created_by')
+      .eq('id', circleId)
+      .single();
+
+    if (circleError || !circle) {
+      throw new NotFoundError('Circle');
+    }
+
+    if (circle.created_by !== requesterId) {
+      throw new AuthorizationError('Only the circle owner can delete this circle');
+    }
+
+    // Delete memberships first (cascade)
+    const { error: membersError } = await this.db
+      .from<CircleMemberRow>('circle_members')
+      .delete()
+      .eq('circle_id', circleId);
+
+    if (membersError) {
+      this.logger.error('Failed to delete circle memberships', { error: membersError, circleId });
+      throw new DatabaseError('Failed to delete circle');
+    }
+
+    // Delete circle posts
+    const { error: postsError } = await this.db
+      .from<CirclePostRow>('circle_posts')
+      .delete()
+      .eq('circle_id', circleId);
+
+    if (postsError) {
+      this.logger.error('Failed to delete circle posts', { error: postsError, circleId });
+      throw new DatabaseError('Failed to delete circle');
+    }
+
+    // Delete the circle itself
+    const { error } = await this.db.from<CircleRow>('creator_circles').delete().eq('id', circleId);
+
+    if (error) {
+      this.logger.error('Failed to delete circle', { error, circleId, requesterId });
+      throw new DatabaseError('Failed to delete circle');
+    }
+
+    this.logger.info('Circle deleted', { circleId, requesterId });
+  }
+
+  async getCircleMembers(
+    circleId: string,
+    pagination?: { offset?: number; limit?: number }
+  ): Promise<{ id: string; creator_id: string; role: string; joined_at: string }[]> {
+    const offset = pagination?.offset ?? 0;
+    const limit = Math.min(pagination?.limit ?? 50, 100);
+
+    // Verify circle exists
+    const { data: circle, error: circleError } = await this.db
+      .from<CircleRow>('creator_circles')
+      .select('id')
+      .eq('id', circleId)
+      .single();
+
+    if (circleError || !circle) {
+      throw new NotFoundError('Circle');
+    }
+
+    const { data, error } = await this.db
+      .from<CircleMemberRow>('circle_members')
+      .select('id, creator_id, role, joined_at')
+      .eq('circle_id', circleId)
+      .order('joined_at', { ascending: true })
+      .range(offset, offset + limit - 1);
+
+    if (error) {
+      this.logger.error('Failed to get circle members', { error, circleId });
+      throw new DatabaseError('Failed to get circle members');
+    }
+
+    return data ?? [];
   }
 }

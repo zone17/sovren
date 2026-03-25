@@ -7,9 +7,9 @@ problem_type: feature_implementation
 component: enterprise_team_builder
 severity: high
 symptoms:
-  - "3 Phase 1 epics needed parallel implementation"
-  - "13 new backend services across 3 domains"
-  - "15 new frontend components across 3 feature modules"
+  - '3 Phase 1 epics needed parallel implementation'
+  - '13 new backend services across 3 domains'
+  - '15 new frontend components across 3 feature modules'
 root_cause: new_feature_development
 solving_agent: 'team-builder enterprise (parallel epic leads, 4 phases)'
 stories: [EPIC-007, EPIC-008, EPIC-009]
@@ -53,11 +53,11 @@ Enterprise workflow with remediation cycle:
 
 Each epic lead owned one domain end-to-end (backend services, frontend components, Supabase migrations, E2E tests):
 
-| Epic Lead | Domain | Backend Services | Frontend Components |
-|-----------|--------|-----------------|---------------------|
-| epic-007-lead | Creator Wellness | 4 services | 9 components |
-| epic-008-lead | Content Shield | 4 provenance services | Pre-existing components |
-| epic-009-lead | Multi-Platform Hub | 5 distribution services | 6 components |
+| Epic Lead     | Domain             | Backend Services        | Frontend Components     |
+| ------------- | ------------------ | ----------------------- | ----------------------- |
+| epic-007-lead | Creator Wellness   | 4 services              | 9 components            |
+| epic-008-lead | Content Shield     | 4 provenance services   | Pre-existing components |
+| epic-009-lead | Multi-Platform Hub | 5 distribution services | 6 components            |
 
 ### Phase 3: QA + Security Review (2 agents, parallel)
 
@@ -72,11 +72,11 @@ Skipped — Phase 3 QA + security review provided equivalent coverage with speci
 
 ### Remediation Phase (3 agents, parallel)
 
-| Track | Agent | Scope |
-|-------|-------|-------|
-| backend | remediation-backend | DI bindings, stale job recovery, crypto bug, OAuth state, Zod validation |
-| frontend | remediation-frontend | Barrel exports (9 wellness + 6 multi-platform components) |
-| direct | remediation-direct | macOS duplicate migration files |
+| Track    | Agent                | Scope                                                                    |
+| -------- | -------------------- | ------------------------------------------------------------------------ |
+| backend  | remediation-backend  | DI bindings, stale job recovery, crypto bug, OAuth state, Zod validation |
+| frontend | remediation-frontend | Barrel exports (9 wellness + 6 multi-platform components)                |
+| direct   | remediation-direct   | macOS duplicate migration files                                          |
 
 ### Key Deliverables
 
@@ -101,16 +101,16 @@ Skipped — Phase 3 QA + security review provided equivalent coverage with speci
 
 ## Final Results
 
-| Metric | Result |
-|--------|--------|
-| Epics completed | 3 (EPIC-007, EPIC-008, EPIC-009) |
-| Backend services delivered | 13 |
-| Frontend components delivered | 15 |
-| Supabase migrations | 5 with RLS policies |
-| P1 findings fixed | 2/2 (100%) |
-| P2 findings fixed | 4/4 (100%) |
-| P3 findings | 3 deferred |
-| Phase 4 code review | Skipped (overlap optimization) |
+| Metric                        | Result                           |
+| ----------------------------- | -------------------------------- |
+| Epics completed               | 3 (EPIC-007, EPIC-008, EPIC-009) |
+| Backend services delivered    | 13                               |
+| Frontend components delivered | 15                               |
+| Supabase migrations           | 5 with RLS policies              |
+| P1 findings fixed             | 2/2 (100%)                       |
+| P2 findings fixed             | 4/4 (100%)                       |
+| P3 findings                   | 3 deferred                       |
+| Phase 4 code review           | Skipped (overlap optimization)   |
 
 ## Prevention
 

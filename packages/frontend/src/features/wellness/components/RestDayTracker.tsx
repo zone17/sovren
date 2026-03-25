@@ -24,7 +24,7 @@ export const RestDayTracker: React.FC = () => {
   if (error) {
     return (
       <Card>
-        <CardContent className="py-6 text-center text-sm text-gray-500">
+        <CardContent className="py-6 text-center text-sm text-muted-foreground">
           Failed to load rest day data.
         </CardContent>
       </Card>
@@ -37,7 +37,7 @@ export const RestDayTracker: React.FC = () => {
         <CardHeader className="pb-2">
           <CardTitle className="text-base font-semibold">Rest Days</CardTitle>
         </CardHeader>
-        <CardContent className="py-6 text-center text-sm text-gray-500">
+        <CardContent className="py-6 text-center text-sm text-muted-foreground">
           No activity tracked yet. Rest day tracking starts after your first week.
         </CardContent>
       </Card>
@@ -59,7 +59,9 @@ export const RestDayTracker: React.FC = () => {
           <span className={`text-3xl font-bold ${onTarget ? 'text-green-600' : 'text-orange-600'}`}>
             {restDays}
           </span>
-          <span className="text-sm text-gray-500">/ {REST_DAY_TARGET} target this week</span>
+          <span className="text-sm text-muted-foreground">
+            / {REST_DAY_TARGET} target this week
+          </span>
         </div>
 
         {/* Segmented bar */}
@@ -78,7 +80,7 @@ export const RestDayTracker: React.FC = () => {
           />
         </div>
 
-        <div className="flex justify-between text-xs text-gray-500">
+        <div className="flex justify-between text-xs text-muted-foreground">
           <span>{workDays} work days</span>
           <span>{restDays} rest days</span>
         </div>

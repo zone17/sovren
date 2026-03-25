@@ -7,6 +7,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import apiClient from '@/services/api/apiClient';
 import {
   Card,
   CardContent,
@@ -30,38 +31,6 @@ interface RevenueMetrics {
 
 type Timeframe = '7d' | '30d' | '90d';
 
-// -- Mock Data --
-
-function generateMockMetrics(timeframe: Timeframe): RevenueMetrics {
-  const days = timeframe === '7d' ? 7 : timeframe === '30d' ? 30 : 90;
-  const revenueByDay = Array.from({ length: days }, (_, i) => {
-    const date = new Date();
-    date.setDate(date.getDate() - (days - 1 - i));
-    return {
-      date: date.toISOString().split('T')[0],
-      revenueSats: Math.floor(5000 + Math.random() * 15000),
-      transactions: Math.floor(2 + Math.random() * 10),
-    };
-  });
-
-  const totalRevenueSats = revenueByDay.reduce((sum, d) => sum + d.revenueSats, 0);
-
-  return {
-    totalRevenueSats,
-    mrrSats: Math.floor(totalRevenueSats / (days / 30)),
-    subscriberCount: 47,
-    avgPaymentSats: 3250,
-    churnRate: 0.08,
-    avgLifetimeValueSats: 42000,
-    revenueByTier: [
-      { tierName: 'Basic', revenueSats: Math.floor(totalRevenueSats * 0.35), subscribers: 28 },
-      { tierName: 'Premium', revenueSats: Math.floor(totalRevenueSats * 0.55), subscribers: 15 },
-      { tierName: 'Tips', revenueSats: Math.floor(totalRevenueSats * 0.1), subscribers: 4 },
-    ],
-    revenueByDay,
-  };
-}
-
 // -- Components --
 
 interface MetricCardProps {
@@ -72,11 +41,11 @@ interface MetricCardProps {
 }
 
 const MetricCard: React.FC<MetricCardProps> = ({ label, value, subtitle, trend }) => (
-  <Card>
+  <Card className="glass">
     <CardContent className="p-6">
-      <p className="text-sm font-medium text-gray-500">{label}</p>
-      <p className="mt-1 text-2xl font-bold text-gray-900">{value}</p>
-      {subtitle && <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>}
+      <p className="text-sm font-medium text-muted-foreground">{label}</p>
+      <p className="mt-1 text-2xl font-bold text-foreground">{value}</p>
+      {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
       {trend && (
         <p
           className={`mt-2 text-xs font-medium ${
@@ -117,11 +86,11 @@ const RevenueChart: React.FC<RevenueChartProps> = ({ data }) => {
                 title={`${day.date}: ${day.revenueSats.toLocaleString()} sats`}
               >
                 <div
-                  className="bg-amber-400 hover:bg-amber-500 rounded-t transition-colors min-h-[2px]"
+                  className="bg-violet-500 hover:bg-violet-400 rounded-t transition-colors duration-150 min-h-[2px]"
                   style={{ height: `${height}%` }}
                 />
                 {/* Tooltip */}
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-900 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10">
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-background text-foreground text-xs rounded px-2 py-1 whitespace-nowrap z-10">
                   {day.revenueSats.toLocaleString()} sats
                   <br />
                   {day.transactions} txns
@@ -130,7 +99,7 @@ const RevenueChart: React.FC<RevenueChartProps> = ({ data }) => {
             );
           })}
         </div>
-        <div className="flex justify-between mt-2 text-xs text-gray-400">
+        <div className="flex justify-between mt-2 text-xs text-muted-foreground">
           <span>{data[0]?.date}</span>
           <span>{data[data.length - 1]?.date}</span>
         </div>
@@ -157,14 +126,14 @@ const TierBreakdown: React.FC<TierBreakdownProps> = ({ tiers, totalRevenue }) =>
           return (
             <div key={tier.tierName}>
               <div className="flex items-center justify-between mb-1">
-                <span className="text-sm font-medium text-gray-700">{tier.tierName}</span>
-                <span className="text-sm text-gray-500">
+                <span className="text-sm font-medium text-foreground">{tier.tierName}</span>
+                <span className="text-sm text-muted-foreground">
                   {tier.revenueSats.toLocaleString()} sats ({tier.subscribers} subs)
                 </span>
               </div>
-              <div className="w-full bg-gray-100 rounded-full h-2">
+              <div className="w-full bg-purple-900/20 rounded-full h-2">
                 <div
-                  className="bg-amber-400 rounded-full h-2 transition-all duration-300"
+                  className="bg-violet-500 rounded-full h-2 transition-all duration-150"
                   style={{ width: `${percentage}%` }}
                   role="progressbar"
                   aria-valuenow={percentage}
@@ -189,12 +158,22 @@ export const RevenueAnalytics: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     setIsLoading(true);
-    const timer = setTimeout(() => {
-      setMetrics(generateMockMetrics(timeframe));
-      setIsLoading(false);
-    }, 400);
-    return () => clearTimeout(timer);
+    apiClient
+      .get<RevenueMetrics>(`/api/v1/payments/analytics?timeframe=${timeframe}`)
+      .then((data) => {
+        if (!cancelled) setMetrics(data);
+      })
+      .catch((err) => {
+        console.error('Failed to load revenue analytics:', err);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [timeframe]);
 
   if (isLoading || !metrics) {
@@ -204,8 +183,8 @@ export const RevenueAnalytics: React.FC = () => {
           {[1, 2, 3, 4].map((i) => (
             <Card key={i}>
               <CardContent className="p-6">
-                <div className="h-4 bg-gray-200 rounded w-20 animate-pulse" />
-                <div className="h-7 bg-gray-200 rounded w-32 mt-2 animate-pulse" />
+                <div className="h-4 bg-purple-500/20 rounded w-20 animate-pulse" />
+                <div className="h-7 bg-purple-500/20 rounded w-32 mt-2 animate-pulse" />
               </CardContent>
             </Card>
           ))}
@@ -225,11 +204,13 @@ export const RevenueAnalytics: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">Revenue Analytics</h2>
-          <p className="text-sm text-gray-500 mt-1">Track your earnings and subscriber metrics</p>
+          <h2 className="text-xl font-semibold text-foreground font-display">Revenue Analytics</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Track your earnings and subscriber metrics
+          </p>
         </div>
         <div
-          className="flex gap-1 bg-gray-100 p-1 rounded-lg"
+          className="flex gap-1 glass p-1 rounded-lg"
           role="radiogroup"
           aria-label="Timeframe selection"
         >
@@ -237,10 +218,10 @@ export const RevenueAnalytics: React.FC = () => {
             <button
               key={opt.value}
               onClick={() => setTimeframe(opt.value)}
-              className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+              className={`px-3 py-1.5 rounded text-sm font-medium transition-colors duration-150 ${
                 timeframe === opt.value
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'bg-violet-600 text-white shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
               role="radio"
               aria-checked={timeframe === opt.value}
@@ -252,7 +233,7 @@ export const RevenueAnalytics: React.FC = () => {
       </div>
 
       {/* Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 reveal-stagger">
         <MetricCard
           label="Total Revenue"
           value={`${metrics.totalRevenueSats.toLocaleString()} sats`}

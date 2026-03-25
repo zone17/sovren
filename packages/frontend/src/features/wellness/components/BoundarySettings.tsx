@@ -78,7 +78,7 @@ export const BoundarySettings: React.FC = () => {
         <CardHeader className="pb-2">
           <CardTitle className="text-base font-semibold">Boundaries</CardTitle>
         </CardHeader>
-        <CardContent className="py-6 text-center text-sm text-gray-500">
+        <CardContent className="py-6 text-center text-sm text-muted-foreground">
           Failed to load boundary settings.
         </CardContent>
       </Card>
@@ -157,7 +157,7 @@ export const BoundarySettings: React.FC = () => {
                   className="w-28"
                   aria-label="Focus hours start time"
                 />
-                <span className="text-xs text-gray-500">to</span>
+                <span className="text-xs text-muted-foreground">to</span>
                 <Input
                   type="time"
                   value={form.focus_hours.end}
@@ -180,7 +180,7 @@ export const BoundarySettings: React.FC = () => {
                     className={`flex-1 py-1 text-xs rounded ${
                       form.focus_hours.days.includes(value)
                         ? 'bg-blue-100 text-blue-700 font-medium'
-                        : 'bg-gray-50 text-gray-400'
+                        : 'bg-muted text-muted-foreground/60'
                     }`}
                     aria-pressed={form.focus_hours.days.includes(value)}
                     aria-label={`${label} focus hours`}
@@ -212,9 +212,9 @@ export const BoundarySettings: React.FC = () => {
               className="w-24"
               aria-label="Weekly engagement budget in minutes"
             />
-            <span className="text-xs text-gray-500">min/week</span>
+            <span className="text-xs text-muted-foreground">min/week</span>
           </div>
-          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+          <div className="h-2 bg-muted rounded-full overflow-hidden">
             <div
               className={`h-full rounded-full transition-all ${
                 engagementPercent > 90
@@ -226,7 +226,7 @@ export const BoundarySettings: React.FC = () => {
               style={{ width: `${engagementPercent}%` }}
             />
           </div>
-          <p className="text-[10px] text-gray-400">
+          <p className="text-[10px] text-muted-foreground/60">
             {form.engagement_used_mins !== null
               ? `${form.engagement_used_mins} / ${form.weekly_engagement_budget_mins} min used`
               : `${form.weekly_engagement_budget_mins} min budget (tracking coming soon)`}
@@ -248,7 +248,7 @@ export const BoundarySettings: React.FC = () => {
             />
           </div>
           <div className="flex items-center justify-between">
-            <Label className="text-xs text-gray-500">Auto-response</Label>
+            <Label className="text-xs text-muted-foreground">Auto-response</Label>
             <Switch
               checked={form.dnd_mode.auto_response_enabled}
               onCheckedChange={(auto_response_enabled) =>
@@ -293,7 +293,7 @@ export const BoundarySettings: React.FC = () => {
                 className={`flex-1 py-2 text-xs rounded ${
                   form.availability_status === value
                     ? 'bg-blue-100 text-blue-700 font-medium'
-                    : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
+                    : 'bg-muted text-muted-foreground hover:bg-accent'
                 }`}
                 aria-pressed={form.availability_status === value}
               >

@@ -20,43 +20,43 @@ describe('Button Component - Elite CDD Standards', () => {
     it('applies default variant styling', () => {
       render(<Button variant="default">Default</Button>);
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('bg-[#0969da]');
+      expect(button).toHaveClass('bg-primary');
     });
 
     it('applies lightning variant styling', () => {
       render(<Button variant="lightning">Lightning</Button>);
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('bg-[#f7931a]');
+      expect(button).toHaveClass('bg-amber-500');
     });
 
     it('applies sovereign variant styling', () => {
       render(<Button variant="sovereign">Sovereign</Button>);
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('bg-[#6366f1]');
+      expect(button).toHaveClass('bg-indigo-500');
     });
 
     it('applies secondary variant styling', () => {
       render(<Button variant="secondary">Secondary</Button>);
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('bg-[#f6f8fa]');
+      expect(button).toHaveClass('bg-secondary');
     });
 
     it('applies outline variant styling', () => {
       render(<Button variant="outline">Outline</Button>);
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('border-[#d1d9e0]');
+      expect(button).toHaveClass('border-input');
     });
 
     it('applies ghost variant styling', () => {
       render(<Button variant="ghost">Ghost</Button>);
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('hover:bg-[#f3f4f6]');
+      expect(button).toHaveClass('text-muted-foreground');
     });
 
     it('applies link variant styling', () => {
       render(<Button variant="link">Link</Button>);
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('text-[#0969da]');
+      expect(button).toHaveClass('text-primary');
     });
   });
 

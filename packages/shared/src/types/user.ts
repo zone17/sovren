@@ -2,9 +2,11 @@ import { z } from 'zod';
 
 // 🏷️ USER ROLE ENUMS
 export enum UserRole {
+  ADMIN = 'admin',
   CREATOR = 'creator',
   SUPPORTER = 'supporter',
-  ADMIN = 'admin',
+  USER = 'user',
+  GUEST = 'guest',
 }
 
 export enum UserStatus {
@@ -40,13 +42,15 @@ export const NostrIdentitySchema = z.object({
   publicKey: z.string().regex(/^[0-9a-fA-F]{64}$/, 'Invalid NOSTR public key format'),
   verified: z.boolean().default(false),
   verifiedAt: z.date().optional(),
-  metadata: z.object({
-    name: z.string().optional(),
-    about: z.string().optional(),
-    picture: z.string().url().optional(),
-    nip05: z.string().optional(), // NIP-05 verification
-    lud16: z.string().optional(), // Lightning address
-  }).optional(),
+  metadata: z
+    .object({
+      name: z.string().optional(),
+      about: z.string().optional(),
+      picture: z.string().url().optional(),
+      nip05: z.string().optional(), // NIP-05 verification
+      lud16: z.string().optional(), // Lightning address
+    })
+    .optional(),
   relays: z.array(z.string().url()).default([]),
   lastSync: z.date().optional(),
 });
@@ -93,25 +97,31 @@ export const UserPreferencesSchema = z.object({
   language: z.string().default('en'),
   timezone: z.string().default('UTC'),
   currency: z.string().length(3).default('USD'), // ISO 4217
-  emailNotifications: z.object({
-    newFollowers: z.boolean().default(true),
-    newSupport: z.boolean().default(true),
-    contentUpdates: z.boolean().default(true),
-    systemUpdates: z.boolean().default(true),
-    marketing: z.boolean().default(false),
-  }).default({}),
-  pushNotifications: z.object({
-    enabled: z.boolean().default(true),
-    newFollowers: z.boolean().default(true),
-    newSupport: z.boolean().default(true),
-    directMessages: z.boolean().default(true),
-  }).default({}),
-  accessibility: z.object({
-    reducedMotion: z.boolean().default(false),
-    highContrast: z.boolean().default(false),
-    largeText: z.boolean().default(false),
-    screenReader: z.boolean().default(false),
-  }).default({}),
+  emailNotifications: z
+    .object({
+      newFollowers: z.boolean().default(true),
+      newSupport: z.boolean().default(true),
+      contentUpdates: z.boolean().default(true),
+      systemUpdates: z.boolean().default(true),
+      marketing: z.boolean().default(false),
+    })
+    .default({}),
+  pushNotifications: z
+    .object({
+      enabled: z.boolean().default(true),
+      newFollowers: z.boolean().default(true),
+      newSupport: z.boolean().default(true),
+      directMessages: z.boolean().default(true),
+    })
+    .default({}),
+  accessibility: z
+    .object({
+      reducedMotion: z.boolean().default(false),
+      highContrast: z.boolean().default(false),
+      largeText: z.boolean().default(false),
+      screenReader: z.boolean().default(false),
+    })
+    .default({}),
 });
 
 export type UserPreferences = z.infer<typeof UserPreferencesSchema>;
@@ -146,11 +156,16 @@ export type SupporterStats = z.infer<typeof SupporterStatsSchema>;
 export const BaseUserSchema = z.object({
   id: z.string().uuid(),
   email: z.string().email().optional(), // Optional: users can use NOSTR-only
-  username: z.string()
+  username: z
+    .string()
     .min(3, 'Username must be at least 3 characters')
     .max(30, 'Username must be at most 30 characters')
-    .regex(/^[a-zA-Z0-9_-]+$/, 'Username can only contain letters, numbers, underscores, and hyphens'),
-  displayName: z.string()
+    .regex(
+      /^[a-zA-Z0-9_-]+$/,
+      'Username can only contain letters, numbers, underscores, and hyphens'
+    ),
+  displayName: z
+    .string()
     .min(1, 'Display name is required')
     .max(100, 'Display name must be at most 100 characters'),
   bio: z.string().max(500, 'Bio must be at most 500 characters').optional(),
@@ -184,15 +199,19 @@ export const CreatorUserSchema = BaseUserSchema.extend({
   lightningAddress: z.string().optional(),
   lightningNodePubkey: z.string().optional(),
   contentCategories: z.array(z.string()).default([]),
-  subscriptionTiers: z.array(z.object({
-    id: z.string().uuid(),
-    name: z.string(),
-    description: z.string(),
-    price: z.number().positive(),
-    currency: z.string().length(3),
-    features: z.array(z.string()),
-    active: z.boolean().default(true),
-  })).default([]),
+  subscriptionTiers: z
+    .array(
+      z.object({
+        id: z.string().uuid(),
+        name: z.string(),
+        description: z.string(),
+        price: z.number().positive(),
+        currency: z.string().length(3),
+        features: z.array(z.string()),
+        active: z.boolean().default(true),
+      })
+    )
+    .default([]),
   verificationBadges: z.array(z.enum(['verified', 'premium', 'partner'])).default([]),
 });
 
@@ -202,36 +221,42 @@ export type CreatorUser = z.infer<typeof CreatorUserSchema>;
 export const SupporterUserSchema = BaseUserSchema.extend({
   role: z.literal(UserRole.SUPPORTER),
   stats: SupporterStatsSchema.default({}),
-  paymentMethods: z.array(z.object({
-    id: z.string().uuid(),
-    type: z.enum(['lightning', 'credit_card', 'bank_transfer']),
-    isDefault: z.boolean().default(false),
-    lastUsed: z.date().optional(),
-  })).default([]),
-  subscriptions: z.array(z.object({
-    id: z.string().uuid(),
-    creatorId: z.string().uuid(),
-    tierId: z.string().uuid(),
-    status: z.enum(['active', 'paused', 'cancelled']),
-    startDate: z.date(),
-    nextBillingDate: z.date().optional(),
-  })).default([]),
+  paymentMethods: z
+    .array(
+      z.object({
+        id: z.string().uuid(),
+        type: z.enum(['lightning', 'credit_card', 'bank_transfer']),
+        isDefault: z.boolean().default(false),
+        lastUsed: z.date().optional(),
+      })
+    )
+    .default([]),
+  subscriptions: z
+    .array(
+      z.object({
+        id: z.string().uuid(),
+        creatorId: z.string().uuid(),
+        tierId: z.string().uuid(),
+        status: z.enum(['active', 'paused', 'cancelled']),
+        startDate: z.date(),
+        nextBillingDate: z.date().optional(),
+      })
+    )
+    .default([]),
 });
 
 export type SupporterUser = z.infer<typeof SupporterUserSchema>;
 
 // 🔄 UNION USER TYPE
-export const UserSchema = z.discriminatedUnion('role', [
-  CreatorUserSchema,
-  SupporterUserSchema,
-]);
+export const UserSchema = z.discriminatedUnion('role', [CreatorUserSchema, SupporterUserSchema]);
 
 export type User = z.infer<typeof UserSchema>;
 
 // 📝 USER CREATION SCHEMAS (NOSTR-based)
 export const CreateUserSchema = z.object({
   email: z.string().email().optional(), // Optional: NOSTR-only registration possible
-  username: z.string()
+  username: z
+    .string()
     .min(3)
     .max(30)
     .regex(/^[a-zA-Z0-9_-]+$/),
@@ -248,18 +273,19 @@ export const CreateUserSchema = z.object({
 export type CreateUser = z.infer<typeof CreateUserSchema>;
 
 // ✏️ USER UPDATE SCHEMAS
-export const UpdateUserSchema = z.object({
-  displayName: z.string().min(1).max(100).optional(),
-  bio: z.string().max(500).optional(),
-  location: z.string().max(100).optional(),
-  website: z.string().url().optional(),
-  email: z.string().email().optional(),
-  privacySettings: PrivacySettingsSchema.partial().optional(),
-  preferences: UserPreferencesSchema.partial().optional(),
-}).refine(
-  (data) => Object.keys(data).length > 0,
-  { message: 'At least one field must be provided for update' }
-);
+export const UpdateUserSchema = z
+  .object({
+    displayName: z.string().min(1).max(100).optional(),
+    bio: z.string().max(500).optional(),
+    location: z.string().max(100).optional(),
+    website: z.string().url().optional(),
+    email: z.string().email().optional(),
+    privacySettings: PrivacySettingsSchema.partial().optional(),
+    preferences: UserPreferencesSchema.partial().optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: 'At least one field must be provided for update',
+  });
 
 export type UpdateUser = z.infer<typeof UpdateUserSchema>;
 

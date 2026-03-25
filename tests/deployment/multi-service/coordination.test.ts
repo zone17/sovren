@@ -29,15 +29,15 @@ describe('Multi-Service Deployment Coordination', () => {
         'cache',
         'email',
         'notification',
-        'content-publishing'
+        'content-publishing',
       ]);
 
       expect(deployment.deploymentOrder).toEqual([
         'database-migration', // First: migrations
-        'cache',              // Second: infrastructure services
-        'email',              // Third: shared services
+        'cache', // Second: infrastructure services
+        'email', // Third: shared services
         'notification',
-        'content-publishing'  // Last: application services
+        'content-publishing', // Last: application services
       ]);
     });
 
@@ -45,7 +45,7 @@ describe('Multi-Service Deployment Coordination', () => {
       const deployment = await simulator.deployMultipleServices([
         'content-publishing',
         'cache',
-        'email'
+        'email',
       ]);
 
       const cacheIndex = deployment.deploymentOrder!.indexOf('cache');
@@ -58,7 +58,7 @@ describe('Multi-Service Deployment Coordination', () => {
       const deployment = await simulator.deployMultipleServices([
         'user-management',
         'database-migration',
-        'auth-service'
+        'auth-service',
       ]);
 
       const migrationIndex = deployment.deploymentOrder!.indexOf('database-migration');
@@ -74,7 +74,7 @@ describe('Multi-Service Deployment Coordination', () => {
       const deployment = await simulator.deployMultipleServices([
         'content-publishing',
         'email',
-        'notification'
+        'notification',
       ]);
 
       const emailIndex = deployment.deploymentOrder!.indexOf('email');
@@ -92,7 +92,7 @@ describe('Multi-Service Deployment Coordination', () => {
         'database-migration',
         'cache',
         'user-management',
-        'content-publishing'
+        'content-publishing',
       ]);
 
       const order = deployment.deploymentOrder!;
@@ -111,7 +111,7 @@ describe('Multi-Service Deployment Coordination', () => {
       // Deploy 5 services, fail the 3rd
       const deployment = await simulator.deployWithFailure({
         services: ['email', 'notification', 'cache', 'content', 'payment'],
-        failAt: 2 // Fail 'cache'
+        failAt: 2, // Fail 'cache'
       });
 
       expect(deployment.status).toBe('partial_failure');
@@ -124,7 +124,7 @@ describe('Multi-Service Deployment Coordination', () => {
     it('should rollback successful deployments on failure', async () => {
       const deployment = await simulator.deployWithFailure({
         services: ['email', 'notification', 'cache', 'content'],
-        failAt: 2
+        failAt: 2,
       });
 
       expect(deployment.rollbackInitiated).toBe(true);
@@ -135,7 +135,7 @@ describe('Multi-Service Deployment Coordination', () => {
     it('should skip remaining services after failure', async () => {
       const deployment = await simulator.deployWithFailure({
         services: ['email', 'notification', 'cache', 'content', 'payment'],
-        failAt: 2
+        failAt: 2,
       });
 
       expect(deployment.skipped).toEqual(['content', 'payment']);
@@ -145,7 +145,7 @@ describe('Multi-Service Deployment Coordination', () => {
     it('should report which services succeeded before failure', async () => {
       const deployment = await simulator.deployWithFailure({
         services: ['email', 'notification', 'cache'],
-        failAt: 1
+        failAt: 1,
       });
 
       expect(deployment.successful).toEqual(['email']);
@@ -155,7 +155,7 @@ describe('Multi-Service Deployment Coordination', () => {
     it('should track partial failure metrics', async () => {
       const deployment = await simulator.deployWithFailure({
         services: ['s1', 's2', 's3', 's4', 's5'],
-        failAt: 2
+        failAt: 2,
       });
 
       expect(deployment.servicesDeployed).toBe(2); // Only successful ones
@@ -167,7 +167,7 @@ describe('Multi-Service Deployment Coordination', () => {
     it('should coordinate traffic shifting across services', async () => {
       const deployment = await simulator.deployWithGradualShift({
         services: ['content-publishing', 'content-moderation'],
-        shiftSteps: [10, 50, 100]
+        shiftSteps: [10, 50, 100],
       });
 
       expect(deployment.trafficShifts).toHaveLength(3);
@@ -177,7 +177,7 @@ describe('Multi-Service Deployment Coordination', () => {
     it('should shift traffic in coordinated steps', async () => {
       const deployment = await simulator.deployWithGradualShift({
         services: ['email', 'notification'],
-        shiftSteps: [25, 50, 75, 100]
+        shiftSteps: [25, 50, 75, 100],
       });
 
       expect(deployment.trafficShifts).toHaveLength(4);
@@ -192,7 +192,7 @@ describe('Multi-Service Deployment Coordination', () => {
     it('should synchronize traffic across all services', async () => {
       const deployment = await simulator.deployWithGradualShift({
         services: ['s1', 's2', 's3'],
-        shiftSteps: [10, 50, 100]
+        shiftSteps: [10, 50, 100],
       });
 
       expect(deployment.allServicesInSync).toBe(true);
@@ -201,10 +201,10 @@ describe('Multi-Service Deployment Coordination', () => {
     it('should monitor error rates during traffic shift', async () => {
       const deployment = await simulator.deployWithGradualShift({
         services: ['content-publishing', 'content-moderation'],
-        shiftSteps: [10, 50, 100]
+        shiftSteps: [10, 50, 100],
       });
 
-      deployment.trafficShifts!.forEach(shift => {
+      deployment.trafficShifts!.forEach((shift) => {
         expect(shift.errorRate).toBeDefined();
         expect(shift.errorRate).toBeLessThan(0.05); // < 5%
       });
@@ -213,10 +213,10 @@ describe('Multi-Service Deployment Coordination', () => {
     it('should track timestamps for each shift', async () => {
       const deployment = await simulator.deployWithGradualShift({
         services: ['email', 'notification'],
-        shiftSteps: [10, 50, 100]
+        shiftSteps: [10, 50, 100],
       });
 
-      const timestamps = deployment.trafficShifts!.map(s => s.timestamp);
+      const timestamps = deployment.trafficShifts!.map((s) => s.timestamp);
 
       // Timestamps should be sequential
       for (let i = 1; i < timestamps.length; i++) {
@@ -230,17 +230,13 @@ describe('Multi-Service Deployment Coordination', () => {
       const deployment = await simulator.deployMultipleServices([
         'content-publishing',
         'cache',
-        'database-migration'
+        'database-migration',
       ]);
 
       const order = deployment.deploymentOrder!;
 
-      expect(order.indexOf('database-migration')).toBeLessThan(
-        order.indexOf('content-publishing')
-      );
-      expect(order.indexOf('cache')).toBeLessThan(
-        order.indexOf('content-publishing')
-      );
+      expect(order.indexOf('database-migration')).toBeLessThan(order.indexOf('content-publishing'));
+      expect(order.indexOf('cache')).toBeLessThan(order.indexOf('content-publishing'));
     });
 
     it('should handle circular dependency detection', async () => {
@@ -249,7 +245,7 @@ describe('Multi-Service Deployment Coordination', () => {
         'api-gateway',
         'auth-service',
         'user-management',
-        'profile-service'
+        'profile-service',
       ]);
 
       expect(deployment.status).toBe('success');
@@ -257,11 +253,7 @@ describe('Multi-Service Deployment Coordination', () => {
     });
 
     it('should wait for dependencies to be healthy', async () => {
-      const deployment = await simulator.deployMultipleServices([
-        'cache',
-        'email',
-        'notification'
-      ]);
+      const deployment = await simulator.deployMultipleServices(['cache', 'email', 'notification']);
 
       expect(deployment.status).toBe('success');
       expect(deployment.servicesDeployed).toBe(3);
@@ -270,7 +262,7 @@ describe('Multi-Service Deployment Coordination', () => {
     it('should fail dependent services if dependency fails', async () => {
       const deployment = await simulator.deployWithFailure({
         services: ['cache', 'email', 'content-publishing'],
-        failAt: 0 // Fail cache (infrastructure)
+        failAt: 0, // Fail cache (infrastructure)
       });
 
       expect(deployment.failed).toEqual(['cache']);
@@ -287,7 +279,7 @@ describe('Multi-Service Deployment Coordination', () => {
         'notification',
         'audit',
         'content-publishing',
-        'content-moderation'
+        'content-moderation',
       ];
 
       const deployment = await simulator.deployMultipleServices(services);
@@ -308,12 +300,7 @@ describe('Multi-Service Deployment Coordination', () => {
     it('should optimize batch deployment time', async () => {
       const startTime = Date.now();
 
-      await simulator.deployMultipleServices([
-        'email',
-        'notification',
-        'cache',
-        'audit'
-      ]);
+      await simulator.deployMultipleServices(['email', 'notification', 'cache', 'audit']);
 
       const duration = Date.now() - startTime;
 
@@ -329,21 +316,17 @@ describe('Multi-Service Deployment Coordination', () => {
       await simulator.deployMultipleServices(services);
 
       const healthChecks = await Promise.all(
-        services.map(service => simulator.checkServiceHealth(service))
+        services.map((service) => simulator.checkServiceHealth(service))
       );
 
-      healthChecks.forEach(health => {
+      healthChecks.forEach((health) => {
         expect(health.status).toBe('healthy');
         expect(health.ready).toBe(true);
       });
     });
 
     it('should coordinate health checks across services', async () => {
-      const deployment = await simulator.deployMultipleServices([
-        'email',
-        'notification',
-        'cache'
-      ]);
+      const deployment = await simulator.deployMultipleServices(['email', 'notification', 'cache']);
 
       expect(deployment.status).toBe('success');
     });
@@ -365,7 +348,7 @@ describe('Multi-Service Deployment Coordination', () => {
         'email',
         'notification',
         'cache',
-        'audit'
+        'audit',
       ]);
 
       // Each service adds to deployment time
@@ -373,11 +356,7 @@ describe('Multi-Service Deployment Coordination', () => {
     });
 
     it('should complete within acceptable timeframe', async () => {
-      const deployment = await simulator.deployMultipleServices([
-        'email',
-        'notification',
-        'cache'
-      ]);
+      const deployment = await simulator.deployMultipleServices(['email', 'notification', 'cache']);
 
       expect(deployment.deploymentTime).toBeLessThan(30000); // < 30 seconds
     });
@@ -387,7 +366,7 @@ describe('Multi-Service Deployment Coordination', () => {
         'email',
         'notification',
         'cache',
-        'audit'
+        'audit',
       ]);
 
       expect(deployment.deploymentTime).toBeGreaterThan(0);
@@ -399,7 +378,7 @@ describe('Multi-Service Deployment Coordination', () => {
     it('should coordinate rollback across all services', async () => {
       const deployment = await simulator.deployWithFailure({
         services: ['email', 'notification', 'cache', 'content'],
-        failAt: 2
+        failAt: 2,
       });
 
       expect(deployment.rollbackInitiated).toBe(true);
@@ -409,7 +388,7 @@ describe('Multi-Service Deployment Coordination', () => {
     it('should rollback in reverse dependency order', async () => {
       const deployment = await simulator.deployWithFailure({
         services: ['database-migration', 'cache', 'email', 'content'],
-        failAt: 3
+        failAt: 3,
       });
 
       // Rollback should occur for successful services
@@ -420,7 +399,7 @@ describe('Multi-Service Deployment Coordination', () => {
     it('should verify all services rolled back successfully', async () => {
       const deployment = await simulator.deployWithFailure({
         services: ['email', 'notification', 'cache'],
-        failAt: 2
+        failAt: 2,
       });
 
       expect(deployment.rollbackInitiated).toBe(true);
@@ -430,11 +409,7 @@ describe('Multi-Service Deployment Coordination', () => {
 
   describe('Deployment State Consistency', () => {
     it('should maintain consistent state across services', async () => {
-      const deployment = await simulator.deployMultipleServices([
-        'email',
-        'notification',
-        'cache'
-      ]);
+      const deployment = await simulator.deployMultipleServices(['email', 'notification', 'cache']);
 
       expect(deployment.status).toBe('success');
       expect(deployment.servicesDeployed).toBe(3);
@@ -443,7 +418,7 @@ describe('Multi-Service Deployment Coordination', () => {
     it('should ensure atomic deployments', async () => {
       const deployment = await simulator.deployWithFailure({
         services: ['email', 'notification', 'cache'],
-        failAt: 1
+        failAt: 1,
       });
 
       // Either all succeed or all rollback
@@ -453,7 +428,7 @@ describe('Multi-Service Deployment Coordination', () => {
     it('should track deployment state per service', async () => {
       const deployment = await simulator.deployWithFailure({
         services: ['s1', 's2', 's3'],
-        failAt: 1
+        failAt: 1,
       });
 
       expect(deployment.successful).toBeDefined();

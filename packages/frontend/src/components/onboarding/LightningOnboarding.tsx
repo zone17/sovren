@@ -181,13 +181,15 @@ const LightningOnboarding: React.FC = () => {
         return (
           <div className="text-center space-y-6">
             <div className="flex justify-center mb-6">
-              <div className="p-6 bg-gradient-to-br from-lightning-500 to-lightning-600 rounded-2xl">
-                <Zap className="h-12 w-12 text-white" />
+              <div className="p-6 bg-amber-500/20 rounded-2xl">
+                <Zap className="h-12 w-12 text-amber-400" />
               </div>
             </div>
 
             <div className="space-y-4">
-              <h2 className="text-3xl font-bold text-white">Welcome to Lightning Network</h2>
+              <h2 className="text-3xl font-bold text-white font-display">
+                Welcome to Lightning Network
+              </h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
                 Experience instant, low-cost Bitcoin payments. Lightning Network makes Bitcoin
                 payments as fast as sending a text message.
@@ -195,25 +197,25 @@ const LightningOnboarding: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-              <Card className="bg-card/50 border-lightning-500/20">
+              <Card className="glass-dark border-border/50">
                 <CardContent className="p-6 text-center">
-                  <Clock className="h-8 w-8 text-lightning-400 mx-auto mb-3" />
+                  <Clock className="h-8 w-8 text-amber-400 mx-auto mb-3" />
                   <h3 className="font-semibold text-white mb-2">Instant</h3>
                   <p className="text-sm text-muted-foreground">Payments in milliseconds</p>
                 </CardContent>
               </Card>
 
-              <Card className="bg-card/50 border-bitcoin-500/20">
+              <Card className="glass-dark border-border/50">
                 <CardContent className="p-6 text-center">
-                  <DollarSign className="h-8 w-8 text-bitcoin-400 mx-auto mb-3" />
+                  <DollarSign className="h-8 w-8 text-amber-400 mx-auto mb-3" />
                   <h3 className="font-semibold text-white mb-2">Low Cost</h3>
                   <p className="text-sm text-muted-foreground">Fees under 1 cent</p>
                 </CardContent>
               </Card>
 
-              <Card className="bg-card/50 border-sovereign-500/20">
+              <Card className="glass-dark border-border/50">
                 <CardContent className="p-6 text-center">
-                  <Bitcoin className="h-8 w-8 text-sovereign-400 mx-auto mb-3" />
+                  <Bitcoin className="h-8 w-8 text-primary mx-auto mb-3" />
                   <h3 className="font-semibold text-white mb-2">Bitcoin Native</h3>
                   <p className="text-sm text-muted-foreground">Real Bitcoin, instant settlement</p>
                 </CardContent>
@@ -222,7 +224,7 @@ const LightningOnboarding: React.FC = () => {
 
             <Button
               onClick={() => setCurrentStep(1)}
-              className="mt-8 px-8 py-4 text-lg bg-lightning-500 hover:bg-lightning-600"
+              className="mt-8 px-8 py-4 text-lg bg-amber-500 hover:bg-amber-600"
             >
               Get Started with Lightning
               <ArrowRight className="ml-2 h-5 w-5" />
@@ -235,11 +237,13 @@ const LightningOnboarding: React.FC = () => {
           <div className="space-y-6">
             <div className="text-center mb-8">
               <div className="flex justify-center mb-4">
-                <div className="p-4 bg-gradient-to-br from-bitcoin-500 to-bitcoin-600 rounded-xl">
-                  <Wallet className="h-8 w-8 text-white" />
+                <div className="p-4 bg-amber-500/20 rounded-xl">
+                  <Wallet className="h-8 w-8 text-amber-400" />
                 </div>
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2">Choose Your Lightning Wallet</h2>
+              <h2 className="text-2xl font-bold text-white mb-2 font-display">
+                Choose Your Lightning Wallet
+              </h2>
               <p className="text-muted-foreground">
                 Select the wallet that best fits your needs and experience level.
               </p>
@@ -251,8 +255,8 @@ const LightningOnboarding: React.FC = () => {
                   key={index}
                   className={`cursor-pointer transition-all duration-200 ${
                     selectedWallet?.name === wallet.name
-                      ? 'border-lightning-500 bg-lightning-500/10'
-                      : 'border-border/50 hover:border-lightning-500/50'
+                      ? 'border-primary bg-primary/10'
+                      : 'border-border/50 hover:border-primary/50'
                   }`}
                   onClick={() => setSelectedWallet(wallet)}
                 >
@@ -263,7 +267,7 @@ const LightningOnboarding: React.FC = () => {
                           wallet.type === 'custodial'
                             ? 'bg-green-500/20'
                             : wallet.type === 'self-custodial'
-                              ? 'bg-blue-500/20'
+                              ? 'bg-purple-500/20'
                               : 'bg-purple-500/20'
                         }`}
                       >
@@ -303,7 +307,7 @@ const LightningOnboarding: React.FC = () => {
               <div className="text-center pt-4">
                 <Button
                   onClick={() => setCurrentStep(2)}
-                  className="px-8 py-3 bg-lightning-500 hover:bg-lightning-600"
+                  className="px-8 py-3 bg-amber-500 hover:bg-amber-600"
                 >
                   Setup {selectedWallet.name}
                   <ArrowRight className="ml-2 h-4 w-4" />
@@ -318,11 +322,13 @@ const LightningOnboarding: React.FC = () => {
           <div className="space-y-6">
             <div className="text-center mb-6">
               <div className="flex justify-center mb-4">
-                <div className="p-4 bg-gradient-to-br from-sovereign-500 to-sovereign-600 rounded-xl">
-                  <Smartphone className="h-8 w-8 text-white" />
+                <div className="p-4 bg-primary/20 rounded-xl">
+                  <Smartphone className="h-8 w-8 text-primary" />
                 </div>
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2">Setup {selectedWallet?.name}</h2>
+              <h2 className="text-2xl font-bold text-white mb-2 font-display">
+                Setup {selectedWallet?.name}
+              </h2>
               <p className="text-muted-foreground">
                 Follow these steps to get your Lightning wallet ready.
               </p>
@@ -330,22 +336,22 @@ const LightningOnboarding: React.FC = () => {
 
             {selectedWallet && (
               <div className="space-y-6">
-                <Alert className="border-lightning-500/20 bg-lightning-500/10">
+                <Alert className="border-amber-500/20 bg-amber-500/10">
                   <Sparkles className="h-4 w-4" />
-                  <AlertDescription className="text-lightning-100">
+                  <AlertDescription className="text-foreground">
                     <strong>Setup Time:</strong> {selectedWallet.setupTime}
                     <br />
                     <strong>Difficulty:</strong> {selectedWallet.difficulty}
                   </AlertDescription>
                 </Alert>
 
-                <Card className="bg-card/50">
+                <Card className="glass-dark">
                   <CardContent className="p-6">
                     <h3 className="font-semibold text-white mb-4">Step-by-Step Instructions:</h3>
 
                     <div className="space-y-4">
                       <div className="flex items-start space-x-3">
-                        <div className="flex items-center justify-center w-6 h-6 bg-lightning-500 text-white rounded-full text-sm font-semibold">
+                        <div className="flex items-center justify-center w-6 h-6 bg-amber-500 text-white rounded-full text-sm font-semibold">
                           1
                         </div>
                         <div>
@@ -359,7 +365,7 @@ const LightningOnboarding: React.FC = () => {
                       </div>
 
                       <div className="flex items-start space-x-3">
-                        <div className="flex items-center justify-center w-6 h-6 bg-lightning-500 text-white rounded-full text-sm font-semibold">
+                        <div className="flex items-center justify-center w-6 h-6 bg-amber-500 text-white rounded-full text-sm font-semibold">
                           2
                         </div>
                         <div>
@@ -373,7 +379,7 @@ const LightningOnboarding: React.FC = () => {
                       </div>
 
                       <div className="flex items-start space-x-3">
-                        <div className="flex items-center justify-center w-6 h-6 bg-lightning-500 text-white rounded-full text-sm font-semibold">
+                        <div className="flex items-center justify-center w-6 h-6 bg-amber-500 text-white rounded-full text-sm font-semibold">
                           3
                         </div>
                         <div>
@@ -386,7 +392,7 @@ const LightningOnboarding: React.FC = () => {
 
                       {selectedWallet.type === 'self-custodial' && (
                         <div className="flex items-start space-x-3">
-                          <div className="flex items-center justify-center w-6 h-6 bg-lightning-500 text-white rounded-full text-sm font-semibold">
+                          <div className="flex items-center justify-center w-6 h-6 bg-amber-500 text-white rounded-full text-sm font-semibold">
                             4
                           </div>
                           <div>
@@ -404,7 +410,7 @@ const LightningOnboarding: React.FC = () => {
                     <div className="flex space-x-4 mt-6">
                       <Button
                         onClick={() => window.open(selectedWallet.downloadUrl, '_blank')}
-                        className="flex-1 bg-lightning-500 hover:bg-lightning-600"
+                        className="flex-1 bg-amber-500 hover:bg-amber-600"
                       >
                         <Download className="mr-2 h-4 w-4" />
                         Download {selectedWallet.name}
@@ -440,18 +446,20 @@ const LightningOnboarding: React.FC = () => {
           <div className="space-y-6">
             <div className="text-center mb-6">
               <div className="flex justify-center mb-4">
-                <div className="p-4 bg-gradient-to-br from-bitcoin-500 to-bitcoin-600 rounded-xl">
-                  <Bitcoin className="h-8 w-8 text-white" />
+                <div className="p-4 bg-amber-500/20 rounded-xl">
+                  <Bitcoin className="h-8 w-8 text-amber-400" />
                 </div>
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2">Test Your First Payment</h2>
+              <h2 className="text-2xl font-bold text-white mb-2 font-display">
+                Test Your First Payment
+              </h2>
               <p className="text-muted-foreground">
                 Make a small test payment to verify everything works perfectly.
               </p>
             </div>
 
             <div className="space-y-6">
-              <Card className="bg-card/50">
+              <Card className="glass-dark">
                 <CardContent className="p-6">
                   <h3 className="font-semibold text-white mb-4">Generate Test Invoice</h3>
 
@@ -473,7 +481,7 @@ const LightningOnboarding: React.FC = () => {
                     <Button
                       onClick={generateTestInvoice}
                       disabled={isGeneratingInvoice || invoiceGenerated}
-                      className="w-full bg-lightning-500 hover:bg-lightning-600"
+                      className="w-full bg-amber-500 hover:bg-amber-600"
                     >
                       {isGeneratingInvoice ? (
                         <>
@@ -497,7 +505,7 @@ const LightningOnboarding: React.FC = () => {
               </Card>
 
               {invoiceGenerated && (
-                <Card className="bg-card/50">
+                <Card className="glass-dark">
                   <CardContent className="p-6">
                     <h3 className="font-semibold text-white mb-4">Payment Invoice</h3>
 
@@ -517,9 +525,9 @@ const LightningOnboarding: React.FC = () => {
                         </div>
                       </div>
 
-                      <Alert className="border-lightning-500/20 bg-lightning-500/10">
+                      <Alert className="border-amber-500/20 bg-amber-500/10">
                         <Zap className="h-4 w-4" />
-                        <AlertDescription className="text-lightning-100">
+                        <AlertDescription className="text-foreground">
                           <strong>How to pay:</strong>
                           <br />
                           1. Open your Lightning wallet
@@ -557,13 +565,15 @@ const LightningOnboarding: React.FC = () => {
         return (
           <div className="text-center space-y-6">
             <div className="flex justify-center mb-6">
-              <div className="p-6 bg-gradient-to-br from-lightning-500 to-bitcoin-600 rounded-2xl">
+              <div className="p-6 bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl">
                 <Crown className="h-12 w-12 text-white" />
               </div>
             </div>
 
             <div className="space-y-4">
-              <h2 className="text-3xl font-bold text-white">⚡ Lightning Network Ready!</h2>
+              <h2 className="text-3xl font-bold text-white font-display">
+                Lightning Network Ready!
+              </h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
                 Congratulations! You're now ready to send and receive instant Bitcoin payments.
                 Welcome to the future of money.
@@ -571,17 +581,17 @@ const LightningOnboarding: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
-              <Card className="bg-card/50 border-lightning-500/20">
+              <Card className="glass-dark border-border/50">
                 <CardContent className="p-6 text-center">
-                  <Zap className="h-8 w-8 text-lightning-400 mx-auto mb-3" />
+                  <Zap className="h-8 w-8 text-amber-400 mx-auto mb-3" />
                   <h3 className="font-semibold text-white mb-2">Instant Payments</h3>
                   <p className="text-sm text-muted-foreground">Send Bitcoin in milliseconds</p>
                 </CardContent>
               </Card>
 
-              <Card className="bg-card/50 border-sovereign-500/20">
+              <Card className="glass-dark border-border/50">
                 <CardContent className="p-6 text-center">
-                  <DollarSign className="h-8 w-8 text-sovereign-400 mx-auto mb-3" />
+                  <DollarSign className="h-8 w-8 text-primary mx-auto mb-3" />
                   <h3 className="font-semibold text-white mb-2">Micropayments</h3>
                   <p className="text-sm text-muted-foreground">Pay for content, tips, and more</p>
                 </CardContent>
@@ -591,7 +601,7 @@ const LightningOnboarding: React.FC = () => {
             <div className="space-y-4 mt-8">
               <Button
                 onClick={() => (window.location.href = '/dashboard')}
-                className="px-8 py-4 text-lg bg-gradient-to-r from-lightning-500 to-bitcoin-600 mr-4"
+                className="px-8 py-4 text-lg bg-gradient-to-r from-amber-500 to-amber-600 mr-4"
               >
                 Start Using Lightning
                 <Zap className="ml-2 h-5 w-5" />
@@ -614,7 +624,7 @@ const LightningOnboarding: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-premium-900 via-premium-800 to-lightning-900">
+    <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         {/* Progress Bar */}
         <div className="max-w-4xl mx-auto mb-8">
@@ -627,8 +637,8 @@ const LightningOnboarding: React.FC = () => {
                 <div
                   className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${
                     index <= currentStep
-                      ? 'bg-lightning-500 border-lightning-500 text-white'
-                      : 'border-gray-600 text-gray-400'
+                      ? 'bg-amber-500 border-amber-500 text-white'
+                      : 'border-border text-muted-foreground'
                   }`}
                 >
                   {index < currentStep ? (
@@ -640,7 +650,7 @@ const LightningOnboarding: React.FC = () => {
                 {index < steps.length - 1 && (
                   <div
                     className={`flex-1 h-0.5 mx-4 ${
-                      index < currentStep ? 'bg-lightning-500' : 'bg-gray-600'
+                      index < currentStep ? 'bg-amber-500' : 'bg-border'
                     }`}
                   />
                 )}
@@ -655,7 +665,7 @@ const LightningOnboarding: React.FC = () => {
         </div>
 
         {/* Main Content */}
-        <Card className="max-w-4xl mx-auto bg-card/50 backdrop-blur-sm border-border/50">
+        <Card className="max-w-4xl mx-auto glass-dark border-border/50">
           <CardContent className="p-8">{renderStep()}</CardContent>
         </Card>
       </div>

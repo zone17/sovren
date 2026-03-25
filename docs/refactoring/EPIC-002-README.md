@@ -13,6 +13,7 @@ Welcome to the complete documentation for Epic 002. This Epic decomposes payment
 3. Dive into [User Stories](./EPIC-002-USER-STORIES.md) (main reference document)
 
 **Ready to start development?**
+
 - Find your assigned story in [User Stories](./EPIC-002-USER-STORIES.md)
 - Check dependencies in [Dependency Graph](./EPIC-002-DEPENDENCY-GRAPH.mmd)
 - Follow sprint plan in [Story Map](./EPIC-002-STORY-MAP.md)
@@ -22,12 +23,14 @@ Welcome to the complete documentation for Epic 002. This Epic decomposes payment
 ## Document Overview
 
 ### 1. Original Epic Definition
+
 **File**: `EPIC-002-payment-processing-todos.md`
 **Purpose**: Original Epic from refactoring backlog
 **Read if**: You want to understand the business context and original TODO list
 **Size**: ~200 lines
 
 **Contains**:
+
 - Business value and revenue risk
 - Current state (12 TODO comments)
 - Desired end state
@@ -38,12 +41,14 @@ Welcome to the complete documentation for Epic 002. This Epic decomposes payment
 ---
 
 ### 2. User Stories (MAIN REFERENCE)
+
 **File**: `EPIC-002-USER-STORIES.md`
 **Purpose**: 18 fully-specified 1-point user stories
 **Read if**: You're implementing any story
 **Size**: ~2,800 lines (comprehensive)
 
 **Contains** (for each of 18 stories):
+
 - User story statement (As a... I want... So that...)
 - Acceptance criteria (Given-When-Then format)
 - Technical implementation (code snippets, database schemas)
@@ -56,6 +61,7 @@ Welcome to the complete documentation for Epic 002. This Epic decomposes payment
 - Risk level
 
 **Story Breakdown**:
+
 - **Sprint 0** (Stories #001-#003): Foundation (8-12 hours)
 - **Sprint 1** (Stories #004-#007): Security (12-16 hours)
 - **Sprint 2** (Stories #008-#012): Features (16-24 hours)
@@ -66,12 +72,14 @@ Welcome to the complete documentation for Epic 002. This Epic decomposes payment
 ---
 
 ### 3. Dependency Graph
+
 **File**: `EPIC-002-DEPENDENCY-GRAPH.mmd`
 **Purpose**: Visual Mermaid diagram of all dependencies
 **Read if**: You need to understand story relationships
 **Size**: ~150 lines (Mermaid syntax)
 
 **Contains**:
+
 - All 18 stories organized by sprint
 - Color-coded by risk level (red=critical, blue=security, green=features, yellow=advanced)
 - Sequential dependencies (solid lines) - MUST complete in order
@@ -81,6 +89,7 @@ Welcome to the complete documentation for Epic 002. This Epic decomposes payment
 - Critical path highlighted
 
 **Visualize**:
+
 ```bash
 # Install mermaid-cli
 npm install -g @mermaid-js/mermaid-cli
@@ -94,12 +103,14 @@ mmdc -i EPIC-002-DEPENDENCY-GRAPH.mmd -o EPIC-002-DEPENDENCY-GRAPH.png
 ---
 
 ### 4. Story Map & Sprint Organization
+
 **File**: `EPIC-002-STORY-MAP.md`
 **Purpose**: Comprehensive sprint planning guide
 **Read if**: You're planning sprints or allocating team resources
 **Size**: ~1,200 lines
 
 **Contains**:
+
 - Visual story map (horizontal backbone)
 - Detailed sprint plans (goals, success criteria, risk mitigation)
 - Parallel work stream organization (4 concurrent streams)
@@ -119,12 +130,14 @@ mmdc -i EPIC-002-DEPENDENCY-GRAPH.mmd -o EPIC-002-DEPENDENCY-GRAPH.png
 ---
 
 ### 5. Implementation Summary
+
 **File**: `EPIC-002-IMPLEMENTATION-SUMMARY.md`
 **Purpose**: Executive summary and next steps
 **Read if**: You want a high-level overview
 **Size**: ~600 lines
 
 **Contains**:
+
 - Executive summary
 - Deliverables created
 - Story breakdown summary (all 18 stories)
@@ -141,12 +154,14 @@ mmdc -i EPIC-002-DEPENDENCY-GRAPH.mmd -o EPIC-002-DEPENDENCY-GRAPH.png
 ---
 
 ### 6. Quick Reference Guide
+
 **File**: `EPIC-002-QUICK-REFERENCE.md`
 **Purpose**: Fast lookup and daily standup reference
 **Read if**: You need quick answers or daily standup info
 **Size**: ~400 lines
 
 **Contains**:
+
 - 30-second summary
 - Story quick lookup table
 - Critical path (must complete in order)
@@ -166,6 +181,7 @@ mmdc -i EPIC-002-DEPENDENCY-GRAPH.mmd -o EPIC-002-DEPENDENCY-GRAPH.png
 ---
 
 ### 7. This Index (README)
+
 **File**: `EPIC-002-README.md`
 **Purpose**: Navigate all Epic 002 documentation
 **Read if**: You want to understand what documents exist and how to use them
@@ -178,6 +194,7 @@ mmdc -i EPIC-002-DEPENDENCY-GRAPH.mmd -o EPIC-002-DEPENDENCY-GRAPH.png
 ### For Developers
 
 **First Day**:
+
 1. Read [Quick Reference](./EPIC-002-QUICK-REFERENCE.md) (5 min)
 2. View [Dependency Graph](./EPIC-002-DEPENDENCY-GRAPH.mmd) (5 min)
 3. Find your story in [User Stories](./EPIC-002-USER-STORIES.md) (15 min)
@@ -185,12 +202,14 @@ mmdc -i EPIC-002-DEPENDENCY-GRAPH.mmd -o EPIC-002-DEPENDENCY-GRAPH.png
 5. Start development!
 
 **During Development**:
+
 - Reference your story's acceptance criteria
 - Check Definition of Done before creating PR
 - Run tests as specified in Testing Requirements
 - Update documentation as needed
 
 **Before Code Review**:
+
 - Verify all acceptance criteria met
 - Run all tests (unit, integration, E2E if applicable)
 - Check security considerations addressed
@@ -201,18 +220,21 @@ mmdc -i EPIC-002-DEPENDENCY-GRAPH.mmd -o EPIC-002-DEPENDENCY-GRAPH.png
 ### For Project Managers
 
 **Sprint Planning**:
+
 1. Review [Story Map](./EPIC-002-STORY-MAP.md) for sprint breakdown
 2. Check [Dependency Graph](./EPIC-002-DEPENDENCY-GRAPH.mmd) for blockers
 3. Allocate team based on scenarios in [Story Map](./EPIC-002-STORY-MAP.md)
 4. Set sprint goals from Quality Gates section
 
 **Daily Standups**:
+
 1. Use one-page summary from [Quick Reference](./EPIC-002-QUICK-REFERENCE.md)
 2. Check critical path progress
 3. Identify blockers from dependency graph
 4. Monitor success metrics
 
 **Sprint Reviews**:
+
 1. Verify Quality Gates from [Story Map](./EPIC-002-STORY-MAP.md)
 2. Review success metrics
 3. Identify risks for next sprint
@@ -223,18 +245,21 @@ mmdc -i EPIC-002-DEPENDENCY-GRAPH.mmd -o EPIC-002-DEPENDENCY-GRAPH.png
 ### For Tech Leads
 
 **Architecture Review**:
+
 1. Review technical implementation in [User Stories](./EPIC-002-USER-STORIES.md)
 2. Check security considerations for all stories
 3. Validate database schema changes
 4. Ensure consistent patterns across stories
 
 **Code Review**:
+
 1. Use Definition of Done checklist from story
 2. Verify testing requirements met
 3. Check performance requirements
 4. Validate security considerations addressed
 
 **Risk Management**:
+
 1. Monitor high-risk stories from [Quick Reference](./EPIC-002-QUICK-REFERENCE.md)
 2. Ensure mitigation strategies from [Story Map](./EPIC-002-STORY-MAP.md) followed
 3. Review security audit results
@@ -245,18 +270,21 @@ mmdc -i EPIC-002-DEPENDENCY-GRAPH.mmd -o EPIC-002-DEPENDENCY-GRAPH.png
 ### For QA Engineers
 
 **Test Planning**:
+
 1. Review Testing Requirements in each story
 2. Create test plan covering unit, integration, E2E
 3. Focus on acceptance criteria (Given-When-Then)
 4. Plan load tests for high-risk stories (#004, #012)
 
 **Test Execution**:
+
 1. Verify all acceptance criteria pass
 2. Run security tests for security stories (#004-#007)
 3. Run performance tests (latency, throughput)
 4. Validate edge cases and error handling
 
 **Quality Gates**:
+
 1. Verify Definition of Done for each story
 2. Check sprint Quality Gates before sign-off
 3. Report metrics (coverage, pass rate, performance)
@@ -266,24 +294,28 @@ mmdc -i EPIC-002-DEPENDENCY-GRAPH.mmd -o EPIC-002-DEPENDENCY-GRAPH.png
 ### For Autonomous Agents
 
 **Story Selection**:
+
 1. Parse [User Stories](./EPIC-002-USER-STORIES.md)
 2. Check dependencies in "Blocked by" section
 3. Verify prerequisites complete
 4. Select story with no blockers
 
 **Implementation**:
+
 1. Read "Technical Implementation" section
 2. Follow code snippets and database schemas
 3. Implement acceptance criteria (Given-When-Then)
 4. Write tests per "Testing Requirements"
 
 **Validation**:
+
 1. Run all tests (unit, integration)
 2. Verify Definition of Done checklist
 3. Check security considerations
 4. Validate performance requirements
 
 **Communication**:
+
 1. Report completion status
 2. Identify blockers encountered
 3. Request code review
@@ -315,17 +347,20 @@ docs/refactoring/
 **Definition**: A story that can be completed by one developer in 2-4 hours (half a day)
 
 **Characteristics**:
+
 - Single responsibility (does exactly one thing)
 - Independently testable (can write unit tests without dependencies)
 - Independently deployable (can be merged without breaking existing functionality)
 - Clear acceptance criteria (success is unambiguous)
 
 **Example** (from this Epic):
+
 - Story #001: Define payment state types (2-4 hours) ✓
 - Story #002: Implement state machine service (3-4 hours) ✓
 - Story #005: Add webhook signature validation (3-4 hours) ✓
 
 **Not a 1-point story**:
+
 - "Implement entire payment system" (too big, 80+ hours)
 - "Add authentication" (too vague, unclear scope)
 - "Fix all bugs" (not specific, unbounded)
@@ -335,16 +370,19 @@ docs/refactoring/
 ### Dependency Types
 
 **BLOCKING (Solid Line →)**:
+
 - Story A must complete before Story B can start
 - Example: #001 → #002 (types must exist before state machine)
 - **Strictly sequential** - no parallelization possible
 
 **ENABLING (Dotted Line -.->)**:
+
 - Story A enables Story B but doesn't strictly block it
 - Example: #002 -.-> #009 (state machine enables refunds, but refunds could use manual states temporarily)
 - **Can work in parallel** with workarounds
 
 **PARALLEL (Dashed Line .->)**:
+
 - Stories can work simultaneously
 - Example: #009 .-> #010 (refunds and upgrades are independent)
 - **Fully parallelizable** - maximum team efficiency
@@ -354,24 +392,28 @@ docs/refactoring/
 ### Sprint Organization
 
 **Sprint 0 (Foundation)**:
+
 - **Goal**: Establish critical infrastructure
 - **Risk**: HIGH (everything depends on this)
 - **Team**: 1-2 senior developers
 - **Duration**: 8-12 hours
 
 **Sprint 1 (Security)**:
+
 - **Goal**: Secure payment processing
 - **Risk**: CRITICAL (security vulnerabilities)
 - **Team**: 2-3 developers with security experience
 - **Duration**: 12-16 hours
 
 **Sprint 2 (Features)**:
+
 - **Goal**: Build core payment features
 - **Risk**: MEDIUM (revenue features)
 - **Team**: 3-4 developers (backend + frontend + data)
 - **Duration**: 16-24 hours
 
 **Sprint 3 (Advanced)**:
+
 - **Goal**: Nice-to-have enhancements
 - **Risk**: LOW-MEDIUM (optional features)
 - **Team**: 4+ developers + tech writer
@@ -382,28 +424,37 @@ docs/refactoring/
 ## Common Questions
 
 ### Q: Which document should I read first?
+
 **A**: [Quick Reference Guide](./EPIC-002-QUICK-REFERENCE.md) for 30-second overview, then [User Stories](./EPIC-002-USER-STORIES.md) for your assigned story.
 
 ### Q: Where do I find the critical path?
+
 **A**: [Dependency Graph](./EPIC-002-DEPENDENCY-GRAPH.mmd) (visual) or [Quick Reference](./EPIC-002-QUICK-REFERENCE.md) (text)
 
 ### Q: How do I know if stories can be worked in parallel?
+
 **A**: Check "Parallel Work Opportunities" section in each story's [User Stories](./EPIC-002-USER-STORIES.md) entry
 
 ### Q: What if I have 3 developers? How should I allocate work?
+
 **A**: See "Scenario 2: Optimal (3 developers)" in [Story Map](./EPIC-002-STORY-MAP.md)
 
 ### Q: What are the Definition of Done requirements?
+
 **A**: Each story has a checklist in [User Stories](./EPIC-002-USER-STORIES.md). Sprint-level gates in [Story Map](./EPIC-002-STORY-MAP.md).
 
 ### Q: How do I know which stories are high-risk?
+
 **A**: See "High-Risk Stories" section in [Quick Reference](./EPIC-002-QUICK-REFERENCE.md)
 
 ### Q: What testing is required for each story?
+
 **A**: See "Testing Requirements" section in each story's [User Stories](./EPIC-002-USER-STORIES.md) entry
 
 ### Q: How long will this Epic take?
+
 **A**: Depends on team size:
+
 - 1 developer: 6.5-9.5 days
 - 2 developers: 4-5 days
 - 3 developers: 3-4 days
@@ -412,10 +463,13 @@ docs/refactoring/
 See [Story Map](./EPIC-002-STORY-MAP.md) for detailed scenarios.
 
 ### Q: Can I skip low-priority stories?
+
 **A**: Yes, Sprint 3 stories (#013-#018) are nice-to-have. Critical path is #001 → #002 → #004 → #007.
 
 ### Q: How do I generate the Mermaid diagram?
+
 **A**:
+
 ```bash
 npm install -g @mermaid-js/mermaid-cli
 mmdc -i EPIC-002-DEPENDENCY-GRAPH.mmd -o EPIC-002-DEPENDENCY-GRAPH.png
@@ -428,6 +482,7 @@ mmdc -i EPIC-002-DEPENDENCY-GRAPH.mmd -o EPIC-002-DEPENDENCY-GRAPH.png
 Epic 002 is considered complete when:
 
 ### Technical Success
+
 - [ ] All 18 stories implemented and deployed
 - [ ] Payment success rate > 95% in production
 - [ ] Zero race condition incidents
@@ -436,6 +491,7 @@ Epic 002 is considered complete when:
 - [ ] 80%+ test coverage on critical paths
 
 ### Business Success
+
 - [ ] Direct revenue impact: Payment infrastructure production-ready
 - [ ] Support tickets: 40% reduction in payment-related issues
 - [ ] User trust: Reliable payment processing
@@ -443,6 +499,7 @@ Epic 002 is considered complete when:
 - [ ] Scalability: Handles 1000 payments/second
 
 ### Documentation Success
+
 - [ ] All Mermaid diagrams render correctly
 - [ ] API documentation updated
 - [ ] Troubleshooting runbook created
@@ -495,18 +552,22 @@ Epic 002 is considered complete when:
 ## Contact & Support
 
 ### Questions About Stories
+
 - Reference [User Stories](./EPIC-002-USER-STORIES.md) for detailed specs
 - Check [Quick Reference](./EPIC-002-QUICK-REFERENCE.md) for quick answers
 
 ### Questions About Dependencies
+
 - View [Dependency Graph](./EPIC-002-DEPENDENCY-GRAPH.mmd)
 - Check "Dependencies" section in each story
 
 ### Questions About Sprint Planning
+
 - See [Story Map](./EPIC-002-STORY-MAP.md) for detailed sprint organization
 - Review work allocation scenarios
 
 ### Technical Questions
+
 - State machine: Story #001, #002 in [User Stories](./EPIC-002-USER-STORIES.md)
 - Security: Stories #004-#007 in [User Stories](./EPIC-002-USER-STORIES.md)
 - Testing: See "Testing Requirements" in each story

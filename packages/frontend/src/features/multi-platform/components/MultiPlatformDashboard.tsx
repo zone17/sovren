@@ -10,8 +10,8 @@ export const MultiPlatformDashboard: React.FC = () => {
       <div className="space-y-6 p-6 bg-gradient-to-br from-indigo-50/50 via-white to-purple-50/50 min-h-screen">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Multi-Platform Hub</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-foreground">Multi-Platform Hub</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Connect, publish, and manage your content across all platforms from one place.
           </p>
         </div>

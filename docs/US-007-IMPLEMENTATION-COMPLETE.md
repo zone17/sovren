@@ -122,14 +122,12 @@ deploy:
 ### Automated Security Pipeline
 
 1. **Trivy Vulnerability Scanner**
-
    - ✅ Daily automated scans
    - ✅ CI/CD integration with GitHub Actions
    - ✅ SARIF reporting to GitHub Security tab
    - ✅ Zero-tolerance for critical vulnerabilities
 
 2. **Custom Security Scanner** (`scripts/security-scan.sh`)
-
    - ✅ 400+ lines of comprehensive security validation
    - ✅ Container configuration auditing
    - ✅ Vulnerability threshold enforcement

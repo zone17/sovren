@@ -41,6 +41,7 @@ Resolve all critical TODO comments in Lightning Network payment processing flows
 ## Technical Scope
 
 ### Packages Affected
+
 - `packages/frontend/src/services/lightning/` - Primary
 - `packages/backend/src/services/payment/` - Primary
 - `packages/shared/src/types/payment.ts` - Secondary
@@ -48,6 +49,7 @@ Resolve all critical TODO comments in Lightning Network payment processing flows
 ### Critical TODOs
 
 #### High Priority (Production Blockers)
+
 1. **Lightning Invoice Expiration Handling** - `LightningService.ts:145`
    - Current: No expiration handling
    - Need: Auto-renewal, user notification, cleanup
@@ -69,6 +71,7 @@ Resolve all critical TODO comments in Lightning Network payment processing flows
    - Need: Automated refund workflow with approval process
 
 #### Medium Priority (Feature Completion)
+
 6. **Subscription Upgrade/Downgrade** - `SubscriptionService.ts:567`
    - Current: Partial implementation
    - Need: Prorated billing, grace periods
@@ -82,6 +85,7 @@ Resolve all critical TODO comments in Lightning Network payment processing flows
    - Need: Revenue metrics, churn analysis, cohort tracking
 
 #### Low Priority (Enhancements)
+
 9. **Batch Payment Processing** - `BatchService.ts:345`
 10. **Payment Method Fallback** - `PaymentMethodService.ts:456`
 11. **Tax Calculation** - `TaxService.ts:123`
@@ -90,6 +94,7 @@ Resolve all critical TODO comments in Lightning Network payment processing flows
 ## Technical Approach
 
 ### Phase 1: Payment State Machine (Critical)
+
 ```typescript
 enum PaymentState {
   PENDING = 'pending',
@@ -109,12 +114,14 @@ interface PaymentTransition {
 ```
 
 ### Phase 2: Error Handling Strategy
+
 - Implement payment-specific error types
 - Add circuit breaker for external payment services
 - Implement dead letter queue for failed payments
 - Add comprehensive logging with correlation IDs
 
 ### Phase 3: Retry Logic Implementation
+
 ```typescript
 interface RetryConfig {
   maxAttempts: number;
@@ -126,6 +133,7 @@ interface RetryConfig {
 ```
 
 ### Phase 4: Security Hardening
+
 - HMAC webhook signature verification
 - Rate limiting on payment endpoints
 - Idempotency keys for all payment operations
@@ -134,21 +142,23 @@ interface RetryConfig {
 ## Dependencies
 
 ### Blockers
+
 - None (critical path item)
 
 ### Related Work
+
 - May require updates to shared payment types (Epic 001)
 - Will improve backend service organization (Epic 005)
 
 ## Risks & Mitigation
 
-| Risk | Impact | Likelihood | Mitigation |
-|------|--------|------------|------------|
-| Payment processing downtime during deployment | Critical | Low | Use feature flags, canary deployment |
-| Breaking changes to payment API | High | Medium | Comprehensive integration tests, versioned API |
-| Lightning Network instability | High | Medium | Implement fallback mechanisms, circuit breaker |
-| Regulatory compliance issues | Critical | Low | Legal review, compliance audit |
-| Data loss in payment records | Critical | Very Low | Database transactions, comprehensive backups |
+| Risk                                          | Impact   | Likelihood | Mitigation                                     |
+| --------------------------------------------- | -------- | ---------- | ---------------------------------------------- |
+| Payment processing downtime during deployment | Critical | Low        | Use feature flags, canary deployment           |
+| Breaking changes to payment API               | High     | Medium     | Comprehensive integration tests, versioned API |
+| Lightning Network instability                 | High     | Medium     | Implement fallback mechanisms, circuit breaker |
+| Regulatory compliance issues                  | Critical | Low        | Legal review, compliance audit                 |
+| Data loss in payment records                  | Critical | Very Low   | Database transactions, comprehensive backups   |
 
 ## Estimated Effort
 

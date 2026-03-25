@@ -659,6 +659,8 @@ export function getClient(): Client {
 | Silent fallback log     | Any lazy-init path   | `logger.warn()` on fallback        | N/A          |
 | PostgREST filter escape | User text → `.or()`  | Escape `\` first, then metachar    | 400          |
 | VIEW security barrier   | Public-facing VIEW   | `security_barrier` + status filter | 200 (hidden) |
+| RLS on CREATE TABLE     | Every new table      | RLS + policies in same migration   | N/A          |
+| Crypto timing-safe      | HMAC/signature check | `timingSafeEqual`, no empty secret | 401          |
 
 ---
 
@@ -829,6 +831,128 @@ const { data: parent } = await db
 **Applies to:** Comments, nested posts, nested tasks, any self-referential table with a scope boundary (content_id, workspace_id, team_id, etc.).
 
 **Detection:** Any parent lookup in a threaded insert that uses only `.eq('id', parentId)` without a scope constraint is a P1 finding.
+
+---
+
+## 16. RLS INSERT Policies Must Restrict to Service Role (1 P1 — Slice 8)
+
+**Recurrence:** 1 P1. `WITH CHECK (TRUE)` on INSERT allows any authenticated user to create rows that should only be created by the backend service.
+
+```sql
+-- WRONG: Any authenticated user can insert
+CREATE POLICY insert_policy ON notifications
+  FOR INSERT WITH CHECK (TRUE);
+
+-- CORRECT: Only backend service role
+CREATE POLICY insert_policy ON notifications
+  FOR INSERT WITH CHECK (auth.role() = 'service_role');
+```
+
+**When to use:** Every table where rows are created by backend services on behalf of users (notifications, audit logs, system events). User-created rows (posts, comments) use `auth.uid()` check instead.
+
+**Detection:** `grep -rn "WITH CHECK (TRUE)" supabase/migrations/` — any hit without an explicit exemption comment is a P1.
+
+---
+
+## 17. PostgreSQL Trigger Atomic Increments (1 P1 — Slice 8)
+
+**Recurrence:** 1 P1. `COALESCE(count, 0) + 1` is a read-modify-write pattern that loses increments under concurrent load.
+
+```sql
+-- WRONG: Read-modify-write race under concurrency
+UPDATE creators SET follower_count = COALESCE(follower_count, 0) + 1;
+
+-- CORRECT: Atomic (PostgreSQL handles row-level locking)
+UPDATE creators SET follower_count = follower_count + 1;
+
+-- For decrements, floor at 0:
+UPDATE creators SET follower_count = GREATEST(follower_count - 1, 0);
+```
+
+**Also required:** `SECURITY DEFINER SET search_path = public` on trigger functions that UPDATE tables the invoking user may not have direct permission on.
+
+**Detection:** `grep -rn "COALESCE.*+ 1\|COALESCE.*- 1" supabase/migrations/` in trigger functions.
+
+---
+
+## 18. RLS Must Accompany Every CREATE TABLE Migration (40+ tables — Audit #757)
+
+**Recurrence:** 1 P1 audit finding affecting 40+ financial tables. Highest-count single finding in the production readiness audit.
+
+**The problem:** Tables created before RLS conventions were established had zero Row Level Security. The fix required a phased remediation migration after the fact.
+
+**Rule:** Every `CREATE TABLE` in a migration must be immediately followed by `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` and at minimum one policy — in the same migration file.
+
+```sql
+-- MANDATORY pattern for every user-data table migration
+CREATE TABLE payment_records (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id),
+  amount_sats BIGINT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- RLS immediately after CREATE TABLE — same migration file
+ALTER TABLE payment_records ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "payment_records_service_role" ON payment_records
+  USING (auth.role() = 'service_role');
+
+CREATE POLICY "payment_records_select_own" ON payment_records
+  FOR SELECT USING (user_id = auth.uid());
+```
+
+**Access model decision tree:**
+
+- Backend-only INSERT → `WITH CHECK (auth.role() = 'service_role')` (pattern #16)
+- User self-INSERT → `WITH CHECK (auth.uid() = user_id)`
+- Financial credit tables → payer-only INSERT, never `recipient_id = auth.uid()` on INSERT
+- Never use `WITH CHECK (TRUE)` on user-data tables
+
+**Detection:**
+
+```sql
+-- Tables missing RLS entirely
+SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND NOT rowsecurity;
+-- Tables with RLS enabled but zero policies (silently denies all access)
+SELECT t.tablename FROM pg_tables t
+WHERE t.rowsecurity AND NOT EXISTS (
+  SELECT 1 FROM pg_policies p WHERE p.tablename = t.tablename
+);
+```
+
+---
+
+## 19. Cryptographic Comparison Must Use `crypto.timingSafeEqual()` (Audit #759)
+
+**Recurrence:** 1 P1. HMAC verification used `===` (timing attack) and accepted empty secrets.
+
+**The problem:** `===` on cryptographic values leaks length information through timing side channels. One file (`csrf.ts`) used `timingSafeEqual` correctly while another (`webhooks.ts`) used `===` — copy/drift between files.
+
+**Rule:** Every HMAC, token, or signature comparison uses `crypto.timingSafeEqual()`. The `===` operator on cryptographic values is a P1 regardless of context.
+
+```typescript
+import { timingSafeEqual, createHmac } from 'crypto';
+
+function verifyHmacSignature(
+  payload: string | Buffer,
+  receivedSig: string,
+  secret: string
+): boolean {
+  if (!secret) {
+    throw new Error('HMAC secret must be configured — refusing to verify with empty secret');
+  }
+  const expected = createHmac('sha256', secret).update(payload).digest();
+  const actual = Buffer.from(receivedSig.replace(/^sha256=/, ''), 'hex');
+
+  if (expected.length !== actual.length) return false;
+  return timingSafeEqual(expected, actual);
+}
+```
+
+**Additional rule:** If the secret is empty or missing, the function must throw — never silently verify. Empty-string HMAC is forgeable by anyone who knows the payload.
+
+**Detection:** `grep -rn '=== .*sig\|sig.*===\|=== .*hash\|hash.*===' packages/backend/src/` — any match is P1. Also: `grep -rn "SECRET.*||.*''" packages/backend/src/` for empty secret fallbacks.
 
 ---
 

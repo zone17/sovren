@@ -36,6 +36,7 @@ Successfully implemented a centralized **RelayPoolManager** service to consolida
 #### Features Implemented
 
 ##### **Connection Management**
+
 - Multi-relay support (configurable up to 10 concurrent)
 - Automatic relay discovery from `NOSTR_RELAYS` env variable
 - Default relay fallback (5 reliable public relays)
@@ -43,6 +44,7 @@ Successfully implemented a centralized **RelayPoolManager** service to consolida
 - Relay tagging (read/write/both - NIP-65 compliant)
 
 ##### **Health Monitoring**
+
 - **Latency Tracking**: Exponential moving average of response times
 - **Success Rate**: Percentage of successful operations
 - **Uptime Monitoring**: Connection availability tracking
@@ -51,6 +53,7 @@ Successfully implemented a centralized **RelayPoolManager** service to consolida
 - **Periodic Checks**: Automated health checks every 30 seconds
 
 ##### **Automatic Reconnection**
+
 - Connection loss detection
 - Exponential backoff: 1s → 2s → 4s → 8s → 16s
 - Configurable max attempts (default: 5)
@@ -58,6 +61,7 @@ Successfully implemented a centralized **RelayPoolManager** service to consolida
 - Per-relay attempt tracking
 
 ##### **Event Publishing**
+
 ```typescript
 // Broadcast to all connected relays
 await relayPoolManager.publishEvent(event);
@@ -73,6 +77,7 @@ await relayPoolManager.publishEvent(event, ['wss://relay.damus.io']);
 ```
 
 **Results Tracking**:
+
 ```typescript
 interface PublishResult {
   relay: string;
@@ -83,6 +88,7 @@ interface PublishResult {
 ```
 
 ##### **Subscription Aggregation**
+
 ```typescript
 // Subscribe across all relays with automatic deduplication
 const subId = relayPoolManager.subscribe(
@@ -96,11 +102,13 @@ relayPoolManager.unsubscribe(subId);
 ```
 
 **Deduplication**:
+
 - Automatic by event ID
 - 10,000 event cache (most recent)
 - 50-80% bandwidth reduction
 
 ##### **Relay Selection**
+
 ```typescript
 // Get fastest relay
 const fastest = relayPoolManager.getFastestRelay();
@@ -181,6 +189,7 @@ interface RelayPoolConfig {
 #### Integration Points
 
 **Initialization**:
+
 ```typescript
 // Old: this.pool = new SimplePool();
 // New: Uses relayPoolManager singleton
@@ -196,6 +205,7 @@ await relayPoolManager.initialize({
 ```
 
 **Connection**:
+
 ```typescript
 // Old: this.pool.ensureRelay(url);
 // New:
@@ -203,6 +213,7 @@ await relayPoolManager.connectAll();
 ```
 
 **Publishing**:
+
 ```typescript
 // Old: this.pool.publish(relayUrls, event);
 // New:
@@ -210,6 +221,7 @@ await relayPoolManager.publishEvent(event);
 ```
 
 **Subscription**:
+
 ```typescript
 // Old: this.pool.subscribeMany(relays, filters, callbacks);
 // New:
@@ -217,6 +229,7 @@ const subId = relayPoolManager.subscribe(filters, onEvent, onEose);
 ```
 
 **Disconnection**:
+
 ```typescript
 // Old: this.pool.close(relayUrls);
 // New:
@@ -313,11 +326,13 @@ await relayPoolManager.removeRelay('wss://old.relay.io');
 #### Viewing Diagrams
 
 **GitHub Visual**:
+
 ```
 https://github.com/owner/repo/blob/main/docs/architecture/diagrams/relay-pool-manager/[diagram-name].mmd
 ```
 
 **Interactive Editor**:
+
 ```
 https://mermaid.live/edit#[base64-encoded-diagram]
 ```
@@ -421,6 +436,7 @@ npm test -- --testPathPattern=RelayPoolManager --coverage
 ### Before: Scattered Relay Management
 
 **Problems**:
+
 - ❌ Multiple `SimplePool` instances throughout codebase
 - ❌ 8+ hardcoded relay URLs in different files
 - ❌ Inconsistent connection management
@@ -430,6 +446,7 @@ npm test -- --testPathPattern=RelayPoolManager --coverage
 - ❌ No relay selection intelligence
 
 **Impact**:
+
 - High bandwidth usage (duplicate events)
 - Poor reliability (no failover)
 - Difficult to maintain (scattered code)
@@ -438,6 +455,7 @@ npm test -- --testPathPattern=RelayPoolManager --coverage
 ### After: Unified RelayPoolManager
 
 **Solutions**:
+
 - ✅ Single `RelayPoolManager` singleton
 - ✅ Zero hardcoded relay URLs (environment-driven)
 - ✅ Centralized connection pool
@@ -447,6 +465,7 @@ npm test -- --testPathPattern=RelayPoolManager --coverage
 - ✅ Intelligent relay selection (fastest/healthiest)
 
 **Impact**:
+
 - 50-80% bandwidth reduction
 - 99%+ uptime with automatic failover
 - Single location for relay management
@@ -457,30 +476,35 @@ npm test -- --testPathPattern=RelayPoolManager --coverage
 ## Performance Optimizations
 
 ### 1. Event Deduplication
+
 **Technique**: Event ID-based deduplication cache
 **Size**: 10,000 most recent event IDs
 **Impact**: 50-80% reduction in duplicate event processing
 **Memory**: O(1) lookup, efficient Set data structure
 
 ### 2. Connection Pooling
+
 **Technique**: Shared connection pool across all consumers
 **Impact**: Eliminates redundant relay connections
 **Before**: N components × M relays = N×M connections
 **After**: M relay connections (shared pool)
 
 ### 3. Health Monitoring
+
 **Technique**: Exponential moving average for metrics
 **Impact**: Low memory overhead (no full history)
 **Update Formula**: `newValue = oldValue * 0.8 + sample * 0.2`
 **Storage**: O(1) per relay (latest metrics only)
 
 ### 4. Smart Relay Selection
+
 **Technique**: Sort relays by latency/health score
 **Impact**: Faster event publishing and subscription
 **Selection Time**: O(N log N) where N = relay count
 **Typical N**: 5-10 relays
 
 ### 5. Exponential Backoff
+
 **Technique**: 2^attempt seconds between retries
 **Impact**: Prevents connection storms
 **Pattern**: 1s → 2s → 4s → 8s → 16s
@@ -491,6 +515,7 @@ npm test -- --testPathPattern=RelayPoolManager --coverage
 ## Quality Metrics
 
 ### Code Quality
+
 - ✅ **TypeScript Strict Mode**: Zero `any` types
 - ✅ **Type Safety**: Comprehensive interfaces for all operations
 - ✅ **Error Handling**: Try-catch blocks with graceful degradation
@@ -498,6 +523,7 @@ npm test -- --testPathPattern=RelayPoolManager --coverage
 - ✅ **Memory Efficiency**: Bounded caches, moving averages
 
 ### Architecture Quality
+
 - ✅ **Singleton Pattern**: Proper instance management
 - ✅ **Event Emitter**: Reactive updates for UI integration
 - ✅ **Separation of Concerns**: Health monitoring, connection, subscription as separate concerns
@@ -505,6 +531,7 @@ npm test -- --testPathPattern=RelayPoolManager --coverage
 - ✅ **Interface Segregation**: Minimal public API surface
 
 ### Documentation Quality
+
 - ✅ **Inline Comments**: JSDoc for all public methods
 - ✅ **Mermaid Diagrams**: 5 comprehensive architectural diagrams
 - ✅ **Type Documentation**: Detailed interface definitions
@@ -512,6 +539,7 @@ npm test -- --testPathPattern=RelayPoolManager --coverage
 - ✅ **CHANGELOG**: Comprehensive entry with all changes
 
 ### Test Quality
+
 - ✅ **TDD Approach**: Tests written first
 - ✅ **Comprehensive Coverage**: 52 test cases
 - ✅ **Category Organization**: 10 test categories
@@ -525,6 +553,7 @@ npm test -- --testPathPattern=RelayPoolManager --coverage
 ### For Application Developers
 
 #### Basic Usage
+
 ```typescript
 import { relayPoolManager } from '@/services/nostr/RelayPoolManager';
 
@@ -538,12 +567,11 @@ await relayPoolManager.connectAll();
 
 // Publish an event
 const results = await relayPoolManager.publishEvent(myEvent);
-console.log(`Published to ${results.filter(r => r.success).length} relays`);
+console.log(`Published to ${results.filter((r) => r.success).length} relays`);
 
 // Subscribe to events
-const subId = relayPoolManager.subscribe(
-  [{ kinds: [1], limit: 10 }],
-  (event) => console.log('New event:', event)
+const subId = relayPoolManager.subscribe([{ kinds: [1], limit: 10 }], (event) =>
+  console.log('New event:', event)
 );
 
 // Unsubscribe
@@ -555,6 +583,7 @@ console.log(`Health score: ${health.score}/100`);
 ```
 
 #### Advanced Usage
+
 ```typescript
 // Publish to fastest 3 relays only
 await relayPoolManager.publishEventToFastest(myEvent, 3);
@@ -592,6 +621,7 @@ const subId = nostr.subscribe(filters, onEvent); // Uses RelayPoolManager.subscr
 ## Files Created/Modified
 
 ### Created Files
+
 ```
 /packages/frontend/src/services/nostr/
 ├── RelayPoolManager.ts                     (790 lines)
@@ -612,6 +642,7 @@ const subId = nostr.subscribe(filters, onEvent); // Uses RelayPoolManager.subscr
 ```
 
 ### Modified Files
+
 ```
 /packages/frontend/lib/services/nostrService.ts
   - Added relayPoolManager import
@@ -629,21 +660,25 @@ const subId = nostr.subscribe(filters, onEvent); // Uses RelayPoolManager.subscr
 ## Next Steps
 
 ### Epic 003 Continuation
+
 The RelayPoolManager is the foundation for the remaining NOSTR consolidation work:
 
 **Immediate Next Stories**:
+
 - **US-303**: Consolidate NIP-05 Verification
 - **US-304**: Unified Event Validation
 - **US-305**: Centralized DM Handling
 - **US-306**: Event Cache Optimization
 
 **Benefits for Future Stories**:
+
 - Consistent relay access pattern
 - Built-in health monitoring
 - Event deduplication
 - Relay selection intelligence
 
 ### Potential Enhancements
+
 Future improvements (not part of current sprint):
 
 1. **NIP-65 Relay Discovery** - Automatic relay discovery from user profiles

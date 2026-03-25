@@ -60,30 +60,30 @@ const LightningBlock: React.FC<LightningBlockProps> = ({ block, onUpdate, onDele
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Amount (sats)</label>
+          <label className="block text-sm font-medium text-foreground mb-1">Amount (sats)</label>
           <input
             type="number"
             value={amount}
             onChange={(e): void => setAmount(parseInt(e.target.value) || 0)}
             onBlur={handleUpdate}
-            className="w-full border border-gray-300 rounded px-3 py-2"
+            className="w-full border border-border rounded px-3 py-2"
             min="1"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+          <label className="block text-sm font-medium text-foreground mb-1">Description</label>
           <input
             type="text"
             value={description}
             onChange={(e): void => setDescription(e.target.value)}
             onBlur={handleUpdate}
             placeholder="What is this payment for?"
-            className="w-full border border-gray-300 rounded px-3 py-2"
+            className="w-full border border-border rounded px-3 py-2"
           />
         </div>
       </div>
 
-      <div className="mt-3 text-sm text-gray-600">
+      <div className="mt-3 text-sm text-muted-foreground">
         Readers can send {amount} sats to support this content section.
       </div>
     </div>
@@ -108,12 +108,10 @@ const MediaBlock: React.FC<MediaBlockProps> = ({ block, onUpdate, onDelete }) =>
     setUploading(true);
     setUploadError(null);
     try {
-      // TODO: Replace with real media upload API call (React Query mutation)
-      throw new Error(
-        'Media upload not yet implemented. Will be added during React Query migration.'
-      );
-    } catch (error) {
-      setUploadError(error instanceof Error ? error.message : 'Upload failed');
+      // TODO(media-engineer): Implement Supabase Storage upload.
+      // Pattern: upload to supabase.storage.from('media').upload(path, file),
+      // then store the public URL via POST /api/v1/content/media.
+      setUploadError('Media upload is coming soon. Please check back shortly.');
     } finally {
       setUploading(false);
     }
@@ -151,7 +149,7 @@ const MediaBlock: React.FC<MediaBlockProps> = ({ block, onUpdate, onDelete }) =>
             disabled={uploading}
             className="mb-3"
           />
-          {uploading && <div className="text-sm text-gray-600">Uploading to IPFS...</div>}
+          {uploading && <div className="text-sm text-muted-foreground">Uploading to IPFS...</div>}
           {uploadError && <div className="text-sm text-red-600">{uploadError}</div>}
         </div>
       ) : (
@@ -182,7 +180,7 @@ const MediaBlock: React.FC<MediaBlockProps> = ({ block, onUpdate, onDelete }) =>
 
           <div className="grid grid-cols-1 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Alt Text</label>
+              <label className="block text-sm font-medium text-foreground mb-1">Alt Text</label>
               <input
                 type="text"
                 value={altText}
@@ -193,12 +191,12 @@ const MediaBlock: React.FC<MediaBlockProps> = ({ block, onUpdate, onDelete }) =>
                     caption,
                   })
                 }
-                className="w-full border border-gray-300 rounded px-3 py-2"
+                className="w-full border border-border rounded px-3 py-2"
                 placeholder="Describe this media for accessibility"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Caption</label>
+              <label className="block text-sm font-medium text-foreground mb-1">Caption</label>
               <input
                 type="text"
                 value={caption}
@@ -209,7 +207,7 @@ const MediaBlock: React.FC<MediaBlockProps> = ({ block, onUpdate, onDelete }) =>
                     caption: e.target.value,
                   })
                 }
-                className="w-full border border-gray-300 rounded px-3 py-2"
+                className="w-full border border-border rounded px-3 py-2"
                 placeholder="Optional caption"
               />
             </div>
@@ -381,7 +379,7 @@ const SimpleContentEditor: React.FC<SimpleContentEditorProps> = ({
   if (!current_content) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">No content selected for editing</div>
+        <div className="text-muted-foreground">No content selected for editing</div>
       </div>
     );
   }
@@ -391,7 +389,7 @@ const SimpleContentEditor: React.FC<SimpleContentEditorProps> = ({
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold text-gray-900">Content Editor</h1>
+          <h1 className="text-2xl font-bold text-foreground">Content Editor</h1>
           <div className="flex items-center space-x-3">
             {editor_state.last_saved ? (
               <span className="text-sm text-green-600">
@@ -423,7 +421,7 @@ const SimpleContentEditor: React.FC<SimpleContentEditorProps> = ({
           value={title}
           onChange={handleTitleChange}
           placeholder="Enter your title..."
-          className="w-full text-3xl font-bold border-none outline-none mb-4 placeholder-gray-400 bg-transparent"
+          className="w-full text-3xl font-bold border-none outline-none mb-4 placeholder-muted-foreground/60 bg-transparent"
         />
 
         {/* Description */}
@@ -431,46 +429,46 @@ const SimpleContentEditor: React.FC<SimpleContentEditorProps> = ({
           value={description}
           onChange={handleDescriptionChange}
           placeholder="Write a brief description..."
-          className="w-full text-gray-600 border-none outline-none resize-none placeholder-gray-400 bg-transparent"
+          className="w-full text-muted-foreground border-none outline-none resize-none placeholder-muted-foreground/60 bg-transparent"
           rows={2}
         />
       </div>
 
       {/* Editor Toolbar */}
-      <div className="border-b border-gray-200 pb-4 mb-6">
+      <div className="border-b border-border pb-4 mb-6">
         <div className="flex items-center space-x-2">
           <button
             onClick={(): void => formatText('bold')}
-            className="px-3 py-1 rounded hover:bg-gray-100"
+            className="px-3 py-1 rounded hover:bg-accent"
             title="Bold"
           >
             <strong>B</strong>
           </button>
           <button
             onClick={(): void => formatText('italic')}
-            className="px-3 py-1 rounded hover:bg-gray-100"
+            className="px-3 py-1 rounded hover:bg-accent"
             title="Italic"
           >
             <em>I</em>
           </button>
           <button
             onClick={(): void => formatText('heading')}
-            className="px-3 py-1 rounded hover:bg-gray-100"
+            className="px-3 py-1 rounded hover:bg-accent"
             title="Heading"
           >
             H2
           </button>
 
-          <div className="border-l border-gray-300 pl-2 ml-2">
+          <div className="border-l border-border pl-2 ml-2">
             <button
               onClick={addMediaBlock}
-              className="px-3 py-1 rounded hover:bg-gray-100 text-blue-600"
+              className="px-3 py-1 rounded hover:bg-accent text-blue-600"
             >
               + Media
             </button>
             <button
               onClick={addLightningBlock}
-              className="px-3 py-1 rounded hover:bg-gray-100 text-yellow-600"
+              className="px-3 py-1 rounded hover:bg-accent text-yellow-600"
             >
               + Lightning
             </button>
@@ -485,9 +483,9 @@ const SimpleContentEditor: React.FC<SimpleContentEditorProps> = ({
           value={content}
           onChange={handleContentChange}
           placeholder="Start writing your content... Use **bold**, *italic*, and ## headings for formatting."
-          className="w-full min-h-96 p-4 border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-y"
+          className="w-full min-h-96 p-4 border border-border rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-y"
         />
-        <div className="text-sm text-gray-500 mt-2">
+        <div className="text-sm text-muted-foreground mt-2">
           Supports Markdown formatting: **bold**, *italic*, ## headings
         </div>
       </div>
@@ -526,8 +524,8 @@ const SimpleContentEditor: React.FC<SimpleContentEditorProps> = ({
       </div>
 
       {/* Footer */}
-      <div className="mt-8 pt-6 border-t border-gray-200">
-        <div className="flex items-center justify-between text-sm text-gray-600">
+      <div className="mt-8 pt-6 border-t border-border">
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
           <div>
             Status: <span className="font-medium">{current_content.status}</span> • Visibility:{' '}
             <span className="font-medium">{current_content.visibility}</span>

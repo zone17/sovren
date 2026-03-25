@@ -14,7 +14,7 @@ const STATUS_COLORS: Record<AlertStatus, string> = {
   new: 'bg-blue-100 text-blue-700',
   reviewed: 'bg-yellow-100 text-yellow-700',
   resolved: 'bg-green-100 text-green-700',
-  false_positive: 'bg-gray-100 text-gray-600',
+  false_positive: 'bg-muted text-muted-foreground',
   reported: 'bg-red-100 text-red-700',
 };
 
@@ -38,7 +38,7 @@ const AlertCard: React.FC<AlertCardProps> = ({ alert, onSelect }) => (
     aria-label={`Alert: ${alert.original_title}, ${(alert.similarity_score * 100).toFixed(0)}% similar, status ${alert.status}`}
   >
     <div className="flex items-start justify-between mb-2">
-      <h4 className="text-sm font-medium text-gray-800 line-clamp-1 flex-1">
+      <h4 className="text-sm font-medium text-foreground line-clamp-1 flex-1">
         {alert.original_title}
       </h4>
       <Badge className={`${STATUS_COLORS[alert.status]} text-[10px] ml-2 shrink-0`}>
@@ -48,19 +48,19 @@ const AlertCard: React.FC<AlertCardProps> = ({ alert, onSelect }) => (
 
     <div className="flex items-center gap-3 mb-2">
       <div className="flex items-center gap-1 flex-1">
-        <div className="h-1.5 flex-1 bg-gray-100 rounded-full overflow-hidden">
+        <div className="h-1.5 flex-1 bg-muted rounded-full overflow-hidden">
           <div
             className={`h-full rounded-full ${MATCH_COLORS[alert.match_level]}`}
             style={{ width: `${alert.similarity_score * 100}%` }}
           />
         </div>
-        <span className="text-xs text-gray-600 shrink-0">
+        <span className="text-xs text-muted-foreground shrink-0">
           {(alert.similarity_score * 100).toFixed(0)}%
         </span>
       </div>
     </div>
 
-    <p className="text-[10px] text-gray-400">
+    <p className="text-[10px] text-muted-foreground/60">
       Detected {new Date(alert.detected_at).toLocaleDateString()} on {alert.relay}
     </p>
   </button>
@@ -91,7 +91,7 @@ const AlertDetailPanel: React.FC<AlertDetailPanelProps> = ({ alertId, onClose })
   return (
     <div className="p-4 border rounded-lg space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-gray-800">Alert Detail</h3>
+        <h3 className="text-sm font-semibold text-foreground">Alert Detail</h3>
         <Button variant="outline" size="sm" onClick={onClose} className="text-xs h-7">
           Close
         </Button>
@@ -102,9 +102,9 @@ const AlertDetailPanel: React.FC<AlertDetailPanelProps> = ({ alertId, onClose })
         {/* Original */}
         <div className="p-3 bg-green-50 rounded-lg">
           <h4 className="text-xs font-medium text-green-700 mb-2">Original</h4>
-          <p className="text-sm font-medium text-gray-800 mb-1">{data.original.title}</p>
-          <p className="text-xs text-gray-600 line-clamp-4">{data.original.excerpt}</p>
-          <p className="text-[10px] text-gray-400 mt-2">
+          <p className="text-sm font-medium text-foreground mb-1">{data.original.title}</p>
+          <p className="text-xs text-muted-foreground line-clamp-4">{data.original.excerpt}</p>
+          <p className="text-[10px] text-muted-foreground/60 mt-2">
             Published {new Date(data.original.published_at).toLocaleDateString()}
           </p>
         </div>
@@ -112,8 +112,8 @@ const AlertDetailPanel: React.FC<AlertDetailPanelProps> = ({ alertId, onClose })
         {/* Detected copy */}
         <div className="p-3 bg-red-50 rounded-lg">
           <h4 className="text-xs font-medium text-red-700 mb-2">Detected Copy</h4>
-          <p className="text-xs text-gray-600 line-clamp-4">{data.detected.excerpt}</p>
-          <p className="text-[10px] text-gray-400 mt-2">
+          <p className="text-xs text-muted-foreground line-clamp-4">{data.detected.excerpt}</p>
+          <p className="text-[10px] text-muted-foreground/60 mt-2">
             Published {new Date(data.detected.published_at).toLocaleDateString()}
           </p>
         </div>
@@ -121,13 +121,13 @@ const AlertDetailPanel: React.FC<AlertDetailPanelProps> = ({ alertId, onClose })
 
       {/* Similarity */}
       <div className="flex items-center gap-3">
-        <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+        <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
           <div
             className={`h-full rounded-full ${MATCH_COLORS[data.comparison.match_level]}`}
             style={{ width: `${data.comparison.similarity_score * 100}%` }}
           />
         </div>
-        <span className="text-sm font-medium text-gray-700">
+        <span className="text-sm font-medium text-foreground">
           {(data.comparison.similarity_score * 100).toFixed(0)}% —{' '}
           {data.comparison.match_level.replace('_', ' ')}
         </span>
@@ -199,7 +199,7 @@ export const AlertsFeed: React.FC = () => {
               className={`px-3 py-1.5 text-xs rounded whitespace-nowrap ${
                 activeStatus === status
                   ? 'bg-blue-100 text-blue-700 font-medium'
-                  : 'text-gray-500 hover:bg-gray-100'
+                  : 'text-muted-foreground hover:bg-muted'
               }`}
               aria-pressed={activeStatus === status}
             >
@@ -222,12 +222,14 @@ export const AlertsFeed: React.FC = () => {
           </div>
         )}
 
-        {error && <p className="text-sm text-gray-500 text-center py-6">Failed to load alerts.</p>}
+        {error && (
+          <p className="text-sm text-muted-foreground text-center py-6">Failed to load alerts.</p>
+        )}
 
         {response && !isLoading && (
           <>
             {response.data.length === 0 ? (
-              <p className="text-sm text-gray-500 text-center py-8">
+              <p className="text-sm text-muted-foreground text-center py-8">
                 No {activeStatus.replace('_', ' ')} alerts.
               </p>
             ) : (
@@ -250,7 +252,7 @@ export const AlertsFeed: React.FC = () => {
                 >
                   Previous
                 </Button>
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-muted-foreground">
                   Page {response.pagination.page} of {response.pagination.totalPages}
                 </span>
                 <Button

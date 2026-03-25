@@ -12,6 +12,7 @@ ContentSearchService provides enterprise-grade search capabilities powered by El
 ## Architecture
 
 ### Architecture Diagram
+
 ![Architecture](https://github.com/user/repo/blob/main/docs/architecture/diagrams/US-E5-014-content-search-architecture.mmd)
 
 **Interactive Mermaid Editor**: [View & Edit](https://mermaid.live/)
@@ -37,6 +38,7 @@ graph TB
 ```
 
 ### Search Flow Diagram
+
 ![Search Flow](https://github.com/user/repo/blob/main/docs/architecture/diagrams/US-E5-014-search-flow.mmd)
 
 ```mermaid
@@ -61,12 +63,14 @@ sequenceDiagram
 ## Features Implemented
 
 ### 1. Full-Text Search
+
 - Multi-field search with field boosting (title^3, summary^2, content)
 - Fuzzy matching with AUTO fuzziness
 - Minimum should match threshold (75%)
 - Custom analyzers for content processing
 
 ### 2. Advanced Filtering
+
 - **Term filters**: Exact match on keyword fields
 - **Terms filters**: Multiple value matching
 - **Range filters**: Numeric and date ranges
@@ -75,36 +79,42 @@ sequenceDiagram
 - **Wildcard filters**: Pattern matching
 
 ### 3. Faceted Search
+
 - **Terms aggregation**: Category/tag distribution
 - **Range aggregation**: Bucketed numeric ranges
 - **Date histogram**: Time-based grouping
 - **Stats aggregation**: Min/max/avg/sum statistics
 
 ### 4. Autocomplete & Suggestions
+
 - Completion suggester with fuzzy matching
 - Configurable suggestion size (default: 10)
 - Duplicate skipping
 - Minimum prefix length (2 characters)
 
 ### 5. Result Highlighting
+
 - Configurable pre/post tags (default: `<mark>`)
 - Fragment size control
 - Multiple fragment support
 - Field-specific highlighting
 
 ### 6. Custom Sorting
+
 - Multi-field sorting
 - Ascending/descending order
 - Sort modes (min, max, avg, sum, median)
 - Missing value handling
 
 ### 7. Intelligent Caching
+
 - **Cache Strategy**: Write-through caching with 5-minute TTL
 - **Cache Key**: MD5 hash of query parameters
 - **Invalidation**: Pattern-based cache invalidation on content changes
 - **Performance**: Eliminates redundant Elasticsearch queries
 
 ### 8. Search Analytics
+
 - Query tracking (search term, filters, page)
 - Result count monitoring
 - Response time measurement
@@ -174,15 +184,17 @@ interface IContentSearchService {
 ### Query Examples
 
 **Basic Search:**
+
 ```typescript
 const results = await searchService.search({
   searchTerm: 'blockchain technology',
   page: 1,
-  pageSize: 20
+  pageSize: 20,
 });
 ```
 
 **Advanced Search with Filters:**
+
 ```typescript
 const results = await searchService.search({
   searchTerm: 'bitcoin',
@@ -191,22 +203,19 @@ const results = await searchService.search({
   filters: [
     { field: 'status', type: 'term', value: 'published' },
     { field: 'tags', type: 'terms', values: ['crypto', 'finance'] },
-    { field: 'views', type: 'range', range: { gte: 1000 } }
+    { field: 'views', type: 'range', range: { gte: 1000 } },
   ],
-  facets: [
-    { name: 'by_category', field: 'category', type: 'terms' }
-  ],
-  sort: [
-    { field: 'publishedAt', order: 'desc' }
-  ],
+  facets: [{ name: 'by_category', field: 'category', type: 'terms' }],
+  sort: [{ field: 'publishedAt', order: 'desc' }],
   highlight: {
     fields: ['title', 'content'],
-    fragmentSize: 150
-  }
+    fragmentSize: 150,
+  },
 });
 ```
 
 **Autocomplete:**
+
 ```typescript
 const suggestions = await searchService.suggest('bitc');
 // Returns: ['bitcoin', 'bitcoin mining', 'bitcoin price']
@@ -215,28 +224,31 @@ const suggestions = await searchService.suggest('bitc');
 ## Performance Characteristics
 
 ### Cache Performance
+
 - **Cache Hit Rate**: 60-80% for typical usage patterns
 - **Cache TTL**: 5 minutes (300 seconds)
 - **Invalidation Strategy**: Pattern-based invalidation on content changes
 
 ### Search Performance
+
 - **Typical Response Time**: 10-50ms (cached), 100-300ms (Elasticsearch)
 - **Concurrent Queries**: Handles 100+ concurrent searches
 - **Index Size**: Scales to millions of documents
 
 ### Quality Metrics
 
-| Metric | Target | Achieved |
-|--------|--------|----------|
-| Test Coverage | ≥95% | **99.39%** ✅ |
-| Branch Coverage | ≥80% | **86.58%** ✅ |
-| Function Coverage | 100% | **100%** ✅ |
-| Line Coverage | ≥95% | **99.37%** ✅ |
-| Tests Passing | 100% | **44/44 (100%)** ✅ |
+| Metric            | Target | Achieved            |
+| ----------------- | ------ | ------------------- |
+| Test Coverage     | ≥95%   | **99.39%** ✅       |
+| Branch Coverage   | ≥80%   | **86.58%** ✅       |
+| Function Coverage | 100%   | **100%** ✅         |
+| Line Coverage     | ≥95%   | **99.37%** ✅       |
+| Tests Passing     | 100%   | **44/44 (100%)** ✅ |
 
 ## Testing
 
 ### Test Coverage Summary
+
 ```
 File                     | % Stmts | % Branch | % Funcs | % Lines
 -------------------------|---------|----------|---------|----------
@@ -244,6 +256,7 @@ ContentSearchService.ts  | 99.39   | 86.58    | 100     | 99.37
 ```
 
 ### Test Categories
+
 1. **Initialization Tests** (3 tests)
    - Index creation
    - Index existence check
@@ -281,6 +294,7 @@ ContentSearchService.ts  | 99.39   | 86.58    | 100     | 99.37
    - History limit
 
 ### Running Tests
+
 ```bash
 cd packages/backend
 npm test -- ContentSearchService.test.ts --coverage
@@ -289,16 +303,19 @@ npm test -- ContentSearchService.test.ts --coverage
 ## Dependencies
 
 ### Production Dependencies
+
 - `@elastic/elasticsearch`: ^8.x - Elasticsearch client
 - `crypto`: Built-in - Hash generation for cache keys
 
 ### Injected Dependencies
+
 - `ICacheService`: Redis-backed caching (5-minute TTL)
 - `ILogger`: Winston logger for monitoring
 
 ## Configuration
 
 ### Environment Variables
+
 ```bash
 ELASTICSEARCH_NODE=http://localhost:9200
 ELASTICSEARCH_USERNAME=elastic  # Optional
@@ -306,27 +323,30 @@ ELASTICSEARCH_PASSWORD=password # Optional
 ```
 
 ### Service Configuration
+
 ```typescript
 const config: ElasticsearchConfig = {
   node: process.env.ELASTICSEARCH_NODE || 'http://localhost:9200',
   auth: {
     username: process.env.ELASTICSEARCH_USERNAME,
-    password: process.env.ELASTICSEARCH_PASSWORD
+    password: process.env.ELASTICSEARCH_PASSWORD,
   },
   maxRetries: 3,
-  requestTimeout: 30000
+  requestTimeout: 30000,
 };
 ```
 
 ## Deployment Considerations
 
 ### Elasticsearch Requirements
+
 - **Version**: 8.x or higher
 - **Memory**: Minimum 2GB heap size
 - **Storage**: SSD recommended for optimal performance
 - **Replicas**: 1 replica recommended for production
 
 ### Monitoring
+
 - Monitor cache hit rate via `CacheService.getStats()`
 - Track search analytics via `getAnalytics()`
 - Monitor Elasticsearch cluster health

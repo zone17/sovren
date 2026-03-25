@@ -47,7 +47,7 @@ export const BatchActionToolbar: React.FC<BatchActionToolbarProps> = ({
   if (selectedCount === 0) return null;
 
   const btnClass =
-    'rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50';
+    'rounded-md border border-border bg-card px-3 py-1.5 text-sm text-foreground hover:bg-accent focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50';
 
   return (
     <div
@@ -106,7 +106,7 @@ export const BatchActionToolbar: React.FC<BatchActionToolbarProps> = ({
             <div
               role="listbox"
               aria-label="Reply templates"
-              className="absolute left-0 top-9 z-10 w-64 rounded-md border border-gray-200 bg-white shadow-lg"
+              className="absolute left-0 top-9 z-10 w-64 rounded-md border border-border bg-card shadow-lg"
             >
               {templates.map((t) => (
                 <button
@@ -114,7 +114,7 @@ export const BatchActionToolbar: React.FC<BatchActionToolbarProps> = ({
                   role="option"
                   aria-selected={false}
                   type="button"
-                  className="block w-full truncate px-3 py-2 text-left text-sm hover:bg-gray-50 focus:outline-none focus:bg-gray-50"
+                  className="block w-full truncate px-3 py-2 text-left text-sm hover:bg-accent focus:outline-none focus:bg-accent"
                   onClick={() => {
                     onTemplateReply(t.template_text);
                     setShowTemplateMenu(false);
@@ -130,7 +130,7 @@ export const BatchActionToolbar: React.FC<BatchActionToolbarProps> = ({
 
       <button
         type="button"
-        className="ml-auto text-xs text-gray-400 hover:text-gray-600 focus:outline-none"
+        className="ml-auto text-xs text-muted-foreground/60 hover:text-muted-foreground focus:outline-none"
         onClick={onClearSelection}
         aria-label="Clear selection"
       >

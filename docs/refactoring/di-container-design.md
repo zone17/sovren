@@ -1,4 +1,5 @@
 # Dependency Injection Container Design - Epic 005
+
 **Generated**: 2025-10-26
 **Story**: US-E5-003
 **Architect**: Lead Engineering Manager
@@ -102,6 +103,7 @@ interface IServiceContainer {
 ## Service Lifecycles
 
 ### Singleton (Application-wide)
+
 - **Created**: Once per application
 - **Shared**: Across all requests and scopes
 - **Disposed**: When application shuts down
@@ -109,33 +111,35 @@ interface IServiceContainer {
 
 ```typescript
 registry.registerSingleton(ServiceTokens.ConfigService, configInstance);
-registry.registerSingletonFactory(ServiceTokens.DatabaseService,
+registry.registerSingletonFactory(
+  ServiceTokens.DatabaseService,
   (container) => new DatabaseService(container.resolve(ServiceTokens.ConfigService))
 );
 ```
 
 ### Scoped (Request/Context-specific)
+
 - **Created**: Once per scope (e.g., HTTP request)
 - **Shared**: Within the same scope
 - **Disposed**: When scope ends
 - **Use Cases**: Database transactions, request context, user sessions
 
 ```typescript
-registry.registerScoped(ServiceTokens.TransactionService,
+registry.registerScoped(
+  ServiceTokens.TransactionService,
   (container) => new TransactionService(container.resolve(ServiceTokens.DatabaseService))
 );
 ```
 
 ### Transient (New instance always)
+
 - **Created**: Every time it's requested
 - **Shared**: Never
 - **Disposed**: By garbage collector
 - **Use Cases**: Stateless utilities, temporary objects
 
 ```typescript
-registry.registerTransient(ServiceTokens.EmailBuilder,
-  (container) => new EmailBuilder()
-);
+registry.registerTransient(ServiceTokens.EmailBuilder, (container) => new EmailBuilder());
 ```
 
 ## Dependency Resolution
@@ -190,24 +194,27 @@ export class PaymentModule implements IServiceModule {
 
   register(registry: IServiceRegistry): void {
     // Register payment services
-    registry.registerSingleton(ServiceTokens.PaymentService,
-      (container) => new LightningPaymentService(
-        container.resolve(ServiceTokens.ConfigService),
-        container.resolve(ServiceTokens.EventBus)
-      )
+    registry.registerSingleton(
+      ServiceTokens.PaymentService,
+      (container) =>
+        new LightningPaymentService(
+          container.resolve(ServiceTokens.ConfigService),
+          container.resolve(ServiceTokens.EventBus)
+        )
     );
 
-    registry.registerScoped(ServiceTokens.InvoiceService,
-      (container) => new InvoiceService(
-        container.resolve(ServiceTokens.PaymentService)
-      )
+    registry.registerScoped(
+      ServiceTokens.InvoiceService,
+      (container) => new InvoiceService(container.resolve(ServiceTokens.PaymentService))
     );
 
-    registry.registerScoped(ServiceTokens.SubscriptionService,
-      (container) => new SubscriptionService(
-        container.resolve(ServiceTokens.PaymentService),
-        container.resolve(ServiceTokens.UserService)
-      )
+    registry.registerScoped(
+      ServiceTokens.SubscriptionService,
+      (container) =>
+        new SubscriptionService(
+          container.resolve(ServiceTokens.PaymentService),
+          container.resolve(ServiceTokens.UserService)
+        )
     );
   }
 }
@@ -233,34 +240,25 @@ import { UserModule } from './modules/UserModule';
 export async function setupDIContainer(): Promise<IServiceContainer> {
   return await bootstrapContainer((registry) => {
     // Register configuration first
-    registry.registerSingleton(ServiceTokens.ConfigService,
-      () => new ConfigService(process.env)
-    );
+    registry.registerSingleton(ServiceTokens.ConfigService, () => new ConfigService(process.env));
 
     // Register infrastructure
-    registry.registerSingleton(ServiceTokens.LoggerService,
-      () => new LoggerService()
-    );
+    registry.registerSingleton(ServiceTokens.LoggerService, () => new LoggerService());
 
-    registry.registerSingleton(ServiceTokens.EventBus,
-      () => new EventBus()
-    );
+    registry.registerSingleton(ServiceTokens.EventBus, () => new EventBus());
 
     // Register database
-    registry.registerSingletonFactory(ServiceTokens.DatabaseService,
-      async (container) => {
-        const config = container.resolve(ServiceTokens.ConfigService);
-        const db = new DatabaseService(config);
-        await db.connect();
-        return db;
-      }
-    );
+    registry.registerSingletonFactory(ServiceTokens.DatabaseService, async (container) => {
+      const config = container.resolve(ServiceTokens.ConfigService);
+      const db = new DatabaseService(config);
+      await db.connect();
+      return db;
+    });
 
     // Register cache
-    registry.registerSingleton(ServiceTokens.CacheService,
-      (container) => new RedisCache(
-        container.resolve(ServiceTokens.ConfigService)
-      )
+    registry.registerSingleton(
+      ServiceTokens.CacheService,
+      (container) => new RedisCache(container.resolve(ServiceTokens.ConfigService))
     );
 
     // Register business modules
@@ -327,19 +325,21 @@ describe('PaymentService', () => {
     // Register mocks
     registry.registerSingleton(ServiceTokens.EventBus, {
       publish: jest.fn(),
-      subscribe: jest.fn()
+      subscribe: jest.fn(),
     });
 
     registry.registerSingleton(ServiceTokens.ConfigService, {
-      get: jest.fn().mockReturnValue('test-value')
+      get: jest.fn().mockReturnValue('test-value'),
     });
 
     // Register service under test
-    registry.registerSingleton(ServiceTokens.PaymentService,
-      (container) => new PaymentService(
-        container.resolve(ServiceTokens.ConfigService),
-        container.resolve(ServiceTokens.EventBus)
-      )
+    registry.registerSingleton(
+      ServiceTokens.PaymentService,
+      (container) =>
+        new PaymentService(
+          container.resolve(ServiceTokens.ConfigService),
+          container.resolve(ServiceTokens.EventBus)
+        )
     );
 
     container = registry.createContainer();
@@ -349,7 +349,7 @@ describe('PaymentService', () => {
     const paymentService = container.resolve(ServiceTokens.PaymentService);
     const invoice = await paymentService.createInvoice({
       userId: 'user123',
-      amount: 1000
+      amount: 1000,
     });
 
     expect(invoice).toBeDefined();
@@ -418,6 +418,7 @@ function toMermaid(graph: DependencyGraph): string {
 ```
 
 Example output:
+
 ```mermaid
 graph LR
   PaymentService[PaymentService]
@@ -434,6 +435,7 @@ graph LR
 ## Migration Strategy
 
 ### Phase 1: Adapter Pattern
+
 Create adapters for existing services:
 
 ```typescript
@@ -453,12 +455,14 @@ class PaymentServiceAdapter implements IPaymentService {
 ```
 
 ### Phase 2: Gradual Migration
+
 1. Register adapters in container
 2. Update routes to use container
 3. Refactor services one by one
 4. Remove legacy code
 
 ### Phase 3: Full DI Adoption
+
 - All services use constructor injection
 - No service creates its own dependencies
 - All cross-cutting concerns handled by container
@@ -466,6 +470,7 @@ class PaymentServiceAdapter implements IPaymentService {
 ## Best Practices
 
 ### DO's
+
 - ✅ Use constructor injection exclusively
 - ✅ Depend on interfaces, not implementations
 - ✅ Register services in modules
@@ -474,6 +479,7 @@ class PaymentServiceAdapter implements IPaymentService {
 - ✅ Dispose resources properly
 
 ### DON'Ts
+
 - ❌ Don't use service locator pattern
 - ❌ Don't create dependencies manually
 - ❌ Don't register implementations directly
@@ -483,18 +489,22 @@ class PaymentServiceAdapter implements IPaymentService {
 ## Performance Considerations
 
 ### Singleton Caching
+
 - Singletons resolved once, cached forever
 - Zero overhead after first resolution
 
 ### Scoped Caching
+
 - Scoped instances cached per request
 - Automatic cleanup on scope disposal
 
 ### Async Resolution
+
 - Support for async factory functions
 - Parallel resolution where possible
 
 ### Memory Management
+
 - Proper disposal of resources
 - Weak references for transient services
 - Scope isolation prevents memory leaks
@@ -502,6 +512,7 @@ class PaymentServiceAdapter implements IPaymentService {
 ## Monitoring & Debugging
 
 ### Container Metrics
+
 ```typescript
 interface ContainerMetrics {
   totalRegistrations: number;
@@ -514,6 +525,7 @@ interface ContainerMetrics {
 ```
 
 ### Debug Mode
+
 ```typescript
 if (process.env.NODE_ENV === 'development') {
   container.enableDebugMode();
@@ -537,6 +549,7 @@ if (process.env.NODE_ENV === 'development') {
 **Document Status**: ✅ COMPLETE
 **Implementation Status**: ✅ COMPLETE
 **Files Created**:
+
 - `/packages/backend/src/interfaces/shared/IServiceRegistry.ts`
 - `/packages/backend/src/container/ServiceContainer.ts`
 - `/docs/refactoring/di-container-design.md`

@@ -1,5 +1,5 @@
 ---
-title: "feat: True E2E Testing with Real Running Backend"
+title: 'feat: True E2E Testing with Real Running Backend'
 type: feat
 date: 2026-02-24
 ---
@@ -52,7 +52,7 @@ const event: NostrEvent = {
   created_at: Math.floor(timestamp / 1000),
   tags: [],
   content: messageHash,
-  id: '',           // ← verifyEvent() will compare hash to '' and return false
+  id: '', // ← verifyEvent() will compare hash to '' and return false
   sig: signature,
 };
 const isValidSignature = verifyEvent(event);
@@ -271,17 +271,18 @@ Fix the 7 P0 blockers that prevent backend integration from working. These are i
 
 **Files to modify:**
 
-| # | File | Change |
-|---|------|--------|
-| P0-1 | `packages/backend/src/services/nostr-auth.ts` | Fix event ID computation with `getEventHash()`, proper `UnsignedEvent` type |
-| P0-2 | `packages/backend/src/middleware/csrf.ts` | Add `/api/auth/challenge` and `/api/auth/authenticate` to `excludePaths` |
-| P0-3 | `packages/frontend/src/services/api/apiClient.ts` | Lazy token accessor `getEffectiveToken()` checking localStorage on each request |
-| P0-4 | `packages/frontend/src/shared/types/feature-flags.ts` | `import.meta.env.VITE_ENABLE_BACKEND === 'true'` |
-| P0-5 | `packages/frontend/vite.config.ts` | Change proxy target port from 4000 to 3001 |
-| P0-6 | `packages/frontend/src/features/auth/services/realAuthService.ts` | Add `timestamp` to `authenticateNostr()` request body |
-| P0-7 | `packages/frontend/e2e/fixtures/test-users.ts` | Replace `generateSecretKey()` with hardcoded hex strings |
+| #    | File                                                              | Change                                                                          |
+| ---- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| P0-1 | `packages/backend/src/services/nostr-auth.ts`                     | Fix event ID computation with `getEventHash()`, proper `UnsignedEvent` type     |
+| P0-2 | `packages/backend/src/middleware/csrf.ts`                         | Add `/api/auth/challenge` and `/api/auth/authenticate` to `excludePaths`        |
+| P0-3 | `packages/frontend/src/services/api/apiClient.ts`                 | Lazy token accessor `getEffectiveToken()` checking localStorage on each request |
+| P0-4 | `packages/frontend/src/shared/types/feature-flags.ts`             | `import.meta.env.VITE_ENABLE_BACKEND === 'true'`                                |
+| P0-5 | `packages/frontend/vite.config.ts`                                | Change proxy target port from 4000 to 3001                                      |
+| P0-6 | `packages/frontend/src/features/auth/services/realAuthService.ts` | Add `timestamp` to `authenticateNostr()` request body                           |
+| P0-7 | `packages/frontend/e2e/fixtures/test-users.ts`                    | Replace `generateSecretKey()` with hardcoded hex strings                        |
 
 **Success criteria:**
+
 - [ ] Standalone NOSTR auth script succeeds: challenge → sign → authenticate → JWT
 - [ ] Backend starts, health check passes, NOSTR auth returns JWT
 - [ ] Frontend with `VITE_ENABLE_BACKEND=true` can log in via NOSTR and load profile
@@ -293,18 +294,18 @@ Set up local Supabase with seed data, create the NOSTR auth helper, and update P
 
 **Create:**
 
-| File | Purpose |
-|------|---------|
-| `packages/backend/src/database/seed.sql` | Test users (matching deterministic test-users.ts pubkeys) + wellness data |
-| `packages/frontend/e2e/helpers/nostr-auth.ts` | NOSTR challenge-response signing helper for API-based auth |
+| File                                          | Purpose                                                                   |
+| --------------------------------------------- | ------------------------------------------------------------------------- |
+| `packages/backend/src/database/seed.sql`      | Test users (matching deterministic test-users.ts pubkeys) + wellness data |
+| `packages/frontend/e2e/helpers/nostr-auth.ts` | NOSTR challenge-response signing helper for API-based auth                |
 
 **Modify:**
 
-| File | Change |
-|------|--------|
+| File                                     | Change                                                      |
+| ---------------------------------------- | ----------------------------------------------------------- |
 | `packages/frontend/playwright.config.ts` | Multiple webServers (frontend + backend), new project tiers |
-| `packages/frontend/e2e/global-setup.ts` | Verify Supabase is running, seed data, create auth dir |
-| `packages/frontend/e2e/auth.setup.ts` | Use NOSTR auth via API instead of demo email login |
+| `packages/frontend/e2e/global-setup.ts`  | Verify Supabase is running, seed data, create auth dir      |
+| `packages/frontend/e2e/auth.setup.ts`    | Use NOSTR auth via API instead of demo email login          |
 
 **NOSTR auth helper** (`e2e/helpers/nostr-auth.ts`):
 
@@ -330,12 +331,15 @@ export async function authenticateWithNostr(
   const messageHash = createHash('sha256').update(message).digest('hex');
 
   // 3. Create and sign NOSTR event
-  const event = finalizeEvent({
-    kind: 1,
-    created_at: Math.floor(timestamp / 1000),
-    tags: [],
-    content: messageHash,
-  }, privateKey);
+  const event = finalizeEvent(
+    {
+      kind: 1,
+      created_at: Math.floor(timestamp / 1000),
+      tags: [],
+      content: messageHash,
+    },
+    privateKey
+  );
 
   // 4. Authenticate
   const authRes = await request.post(`${baseUrl}/api/auth/authenticate`, {
@@ -372,14 +376,20 @@ setup('authenticate as creator via NOSTR', async ({ page, request }) => {
 
   // Inject token into browser context
   await page.goto('/');
-  await page.evaluate(({ jwt, pubkey }) => {
-    localStorage.setItem('auth_token', jwt);
-    localStorage.setItem('demo_user', JSON.stringify({
-      id: 'alice-test',
-      nostr_pubkey: pubkey,
-      role: 'creator',
-    }));
-  }, { jwt: token, pubkey: TEST_USERS.alice.publicKey });
+  await page.evaluate(
+    ({ jwt, pubkey }) => {
+      localStorage.setItem('auth_token', jwt);
+      localStorage.setItem(
+        'demo_user',
+        JSON.stringify({
+          id: 'alice-test',
+          nostr_pubkey: pubkey,
+          role: 'creator',
+        })
+      );
+    },
+    { jwt: token, pubkey: TEST_USERS.alice.publicKey }
+  );
 
   // Navigate to profile to verify auth works
   await page.goto('/profile');
@@ -398,7 +408,7 @@ export default defineConfig({
   webServer: [
     {
       command: 'npm run dev',
-      cwd: path.join(__dirname, '../backend'),  // ← correct relative path
+      cwd: path.join(__dirname, '../backend'), // ← correct relative path
       url: 'http://localhost:3001/health',
       timeout: 30_000,
       reuseExistingServer: !process.env.CI,
@@ -456,6 +466,7 @@ INSERT INTO work_patterns (user_pubkey, pattern_type, score, recorded_at) VALUES
 Note: Exact pubkeys will be captured during Phase 1 when test-users.ts is made deterministic.
 
 **Success criteria:**
+
 - [ ] `authenticateWithNostr()` returns a valid JWT from the real backend
 - [ ] Auth setup project completes successfully using NOSTR keys
 - [ ] Storage state file contains valid JWT and user data
@@ -468,10 +479,10 @@ Create ONE Page Object + ONE spec that exercises the full stack with real data. 
 
 **Create:**
 
-| File | Purpose |
-|------|---------|
-| `e2e/pages/wellness.page.ts` | POM for Wellness Dashboard |
-| `e2e/wellness.spec.ts` | Wellness dashboard E2E tests (3-4 tests) |
+| File                         | Purpose                                  |
+| ---------------------------- | ---------------------------------------- |
+| `e2e/pages/wellness.page.ts` | POM for Wellness Dashboard               |
+| `e2e/wellness.spec.ts`       | Wellness dashboard E2E tests (3-4 tests) |
 
 **POM locators MUST be verified against actual component source** (`src/features/wellness/components/WellnessDashboard.tsx`) during implementation. Placeholder:
 
@@ -510,6 +521,7 @@ test.describe('Wellness Dashboard (real backend)', () => {
 ```
 
 **Success criteria:**
+
 - [ ] Wellness page loads and renders real data from backend API
 - [ ] Zero `page.route()` calls
 - [ ] Zero `waitForTimeout` calls
@@ -518,13 +530,13 @@ test.describe('Wellness Dashboard (real backend)', () => {
 
 ### Deferred to Follow-Up PRs
 
-| Item | Why Deferred |
-|------|-------------|
+| Item                                  | Why Deferred                                                                                      |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------- |
 | CI pipeline updates (Supabase in GHA) | Prove locally first. CI `supabase start` needs 5-10 min first-run Docker pull + caching strategy. |
-| Shield spec + POM | Prove pattern with wellness first, then expand |
-| Creator Dashboard spec + POM | `CreatorDashboard.tsx` may have no backend API calls — verify before writing spec |
-| Analytics spec + POM | Depends on analytics backend routes being functional |
-| auth.spec.ts NOSTR login flow tests | Current demo auth tests still pass; NOSTR UI login tests need separate UX work |
+| Shield spec + POM                     | Prove pattern with wellness first, then expand                                                    |
+| Creator Dashboard spec + POM          | `CreatorDashboard.tsx` may have no backend API calls — verify before writing spec                 |
+| Analytics spec + POM                  | Depends on analytics backend routes being functional                                              |
+| auth.spec.ts NOSTR login flow tests   | Current demo auth tests still pass; NOSTR UI login tests need separate UX work                    |
 
 ## Acceptance Criteria
 
@@ -552,57 +564,57 @@ test.describe('Wellness Dashboard (real backend)', () => {
 
 ## Dependencies & Prerequisites
 
-| Dependency | Type | Status | Notes |
-|------------|------|--------|-------|
-| Supabase CLI | Tool | Check if installed | `supabase start` for local instance |
-| nostr-tools@2.23.0 | Library | Installed | Both frontend + backend use same version |
-| Supabase migrations | Schema | Exists as `schema.sql` | Need to verify it loads cleanly in local Supabase |
-| Test keypairs | Fixture | **NEEDS FIX** | Currently random — must be made deterministic (P0-7) |
-| Backend `npm run dev` | Service | Works | `tsx watch src/server.ts` on port 3001 |
-| Vite proxy | Config | **EXISTS** (port 4000) | Just change port to 3001 (P0-5) |
-| `seed.sql` | Data | Missing | Must create after P0-7 (need deterministic pubkeys) |
+| Dependency            | Type    | Status                 | Notes                                                |
+| --------------------- | ------- | ---------------------- | ---------------------------------------------------- |
+| Supabase CLI          | Tool    | Check if installed     | `supabase start` for local instance                  |
+| nostr-tools@2.23.0    | Library | Installed              | Both frontend + backend use same version             |
+| Supabase migrations   | Schema  | Exists as `schema.sql` | Need to verify it loads cleanly in local Supabase    |
+| Test keypairs         | Fixture | **NEEDS FIX**          | Currently random — must be made deterministic (P0-7) |
+| Backend `npm run dev` | Service | Works                  | `tsx watch src/server.ts` on port 3001               |
+| Vite proxy            | Config  | **EXISTS** (port 4000) | Just change port to 3001 (P0-5)                      |
+| `seed.sql`            | Data    | Missing                | Must create after P0-7 (need deterministic pubkeys)  |
 
 ## Risk Analysis & Mitigation
 
-| Risk | Impact | Likelihood | Mitigation |
-|------|--------|------------|------------|
-| NOSTR signature verification is fundamentally broken | Blocks all auth | High (P0-1) | Fix event ID computation first, validate with standalone script |
-| nostr-tools ESM/CJS incompatibility in globalSetup | Setup fails | Medium | globalSetup runs in Node — may need `nostr-tools/pure` import or dynamic import |
-| Backend DI container fails without all services | Backend won't start | Medium | Ensure graceful fallback for optional services (Redis, Lightning, Queues) |
-| Wellness component doesn't actually call backend APIs | Wasted POM effort | Medium | Read component source before writing POM; may find hardcoded data |
-| Test data isolation between runs | Flaky tests | Low | Deterministic keys + `DELETE FROM` in teardown |
-| Rate limiting blocks repeated test runs | Tests fail on retry | Low | Backend runs with `NODE_ENV=test` which skips rate limiting |
+| Risk                                                  | Impact              | Likelihood  | Mitigation                                                                      |
+| ----------------------------------------------------- | ------------------- | ----------- | ------------------------------------------------------------------------------- |
+| NOSTR signature verification is fundamentally broken  | Blocks all auth     | High (P0-1) | Fix event ID computation first, validate with standalone script                 |
+| nostr-tools ESM/CJS incompatibility in globalSetup    | Setup fails         | Medium      | globalSetup runs in Node — may need `nostr-tools/pure` import or dynamic import |
+| Backend DI container fails without all services       | Backend won't start | Medium      | Ensure graceful fallback for optional services (Redis, Lightning, Queues)       |
+| Wellness component doesn't actually call backend APIs | Wasted POM effort   | Medium      | Read component source before writing POM; may find hardcoded data               |
+| Test data isolation between runs                      | Flaky tests         | Low         | Deterministic keys + `DELETE FROM` in teardown                                  |
+| Rate limiting blocks repeated test runs               | Tests fail on retry | Low         | Backend runs with `NODE_ENV=test` which skips rate limiting                     |
 
 ## File Change Summary
 
 ### Phase 1 — Fix Prerequisites (7 files modified)
 
-| File | Action | Lines Est. |
-|------|--------|-----------|
-| `packages/backend/src/services/nostr-auth.ts` | Fix event ID computation | ~10 |
-| `packages/backend/src/middleware/csrf.ts` | Add auth routes to excludePaths | ~2 |
-| `packages/frontend/src/services/api/apiClient.ts` | Lazy token accessor | ~20 |
-| `packages/frontend/src/shared/types/feature-flags.ts` | Read from import.meta.env | ~3 |
-| `packages/frontend/vite.config.ts` | Change proxy port 4000→3001 | ~1 |
-| `packages/frontend/src/features/auth/services/realAuthService.ts` | Add timestamp to request | ~2 |
-| `packages/frontend/e2e/fixtures/test-users.ts` | Hardcoded hex keys | ~20 |
+| File                                                              | Action                          | Lines Est. |
+| ----------------------------------------------------------------- | ------------------------------- | ---------- |
+| `packages/backend/src/services/nostr-auth.ts`                     | Fix event ID computation        | ~10        |
+| `packages/backend/src/middleware/csrf.ts`                         | Add auth routes to excludePaths | ~2         |
+| `packages/frontend/src/services/api/apiClient.ts`                 | Lazy token accessor             | ~20        |
+| `packages/frontend/src/shared/types/feature-flags.ts`             | Read from import.meta.env       | ~3         |
+| `packages/frontend/vite.config.ts`                                | Change proxy port 4000→3001     | ~1         |
+| `packages/frontend/src/features/auth/services/realAuthService.ts` | Add timestamp to request        | ~2         |
+| `packages/frontend/e2e/fixtures/test-users.ts`                    | Hardcoded hex keys              | ~20        |
 
 ### Phase 2 — Seed + Auth + Config (2 created, 3 modified)
 
-| File | Action | Lines Est. |
-|------|--------|-----------|
-| `packages/backend/src/database/seed.sql` | Create test data SQL | ~40 |
-| `packages/frontend/e2e/helpers/nostr-auth.ts` | Create NOSTR auth helper | ~50 |
-| `packages/frontend/playwright.config.ts` | Multiple webServers, new projects | ~30 |
-| `packages/frontend/e2e/global-setup.ts` | Verify Supabase, seed data | ~20 |
-| `packages/frontend/e2e/auth.setup.ts` | Rewrite with NOSTR auth | ~25 |
+| File                                          | Action                            | Lines Est. |
+| --------------------------------------------- | --------------------------------- | ---------- |
+| `packages/backend/src/database/seed.sql`      | Create test data SQL              | ~40        |
+| `packages/frontend/e2e/helpers/nostr-auth.ts` | Create NOSTR auth helper          | ~50        |
+| `packages/frontend/playwright.config.ts`      | Multiple webServers, new projects | ~30        |
+| `packages/frontend/e2e/global-setup.ts`       | Verify Supabase, seed data        | ~20        |
+| `packages/frontend/e2e/auth.setup.ts`         | Rewrite with NOSTR auth           | ~25        |
 
 ### Phase 3 — One Wellness Spec (2 created)
 
-| File | Action | Lines Est. |
-|------|--------|-----------|
-| `e2e/pages/wellness.page.ts` | Wellness POM | ~30 |
-| `e2e/wellness.spec.ts` | Wellness specs (3-4 tests) | ~50 |
+| File                         | Action                     | Lines Est. |
+| ---------------------------- | -------------------------- | ---------- |
+| `e2e/pages/wellness.page.ts` | Wellness POM               | ~30        |
+| `e2e/wellness.spec.ts`       | Wellness specs (3-4 tests) | ~50        |
 
 **Total: ~11 files, estimated ~300 lines (vs original 20 files / 780 lines)**
 

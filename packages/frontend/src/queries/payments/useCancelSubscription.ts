@@ -16,8 +16,8 @@ const cancelSubscription = async ({
   reason,
   immediate = false,
 }: CancelSubscriptionInput): Promise<Subscription> => {
-  const response = await fetch(`/api/payments/subscriptions/${subscriptionId}/cancel`, {
-    method: 'POST',
+  const response = await fetch(`/api/v1/payments/subscriptions/${subscriptionId}`, {
+    method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
     },

@@ -60,6 +60,7 @@ The architecture is organized into four distinct layers:
 **Purpose**: Centralized relay connection pool with intelligent routing and health monitoring.
 
 **Responsibilities**:
+
 - Maintain persistent WebSocket connections to NOSTR relays
 - Automatic reconnection with exponential backoff
 - Health monitoring and relay scoring (latency, uptime, success rate)
@@ -68,6 +69,7 @@ The architecture is organized into four distinct layers:
 - Subscription lifecycle management
 
 **Key Methods**:
+
 ```typescript
 initialize(config?: RelayPoolConfig): Promise<void>
 connectAll(): Promise<void>
@@ -94,6 +96,7 @@ getHealthInfo(): RelayHealthInfo[]
 **Purpose**: Secure key generation, storage, and signing operations.
 
 **Responsibilities**:
+
 - Generate cryptographically secure key pairs
 - Import/export keys (nsec, hex, mnemonic formats)
 - Detect and integrate with NIP-07 browser extensions
@@ -102,6 +105,7 @@ getHealthInfo(): RelayHealthInfo[]
 - Security scoring and validation
 
 **Key Methods**:
+
 ```typescript
 generateKey(options?: KeyGenerationOptions): Promise<NostrKeyPair>
 importKey(keyData: string, format: KeyFormat): Promise<NostrKeyPair>
@@ -128,6 +132,7 @@ validateKeyPair(keyPair: NostrKeyPair): KeyValidationResult
 **Purpose**: Publish events to NOSTR relays with validation and error handling.
 
 **Responsibilities**:
+
 - Validate unsigned events before signing
 - Coordinate with KeyManagementService for signing
 - Publish to multiple relays via RelayPoolManager
@@ -136,6 +141,7 @@ validateKeyPair(keyPair: NostrKeyPair): KeyValidationResult
 - Emit publication metrics
 
 **Key Methods**:
+
 ```typescript
 publishEvent(unsignedEvent: UnsignedEvent): Promise<PublishResult>
 publishBatch(events: UnsignedEvent[]): Promise<PublishResult[]>
@@ -160,6 +166,7 @@ deleteEvent(eventId: string, reason?: string): Promise<PublishResult>
 **Purpose**: Manage NOSTR subscriptions with lifecycle tracking.
 
 **Responsibilities**:
+
 - Create and manage REQ subscriptions
 - Track subscription state (active, paused, closed)
 - Handle EOSE (end of stored events) messages
@@ -168,6 +175,7 @@ deleteEvent(eventId: string, reason?: string): Promise<PublishResult>
 - Filter validation and optimization
 
 **Key Methods**:
+
 ```typescript
 createSubscription(filters: Filter[], callback: EventCallback): string
 pauseSubscription(subscriptionId: string): void
@@ -193,6 +201,7 @@ getActiveSubscriptions(): Map<string, Subscription>
 **Purpose**: Intelligent event caching with deduplication and persistence.
 
 **Responsibilities**:
+
 - Cache events in memory for fast access
 - Persist to IndexedDB for offline support
 - Deduplication across relays (prevent duplicates)
@@ -201,6 +210,7 @@ getActiveSubscriptions(): Map<string, Subscription>
 - Query cached events by filter
 
 **Key Methods**:
+
 ```typescript
 cacheEvent(event: NostrEvent, relayUrl: string): Promise<void>
 getCachedEvent(eventId: string): Promise<NostrEvent | null>
@@ -218,6 +228,7 @@ getCacheStats(): CacheStatistics
 **Purpose**: Real-time monitoring, metrics collection, and health dashboards.
 
 **Responsibilities**:
+
 - Track relay connection health
 - Measure publish/subscribe latency
 - Calculate success rates
@@ -226,6 +237,7 @@ getCacheStats(): CacheStatistics
 - Alert generation for anomalies
 
 **Key Methods**:
+
 ```typescript
 recordMetric(metricName: string, value: number): void
 getMetrics(timeRange?: TimeRange): MetricsSnapshot
@@ -279,12 +291,12 @@ subscribeToAlerts(callback: AlertCallback): void
 
 ### Core Dependencies
 
-| Package | Version | Purpose |
-|---------|---------|---------|
-| `nostr-tools` | ^2.0.0 | Core NOSTR protocol implementation |
-| `@noble/secp256k1` | ^2.0.0 | Cryptographic operations |
-| `zod` | ^3.22.0 | Runtime type validation |
-| `idb` | ^7.1.1 | IndexedDB wrapper for storage |
+| Package            | Version | Purpose                            |
+| ------------------ | ------- | ---------------------------------- |
+| `nostr-tools`      | ^2.0.0  | Core NOSTR protocol implementation |
+| `@noble/secp256k1` | ^2.0.0  | Cryptographic operations           |
+| `zod`              | ^3.22.0 | Runtime type validation            |
+| `idb`              | ^7.1.1  | IndexedDB wrapper for storage      |
 
 ### Browser APIs Used
 
@@ -355,15 +367,15 @@ Services continue operating with reduced functionality if components fail:
 
 ### Benchmarks (Average)
 
-| Operation | Latency | Throughput |
-|-----------|---------|------------|
-| Event Publishing | 100-300ms | 10-20 events/sec |
-| Event Subscription | 50-150ms | 50-100 events/sec |
-| Key Generation | 50-100ms | N/A |
-| Event Signing (local) | 5-10ms | 100+ signs/sec |
+| Operation                 | Latency   | Throughput          |
+| ------------------------- | --------- | ------------------- |
+| Event Publishing          | 100-300ms | 10-20 events/sec    |
+| Event Subscription        | 50-150ms  | 50-100 events/sec   |
+| Key Generation            | 50-100ms  | N/A                 |
+| Event Signing (local)     | 5-10ms    | 100+ signs/sec      |
 | Event Signing (extension) | 100-500ms | N/A (user approval) |
-| Cache Query | 1-5ms | 1000+ queries/sec |
-| Relay Connection | 100-500ms | N/A |
+| Cache Query               | 1-5ms     | 1000+ queries/sec   |
+| Relay Connection          | 100-500ms | N/A                 |
 
 ### Scalability Limits
 

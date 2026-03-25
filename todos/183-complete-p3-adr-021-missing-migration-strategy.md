@@ -3,6 +3,7 @@
 ## Priority: P3 (Nice-to-have)
 
 ## Source
+
 PR #83 — Review Agent: architecture-strategist
 
 ## Description
@@ -25,4 +26,5 @@ This is a documentation-only improvement. The ADR decision itself is sound.
 Add a "Migration Strategy" section after "Technical Notes" outlining the phased implementation approach.
 
 ## Impact
+
 Documentation — future implementors lack migration guidance.

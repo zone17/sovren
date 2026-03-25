@@ -1,7 +1,7 @@
 ---
 status: pending
 priority: p2
-issue_id: "482"
+issue_id: '482'
 tags:
   - code-review
   - msw
@@ -10,7 +10,7 @@ tags:
 dependencies: []
 ---
 
-# Handler URL paths use /api/* instead of real /api/v1/*
+# Handler URL paths use /api/_ instead of real /api/v1/_
 
 ## Problem Statement
 
@@ -28,7 +28,7 @@ MSW handlers define endpoints at `/api/content`, `/api/analytics/summary`, etc. 
 
 ## Proposed Solutions
 
-### Option A: Update all handler paths to /api/v1/* (Recommended)
+### Option A: Update all handler paths to /api/v1/\* (Recommended)
 
 **Pros:** Matches real API paths. Handlers will intercept real ApiClient requests.
 **Cons:** Need to verify exact paths from backend routes.
@@ -58,8 +58,8 @@ Option A. Update paths to match real API.
 
 ## Work Log
 
-| Date | Action | Learnings |
-|------|--------|-----------|
+| Date       | Action                                                | Learnings                                                     |
+| ---------- | ----------------------------------------------------- | ------------------------------------------------------------- |
 | 2026-02-24 | Created from Phase 9 MSW review (3/7 agent consensus) | MSW handler paths must exactly match frontend ApiClient paths |
 
 ## Resources

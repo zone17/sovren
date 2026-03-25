@@ -7,12 +7,12 @@ export const PlatformROI: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="rounded-lg border bg-white p-6">
+      <div className="rounded-lg border bg-card p-6">
         <div className="animate-pulse space-y-3">
-          <div className="h-5 w-48 rounded bg-gray-200" />
-          <div className="h-10 rounded bg-gray-100" />
-          <div className="h-10 rounded bg-gray-100" />
-          <div className="h-10 rounded bg-gray-100" />
+          <div className="h-5 w-48 rounded bg-muted" />
+          <div className="h-10 rounded bg-muted" />
+          <div className="h-10 rounded bg-muted" />
+          <div className="h-10 rounded bg-muted" />
         </div>
       </div>
     );
@@ -20,8 +20,11 @@ export const PlatformROI: React.FC = () => {
 
   if (isError) {
     return (
-      <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-4 text-center">
-        <p className="text-sm text-red-600">Failed to load ROI data.</p>
+      <div
+        role="alert"
+        className="rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4 text-center"
+      >
+        <p className="text-sm text-red-600 dark:text-red-400">Failed to load ROI data.</p>
       </div>
     );
   }
@@ -31,9 +34,9 @@ export const PlatformROI: React.FC = () => {
   const maxEngagement = Math.max(...roi.map((r) => r.engagement_per_hour), 1);
 
   return (
-    <div className="rounded-lg border bg-white p-6">
-      <h3 className="text-lg font-semibold text-gray-900">Platform ROI</h3>
-      <p className="mt-1 text-sm text-gray-500">
+    <div className="rounded-lg border bg-card p-6">
+      <h3 className="text-lg font-semibold text-foreground">Platform ROI</h3>
+      <p className="mt-1 text-sm text-muted-foreground">
         Engagement per hour invested, ranked by efficiency.
       </p>
 
@@ -46,7 +49,7 @@ export const PlatformROI: React.FC = () => {
             <div key={item.platform} className="space-y-1">
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
-                  <span className="w-5 text-right text-xs font-medium text-gray-400">
+                  <span className="w-5 text-right text-xs font-medium text-muted-foreground/60">
                     #{item.rank}
                   </span>
                   <div
@@ -54,7 +57,7 @@ export const PlatformROI: React.FC = () => {
                     style={{ backgroundColor: display?.color || '#6B7280' }}
                     aria-hidden="true"
                   />
-                  <span className="font-medium text-gray-800">
+                  <span className="font-medium text-foreground">
                     {display?.name || item.platform}
                   </span>
                 </div>
@@ -62,13 +65,13 @@ export const PlatformROI: React.FC = () => {
                   <span className="font-semibold text-indigo-700">
                     {item.engagement_per_hour.toLocaleString()} eng/hr
                   </span>
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-muted-foreground/60">
                     {item.estimated_hours_30d.toFixed(1)}h / 30d
                   </span>
                 </div>
               </div>
               <div
-                className="h-2 w-full overflow-hidden rounded-full bg-gray-100"
+                className="h-2 w-full overflow-hidden rounded-full bg-muted"
                 role="progressbar"
                 aria-valuenow={Math.round(barWidth)}
                 aria-valuemin={0}

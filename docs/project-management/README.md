@@ -15,6 +15,7 @@ This directory contains comprehensive project management documentation for the S
 ### For Agents (Start Here)
 
 📖 **[STORY_WORKFLOW.md](STORY_WORKFLOW.md)** - How to work with user stories
+
 - Story lifecycle and phases
 - How to update status via GitHub CLI
 - Agent responsibilities and handoff procedures
@@ -24,6 +25,7 @@ This directory contains comprehensive project management documentation for the S
 ### For Planning and Coordination
 
 📊 **[DEPENDENCY_MAP.md](DEPENDENCY_MAP.md)** - Complete dependency analysis
+
 - Visual dependency diagrams (Mermaid)
 - Epic and story-level dependencies
 - Critical path analysis (27 days)
@@ -31,6 +33,7 @@ This directory contains comprehensive project management documentation for the S
 - **Use this to understand what must be done first**
 
 🔀 **[PARALLEL_STREAMS.md](PARALLEL_STREAMS.md)** - Parallel execution strategy
+
 - Week-by-week execution plan
 - Resource allocation (2-8 developers)
 - Conflict avoidance strategy
@@ -40,6 +43,7 @@ This directory contains comprehensive project management documentation for the S
 ### For Project Managers
 
 📈 **[PROJECT_BOARD_ENHANCEMENTS.md](PROJECT_BOARD_ENHANCEMENTS.md)** - Enhancement summary
+
 - Current state analysis (67 stories, 4 epics)
 - All enhancements delivered (custom fields, docs, diagrams)
 - Success metrics and velocity tracking
@@ -57,6 +61,7 @@ Backlog → Design → Implementation → Testing → Review → Done
 ```
 
 Each story follows a 4-phase workflow:
+
 1. **Design**: UX/UI mockups, architecture specs
 2. **Implementation**: Code, components, services
 3. **Testing**: Unit tests, integration tests (95%+ coverage)
@@ -154,18 +159,22 @@ gh issue view <ISSUE_NUMBER> --repo zone17/Sovren
 All diagrams are in `docs/architecture/diagrams/project-management/`
 
 ### Epic Dependencies
+
 **File**: [epic-dependencies.mmd](../architecture/diagrams/project-management/epic-dependencies.mmd)
 **Shows**: All 4 epics, story groupings, dependencies, parallel opportunities
 
 ### Critical Path
+
 **File**: [critical-path.mmd](../architecture/diagrams/project-management/critical-path.mmd)
 **Shows**: 6-week timeline, critical path stories, parallel paths
 
 ### Parallel Streams
+
 **File**: [parallel-streams.mmd](../architecture/diagrams/project-management/parallel-streams.mmd)
 **Shows**: 7 work streams, color-coded by type, timeline alignment
 
 **View Diagrams**:
+
 ```bash
 # View source
 cat docs/architecture/diagrams/project-management/epic-dependencies.mmd
@@ -180,20 +189,21 @@ mmdc -i docs/architecture/diagrams/project-management/epic-dependencies.mmd -o e
 
 The project uses 10 fields for tracking:
 
-| Field | Type | Purpose | Update Via |
-|-------|------|---------|------------|
-| **Status** | Single Select | Todo, In Progress, Done | Update script |
-| **Agent** | Text | Assigned agent name | Update script |
-| **Completion %** | Number | 0-100% progress | Update script |
-| **Story Points** | Number | Complexity (1-5) | Manual or script |
-| **Priority** | Single Select | Critical, High, Medium, Low | Manual |
-| **Phase** | Single Select | Design, Implementation, Testing, Review | Manual or script |
-| **Labels** | Tags | epic:*, user-story, status:*, etc. | Update script |
-| **Assignees** | People | GitHub usernames | Manual |
-| **Linked PRs** | Links | Auto-linked from PR description | Automatic |
-| **Milestone** | Milestone | Epic milestone | Manual |
+| Field            | Type          | Purpose                                 | Update Via       |
+| ---------------- | ------------- | --------------------------------------- | ---------------- |
+| **Status**       | Single Select | Todo, In Progress, Done                 | Update script    |
+| **Agent**        | Text          | Assigned agent name                     | Update script    |
+| **Completion %** | Number        | 0-100% progress                         | Update script    |
+| **Story Points** | Number        | Complexity (1-5)                        | Manual or script |
+| **Priority**     | Single Select | Critical, High, Medium, Low             | Manual           |
+| **Phase**        | Single Select | Design, Implementation, Testing, Review | Manual or script |
+| **Labels**       | Tags          | epic:_, user-story, status:_, etc.      | Update script    |
+| **Assignees**    | People        | GitHub usernames                        | Manual           |
+| **Linked PRs**   | Links         | Auto-linked from PR description         | Automatic        |
+| **Milestone**    | Milestone     | Epic milestone                          | Manual           |
 
 **Update Command**:
+
 ```bash
 ./scripts/update-story-status.sh <ISSUE> <STATUS> <COMPLETION> <AGENT> [MESSAGE]
 ```
@@ -205,6 +215,7 @@ This automatically updates: Status, Agent, Completion %, Labels
 ## Epic Overview
 
 ### EPIC 1: Immediate Blockers (Week 1)
+
 **Issues**: [#1](https://github.com/zone17/Sovren/issues/1) (Epic), #5-11 (Stories)
 **Stories**: 7
 **Duration**: 13 hours (~2 days)
@@ -212,6 +223,7 @@ This automatically updates: Status, Agent, Completion %, Labels
 **Blocks**: All other epics
 
 ### EPIC 2: Frontend Critical Stories (Weeks 2-4)
+
 **Issues**: [#2](https://github.com/zone17/Sovren/issues/2) (Epic), #12-52 (Stories)
 **Stories**: 41
 **Duration**: 3 weeks
@@ -219,6 +231,7 @@ This automatically updates: Status, Agent, Completion %, Labels
 **Parallel Streams**: 3 (max parallelization)
 
 ### EPIC 3: Integration & Testing (Week 5)
+
 **Issues**: [#3](https://github.com/zone17/Sovren/issues/3) (Epic), #53-62 (Stories)
 **Stories**: 10
 **Duration**: 5 days
@@ -226,6 +239,7 @@ This automatically updates: Status, Agent, Completion %, Labels
 **Parallel Streams**: 2
 
 ### EPIC 4: Production Readiness (Week 6)
+
 **Issues**: [#4](https://github.com/zone17/Sovren/issues/4) (Epic), #63-71 (Stories)
 **Stories**: 9
 **Duration**: 7 days
@@ -241,6 +255,7 @@ This automatically updates: Status, Agent, Completion %, Labels
 ✅ **EXCELLENT** - Already at optimal granularity
 
 **Characteristics**:
+
 - **Atomic**: Each story does one thing
 - **Time-Boxed**: 0.5-1 day (1-point stories)
 - **Independently Testable**: Clear acceptance criteria
@@ -248,6 +263,7 @@ This automatically updates: Status, Agent, Completion %, Labels
 - **Clear DoD**: Unambiguous completion criteria
 
 **Average Story Size**:
+
 - EPIC 1: 1.9 hours (0.24 days)
 - EPIC 2: 0.6 days
 - EPIC 3: 0.5 days
@@ -295,11 +311,13 @@ Use GitHub issue comments to coordinate:
 @next-agent Ready for implementation.
 
 **Deliverables**:
+
 - User flow diagrams: docs/design/us-001-nostr-auth/flows/
 - Wireframes: docs/design/us-001-nostr-auth/wireframes/
 - Component specs: docs/design/us-001-nostr-auth/specs/
 
 **Next Steps**:
+
 1. Implement NOSTRAuthButton (#17)
 2. Implement AuthModal (#18)
 3. Follow component specs for props and state
@@ -314,6 +332,7 @@ Use GitHub issue comments to coordinate:
 ### Issue: Can't update project fields
 
 **Solution**: Use the update script:
+
 ```bash
 ./scripts/update-story-status.sh <ISSUE> <STATUS> <COMPLETION> <AGENT>
 ```
@@ -321,6 +340,7 @@ Use GitHub issue comments to coordinate:
 ### Issue: Story is blocked
 
 **Solution**:
+
 1. Add comment explaining blocker
 2. Add "blocked" label
 3. Find parallel work or notify PM
@@ -328,6 +348,7 @@ Use GitHub issue comments to coordinate:
 ### Issue: Merge conflicts
 
 **Solution**:
+
 - Ensure working in correct feature directory
 - Pull latest main before merging
 - Follow merge order: content → payments → subscriptions
@@ -335,6 +356,7 @@ Use GitHub issue comments to coordinate:
 ### Issue: Can't find dependencies
 
 **Solution**:
+
 - Check [DEPENDENCY_MAP.md](DEPENDENCY_MAP.md)
 - Look for "Blocked by" in issue description
 - Use gh to view linked issues
@@ -344,16 +366,19 @@ Use GitHub issue comments to coordinate:
 ## Resources
 
 ### GitHub Documentation
+
 - [Projects Documentation](https://docs.github.com/en/issues/planning-and-tracking-with-projects)
 - [GitHub CLI Manual](https://cli.github.com/manual/)
 - [GraphQL API](https://docs.github.com/en/graphql)
 
 ### Mermaid Diagrams
+
 - [Mermaid Documentation](https://mermaid.js.org/)
 - [Mermaid Live Editor](https://mermaid.live/)
 - [GitHub Mermaid Support](https://github.blog/2022-02-14-include-diagrams-markdown-files-mermaid/)
 
 ### Agile Best Practices
+
 - [Story Decomposition Guide](https://www.atlassian.com/agile/project-management/user-stories)
 - [Dependency Mapping](https://www.scrum.org/resources/blog/dependency-management-scrum)
 - [Parallel Development](https://www.scaledagileframework.com/team-and-technical-agility/)
@@ -364,15 +389,16 @@ Use GitHub issue comments to coordinate:
 
 Track these weekly:
 
-| Metric | Current | Target | Status |
-|--------|---------|--------|--------|
-| Stories Completed | 0/67 | 67/67 | 🔴 0% |
-| Epic Progress | 0% | 100% | 🔴 Not Started |
-| Test Coverage | 95% (backend) | 85% (global) | 🟢 Exceeded |
-| Velocity | TBD | 11 stories/week | - |
-| Parallelization Efficiency | TBD | 0.65 (35% savings) | - |
+| Metric                     | Current       | Target             | Status         |
+| -------------------------- | ------------- | ------------------ | -------------- |
+| Stories Completed          | 0/67          | 67/67              | 🔴 0%          |
+| Epic Progress              | 0%            | 100%               | 🔴 Not Started |
+| Test Coverage              | 95% (backend) | 85% (global)       | 🟢 Exceeded    |
+| Velocity                   | TBD           | 11 stories/week    | -              |
+| Parallelization Efficiency | TBD           | 0.65 (35% savings) | -              |
 
 **Update Progress**:
+
 ```bash
 # View project completion
 gh project view 1 --owner zone17
@@ -386,6 +412,7 @@ gh project view 1 --owner zone17
 ## Contact
 
 For questions about project management or story workflow:
+
 - Check this documentation first
 - Review example workflows in STORY_WORKFLOW.md
 - Check dependency map before starting work

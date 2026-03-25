@@ -34,17 +34,37 @@ const epic005Stories = [
     phase: 'Phase 1: Design & Interface Definition',
     dependencies: [],
     subtasks: [
-      { order: 1, description: 'Create docs/refactoring/service-dependency-analysis.md', status: 'pending' },
-      { order: 2, description: 'Use AST parser to analyze service imports and method calls', status: 'pending' },
+      {
+        order: 1,
+        description: 'Create docs/refactoring/service-dependency-analysis.md',
+        status: 'pending',
+      },
+      {
+        order: 2,
+        description: 'Use AST parser to analyze service imports and method calls',
+        status: 'pending',
+      },
       { order: 3, description: 'Generate dependency graph using madge tool', status: 'pending' },
-      { order: 4, description: 'Classify dependencies as tight/loose/data coupling', status: 'pending' },
+      {
+        order: 4,
+        description: 'Classify dependencies as tight/loose/data coupling',
+        status: 'pending',
+      },
       { order: 5, description: 'Identify critical payment flow dependencies', status: 'pending' },
-      { order: 6, description: 'Create dependency matrix showing inter-service calls', status: 'pending' },
+      {
+        order: 6,
+        description: 'Create dependency matrix showing inter-service calls',
+        status: 'pending',
+      },
       { order: 7, description: 'Document risk areas requiring extra care', status: 'pending' },
-      { order: 8, description: 'Create Mermaid dependency visualization diagram', status: 'pending' },
+      {
+        order: 8,
+        description: 'Create Mermaid dependency visualization diagram',
+        status: 'pending',
+      },
       { order: 9, description: 'Get senior developer review and approval', status: 'pending' },
-      { order: 10, description: 'Publish analysis document to project docs', status: 'pending' }
-    ]
+      { order: 10, description: 'Publish analysis document to project docs', status: 'pending' },
+    ],
   },
   {
     id: 'story-us-e5-002',
@@ -61,17 +81,41 @@ const epic005Stories = [
     phase: 'Phase 1: Design & Interface Definition',
     dependencies: ['US-E5-001'],
     subtasks: [
-      { order: 1, description: 'Create packages/backend/src/interfaces/ directory structure', status: 'pending' },
-      { order: 2, description: 'Define IContentCreationService interface with methods', status: 'pending' },
+      {
+        order: 1,
+        description: 'Create packages/backend/src/interfaces/ directory structure',
+        status: 'pending',
+      },
+      {
+        order: 2,
+        description: 'Define IContentCreationService interface with methods',
+        status: 'pending',
+      },
       { order: 3, description: 'Define IContentPublishingService interface', status: 'pending' },
       { order: 4, description: 'Define IUserAuthenticationService interface', status: 'pending' },
       { order: 5, description: 'Define IPaymentProcessingService interface', status: 'pending' },
-      { order: 6, description: 'Create TypeScript types for all service contracts', status: 'pending' },
-      { order: 7, description: 'Document bounded contexts in docs/refactoring/bounded-contexts.md', status: 'pending' },
+      {
+        order: 6,
+        description: 'Create TypeScript types for all service contracts',
+        status: 'pending',
+      },
+      {
+        order: 7,
+        description: 'Document bounded contexts in docs/refactoring/bounded-contexts.md',
+        status: 'pending',
+      },
       { order: 8, description: 'Add JSDoc comments to all interfaces', status: 'pending' },
-      { order: 9, description: 'Create Mermaid diagram showing service boundaries', status: 'pending' },
-      { order: 10, description: 'Validate interfaces with team and get approval', status: 'pending' }
-    ]
+      {
+        order: 9,
+        description: 'Create Mermaid diagram showing service boundaries',
+        status: 'pending',
+      },
+      {
+        order: 10,
+        description: 'Validate interfaces with team and get approval',
+        status: 'pending',
+      },
+    ],
   },
   {
     id: 'story-us-e5-003',
@@ -88,17 +132,41 @@ const epic005Stories = [
     phase: 'Phase 1: Design & Interface Definition',
     dependencies: ['US-E5-002'],
     subtasks: [
-      { order: 1, description: 'Install InversifyJS and reflect-metadata dependencies', status: 'pending' },
-      { order: 2, description: 'Create services/container.ts with basic container setup', status: 'pending' },
-      { order: 3, description: 'Create services/types.ts with service type symbols', status: 'pending' },
-      { order: 4, description: 'Configure TypeScript decorators in tsconfig.json', status: 'pending' },
-      { order: 5, description: 'Create container bindings for existing services', status: 'pending' },
+      {
+        order: 1,
+        description: 'Install InversifyJS and reflect-metadata dependencies',
+        status: 'pending',
+      },
+      {
+        order: 2,
+        description: 'Create services/container.ts with basic container setup',
+        status: 'pending',
+      },
+      {
+        order: 3,
+        description: 'Create services/types.ts with service type symbols',
+        status: 'pending',
+      },
+      {
+        order: 4,
+        description: 'Configure TypeScript decorators in tsconfig.json',
+        status: 'pending',
+      },
+      {
+        order: 5,
+        description: 'Create container bindings for existing services',
+        status: 'pending',
+      },
       { order: 6, description: 'Setup container initialization in app startup', status: 'pending' },
       { order: 7, description: 'Create unit tests for container resolution', status: 'pending' },
       { order: 8, description: 'Add container documentation with examples', status: 'pending' },
       { order: 9, description: 'Verify no circular dependencies exist', status: 'pending' },
-      { order: 10, description: 'Performance test container initialization time', status: 'pending' }
-    ]
+      {
+        order: 10,
+        description: 'Performance test container initialization time',
+        status: 'pending',
+      },
+    ],
   },
   {
     id: 'story-us-e5-004',
@@ -116,16 +184,32 @@ const epic005Stories = [
     dependencies: ['US-E5-003'],
     subtasks: [
       { order: 1, description: 'Create factories/ServiceFactory.ts base class', status: 'pending' },
-      { order: 2, description: 'Implement ContentServiceFactory with bundle creation', status: 'pending' },
-      { order: 3, description: 'Implement UserServiceFactory for user services', status: 'pending' },
-      { order: 4, description: 'Implement PaymentServiceFactory with error handling', status: 'pending' },
+      {
+        order: 2,
+        description: 'Implement ContentServiceFactory with bundle creation',
+        status: 'pending',
+      },
+      {
+        order: 3,
+        description: 'Implement UserServiceFactory for user services',
+        status: 'pending',
+      },
+      {
+        order: 4,
+        description: 'Implement PaymentServiceFactory with error handling',
+        status: 'pending',
+      },
       { order: 5, description: 'Add factory configuration validation', status: 'pending' },
       { order: 6, description: 'Create factory unit tests with mocks', status: 'pending' },
-      { order: 7, description: 'Add meaningful error messages for misconfiguration', status: 'pending' },
+      {
+        order: 7,
+        description: 'Add meaningful error messages for misconfiguration',
+        status: 'pending',
+      },
       { order: 8, description: 'Document factory pattern usage in README', status: 'pending' },
       { order: 9, description: 'Create integration tests for factories', status: 'pending' },
-      { order: 10, description: 'Benchmark factory instantiation performance', status: 'pending' }
-    ]
+      { order: 10, description: 'Benchmark factory instantiation performance', status: 'pending' },
+    ],
   },
   {
     id: 'story-us-e5-005',
@@ -142,17 +226,41 @@ const epic005Stories = [
     phase: 'Phase 1: Design & Interface Definition',
     dependencies: ['US-E5-003'],
     subtasks: [
-      { order: 1, description: 'Create events/EventBus.ts with EventEmitter implementation', status: 'pending' },
-      { order: 2, description: 'Define IEventBus interface with emit/on/off methods', status: 'pending' },
-      { order: 3, description: 'Create events/types.ts with ServiceEvents enum', status: 'pending' },
-      { order: 4, description: 'Implement typed event payloads for type safety', status: 'pending' },
+      {
+        order: 1,
+        description: 'Create events/EventBus.ts with EventEmitter implementation',
+        status: 'pending',
+      },
+      {
+        order: 2,
+        description: 'Define IEventBus interface with emit/on/off methods',
+        status: 'pending',
+      },
+      {
+        order: 3,
+        description: 'Create events/types.ts with ServiceEvents enum',
+        status: 'pending',
+      },
+      {
+        order: 4,
+        description: 'Implement typed event payloads for type safety',
+        status: 'pending',
+      },
       { order: 5, description: 'Add retry logic with exponential backoff', status: 'pending' },
-      { order: 6, description: 'Implement error handling and dead letter queue', status: 'pending' },
+      {
+        order: 6,
+        description: 'Implement error handling and dead letter queue',
+        status: 'pending',
+      },
       { order: 7, description: 'Create unit tests for event bus functionality', status: 'pending' },
       { order: 8, description: 'Add event logging for debugging', status: 'pending' },
-      { order: 9, description: 'Document event bus patterns and best practices', status: 'pending' },
-      { order: 10, description: 'Performance test event throughput capacity', status: 'pending' }
-    ]
+      {
+        order: 9,
+        description: 'Document event bus patterns and best practices',
+        status: 'pending',
+      },
+      { order: 10, description: 'Performance test event throughput capacity', status: 'pending' },
+    ],
   },
   {
     id: 'story-us-e5-006',
@@ -170,16 +278,24 @@ const epic005Stories = [
     dependencies: ['US-E5-001', 'US-E5-002', 'US-E5-003', 'US-E5-004', 'US-E5-005'],
     subtasks: [
       { order: 1, description: 'Create docs/refactoring/migration-strategy.md', status: 'pending' },
-      { order: 2, description: 'Document step-by-step migration process for each service', status: 'pending' },
+      {
+        order: 2,
+        description: 'Document step-by-step migration process for each service',
+        status: 'pending',
+      },
       { order: 3, description: 'Define feature flag configuration strategy', status: 'pending' },
       { order: 4, description: 'Create rollback procedures for each phase', status: 'pending' },
-      { order: 5, description: 'Document testing checkpoints and validation criteria', status: 'pending' },
+      {
+        order: 5,
+        description: 'Document testing checkpoints and validation criteria',
+        status: 'pending',
+      },
       { order: 6, description: 'Define performance benchmarks and thresholds', status: 'pending' },
       { order: 7, description: 'Document database migration considerations', status: 'pending' },
       { order: 8, description: 'Create risk mitigation strategies', status: 'pending' },
       { order: 9, description: 'Get team review and sign-off', status: 'pending' },
-      { order: 10, description: 'Publish strategy to team wiki', status: 'pending' }
-    ]
+      { order: 10, description: 'Publish strategy to team wiki', status: 'pending' },
+    ],
   },
 
   // PHASE 2: SHARED SERVICES EXTRACTION (Stories 7-10)
@@ -198,17 +314,29 @@ const epic005Stories = [
     phase: 'Phase 2: Shared Services Extraction',
     dependencies: ['US-E5-003'],
     subtasks: [
-      { order: 1, description: 'Create services/shared/EmailService.ts with @injectable decorator', status: 'pending' },
+      {
+        order: 1,
+        description: 'Create services/shared/EmailService.ts with @injectable decorator',
+        status: 'pending',
+      },
       { order: 2, description: 'Implement sendEmail method with retry logic', status: 'pending' },
-      { order: 3, description: 'Implement sendBulkEmails with batch processing', status: 'pending' },
+      {
+        order: 3,
+        description: 'Implement sendBulkEmails with batch processing',
+        status: 'pending',
+      },
       { order: 4, description: 'Add email template support with handlebars', status: 'pending' },
       { order: 5, description: 'Implement exponential backoff for retries', status: 'pending' },
       { order: 6, description: 'Add attachment handling capability', status: 'pending' },
-      { order: 7, description: 'Create comprehensive unit tests (95% coverage)', status: 'pending' },
+      {
+        order: 7,
+        description: 'Create comprehensive unit tests (95% coverage)',
+        status: 'pending',
+      },
       { order: 8, description: 'Register EmailService in DI container', status: 'pending' },
       { order: 9, description: 'Add monitoring and metrics collection', status: 'pending' },
-      { order: 10, description: 'Document EmailService API and usage examples', status: 'pending' }
-    ]
+      { order: 10, description: 'Document EmailService API and usage examples', status: 'pending' },
+    ],
   },
   {
     id: 'story-us-e5-008',
@@ -226,16 +354,24 @@ const epic005Stories = [
     dependencies: ['US-E5-003', 'US-E5-007'],
     subtasks: [
       { order: 1, description: 'Create services/shared/NotificationService.ts', status: 'pending' },
-      { order: 2, description: 'Implement multi-channel notification logic (email, push, in-app)', status: 'pending' },
+      {
+        order: 2,
+        description: 'Implement multi-channel notification logic (email, push, in-app)',
+        status: 'pending',
+      },
       { order: 3, description: 'Add user preference checking before sending', status: 'pending' },
       { order: 4, description: 'Implement fallback channel mechanism', status: 'pending' },
       { order: 5, description: 'Add notification queueing and batching', status: 'pending' },
       { order: 6, description: 'Create notification templates system', status: 'pending' },
-      { order: 7, description: 'Inject EmailService and PushService dependencies', status: 'pending' },
+      {
+        order: 7,
+        description: 'Inject EmailService and PushService dependencies',
+        status: 'pending',
+      },
       { order: 8, description: 'Add comprehensive tests with mocked services', status: 'pending' },
       { order: 9, description: 'Register in DI container with proper scope', status: 'pending' },
-      { order: 10, description: 'Document notification patterns and usage', status: 'pending' }
-    ]
+      { order: 10, description: 'Document notification patterns and usage', status: 'pending' },
+    ],
   },
   {
     id: 'story-us-e5-009',
@@ -254,15 +390,23 @@ const epic005Stories = [
     subtasks: [
       { order: 1, description: 'Create services/shared/AuditLogService.ts', status: 'pending' },
       { order: 2, description: 'Implement immutable log storage mechanism', status: 'pending' },
-      { order: 3, description: 'Add structured logging with who/what/when/where', status: 'pending' },
-      { order: 4, description: 'Create database indexes for efficient querying', status: 'pending' },
+      {
+        order: 3,
+        description: 'Add structured logging with who/what/when/where',
+        status: 'pending',
+      },
+      {
+        order: 4,
+        description: 'Create database indexes for efficient querying',
+        status: 'pending',
+      },
       { order: 5, description: 'Implement query methods with filtering', status: 'pending' },
       { order: 6, description: 'Add configurable retention policies', status: 'pending' },
       { order: 7, description: 'Ensure GDPR compliance in log storage', status: 'pending' },
       { order: 8, description: 'Create unit tests for audit operations', status: 'pending' },
       { order: 9, description: 'Register service with singleton scope', status: 'pending' },
-      { order: 10, description: 'Document audit log requirements and usage', status: 'pending' }
-    ]
+      { order: 10, description: 'Document audit log requirements and usage', status: 'pending' },
+    ],
   },
   {
     id: 'story-us-e5-010',
@@ -280,7 +424,11 @@ const epic005Stories = [
     dependencies: ['US-E5-003'],
     subtasks: [
       { order: 1, description: 'Create services/shared/CacheService.ts', status: 'pending' },
-      { order: 2, description: 'Implement Redis integration with connection pooling', status: 'pending' },
+      {
+        order: 2,
+        description: 'Implement Redis integration with connection pooling',
+        status: 'pending',
+      },
       { order: 3, description: 'Add get/set methods with TTL support', status: 'pending' },
       { order: 4, description: 'Implement cache-aside pattern with fallback', status: 'pending' },
       { order: 5, description: 'Add pattern-based cache invalidation', status: 'pending' },
@@ -288,8 +436,8 @@ const epic005Stories = [
       { order: 7, description: 'Add serialization/deserialization logic', status: 'pending' },
       { order: 8, description: 'Create comprehensive cache tests', status: 'pending' },
       { order: 9, description: 'Register in DI container', status: 'pending' },
-      { order: 10, description: 'Document caching strategies and patterns', status: 'pending' }
-    ]
+      { order: 10, description: 'Document caching strategies and patterns', status: 'pending' },
+    ],
   },
 
   // PHASE 3: CONTENT SERVICE REFACTORING (Stories 11-17)
@@ -308,17 +456,25 @@ const epic005Stories = [
     phase: 'Phase 3: Content Service Refactoring',
     dependencies: ['US-E5-002', 'US-E5-003', 'US-E5-009'],
     subtasks: [
-      { order: 1, description: 'Create services/content/ContentCreationService.ts', status: 'pending' },
+      {
+        order: 1,
+        description: 'Create services/content/ContentCreationService.ts',
+        status: 'pending',
+      },
       { order: 2, description: 'Implement createDraft method with validation', status: 'pending' },
       { order: 3, description: 'Add content validation with business rules', status: 'pending' },
       { order: 4, description: 'Implement auto-save functionality', status: 'pending' },
       { order: 5, description: 'Add version tracking for drafts', status: 'pending' },
-      { order: 6, description: 'Inject ContentRepository and ValidationService', status: 'pending' },
+      {
+        order: 6,
+        description: 'Inject ContentRepository and ValidationService',
+        status: 'pending',
+      },
       { order: 7, description: 'Integrate AuditLogService for tracking', status: 'pending' },
       { order: 8, description: 'Create unit tests with 95% coverage', status: 'pending' },
       { order: 9, description: 'Update API routes to use new service', status: 'pending' },
-      { order: 10, description: 'Document content creation workflow', status: 'pending' }
-    ]
+      { order: 10, description: 'Document content creation workflow', status: 'pending' },
+    ],
   },
   {
     id: 'story-us-e5-012',
@@ -335,8 +491,16 @@ const epic005Stories = [
     phase: 'Phase 3: Content Service Refactoring',
     dependencies: ['US-E5-002', 'US-E5-003', 'US-E5-005'],
     subtasks: [
-      { order: 1, description: 'Create services/content/ContentPublishingService.ts', status: 'pending' },
-      { order: 2, description: 'Implement publish method with immediate/scheduled options', status: 'pending' },
+      {
+        order: 1,
+        description: 'Create services/content/ContentPublishingService.ts',
+        status: 'pending',
+      },
+      {
+        order: 2,
+        description: 'Implement publish method with immediate/scheduled options',
+        status: 'pending',
+      },
       { order: 3, description: 'Add NOSTR event publication integration', status: 'pending' },
       { order: 4, description: 'Implement idempotent retry logic', status: 'pending' },
       { order: 5, description: 'Add content status update logic', status: 'pending' },
@@ -344,8 +508,8 @@ const epic005Stories = [
       { order: 7, description: 'Emit CONTENT_PUBLISHED event to EventBus', status: 'pending' },
       { order: 8, description: 'Create comprehensive publishing tests', status: 'pending' },
       { order: 9, description: 'Update publishing API endpoints', status: 'pending' },
-      { order: 10, description: 'Document publishing workflow and events', status: 'pending' }
-    ]
+      { order: 10, description: 'Document publishing workflow and events', status: 'pending' },
+    ],
   },
   {
     id: 'story-us-e5-013',
@@ -362,7 +526,11 @@ const epic005Stories = [
     phase: 'Phase 3: Content Service Refactoring',
     dependencies: ['US-E5-002', 'US-E5-003', 'US-E5-009'],
     subtasks: [
-      { order: 1, description: 'Create services/content/ContentModerationService.ts', status: 'pending' },
+      {
+        order: 1,
+        description: 'Create services/content/ContentModerationService.ts',
+        status: 'pending',
+      },
       { order: 2, description: 'Implement moderate method with AI integration', status: 'pending' },
       { order: 3, description: 'Add configurable moderation rules engine', status: 'pending' },
       { order: 4, description: 'Implement manual review workflow', status: 'pending' },
@@ -371,8 +539,8 @@ const epic005Stories = [
       { order: 7, description: 'Create moderation queue management', status: 'pending' },
       { order: 8, description: 'Add unit tests for moderation logic', status: 'pending' },
       { order: 9, description: 'Update moderation API endpoints', status: 'pending' },
-      { order: 10, description: 'Document moderation policies and workflow', status: 'pending' }
-    ]
+      { order: 10, description: 'Document moderation policies and workflow', status: 'pending' },
+    ],
   },
   {
     id: 'story-us-e5-014',
@@ -389,8 +557,16 @@ const epic005Stories = [
     phase: 'Phase 3: Content Service Refactoring',
     dependencies: ['US-E5-002', 'US-E5-003', 'US-E5-010'],
     subtasks: [
-      { order: 1, description: 'Create services/content/ContentSearchService.ts', status: 'pending' },
-      { order: 2, description: 'Implement search method with Elasticsearch client', status: 'pending' },
+      {
+        order: 1,
+        description: 'Create services/content/ContentSearchService.ts',
+        status: 'pending',
+      },
+      {
+        order: 2,
+        description: 'Implement search method with Elasticsearch client',
+        status: 'pending',
+      },
       { order: 3, description: 'Add full-text search with filters and facets', status: 'pending' },
       { order: 4, description: 'Implement relevance scoring algorithm', status: 'pending' },
       { order: 5, description: 'Add search result caching with CacheService', status: 'pending' },
@@ -398,8 +574,8 @@ const epic005Stories = [
       { order: 7, description: 'Add personalization to search results', status: 'pending' },
       { order: 8, description: 'Create search performance tests', status: 'pending' },
       { order: 9, description: 'Update search API endpoints', status: 'pending' },
-      { order: 10, description: 'Document search features and optimization', status: 'pending' }
-    ]
+      { order: 10, description: 'Document search features and optimization', status: 'pending' },
+    ],
   },
   {
     id: 'story-us-e5-015',
@@ -416,7 +592,11 @@ const epic005Stories = [
     phase: 'Phase 3: Content Service Refactoring',
     dependencies: ['US-E5-002', 'US-E5-003', 'US-E5-010'],
     subtasks: [
-      { order: 1, description: 'Create services/content/ContentRecommendationService.ts', status: 'pending' },
+      {
+        order: 1,
+        description: 'Create services/content/ContentRecommendationService.ts',
+        status: 'pending',
+      },
       { order: 2, description: 'Implement getRecommendations with ML model', status: 'pending' },
       { order: 3, description: 'Add collaborative filtering algorithm', status: 'pending' },
       { order: 4, description: 'Implement content-based recommendation', status: 'pending' },
@@ -425,8 +605,8 @@ const epic005Stories = [
       { order: 7, description: 'Add A/B testing support for algorithms', status: 'pending' },
       { order: 8, description: 'Create recommendation accuracy tests', status: 'pending' },
       { order: 9, description: 'Update recommendation API endpoints', status: 'pending' },
-      { order: 10, description: 'Document recommendation algorithms', status: 'pending' }
-    ]
+      { order: 10, description: 'Document recommendation algorithms', status: 'pending' },
+    ],
   },
   {
     id: 'story-us-e5-016',
@@ -443,7 +623,11 @@ const epic005Stories = [
     phase: 'Phase 3: Content Service Refactoring',
     dependencies: ['US-E5-002', 'US-E5-003'],
     subtasks: [
-      { order: 1, description: 'Create services/content/ContentAnalyticsService.ts', status: 'pending' },
+      {
+        order: 1,
+        description: 'Create services/content/ContentAnalyticsService.ts',
+        status: 'pending',
+      },
       { order: 2, description: 'Implement trackEvent method for analytics', status: 'pending' },
       { order: 3, description: 'Add view/like/share tracking logic', status: 'pending' },
       { order: 4, description: 'Implement getMetrics with aggregation', status: 'pending' },
@@ -452,8 +636,8 @@ const epic005Stories = [
       { order: 7, description: 'Add custom dimension support', status: 'pending' },
       { order: 8, description: 'Create analytics performance tests', status: 'pending' },
       { order: 9, description: 'Update analytics API endpoints', status: 'pending' },
-      { order: 10, description: 'Document analytics tracking and reporting', status: 'pending' }
-    ]
+      { order: 10, description: 'Document analytics tracking and reporting', status: 'pending' },
+    ],
   },
   {
     id: 'story-us-e5-017',
@@ -470,7 +654,11 @@ const epic005Stories = [
     phase: 'Phase 3: Content Service Refactoring',
     dependencies: ['US-E5-002', 'US-E5-003'],
     subtasks: [
-      { order: 1, description: 'Create services/content/ContentVersioningService.ts', status: 'pending' },
+      {
+        order: 1,
+        description: 'Create services/content/ContentVersioningService.ts',
+        status: 'pending',
+      },
       { order: 2, description: 'Implement saveVersion with delta storage', status: 'pending' },
       { order: 3, description: 'Add efficient delta compression algorithm', status: 'pending' },
       { order: 4, description: 'Implement rollback functionality', status: 'pending' },
@@ -479,8 +667,8 @@ const epic005Stories = [
       { order: 7, description: 'Add version pruning for old versions', status: 'pending' },
       { order: 8, description: 'Create versioning unit tests', status: 'pending' },
       { order: 9, description: 'Update versioning API endpoints', status: 'pending' },
-      { order: 10, description: 'Document version control workflow', status: 'pending' }
-    ]
+      { order: 10, description: 'Document version control workflow', status: 'pending' },
+    ],
   },
 
   // PHASE 4: USER SERVICE REFACTORING (Stories 18-23)
@@ -499,8 +687,16 @@ const epic005Stories = [
     phase: 'Phase 4: User Service Refactoring',
     dependencies: ['US-E5-002', 'US-E5-003', 'US-E5-009'],
     subtasks: [
-      { order: 1, description: 'Create services/user/UserAuthenticationService.ts', status: 'pending' },
-      { order: 2, description: 'Implement login method with credential validation', status: 'pending' },
+      {
+        order: 1,
+        description: 'Create services/user/UserAuthenticationService.ts',
+        status: 'pending',
+      },
+      {
+        order: 2,
+        description: 'Implement login method with credential validation',
+        status: 'pending',
+      },
       { order: 3, description: 'Add rate limiting and brute force protection', status: 'pending' },
       { order: 4, description: 'Implement session management logic', status: 'pending' },
       { order: 5, description: 'Add TOTP multi-factor authentication', status: 'pending' },
@@ -508,8 +704,8 @@ const epic005Stories = [
       { order: 7, description: 'Add logout and session invalidation', status: 'pending' },
       { order: 8, description: 'Create security-focused unit tests', status: 'pending' },
       { order: 9, description: 'Update authentication API endpoints', status: 'pending' },
-      { order: 10, description: 'Document authentication flow and security', status: 'pending' }
-    ]
+      { order: 10, description: 'Document authentication flow and security', status: 'pending' },
+    ],
   },
   {
     id: 'story-us-e5-019',
@@ -535,8 +731,8 @@ const epic005Stories = [
       { order: 7, description: 'Add profile completeness calculation', status: 'pending' },
       { order: 8, description: 'Create profile service tests', status: 'pending' },
       { order: 9, description: 'Update profile API endpoints', status: 'pending' },
-      { order: 10, description: 'Document profile management features', status: 'pending' }
-    ]
+      { order: 10, description: 'Document profile management features', status: 'pending' },
+    ],
   },
   {
     id: 'story-us-e5-020',
@@ -553,17 +749,25 @@ const epic005Stories = [
     phase: 'Phase 4: User Service Refactoring',
     dependencies: ['US-E5-002', 'US-E5-003'],
     subtasks: [
-      { order: 1, description: 'Create services/user/UserPreferencesService.ts', status: 'pending' },
+      {
+        order: 1,
+        description: 'Create services/user/UserPreferencesService.ts',
+        status: 'pending',
+      },
       { order: 2, description: 'Implement getPreferences with defaults', status: 'pending' },
       { order: 3, description: 'Add updatePreferences with validation', status: 'pending' },
       { order: 4, description: 'Implement notification preferences logic', status: 'pending' },
       { order: 5, description: 'Add privacy preferences management', status: 'pending' },
-      { order: 6, description: 'Implement display preferences (theme, language)', status: 'pending' },
+      {
+        order: 6,
+        description: 'Implement display preferences (theme, language)',
+        status: 'pending',
+      },
       { order: 7, description: 'Add preference migration for updates', status: 'pending' },
       { order: 8, description: 'Create preferences service tests', status: 'pending' },
       { order: 9, description: 'Update preferences API endpoints', status: 'pending' },
-      { order: 10, description: 'Document preference categories and options', status: 'pending' }
-    ]
+      { order: 10, description: 'Document preference categories and options', status: 'pending' },
+    ],
   },
   {
     id: 'story-us-e5-021',
@@ -589,8 +793,8 @@ const epic005Stories = [
       { order: 7, description: 'Add activity retention policies', status: 'pending' },
       { order: 8, description: 'Create activity tracking tests', status: 'pending' },
       { order: 9, description: 'Update activity API endpoints', status: 'pending' },
-      { order: 10, description: 'Document activity tracking and privacy', status: 'pending' }
-    ]
+      { order: 10, description: 'Document activity tracking and privacy', status: 'pending' },
+    ],
   },
   {
     id: 'story-us-e5-022',
@@ -607,7 +811,11 @@ const epic005Stories = [
     phase: 'Phase 4: User Service Refactoring',
     dependencies: ['US-E5-002', 'US-E5-003', 'US-E5-008'],
     subtasks: [
-      { order: 1, description: 'Create services/user/UserRelationshipService.ts', status: 'pending' },
+      {
+        order: 1,
+        description: 'Create services/user/UserRelationshipService.ts',
+        status: 'pending',
+      },
       { order: 2, description: 'Implement follow/unfollow methods', status: 'pending' },
       { order: 3, description: 'Add block/mute functionality', status: 'pending' },
       { order: 4, description: 'Implement getFollowers with pagination', status: 'pending' },
@@ -616,8 +824,8 @@ const epic005Stories = [
       { order: 7, description: 'Add relationship notifications integration', status: 'pending' },
       { order: 8, description: 'Create relationship service tests', status: 'pending' },
       { order: 9, description: 'Update relationship API endpoints', status: 'pending' },
-      { order: 10, description: 'Document relationship features and privacy', status: 'pending' }
-    ]
+      { order: 10, description: 'Document relationship features and privacy', status: 'pending' },
+    ],
   },
   {
     id: 'story-us-e5-023',
@@ -643,8 +851,8 @@ const epic005Stories = [
       { order: 7, description: 'Add dashboard-ready metric formatting', status: 'pending' },
       { order: 8, description: 'Create analytics service tests', status: 'pending' },
       { order: 9, description: 'Update analytics API endpoints', status: 'pending' },
-      { order: 10, description: 'Document user analytics and reporting', status: 'pending' }
-    ]
+      { order: 10, description: 'Document user analytics and reporting', status: 'pending' },
+    ],
   },
 
   // PHASE 5: PAYMENT SERVICE REFACTORING - CRITICAL PATH (Stories 24-31)
@@ -669,11 +877,15 @@ const epic005Stories = [
       { order: 4, description: 'Implement proration logic for subscriptions', status: 'pending' },
       { order: 5, description: 'Add discount and credit application', status: 'pending' },
       { order: 6, description: 'Ensure 100% backward compatibility', status: 'pending' },
-      { order: 7, description: 'Create comprehensive unit tests (100% coverage)', status: 'pending' },
+      {
+        order: 7,
+        description: 'Create comprehensive unit tests (100% coverage)',
+        status: 'pending',
+      },
       { order: 8, description: 'Add property-based testing for calculations', status: 'pending' },
       { order: 9, description: 'Perform security review and audit', status: 'pending' },
-      { order: 10, description: 'Document invoice generation process', status: 'pending' }
-    ]
+      { order: 10, description: 'Document invoice generation process', status: 'pending' },
+    ],
   },
   {
     id: 'story-us-e5-025',
@@ -690,7 +902,11 @@ const epic005Stories = [
     phase: 'Phase 5: Payment Service Refactoring',
     dependencies: ['US-E5-024'],
     subtasks: [
-      { order: 1, description: 'Create services/payment/PaymentProcessingService.ts', status: 'pending' },
+      {
+        order: 1,
+        description: 'Create services/payment/PaymentProcessingService.ts',
+        status: 'pending',
+      },
       { order: 2, description: 'Implement processPayment with idempotency', status: 'pending' },
       { order: 3, description: 'Add Stripe payment provider integration', status: 'pending' },
       { order: 4, description: 'Add Lightning Network payment support', status: 'pending' },
@@ -699,8 +915,8 @@ const epic005Stories = [
       { order: 7, description: 'Ensure PCI compliance in implementation', status: 'pending' },
       { order: 8, description: 'Create failure scenario tests', status: 'pending' },
       { order: 9, description: 'Perform load testing for peak times', status: 'pending' },
-      { order: 10, description: 'Document payment processing security', status: 'pending' }
-    ]
+      { order: 10, description: 'Document payment processing security', status: 'pending' },
+    ],
   },
   {
     id: 'story-us-e5-026',
@@ -717,7 +933,11 @@ const epic005Stories = [
     phase: 'Phase 5: Payment Service Refactoring',
     dependencies: ['US-E5-024', 'US-E5-025'],
     subtasks: [
-      { order: 1, description: 'Create services/payment/SubscriptionService.ts', status: 'pending' },
+      {
+        order: 1,
+        description: 'Create services/payment/SubscriptionService.ts',
+        status: 'pending',
+      },
       { order: 2, description: 'Implement createSubscription with validation', status: 'pending' },
       { order: 3, description: 'Add update/pause/resume/cancel operations', status: 'pending' },
       { order: 4, description: 'Implement renewal processing logic', status: 'pending' },
@@ -726,8 +946,8 @@ const epic005Stories = [
       { order: 7, description: 'Add webhook setup for providers', status: 'pending' },
       { order: 8, description: 'Create lifecycle state machine tests', status: 'pending' },
       { order: 9, description: 'Test all edge cases and transitions', status: 'pending' },
-      { order: 10, description: 'Document subscription lifecycle management', status: 'pending' }
-    ]
+      { order: 10, description: 'Document subscription lifecycle management', status: 'pending' },
+    ],
   },
   {
     id: 'story-us-e5-027',
@@ -753,8 +973,8 @@ const epic005Stories = [
       { order: 7, description: 'Add authorization checks for approvals', status: 'pending' },
       { order: 8, description: 'Implement rate limiting on requests', status: 'pending' },
       { order: 9, description: 'Create compliance verification tests', status: 'pending' },
-      { order: 10, description: 'Document refund policies and workflow', status: 'pending' }
-    ]
+      { order: 10, description: 'Document refund policies and workflow', status: 'pending' },
+    ],
   },
   {
     id: 'story-us-e5-028',
@@ -771,7 +991,11 @@ const epic005Stories = [
     phase: 'Phase 5: Payment Service Refactoring',
     dependencies: ['US-E5-024', 'US-E5-025', 'US-E5-026', 'US-E5-027'],
     subtasks: [
-      { order: 1, description: 'Create services/payment/PaymentAnalyticsService.ts', status: 'pending' },
+      {
+        order: 1,
+        description: 'Create services/payment/PaymentAnalyticsService.ts',
+        status: 'pending',
+      },
       { order: 2, description: 'Implement MRR calculation logic', status: 'pending' },
       { order: 3, description: 'Add churn rate analytics', status: 'pending' },
       { order: 4, description: 'Implement LTV calculation', status: 'pending' },
@@ -780,8 +1004,8 @@ const epic005Stories = [
       { order: 7, description: 'Add discrepancy detection logic', status: 'pending' },
       { order: 8, description: 'Create real-time reporting views', status: 'pending' },
       { order: 9, description: 'Test financial calculations accuracy', status: 'pending' },
-      { order: 10, description: 'Document metrics and KPIs', status: 'pending' }
-    ]
+      { order: 10, description: 'Document metrics and KPIs', status: 'pending' },
+    ],
   },
   {
     id: 'story-us-e5-029',
@@ -807,8 +1031,8 @@ const epic005Stories = [
       { order: 7, description: 'Add IP whitelisting for providers', status: 'pending' },
       { order: 8, description: 'Create webhook replay functionality', status: 'pending' },
       { order: 9, description: 'Test webhook security thoroughly', status: 'pending' },
-      { order: 10, description: 'Document webhook integration guide', status: 'pending' }
-    ]
+      { order: 10, description: 'Document webhook integration guide', status: 'pending' },
+    ],
   },
   {
     id: 'story-us-e5-030',
@@ -834,8 +1058,8 @@ const epic005Stories = [
       { order: 7, description: 'Add historical rate tracking', status: 'pending' },
       { order: 8, description: 'Create currency conversion tests', status: 'pending' },
       { order: 9, description: 'Test formatting across locales', status: 'pending' },
-      { order: 10, description: 'Document supported currencies and usage', status: 'pending' }
-    ]
+      { order: 10, description: 'Document supported currencies and usage', status: 'pending' },
+    ],
   },
   {
     id: 'story-us-e5-031',
@@ -850,9 +1074,21 @@ const epic005Stories = [
     agent: null,
     agent_type: 'backend',
     phase: 'Phase 5: Payment Service Refactoring',
-    dependencies: ['US-E5-024', 'US-E5-025', 'US-E5-026', 'US-E5-027', 'US-E5-028', 'US-E5-029', 'US-E5-030'],
+    dependencies: [
+      'US-E5-024',
+      'US-E5-025',
+      'US-E5-026',
+      'US-E5-027',
+      'US-E5-028',
+      'US-E5-029',
+      'US-E5-030',
+    ],
     subtasks: [
-      { order: 1, description: 'Create tests/integration/payment-services.test.ts', status: 'pending' },
+      {
+        order: 1,
+        description: 'Create tests/integration/payment-services.test.ts',
+        status: 'pending',
+      },
       { order: 2, description: 'Test complete subscription lifecycle', status: 'pending' },
       { order: 3, description: 'Test payment failure scenarios', status: 'pending' },
       { order: 4, description: 'Test refund processing workflow', status: 'pending' },
@@ -861,8 +1097,8 @@ const epic005Stories = [
       { order: 7, description: 'Perform security penetration testing', status: 'pending' },
       { order: 8, description: 'Run performance benchmarking', status: 'pending' },
       { order: 9, description: 'Validate all edge cases', status: 'pending' },
-      { order: 10, description: 'Document test results and coverage', status: 'pending' }
-    ]
+      { order: 10, description: 'Document test results and coverage', status: 'pending' },
+    ],
   },
 
   // PHASE 6: INTEGRATION & TESTING (Stories 32-36)
@@ -885,13 +1121,17 @@ const epic005Stories = [
       { order: 2, description: 'Register all user services in container', status: 'pending' },
       { order: 3, description: 'Register all payment services in container', status: 'pending' },
       { order: 4, description: 'Register all shared services in container', status: 'pending' },
-      { order: 5, description: 'Configure proper service scopes (singleton/transient)', status: 'pending' },
+      {
+        order: 5,
+        description: 'Configure proper service scopes (singleton/transient)',
+        status: 'pending',
+      },
       { order: 6, description: 'Verify no circular dependencies exist', status: 'pending' },
       { order: 7, description: 'Test container resolution for all services', status: 'pending' },
       { order: 8, description: 'Add container validation on startup', status: 'pending' },
       { order: 9, description: 'Create container health check endpoint', status: 'pending' },
-      { order: 10, description: 'Document container configuration', status: 'pending' }
-    ]
+      { order: 10, description: 'Document container configuration', status: 'pending' },
+    ],
   },
   {
     id: 'story-us-e5-033',
@@ -912,13 +1152,17 @@ const epic005Stories = [
       { order: 2, description: 'Update user API routes with DI', status: 'pending' },
       { order: 3, description: 'Update payment API routes with DI', status: 'pending' },
       { order: 4, description: 'Inject services using container.get()', status: 'pending' },
-      { order: 5, description: 'Maintain exact API contracts (no breaking changes)', status: 'pending' },
+      {
+        order: 5,
+        description: 'Maintain exact API contracts (no breaking changes)',
+        status: 'pending',
+      },
       { order: 6, description: 'Add request validation middleware', status: 'pending' },
       { order: 7, description: 'Update error handling in routes', status: 'pending' },
       { order: 8, description: 'Test all endpoints with Postman', status: 'pending' },
       { order: 9, description: 'Verify backward compatibility', status: 'pending' },
-      { order: 10, description: 'Update API documentation', status: 'pending' }
-    ]
+      { order: 10, description: 'Update API documentation', status: 'pending' },
+    ],
   },
   {
     id: 'story-us-e5-034',
@@ -937,15 +1181,19 @@ const epic005Stories = [
     subtasks: [
       { order: 1, description: 'Run existing integration test suite', status: 'pending' },
       { order: 2, description: 'Test complete content workflow end-to-end', status: 'pending' },
-      { order: 3, description: 'Test user registration and authentication flow', status: 'pending' },
+      {
+        order: 3,
+        description: 'Test user registration and authentication flow',
+        status: 'pending',
+      },
       { order: 4, description: 'Test payment processing workflow', status: 'pending' },
       { order: 5, description: 'Verify cross-service communication', status: 'pending' },
       { order: 6, description: 'Test event bus message delivery', status: 'pending' },
       { order: 7, description: 'Measure and verify 95%+ coverage', status: 'pending' },
       { order: 8, description: 'Fix any failing tests', status: 'pending' },
       { order: 9, description: 'Generate test coverage report', status: 'pending' },
-      { order: 10, description: 'Document test results', status: 'pending' }
-    ]
+      { order: 10, description: 'Document test results', status: 'pending' },
+    ],
   },
   {
     id: 'story-us-e5-035',
@@ -971,8 +1219,8 @@ const epic005Stories = [
       { order: 7, description: 'Optimize slow database queries', status: 'pending' },
       { order: 8, description: 'Optimize service initialization time', status: 'pending' },
       { order: 9, description: 'Re-test after optimizations', status: 'pending' },
-      { order: 10, description: 'Document performance benchmarks', status: 'pending' }
-    ]
+      { order: 10, description: 'Document performance benchmarks', status: 'pending' },
+    ],
   },
   {
     id: 'story-us-e5-036',
@@ -998,8 +1246,8 @@ const epic005Stories = [
       { order: 7, description: 'Re-run integration tests', status: 'pending' },
       { order: 8, description: 'Verify all fixes work correctly', status: 'pending' },
       { order: 9, description: 'Update documentation for changes', status: 'pending' },
-      { order: 10, description: 'Get sign-off for production readiness', status: 'pending' }
-    ]
+      { order: 10, description: 'Get sign-off for production readiness', status: 'pending' },
+    ],
   },
 
   // PHASE 7: DOCUMENTATION & CLEANUP (Stories 37-42)
@@ -1027,8 +1275,8 @@ const epic005Stories = [
       { order: 7, description: 'Create data flow diagrams', status: 'pending' },
       { order: 8, description: 'Add diagrams to documentation site', status: 'pending' },
       { order: 9, description: 'Get diagrams reviewed by team', status: 'pending' },
-      { order: 10, description: 'Commit diagrams to repository', status: 'pending' }
-    ]
+      { order: 10, description: 'Commit diagrams to repository', status: 'pending' },
+    ],
   },
   {
     id: 'story-us-e5-038',
@@ -1054,8 +1302,8 @@ const epic005Stories = [
       { order: 7, description: 'Add authentication documentation', status: 'pending' },
       { order: 8, description: 'Document error codes and handling', status: 'pending' },
       { order: 9, description: 'Review documentation with frontend team', status: 'pending' },
-      { order: 10, description: 'Publish to documentation site', status: 'pending' }
-    ]
+      { order: 10, description: 'Publish to documentation site', status: 'pending' },
+    ],
   },
   {
     id: 'story-us-e5-039',
@@ -1074,15 +1322,19 @@ const epic005Stories = [
     subtasks: [
       { order: 1, description: 'Create docs/developer-guide.md', status: 'pending' },
       { order: 2, description: 'Document service architecture overview', status: 'pending' },
-      { order: 3, description: 'Explain service responsibilities and boundaries', status: 'pending' },
+      {
+        order: 3,
+        description: 'Explain service responsibilities and boundaries',
+        status: 'pending',
+      },
       { order: 4, description: 'Document how to add new services', status: 'pending' },
       { order: 5, description: 'Explain DI patterns and best practices', status: 'pending' },
       { order: 6, description: 'Document testing strategies', status: 'pending' },
       { order: 7, description: 'Add troubleshooting guide', status: 'pending' },
       { order: 8, description: 'Include code examples and snippets', status: 'pending' },
       { order: 9, description: 'Review guide with development team', status: 'pending' },
-      { order: 10, description: 'Publish to team wiki', status: 'pending' }
-    ]
+      { order: 10, description: 'Publish to team wiki', status: 'pending' },
+    ],
   },
   {
     id: 'story-us-e5-040',
@@ -1100,7 +1352,11 @@ const epic005Stories = [
     dependencies: [],
     subtasks: [
       { order: 1, description: 'Create ADR for service decomposition strategy', status: 'pending' },
-      { order: 2, description: 'Create ADR for DI framework selection (InversifyJS)', status: 'pending' },
+      {
+        order: 2,
+        description: 'Create ADR for DI framework selection (InversifyJS)',
+        status: 'pending',
+      },
       { order: 3, description: 'Create ADR for service boundary decisions', status: 'pending' },
       { order: 4, description: 'Create ADR for payment service isolation', status: 'pending' },
       { order: 5, description: 'Create ADR for event-driven communication', status: 'pending' },
@@ -1108,8 +1364,8 @@ const epic005Stories = [
       { order: 7, description: 'Explain alternatives considered', status: 'pending' },
       { order: 8, description: 'Add context and consequences', status: 'pending' },
       { order: 9, description: 'Get ADRs reviewed by architects', status: 'pending' },
-      { order: 10, description: 'Commit ADRs to docs/decisions/', status: 'pending' }
-    ]
+      { order: 10, description: 'Commit ADRs to docs/decisions/', status: 'pending' },
+    ],
   },
   {
     id: 'story-us-e5-041',
@@ -1135,8 +1391,8 @@ const epic005Stories = [
       { order: 7, description: 'Clean up unused imports', status: 'pending' },
       { order: 8, description: 'Update build configuration', status: 'pending' },
       { order: 9, description: 'Verify build still passes', status: 'pending' },
-      { order: 10, description: 'Commit cleanup changes', status: 'pending' }
-    ]
+      { order: 10, description: 'Commit cleanup changes', status: 'pending' },
+    ],
   },
   {
     id: 'story-us-e5-042',
@@ -1162,9 +1418,9 @@ const epic005Stories = [
       { order: 7, description: 'Get QA team sign-off', status: 'pending' },
       { order: 8, description: 'Get security team approval', status: 'pending' },
       { order: 9, description: 'Get management sign-off', status: 'pending' },
-      { order: 10, description: 'Mark epic as ready for deployment', status: 'pending' }
-    ]
-  }
+      { order: 10, description: 'Mark epic as ready for deployment', status: 'pending' },
+    ],
+  },
 ];
 
 // Add Epic 005 parent task
@@ -1184,13 +1440,13 @@ const epic005Parent = {
     'Phase 4: User Service Refactoring': { total: 6, completed: 0 },
     'Phase 5: Payment Service Refactoring': { total: 8, completed: 0 },
     'Phase 6: Integration & Testing': { total: 5, completed: 0 },
-    'Phase 7: Documentation & Cleanup': { total: 6, completed: 0 }
-  }
+    'Phase 7: Documentation & Cleanup': { total: 6, completed: 0 },
+  },
 };
 
 // Check if Epic 005 already exists
 const existingEpic005Index = tasks.phases['active-development'].tasks.findIndex(
-  task => task.id === 'epic-005-parent'
+  (task) => task.id === 'epic-005-parent'
 );
 
 if (existingEpic005Index !== -1) {
@@ -1205,7 +1461,7 @@ if (existingEpic005Index !== -1) {
 
 // Remove any existing Epic 005 stories (clean slate)
 tasks.phases['active-development'].tasks = tasks.phases['active-development'].tasks.filter(
-  task => !task.story_id || !task.story_id.startsWith('US-E5-')
+  (task) => !task.story_id || !task.story_id.startsWith('US-E5-')
 );
 
 // Add all Epic 005 stories

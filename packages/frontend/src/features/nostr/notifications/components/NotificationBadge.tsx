@@ -37,7 +37,7 @@ export const NotificationBadge: React.FC<NotificationBadgeProps> = ({
 
   // Variant styles
   const variantStyles = {
-    default: 'bg-gray-500 text-white',
+    default: 'bg-muted-foreground text-background',
     primary: 'bg-blue-500 text-white',
     success: 'bg-green-500 text-white',
     warning: 'bg-yellow-500 text-white',

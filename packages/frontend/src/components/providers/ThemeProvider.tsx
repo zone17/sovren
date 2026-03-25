@@ -22,54 +22,23 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     dispatch(hydrateFromStorage());
   }, [dispatch]);
 
-  // Apply theme to document
+  // Apply theme to document — theme is always 'dark' or 'light' (no 'system')
   useEffect(() => {
     const root = document.documentElement;
-    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
-      ? 'dark'
-      : 'light';
-
-    const effectiveTheme = theme === 'system' ? systemTheme : theme;
 
     // Remove existing theme classes
     root.classList.remove('light', 'dark');
 
     // Add current theme class
-    root.classList.add(effectiveTheme);
+    root.classList.add(theme);
 
     // Set CSS variables for theme
-    root.setAttribute('data-theme', effectiveTheme);
+    root.setAttribute('data-theme', theme);
 
     // Update meta theme-color for mobile browsers
     const metaThemeColor = document.querySelector('meta[name="theme-color"]');
     if (metaThemeColor) {
-      metaThemeColor.setAttribute('content', effectiveTheme === 'dark' ? '#1a1a1a' : '#ffffff');
-    }
-  }, [theme]);
-
-  // Listen for system theme changes
-  useEffect(() => {
-    if (theme !== 'system') return;
-
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = (e: MediaQueryListEvent) => {
-      const root = document.documentElement;
-      const newTheme = e.matches ? 'dark' : 'light';
-
-      root.classList.remove('light', 'dark');
-      root.classList.add(newTheme);
-      root.setAttribute('data-theme', newTheme);
-    };
-
-    // Modern browsers
-    if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener('change', handleChange);
-      return () => mediaQuery.removeEventListener('change', handleChange);
-    }
-    // Legacy browsers
-    else {
-      mediaQuery.addListener(handleChange);
-      return () => mediaQuery.removeListener(handleChange);
+      metaThemeColor.setAttribute('content', theme === 'dark' ? '#1a1a1a' : '#ffffff');
     }
   }, [theme]);
 
@@ -82,7 +51,7 @@ export const useTheme = () => {
   const dispatch = useAppDispatch();
 
   const setTheme = React.useCallback(
-    (newTheme: 'light' | 'dark' | 'system') => {
+    (newTheme: 'light' | 'dark') => {
       dispatch({ type: 'ui/setTheme', payload: newTheme });
     },
     [dispatch]
@@ -93,16 +62,8 @@ export const useTheme = () => {
     setTheme(newTheme);
   }, [theme, setTheme]);
 
-  const effectiveTheme = React.useMemo(() => {
-    if (theme === 'system') {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }
-    return theme;
-  }, [theme]);
-
   return {
     theme,
-    effectiveTheme,
     setTheme,
     toggleTheme,
   };

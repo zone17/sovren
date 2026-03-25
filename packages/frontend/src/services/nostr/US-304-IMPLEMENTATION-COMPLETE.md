@@ -16,6 +16,7 @@ Build centralized service for managing NOSTR event subscriptions across all rela
 **Location**: `/packages/frontend/src/services/nostr/SubscriptionManagerService.ts`
 
 **Features Implemented**:
+
 - ✅ Singleton pattern for shared subscription management
 - ✅ Multi-relay subscription handling via RelayPoolManager (US-302)
 - ✅ Automatic event deduplication across relays
@@ -30,6 +31,7 @@ Build centralized service for managing NOSTR event subscriptions across all rela
 ### 2. Subscription Operations
 
 **Core Operations**:
+
 ```typescript
 // Create subscription
 const subId = manager.subscribe(
@@ -62,24 +64,28 @@ const paused = manager.getSubscriptions('paused');
 ### 3. Advanced Features
 
 **Event Deduplication**:
+
 - Tracks event IDs across all relays
 - Prevents duplicate event callbacks
 - LRU cache (keeps last 10,000 event IDs)
 - Zero performance overhead
 
 **Filter Optimization**:
+
 - Merges similar filters (same kinds)
 - Removes empty filters
 - Deduplicates array values
 - Optimizes time ranges and limits
 
 **Subscription Pooling**:
+
 - Reuses subscriptions for identical filters
 - Reduces relay connections
 - Multiple callbacks per subscription
 - Opt-in/opt-out via `pool` option
 
 **Auto-Caching**:
+
 - Automatic event caching in EventCacheService
 - Configurable via `autoCache` option
 - Metadata tracking (timestamp, relay, verified)
@@ -90,6 +96,7 @@ const paused = manager.getSubscriptions('paused');
 **Location**: `/packages/frontend/src/services/nostr/__tests__/SubscriptionManagerService.test.ts`
 
 **Test Results**:
+
 ```
 ✅ 47/47 tests passing (100% pass rate)
 ✅ All test categories covered:
@@ -111,6 +118,7 @@ const paused = manager.getSubscriptions('paused');
 ```
 
 **Coverage Highlights**:
+
 - ✅ Singleton pattern verification
 - ✅ Multi-relay subscription handling
 - ✅ Event deduplication across relays
@@ -125,11 +133,13 @@ const paused = manager.getSubscriptions('paused');
 ### 5. Integration with Existing Services
 
 **Dependencies**:
+
 - ✅ **RelayPoolManager** (US-302): Multi-relay connection handling
 - ✅ **EventCacheService** (US-312): Event persistence and caching
 - ✅ **Consolidated Types** (US-308): Type safety with NostrFilter, NostrEvent
 
 **Service Exports**:
+
 ```typescript
 // Singleton instance
 export const subscriptionManager = SubscriptionManagerService.getInstance();
@@ -144,12 +154,14 @@ export type { SubscriptionManagerOptions };
 ## 📊 Quality Metrics
 
 ### Test Coverage
+
 - **Total Tests**: 47
 - **Passing**: 47
 - **Success Rate**: 100%
 - **Test Execution Time**: ~500ms
 
 ### Code Quality
+
 - ✅ Zero ESLint errors
 - ✅ Zero TypeScript errors
 - ✅ Full type safety with shared types
@@ -157,6 +169,7 @@ export type { SubscriptionManagerOptions };
 - ✅ TDD approach (tests written first)
 
 ### Performance Metrics
+
 - ✅ Event deduplication: O(1) lookup
 - ✅ Filter optimization: Reduces subscription count by ~30-50%
 - ✅ Subscription pooling: Saves relay connections
@@ -167,6 +180,7 @@ export type { SubscriptionManagerOptions };
 ### Architecture Patterns
 
 **Singleton Pattern**:
+
 ```typescript
 export class SubscriptionManagerService {
   private static instance: SubscriptionManagerService | null = null;
@@ -181,6 +195,7 @@ export class SubscriptionManagerService {
 ```
 
 **Event Deduplication**:
+
 ```typescript
 // LRU cache for seen event IDs
 private seenEventIds: Set<string> = new Set();
@@ -201,6 +216,7 @@ private handleEvent(subId: string, event: NostrEvent): void {
 ```
 
 **Filter Optimization**:
+
 ```typescript
 private mergeFilters(filters: NostrFilter[]): NostrFilter[] {
   // Merge filters with same kinds
@@ -211,6 +227,7 @@ private mergeFilters(filters: NostrFilter[]): NostrFilter[] {
 ```
 
 **Subscription Pooling**:
+
 ```typescript
 private generatePoolKey(filters: NostrFilter[]): string {
   // Create deterministic key from normalized filters
@@ -224,23 +241,22 @@ private generatePoolKey(filters: NostrFilter[]): string {
 ## 📈 Usage Examples
 
 ### Basic Subscription
+
 ```typescript
 import { subscriptionManager } from '@/services/nostr';
 
-const subId = subscriptionManager.subscribe(
-  [{ kinds: [1], limit: 50 }],
-  (event) => {
-    console.log('New event:', event.content);
-  }
-);
+const subId = subscriptionManager.subscribe([{ kinds: [1], limit: 50 }], (event) => {
+  console.log('New event:', event.content);
+});
 ```
 
 ### Advanced Subscription with Options
+
 ```typescript
 const subId = subscriptionManager.subscribe(
   [
     { kinds: [1], authors: [userPubkey], limit: 100 },
-    { kinds: [6, 7], '#e': [eventId] }
+    { kinds: [6, 7], '#e': [eventId] },
   ],
   (event, relay) => {
     console.log(`Event from ${relay}:`, event);
@@ -256,6 +272,7 @@ const subId = subscriptionManager.subscribe(
 ```
 
 ### Subscription Lifecycle
+
 ```typescript
 // Create
 const subId = manager.subscribe([filter], onEvent);
@@ -274,6 +291,7 @@ manager.unsubscribe(subId);
 ```
 
 ### Subscription Monitoring
+
 ```typescript
 // Get subscription info
 const info = manager.getSubscription(subId);
@@ -292,21 +310,25 @@ console.log('Total events:', stats.totalEvents);
 ## 🔐 Security & Best Practices
 
 ### Event Validation
+
 - ✅ All events validated before caching
 - ✅ Filter validation with Zod schemas
 - ✅ Relay URL validation
 
 ### Error Handling
+
 - ✅ Graceful handling of network errors
 - ✅ Callback error isolation
 - ✅ Comprehensive error callbacks
 
 ### Memory Management
+
 - ✅ LRU cache for event IDs (10K limit)
 - ✅ Automatic cleanup on destroy
 - ✅ Efficient Set-based deduplication
 
 ### Type Safety
+
 - ✅ Full TypeScript coverage
 - ✅ Zod schema validation
 - ✅ Shared type definitions
@@ -314,11 +336,13 @@ console.log('Total events:', stats.totalEvents);
 ## 🎓 Dependencies
 
 ### Provided By (US-304 uses these)
+
 - **US-302**: RelayPoolManager - Multi-relay connection handling
 - **US-308**: Consolidated Types - NostrFilter, NostrEvent, SubscriptionOptions
 - **US-312**: EventCacheService - Event persistence
 
 ### Used By (Other stories will use US-304)
+
 - **US-305**: Query Service - Uses subscriptions for event queries
 - **US-306**: Timeline Service - Uses subscriptions for feed management
 - **US-307**: Event Stream Manager - Uses subscriptions for real-time updates
@@ -362,6 +386,7 @@ console.log('Total events:', stats.totalEvents);
 ## 🚀 Ready for Production
 
 The SubscriptionManagerService is:
+
 - ✅ Fully implemented
 - ✅ Comprehensively tested (100% pass rate)
 - ✅ Integrated with existing services

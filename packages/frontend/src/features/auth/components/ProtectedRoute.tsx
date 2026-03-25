@@ -1,5 +1,6 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
+import { Spinner } from '../../../components/ui/spinner';
 import { useAuthStatus } from '../services/AuthContext';
 import type { ProtectedRouteProps } from '../types';
 
@@ -15,7 +16,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+        <Spinner size="xl" />
       </div>
     );
   }
@@ -30,8 +31,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       return (
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h2>
-            <p className="text-gray-600">You don't have permission to access this page.</p>
+            <h2 className="text-2xl font-bold text-foreground mb-4">Access Denied</h2>
+            <p className="text-muted-foreground">You don't have permission to access this page.</p>
           </div>
         </div>
       );
@@ -50,8 +51,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         return (
           <div className="flex items-center justify-center min-h-screen">
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h2>
-              <p className="text-gray-600">
+              <h2 className="text-2xl font-bold text-foreground mb-4">Access Denied</h2>
+              <p className="text-muted-foreground">
                 You don't have the required permissions to access this page.
               </p>
             </div>

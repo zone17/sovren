@@ -70,14 +70,12 @@ The platform addresses critical pain points in current Web3 creator tools by pro
 ## 4. Functional requirements
 
 - **Authentication System** (Priority: Critical)
-
   - NOSTR key-based authentication with support for browser extensions
   - Secure session management with JWT
   - Profile creation and management
   - NIP-05 verification integration
 
 - **Content Management** (Priority: Critical)
-
   - Rich text editor with markdown support
   - Media embedding (images, videos, audio)
   - Content categorization and tagging
@@ -85,7 +83,6 @@ The platform addresses critical pain points in current Web3 creator tools by pro
   - Content synchronization with NOSTR network
 
 - **Lightning Network Integration** (Priority: Critical)
-
   - BOLT11 invoice generation
   - Payment verification and confirmation
   - Multiple wallet support
@@ -93,7 +90,6 @@ The platform addresses critical pain points in current Web3 creator tools by pro
   - Subscription management
 
 - **Creator Dashboard** (Priority: High)
-
   - Activity overview and key metrics
   - Content performance analytics
   - Audience growth and engagement metrics
@@ -101,7 +97,6 @@ The platform addresses critical pain points in current Web3 creator tools by pro
   - Content planning and management tools
 
 - **Supporter Experience** (Priority: High)
-
   - Personalized content feed
   - Subscription management interface
   - Creator discovery
@@ -109,7 +104,6 @@ The platform addresses critical pain points in current Web3 creator tools by pro
   - Direct messaging with creators
 
 - **Mobile Optimization** (Priority: High)
-
   - Responsive design for all screen sizes
   - Touch-optimized interface
   - Offline content access
@@ -117,7 +111,6 @@ The platform addresses critical pain points in current Web3 creator tools by pro
   - Native-like experience through PWA
 
 - **Discovery and Recommendations** (Priority: Medium)
-
   - Content recommendation engine
   - Creator recommendation system
   - Category-based browsing
@@ -276,35 +269,30 @@ Sophia is a professional illustrator who wants to monetize her digital art direc
 ### 9.3. Suggested phases
 
 - **Phase 1**: Project Setup and Infrastructure (2 weeks)
-
   - Repository setup, monorepo structure, CI/CD pipeline
   - Core infrastructure with Supabase and Docker
   - Feature flag system implementation (SovFlag)
   - Base frontend and backend architecture
 
 - **Phase 2**: NOSTR Integration and Core Features (2-3 weeks)
-
   - NOSTR protocol integration with relay management
   - Authentication system with NOSTR keys
   - User profile system with NIP-05 verification
   - Basic content system with NOSTR synchronization
 
 - **Phase 3**: Payment Integration and Frontend Foundation (2-3 weeks)
-
   - Lightning Network integration for payments
   - Subscription system implementation
   - Frontend foundation with responsive layouts
   - Content display and interaction components
 
 - **Phase 4**: Creator and Supporter Experiences (2-3 weeks)
-
   - Creator dashboard with analytics
   - Supporter experience with content feed
   - Engagement features (comments, reactions)
   - Content organization and discovery
 
 - **Phase 5**: AI Integration and Enhanced Features (2-3 weeks)
-
   - Recommendation engine for content and creators
   - Enhanced analytics for creators
   - Advanced content features (rich media, formatting)

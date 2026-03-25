@@ -16,6 +16,7 @@ import {
 } from '../../interfaces/payment';
 import { ICacheService } from '../../interfaces/ICacheService';
 import { IEventBusService } from '../../interfaces/IEventBusService';
+import { DomainEventBuilder, DomainEventType } from '../../interfaces/shared/IEventBus';
 import { IAuditLogService } from '../../interfaces/IAuditLogService';
 import { INotificationService } from '../../interfaces/INotificationService';
 import { IDatabase } from '../../interfaces/IDatabase';
@@ -178,13 +179,20 @@ export class InvoiceService implements IInvoiceService {
         3600 // 1 hour
       );
 
-      // Emit event
-      await this.eventBus.emit('invoice.created', {
-        invoiceId: invoice.id,
-        customerId: invoice.customerId,
-        total: total.toFixed(2),
-        timestamp: Date.now(),
-      });
+      // Publish domain event (Todo #690: emit→publish migration)
+      await this.eventBus.publish(
+        new DomainEventBuilder()
+          .withType(DomainEventType.INVOICE_CREATED)
+          .withAggregateId(invoice.id)
+          .withAggregateType('Invoice')
+          .withPayload({
+            invoiceId: invoice.id,
+            customerId: invoice.customerId,
+            total: total.toFixed(2),
+          })
+          .withSource('InvoiceService')
+          .build()
+      );
 
       this.logger.info('Invoice created successfully', {
         invoiceId: invoice.id,
@@ -263,12 +271,20 @@ export class InvoiceService implements IInvoiceService {
       // Update cache
       await this.cache.set(`invoice:${id}`, updatedInvoice, 3600);
 
-      // Emit event
-      await this.eventBus.emit('invoice.updated', {
-        invoiceId: id,
-        version: updatedInvoice.version,
-        timestamp: Date.now(),
-      });
+      // Publish domain event (Todo #690: emit→publish migration)
+      // TODO #690: Add INVOICE_UPDATED to DomainEventType enum
+      await this.eventBus.publish(
+        new DomainEventBuilder()
+          .withType('invoice.updated' as DomainEventType)
+          .withAggregateId(id)
+          .withAggregateType('Invoice')
+          .withPayload({
+            invoiceId: id,
+            version: updatedInvoice.version,
+          })
+          .withSource('InvoiceService')
+          .build()
+      );
 
       return updatedInvoice;
     } catch (error) {
@@ -341,12 +357,20 @@ export class InvoiceService implements IInvoiceService {
       // Update cache
       await this.cache.set(`invoice:${id}`, invoice, 3600);
 
-      // Emit event
-      await this.eventBus.emit('invoice.finalized', {
-        invoiceId: id,
-        customerId: invoice.customerId,
-        timestamp: Date.now(),
-      });
+      // Publish domain event (Todo #690: emit→publish migration)
+      // TODO #690: Add INVOICE_FINALIZED to DomainEventType enum
+      await this.eventBus.publish(
+        new DomainEventBuilder()
+          .withType('invoice.finalized' as DomainEventType)
+          .withAggregateId(id)
+          .withAggregateType('Invoice')
+          .withPayload({
+            invoiceId: id,
+            customerId: invoice.customerId,
+          })
+          .withSource('InvoiceService')
+          .build()
+      );
 
       // Send invoice to customer
       await this.sendInvoice(id, invoice.customerId);
@@ -408,12 +432,20 @@ export class InvoiceService implements IInvoiceService {
       // Clear cache
       await this.cache.delete(`invoice:${id}`);
 
-      // Emit event
-      await this.eventBus.emit('invoice.voided', {
-        invoiceId: id,
-        reason,
-        timestamp: Date.now(),
-      });
+      // Publish domain event (Todo #690: emit→publish migration)
+      // TODO #690: Add INVOICE_VOIDED to DomainEventType enum
+      await this.eventBus.publish(
+        new DomainEventBuilder()
+          .withType('invoice.voided' as DomainEventType)
+          .withAggregateId(id)
+          .withAggregateType('Invoice')
+          .withPayload({
+            invoiceId: id,
+            reason,
+          })
+          .withSource('InvoiceService')
+          .build()
+      );
     } catch (error) {
       this.logger.error('Failed to void invoice', error);
       throw error instanceof ServiceError
@@ -816,15 +848,23 @@ export class InvoiceService implements IInvoiceService {
     try {
       const invoice = await this.getInvoice(invoiceId);
 
-      // Schedule reminder via event bus
-      await this.eventBus.emit('invoice.reminder.schedule', {
-        invoiceId,
-        customerId: invoice.customerId,
-        scheduledFor: date,
-        invoiceNumber: invoice.number,
-        amount: invoice.total,
-        timestamp: Date.now(),
-      });
+      // Schedule reminder via event bus (Todo #690: emit→publish migration)
+      // TODO #690: Add INVOICE_REMINDER_SCHEDULED to DomainEventType enum
+      await this.eventBus.publish(
+        new DomainEventBuilder()
+          .withType('invoice.reminder.schedule' as DomainEventType)
+          .withAggregateId(invoiceId)
+          .withAggregateType('Invoice')
+          .withPayload({
+            invoiceId,
+            customerId: invoice.customerId,
+            scheduledFor: date,
+            invoiceNumber: invoice.number,
+            amount: invoice.total,
+          })
+          .withSource('InvoiceService')
+          .build()
+      );
 
       // Store reminder in database
       await this.db.query(
@@ -913,13 +953,21 @@ export class InvoiceService implements IInvoiceService {
         timestamp: new Date(),
       });
 
-      // Emit event
-      await this.eventBus.emit('invoice.payment_recorded', {
-        invoiceId,
-        paymentId: payment.id,
-        amount: payment.amount,
-        timestamp: Date.now(),
-      });
+      // Publish domain event (Todo #690: emit→publish migration)
+      // TODO #690: Add INVOICE_PAYMENT_RECORDED to DomainEventType enum
+      await this.eventBus.publish(
+        new DomainEventBuilder()
+          .withType('invoice.payment_recorded' as DomainEventType)
+          .withAggregateId(invoiceId)
+          .withAggregateType('Invoice')
+          .withPayload({
+            invoiceId,
+            paymentId: payment.id,
+            amount: payment.amount,
+          })
+          .withSource('InvoiceService')
+          .build()
+      );
     } catch (error) {
       this.logger.error('Failed to record payment', error);
       throw error instanceof ServiceError
@@ -984,13 +1032,21 @@ export class InvoiceService implements IInvoiceService {
         timestamp: new Date(),
       });
 
-      // Emit event
-      await this.eventBus.emit('invoice.paid', {
-        invoiceId,
-        customerId: invoice.customerId,
-        amount: invoice.total,
-        timestamp: Date.now(),
-      });
+      // Publish domain event (Todo #690: emit→publish migration)
+      // TODO #690: Add INVOICE_PAID to DomainEventType enum
+      await this.eventBus.publish(
+        new DomainEventBuilder()
+          .withType('invoice.paid' as DomainEventType)
+          .withAggregateId(invoiceId)
+          .withAggregateType('Invoice')
+          .withPayload({
+            invoiceId,
+            customerId: invoice.customerId,
+            amount: invoice.total,
+          })
+          .withSource('InvoiceService')
+          .build()
+      );
 
       // Send receipt
       await this.sendReceipt(invoiceId, invoice.customerId);

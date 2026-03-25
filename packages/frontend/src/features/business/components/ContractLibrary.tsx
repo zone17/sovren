@@ -15,7 +15,7 @@ const CATEGORY_LABELS: Record<ContractCategory, string> = {
 };
 
 const STATUS_STYLES: Record<string, string> = {
-  draft: 'bg-gray-100 text-gray-700',
+  draft: 'bg-muted text-foreground',
   sent: 'bg-blue-100 text-blue-700',
   signed: 'bg-green-100 text-green-700',
   expired: 'bg-yellow-100 text-yellow-700',
@@ -34,9 +34,9 @@ const ContractLibrary: React.FC<ContractLibraryProps> = ({ onSelectTemplate }) =
   if (templatesLoading || contractsLoading) {
     return (
       <div className="space-y-4 animate-pulse">
-        <div className="h-8 w-48 rounded bg-gray-200" />
-        <div className="h-24 rounded bg-gray-100" />
-        <div className="h-24 rounded bg-gray-100" />
+        <div className="h-8 w-48 rounded bg-muted" />
+        <div className="h-24 rounded bg-muted" />
+        <div className="h-24 rounded bg-muted" />
       </div>
     );
   }
@@ -46,11 +46,11 @@ const ContractLibrary: React.FC<ContractLibraryProps> = ({ onSelectTemplate }) =
       {/* Templates */}
       <section aria-labelledby="templates-heading">
         <div className="flex items-center justify-between">
-          <h3 id="templates-heading" className="text-base font-semibold text-gray-900">
+          <h3 id="templates-heading" className="text-base font-semibold text-foreground">
             Contract Templates
           </h3>
           <select
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="rounded-md border border-border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value as ContractCategory | 'all')}
             aria-label="Filter templates by category"
@@ -68,11 +68,11 @@ const ContractLibrary: React.FC<ContractLibraryProps> = ({ onSelectTemplate }) =
           {filteredTemplates.map((template) => (
             <li key={template.id}>
               <button
-                className="w-full rounded-lg border border-gray-200 p-4 text-left hover:border-indigo-300 hover:bg-indigo-50/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition-colors"
+                className="w-full rounded-lg border border-border p-4 text-left hover:border-indigo-300 hover:bg-indigo-50/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition-colors"
                 onClick={() => onSelectTemplate(template.id)}
                 aria-label={`Use template: ${template.name}`}
               >
-                <span className="block text-sm font-medium text-gray-900">{template.name}</span>
+                <span className="block text-sm font-medium text-foreground">{template.name}</span>
                 <span className="mt-1 inline-block rounded-full bg-indigo-100 px-2 py-0.5 text-xs text-indigo-700">
                   {CATEGORY_LABELS[template.category]}
                 </span>
@@ -87,26 +87,30 @@ const ContractLibrary: React.FC<ContractLibraryProps> = ({ onSelectTemplate }) =
         </ul>
 
         {filteredTemplates.length === 0 && (
-          <p className="mt-3 text-sm text-gray-500">No templates found for selected category.</p>
+          <p className="mt-3 text-sm text-muted-foreground">
+            No templates found for selected category.
+          </p>
         )}
       </section>
 
       {/* My Contracts */}
       <section aria-labelledby="contracts-heading">
-        <h3 id="contracts-heading" className="text-base font-semibold text-gray-900">
+        <h3 id="contracts-heading" className="text-base font-semibold text-foreground">
           My Contracts
         </h3>
 
         {contracts && contracts.length > 0 ? (
           <ul
-            className="mt-3 divide-y divide-gray-100 rounded-lg border border-gray-200 bg-white"
+            className="mt-3 divide-y divide-border rounded-lg border border-border bg-card"
             role="list"
           >
             {contracts.map((contract) => (
               <li key={contract.id} className="flex items-center justify-between px-4 py-3">
                 <div>
-                  <span className="text-sm font-medium text-gray-900">{contract.counterparty}</span>
-                  <span className="ml-2 text-xs text-gray-500">
+                  <span className="text-sm font-medium text-foreground">
+                    {contract.counterparty}
+                  </span>
+                  <span className="ml-2 text-xs text-muted-foreground">
                     {new Date(contract.createdAt).toLocaleDateString()}
                   </span>
                 </div>
@@ -119,7 +123,7 @@ const ContractLibrary: React.FC<ContractLibraryProps> = ({ onSelectTemplate }) =
             ))}
           </ul>
         ) : (
-          <p className="mt-3 text-sm text-gray-500">
+          <p className="mt-3 text-sm text-muted-foreground">
             No contracts yet. Start from a template above.
           </p>
         )}

@@ -129,7 +129,7 @@ describe('🎨 Design System Integration', () => {
 
     it('should apply shimmer loading animation', () => {
       render(
-        <div className="animate-shimmer bg-gradient-to-r from-gray-200 via-white to-gray-200">
+        <div className="animate-shimmer bg-gradient-to-r from-muted via-background to-muted">
           Loading...
         </div>
       );

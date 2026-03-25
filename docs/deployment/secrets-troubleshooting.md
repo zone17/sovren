@@ -53,11 +53,13 @@ vercel whoami --token "$VERCEL_TOKEN" || echo "❌ Vercel auth failed"
 ### 1. "Secret not found" in GitHub Actions
 
 **Symptoms**:
+
 - Workflow fails with "secret not found"
 - Environment variable is empty/undefined
 - Workflow step skipped due to missing secret
 
 **Causes**:
+
 - Secret name typo (case-sensitive)
 - Secret not set at correct level (repo vs organization)
 - Secret name changed but workflow not updated
@@ -87,6 +89,7 @@ gh secret set SECRET_NAME
 ```
 
 **Prevention**:
+
 - Use consistent naming conventions
 - Document all required secrets
 - Run validation workflow after changes
@@ -96,11 +99,13 @@ gh secret set SECRET_NAME
 ### 2. "Invalid credentials" / Authentication Failed
 
 **Symptoms**:
+
 - 401 Unauthorized errors
 - "Authentication failed" messages
 - API returns "invalid token"
 
 **Causes**:
+
 - Secret expired (tokens have expiration)
 - Secret value incorrect or truncated
 - Whitespace in secret value
@@ -133,6 +138,7 @@ curl -H "apikey: $SUPABASE_ANON_KEY" \
 ```
 
 **Prevention**:
+
 - Always trim whitespace when copying secrets
 - Test secrets immediately after setting
 - Set expiration reminders (90 days before)
@@ -142,11 +148,13 @@ curl -H "apikey: $SUPABASE_ANON_KEY" \
 ### 3. "Environment variable not defined" in Vercel
 
 **Symptoms**:
+
 - Build fails with "VITE_XXX is not defined"
 - Frontend cannot access configuration
 - Blank values in production
 
 **Causes**:
+
 - Variable not set in correct environment (Production/Preview/Development)
 - Missing `VITE_` prefix for frontend variables
 - Variable added but not redeployed
@@ -174,6 +182,7 @@ vercel --prod
 ```
 
 **Prevention**:
+
 - Always set variables in all three environments
 - Use `.env.example` as checklist
 - Test preview deployment before production
@@ -183,11 +192,13 @@ vercel --prod
 ### 4. JWT_SECRET / SESSION_SECRET Too Short
 
 **Symptoms**:
+
 - Validation fails with "too short" error
 - Security warnings in logs
 - Authentication issues
 
 **Causes**:
+
 - Using default/weak secret
 - Generated secret too short
 - Development secret used in production
@@ -211,6 +222,7 @@ gh workflow run release.yml -f environment=production
 ```
 
 **Prevention**:
+
 - Always use `openssl rand -hex 64` for production
 - Document minimum lengths in `.env.example`
 - Run validation before deployment
@@ -220,11 +232,13 @@ gh workflow run release.yml -f environment=production
 ### 5. Database Connection Failed
 
 **Symptoms**:
+
 - "connection refused" errors
 - "no pg_hba.conf entry for host" error
 - Timeout connecting to database
 
 **Causes**:
+
 - IP not whitelisted in database firewall
 - Connection string incorrect
 - SSL/TLS not configured
@@ -263,6 +277,7 @@ DATABASE_URL="${DATABASE_URL}?sslmode=require"
 ```
 
 **Prevention**:
+
 - Always use SSL: `?sslmode=require`
 - Whitelist GitHub Actions IP ranges
 - Test connectivity from CI before production
@@ -272,11 +287,13 @@ DATABASE_URL="${DATABASE_URL}?sslmode=require"
 ### 6. Redis Connection Failed
 
 **Symptoms**:
+
 - "connection refused" to Redis
 - "NOAUTH Authentication required"
 - Cache operations failing
 
 **Causes**:
+
 - Wrong Redis URL format
 - Missing authentication
 - TLS not configured
@@ -315,6 +332,7 @@ REDIS_URL="rediss://default:PASSWORD@host:6379"
 ```
 
 **Prevention**:
+
 - Use `rediss://` (TLS) in production
 - Include authentication in URL
 - Test from CI environment
@@ -324,11 +342,13 @@ REDIS_URL="rediss://default:PASSWORD@host:6379"
 ### 7. Slack Webhook Not Working
 
 **Symptoms**:
+
 - No notifications received
 - HTTP 404 or 403 errors
 - Webhook URL rejected
 
 **Causes**:
+
 - Webhook URL expired or revoked
 - Incorrect URL format
 - Channel deleted or app removed
@@ -365,6 +385,7 @@ gh secret set SLACK_WEBHOOK_URL -b"https://hooks.slack.com/services/..."
 ```
 
 **Prevention**:
+
 - Document which channel webhook posts to
 - Test after rotation
 - Monitor for failed webhook calls
@@ -374,11 +395,13 @@ gh secret set SLACK_WEBHOOK_URL -b"https://hooks.slack.com/services/..."
 ### 8. Lightning Node Connection Issues
 
 **Symptoms**:
+
 - "unable to connect to LND" errors
 - "invalid macaroon" errors
 - Payment operations failing
 
 **Causes**:
+
 - Macaroon expired or invalid
 - TLS certificate mismatch
 - Node unreachable
@@ -420,6 +443,7 @@ curl -k "$LIGHTNING_NODE_URL"
 ```
 
 **Prevention**:
+
 - Use LNbits for easier integration
 - Document network (testnet/mainnet) per environment
 - Test payments in staging first
@@ -437,6 +461,7 @@ curl -k "$LIGHTNING_NODE_URL"
 **Cause**: Security feature - forks don't have access to secrets
 
 **Solution**:
+
 - Secrets only work in main repository
 - Use `pull_request_target` trigger (with caution)
 - Or: Approve fork PRs to run in main repo
@@ -450,6 +475,7 @@ curl -k "$LIGHTNING_NODE_URL"
 **Cause**: Workflow run started before secret update
 
 **Solution**:
+
 ```bash
 # Cancel running workflows
 gh run list --workflow=release.yml | head -1 | awk '{print $7}' | xargs gh run cancel
@@ -469,10 +495,12 @@ gh workflow run release.yml
 **Problem**: Environment variable undefined during build
 
 **Cause**:
+
 - Variable set for wrong environment
 - Build cache using old value
 
 **Solution**:
+
 ```bash
 # Clear Vercel build cache
 vercel --prod --force
@@ -491,13 +519,14 @@ vercel env ls
 
 ---
 
-#### VITE_ Prefix Required But Missing
+#### VITE\_ Prefix Required But Missing
 
 **Problem**: Frontend can't access environment variable
 
 **Cause**: Vite requires `VITE_` prefix for client-side variables
 
 **Solution**:
+
 ```bash
 # Wrong (not accessible in frontend)
 SUPABASE_URL=https://...
@@ -526,11 +555,13 @@ const url = import.meta.env.VITE_SUPABASE_URL;
 **Problem**: Service role operations failing
 
 **Cause**:
+
 - Using anon key instead of service role key
 - Row Level Security blocking operation
 - Key expired/rotated
 
 **Solution**:
+
 ```bash
 # Verify you're using service role key (not anon key)
 # Service role key bypasses RLS, anon key doesn't
@@ -559,6 +590,7 @@ gh secret set SUPABASE_SERVICE_ROLE_KEY
 **Cause**: Environment variable not loaded
 
 **Solution**:
+
 ```typescript
 // Add defensive checks
 const supabaseUrl = process.env.VITE_SUPABASE_URL;
@@ -579,6 +611,7 @@ const config = {
 **Cause**: Secret doesn't match expected pattern
 
 **Solution**:
+
 ```bash
 # Check validation requirements
 ./scripts/validate-deployment-secrets.sh production
@@ -605,6 +638,7 @@ SLACK_WEBHOOK_URL=https://hooks.slack.com/services/T.../B.../...
 **Cause**: Service unreachable or firewall blocking
 
 **Solution**:
+
 ```bash
 # Check service is running
 curl -I https://your-service.com
@@ -774,16 +808,19 @@ watch -n 5 'curl -f https://sovren.dev/api/v1/health'
 ### Escalation
 
 **Critical Issues** (production down):
+
 1. Page on-call DevOps engineer
 2. Post in #incidents Slack channel
 3. Start incident response procedure
 
 **High Priority** (deployment blocked):
+
 1. Post in #devops Slack channel
 2. Review this troubleshooting guide
 3. Run validation script
 
 **Medium Priority** (non-blocking issues):
+
 1. Create GitHub issue
 2. Tag with `secrets`, `deployment`
 3. Assign to DevOps team

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { Spinner } from '../../../components/ui/spinner';
 import { getPerformanceReport } from '../../../monitoring/performance';
 
 interface MetricDisplayProps {
@@ -19,7 +20,7 @@ const MetricCard: React.FC<MetricDisplayProps> = ({ title, value, status, unit, 
       case 'poor':
         return 'bg-red-50 border-red-200 text-red-800';
       default:
-        return 'bg-gray-50 border-gray-200 text-gray-800';
+        return 'bg-muted border-border text-foreground';
     }
   };
 
@@ -179,29 +180,26 @@ const MonitoringDashboard: React.FC = () => {
 
       {/* Dashboard Panel */}
       {isVisible && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40"
-          onClick={() => setIsVisible(false)}
-        >
+        <div className="fixed inset-0 bg-background/50 z-40" onClick={() => setIsVisible(false)}>
           <div
-            className="fixed top-4 right-4 bottom-4 w-96 bg-white rounded-lg shadow-xl overflow-hidden flex flex-col"
+            className="fixed top-4 right-4 bottom-4 w-96 bg-card rounded-lg shadow-xl overflow-hidden flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="bg-gray-50 px-4 py-3 border-b flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">Performance Monitor</h2>
+            <div className="bg-muted px-4 py-3 border-b flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-foreground">Performance Monitor</h2>
               <div className="flex items-center space-x-2">
                 <button
                   onClick={() => setAutoRefresh(!autoRefresh)}
                   className={`px-2 py-1 text-xs rounded ${
-                    autoRefresh ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                    autoRefresh ? 'bg-green-100 text-green-800' : 'bg-muted text-foreground'
                   }`}
                 >
                   {autoRefresh ? 'Auto' : 'Manual'}
                 </button>
                 <button
                   onClick={() => setIsVisible(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-muted-foreground/60 hover:text-muted-foreground"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
@@ -249,7 +247,7 @@ const MonitoringDashboard: React.FC = () => {
                     ['LCP', 'FID', 'CLS', 'FCP', 'TTFB'].includes(name)
                   ).length > 0 && (
                     <div className="mb-6">
-                      <h3 className="text-sm font-medium text-gray-900 mb-3">Core Web Vitals</h3>
+                      <h3 className="text-sm font-medium text-foreground mb-3">Core Web Vitals</h3>
                       <div className="grid grid-cols-1 gap-2">
                         {Object.entries(performanceData.summary.byType)
                           .filter(([name]) => ['LCP', 'FID', 'CLS', 'FCP', 'TTFB'].includes(name))
@@ -272,7 +270,7 @@ const MonitoringDashboard: React.FC = () => {
                     ([name]) => !['LCP', 'FID', 'CLS', 'FCP', 'TTFB'].includes(name)
                   ).length > 0 && (
                     <div className="mb-6">
-                      <h3 className="text-sm font-medium text-gray-900 mb-3">Custom Metrics</h3>
+                      <h3 className="text-sm font-medium text-foreground mb-3">Custom Metrics</h3>
                       <div className="grid grid-cols-1 gap-2">
                         {Object.entries(performanceData.summary.byType)
                           .filter(([name]) => !['LCP', 'FID', 'CLS', 'FCP', 'TTFB'].includes(name))
@@ -320,11 +318,13 @@ const MonitoringDashboard: React.FC = () => {
                   {/* Recent Activity */}
                   {performanceData.recentMetrics.length > 0 && (
                     <div>
-                      <h3 className="text-sm font-medium text-gray-900 mb-3">Recent Activity</h3>
+                      <h3 className="text-sm font-medium text-foreground mb-3">Recent Activity</h3>
                       <div className="space-y-1">
                         {performanceData.recentMetrics.slice(0, 5).map((metric, index) => (
                           <div key={index} className="flex justify-between items-center text-xs">
-                            <span className="text-gray-600">{metric.name.replace(/_/g, ' ')}</span>
+                            <span className="text-muted-foreground">
+                              {metric.name.replace(/_/g, ' ')}
+                            </span>
                             <div className="flex items-center space-x-2">
                               <span
                                 className={`
@@ -350,7 +350,7 @@ const MonitoringDashboard: React.FC = () => {
                   {/* Controls */}
                   <div className="mt-6 pt-4 border-t">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-gray-500">
+                      <span className="text-muted-foreground">
                         Last updated: {new Date(performanceData.timestamp).toLocaleTimeString()}
                       </span>
                       <button
@@ -365,8 +365,8 @@ const MonitoringDashboard: React.FC = () => {
               ) : (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                    <p className="text-gray-500">Loading performance data...</p>
+                    <Spinner size="lg" className="mx-auto mb-2" />
+                    <p className="text-muted-foreground">Loading performance data...</p>
                   </div>
                 </div>
               )}

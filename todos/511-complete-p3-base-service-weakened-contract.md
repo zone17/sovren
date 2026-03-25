@@ -21,6 +21,7 @@ dependencies: []
 ## Proposed Solutions
 
 ### Option A: Accept as-is (Recommended)
+
 - The fix is pragmatic and prevents crashes
 - Future subclasses should implement cleanup if they hold resources
 - Add a code comment noting the design decision
@@ -28,6 +29,7 @@ dependencies: []
 - Risk: Low
 
 ### Option B: Restore abstract, fix ContentTransformationService
+
 - Revert performCleanup to abstract
 - Add empty implementation to ContentTransformationService
 - Pros: Restores compile-time enforcement
@@ -45,8 +47,8 @@ dependencies: []
 
 ## Work Log
 
-| Date | Action | Learnings |
-|------|--------|-----------|
+| Date       | Action                                 | Learnings                                             |
+| ---------- | -------------------------------------- | ----------------------------------------------------- |
 | 2026-02-25 | Identified during manual PR #98 review | Trade-off: runtime safety vs compile-time enforcement |
 
 ## Resources

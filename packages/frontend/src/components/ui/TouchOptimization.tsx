@@ -443,7 +443,7 @@ export const Swipeable: React.FC<SwipeableProps> = ({
 
   const actionColors = {
     primary: 'bg-blue-500 text-white',
-    secondary: 'bg-gray-500 text-white',
+    secondary: 'bg-secondary text-secondary-foreground',
     danger: 'bg-red-500 text-white',
   };
 
@@ -511,7 +511,7 @@ export const Swipeable: React.FC<SwipeableProps> = ({
       <div
         ref={elementRef}
         className={cn(
-          'transition-transform duration-200 bg-white',
+          'transition-transform duration-200 bg-card',
           isRevealed === 'left' && 'translate-x-20',
           isRevealed === 'right' && '-translate-x-20'
         )}

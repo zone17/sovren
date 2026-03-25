@@ -16,6 +16,22 @@ export enum DomainEventType {
   SUBSCRIPTION_CREATED = 'subscription.created',
   SUBSCRIPTION_CANCELLED = 'subscription.cancelled',
   SUBSCRIPTION_RENEWED = 'subscription.renewed',
+  SUBSCRIPTION_TRIAL_STARTED = 'subscription.trial_started',
+  SUBSCRIPTION_TRIAL_ENDING = 'subscription.trial_ending',
+  SUBSCRIPTION_TRIAL_ENDED = 'subscription.trial_ended',
+  SUBSCRIPTION_ACTIVATED = 'subscription.activated',
+  SUBSCRIPTION_PAYMENT_FAILED = 'subscription.payment_failed',
+  SUBSCRIPTION_GRACE_PERIOD_STARTED = 'subscription.grace_period_started',
+  SUBSCRIPTION_UPGRADED = 'subscription.upgraded',
+  SUBSCRIPTION_DOWNGRADED = 'subscription.downgraded',
+  SUBSCRIPTION_DOWNGRADE_SCHEDULED = 'subscription.downgrade_scheduled',
+  SUBSCRIPTION_PLAN_CHANGED = 'subscription.plan_changed',
+  SUBSCRIPTION_PAUSED = 'subscription.paused',
+  SUBSCRIPTION_RESUMED = 'subscription.resumed',
+  SUBSCRIPTION_CANCELED = 'subscription.canceled',
+  SUBSCRIPTION_CANCELLATION_SCHEDULED = 'subscription.cancellation_scheduled',
+  SUBSCRIPTION_EXPIRED = 'subscription.expired',
+  SUBSCRIPTION_PAYMENT_METHOD_UPDATED = 'subscription.payment_method_updated',
 
   // Refund Events
   REFUND_INITIATED = 'refund.initiated',
@@ -53,6 +69,15 @@ export enum DomainEventType {
   SERVICE_ERROR = 'service.error',
   SERVICE_HEALTHY = 'service.healthy',
   SERVICE_UNHEALTHY = 'service.unhealthy',
+
+  // Community / Creator Network Events (Slice 8)
+  COMMUNITY_USER_FOLLOWED = 'community.user.followed',
+  COMMUNITY_COMMENT_CREATED = 'community.comment.created',
+  COMMUNITY_MENTORSHIP_REQUESTED = 'community.mentorship.requested',
+  COMMUNITY_MENTORSHIP_ACCEPTED = 'community.mentorship.accepted',
+  COMMUNITY_MENTORSHIP_DECLINED = 'community.mentorship.declined',
+  COMMUNITY_CIRCLE_JOINED = 'community.circle.joined',
+  COMMUNITY_CIRCLE_POST_CREATED = 'community.circle.post.created',
 }
 
 export interface EventMetadata {

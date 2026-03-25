@@ -68,18 +68,18 @@ const OrderTracker: React.FC<OrderTrackerProps> = ({ order, role }) => {
   };
 
   return (
-    <div className="rounded-lg border bg-white p-4 space-y-4">
+    <div className="rounded-lg border bg-card p-4 space-y-4">
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs text-gray-400">Order #{order.id.slice(0, 8)}</p>
-          <p className="text-sm font-medium text-gray-900">
+          <p className="text-xs text-muted-foreground/60">Order #{order.id.slice(0, 8)}</p>
+          <p className="text-sm font-medium text-foreground">
             {order.amountSats.toLocaleString()} sats
           </p>
         </div>
         <span
           className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-            ORDER_STATUS_COLORS[order.status] ?? 'bg-gray-100 text-gray-600'
+            ORDER_STATUS_COLORS[order.status] ?? 'bg-muted text-muted-foreground'
           }`}
         >
           {ORDER_STATUS_LABELS[order.status] ?? order.status}
@@ -186,7 +186,7 @@ const OrderTracker: React.FC<OrderTrackerProps> = ({ order, role }) => {
                 setShowDisputeForm(false);
                 setDisputeReason('');
               }}
-              className="rounded-md border px-3 py-1.5 text-sm text-gray-600"
+              className="rounded-md border px-3 py-1.5 text-sm text-muted-foreground"
             >
               Cancel
             </button>
@@ -199,14 +199,14 @@ const OrderTracker: React.FC<OrderTrackerProps> = ({ order, role }) => {
         <div className="rounded-md border border-yellow-200 bg-yellow-50 p-3 space-y-2">
           <p className="text-sm font-medium text-yellow-800">Rate this service</p>
           <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-700" htmlFor={`rating-${order.id}`}>
+            <label className="text-sm text-foreground" htmlFor={`rating-${order.id}`}>
               Rating:
             </label>
             <select
               id={`rating-${order.id}`}
               value={rating}
               onChange={(e) => setRating(Number(e.target.value))}
-              className="rounded-md border border-gray-300 px-2 py-1 text-sm"
+              className="rounded-md border border-border px-2 py-1 text-sm"
             >
               {[5, 4, 3, 2, 1].map((r) => (
                 <option key={r} value={r}>
@@ -220,7 +220,7 @@ const OrderTracker: React.FC<OrderTrackerProps> = ({ order, role }) => {
             value={reviewText}
             onChange={(e) => setReviewText(e.target.value)}
             rows={2}
-            className="w-full resize-none rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none"
+            className="w-full resize-none rounded-md border border-border px-3 py-2 text-sm focus:outline-none"
             aria-label="Review text"
           />
           <div className="flex gap-2">
@@ -234,7 +234,7 @@ const OrderTracker: React.FC<OrderTrackerProps> = ({ order, role }) => {
             </button>
             <button
               onClick={() => setShowReviewForm(false)}
-              className="rounded-md border px-3 py-1.5 text-sm text-gray-600"
+              className="rounded-md border px-3 py-1.5 text-sm text-muted-foreground"
             >
               Cancel
             </button>
@@ -243,7 +243,7 @@ const OrderTracker: React.FC<OrderTrackerProps> = ({ order, role }) => {
       )}
 
       {/* Timestamps */}
-      <dl className="text-xs text-gray-400 space-y-0.5">
+      <dl className="text-xs text-muted-foreground/60 space-y-0.5">
         <div className="flex gap-2">
           <dt>Created:</dt>
           <dd>{new Date(order.createdAt).toLocaleDateString()}</dd>

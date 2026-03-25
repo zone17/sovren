@@ -1,9 +1,19 @@
 // @ts-nocheck
+// TODO #744: Dual follow systems overlap — this service's follow/unfollow functionality
+// overlaps with FollowService (packages/backend/src/services/community/FollowService.ts).
+// Routes use FollowService for the creator-facing follow flow. This service handles
+// broader user graph queries (block, mute, friend requests, recommendations) but its
+// follow methods are unused by routes. Consolidate follow logic into FollowService and
+// keep only non-follow relationship methods here.
 /**
  * User Relationship Service Implementation
  * User Story: US-E5-022
  * Comprehensive social relationship management with event-driven architecture
  * Part of Epic 005 - Backend Service Layer Refactoring
+ *
+ * @deprecated Follow/unfollow methods overlap with FollowService — see todo #744.
+ * Use FollowService for creator-facing follow operations.
+ * Non-follow methods (block, mute, friend, recommendations) remain active.
  */
 
 import type { IUserRelationshipService } from '../../interfaces/user/IUserRelationshipService';

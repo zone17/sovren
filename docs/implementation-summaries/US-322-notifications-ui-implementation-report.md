@@ -59,6 +59,7 @@ The notification system follows a clean, layered architecture:
 **Purpose**: Core singleton service managing all notification logic
 
 **Features**:
+
 - IndexedDB storage with 30-day retention
 - Real-time state management with subscriber pattern
 - Smart deduplication (prevents duplicate notifications)
@@ -69,6 +70,7 @@ The notification system follows a clean, layered architecture:
 - Sound playback via Web Audio API
 
 **Key Methods**:
+
 ```typescript
 - addNotification(notification): Promise<void>
 - markAsRead(id): Promise<void>
@@ -81,6 +83,7 @@ The notification system follows a clean, layered architecture:
 ```
 
 **Quality**:
+
 - 95%+ test coverage
 - Comprehensive error handling
 - Optimized IndexedDB queries
@@ -91,6 +94,7 @@ The notification system follows a clean, layered architecture:
 **Purpose**: Main UI component with bell button and slide-out panel
 
 **Features**:
+
 - Bell icon with unread count badge
 - 400px slide-out panel (left/right positioning)
 - Filter tabs (All, Mentions, Replies, Reactions, Messages, Zaps)
@@ -104,6 +108,7 @@ The notification system follows a clean, layered architecture:
 - Keyboard navigation
 
 **Props**:
+
 ```typescript
 interface NotificationCenterProps {
   position?: 'left' | 'right';
@@ -118,6 +123,7 @@ interface NotificationCenterProps {
 ```
 
 **Quality**:
+
 - 90%+ test coverage
 - WCAG AA compliant
 - Responsive design
@@ -128,6 +134,7 @@ interface NotificationCenterProps {
 **Purpose**: Individual notification display
 
 **Features**:
+
 - Author avatar or type-specific icon
 - Unique icon for each notification type
 - Formatted content message
@@ -139,6 +146,7 @@ interface NotificationCenterProps {
 - Hover effects
 
 **Notification Types Supported**:
+
 - Mention (@ icon)
 - Reply (arrow icon)
 - Reaction (heart icon)
@@ -148,6 +156,7 @@ interface NotificationCenterProps {
 - Zap (lightning icon)
 
 **Quality**:
+
 - Type-specific styling
 - Accessible
 - Interactive
@@ -158,6 +167,7 @@ interface NotificationCenterProps {
 **Purpose**: Display unread count badge
 
 **Features**:
+
 - Count display with "99+" overflow
 - 5 color variants (default, primary, success, warning, danger)
 - 3 sizes (sm, md, lg)
@@ -165,6 +175,7 @@ interface NotificationCenterProps {
 - Configurable zero display
 
 **Quality**:
+
 - Highly reusable
 - Customizable
 - Accessible
@@ -174,6 +185,7 @@ interface NotificationCenterProps {
 **Purpose**: User preference configuration
 
 **Features**:
+
 - Enable/disable toggles for each notification type
 - Sound volume slider
 - Desktop notification permission
@@ -183,6 +195,7 @@ interface NotificationCenterProps {
 - Persistent storage
 
 **Quality**:
+
 - Intuitive UI
 - Immediate feedback
 - Persistent settings
@@ -192,11 +205,13 @@ interface NotificationCenterProps {
 **Purpose**: Empty state display
 
 **Features**:
+
 - Icon and message
 - Contextual messaging
 - Optional CTA button
 
 **Quality**:
+
 - Clean design
 - Helpful messaging
 
@@ -207,6 +222,7 @@ interface NotificationCenterProps {
 **Purpose**: Access notifications with filtering
 
 **Returns**:
+
 ```typescript
 {
   notifications: Notification[];
@@ -221,6 +237,7 @@ interface NotificationCenterProps {
 ```
 
 **Features**:
+
 - Real-time updates
 - Filtering support
 - CRUD operations
@@ -233,6 +250,7 @@ interface NotificationCenterProps {
 **Returns**: `number` (unread count)
 
 **Features**:
+
 - Real-time updates
 - Efficient (only subscribes to count)
 
@@ -241,6 +259,7 @@ interface NotificationCenterProps {
 **Purpose**: Play notification sounds
 
 **Returns**:
+
 ```typescript
 {
   playSound: (type: NotificationType) => void;
@@ -251,6 +270,7 @@ interface NotificationCenterProps {
 ```
 
 **Features**:
+
 - Web Audio API integration
 - Type-specific sounds
 - Volume control
@@ -274,6 +294,7 @@ Comprehensive TypeScript types (200 lines):
 ```
 
 **Quality**:
+
 - 100% type coverage
 - Strict mode compliant
 - Well-documented
@@ -288,6 +309,7 @@ Comprehensive TypeScript types (200 lines):
 **Overall**: 95%+ coverage
 
 **Service Tests** (400 lines):
+
 - Initialization
 - Add notification
 - Mark as read
@@ -301,6 +323,7 @@ Comprehensive TypeScript types (200 lines):
 - Cleanup
 
 **Component Tests** (250 lines):
+
 - Rendering states
 - User interactions
 - Filtering
@@ -330,6 +353,7 @@ Coverage: 95%+
 ### Stories Created (40+ variants)
 
 **NotificationBadge** (13 stories):
+
 - Default, Zero, MaxExceeded
 - Small, Medium, Large sizes
 - All color variants
@@ -337,6 +361,7 @@ Coverage: 95%+
 - OnButton demo
 
 **NotificationItem** (15 stories):
+
 - All notification types
 - Read/unread states
 - With/without avatar
@@ -345,6 +370,7 @@ Coverage: 95%+
 - Interactive demo
 
 **NotificationCenter** (12 stories):
+
 - Default, Open by default
 - Left/right positioning
 - With/without settings
@@ -354,6 +380,7 @@ Coverage: 95%+
 - Interactive demo
 
 **Quality**:
+
 - Comprehensive coverage
 - Interactive demos
 - Documentation
@@ -398,6 +425,7 @@ Coverage: 95%+
    - Alert triggers
 
 **Diagram Locations**:
+
 ```
 /docs/architecture/diagrams/nostr-notifications/
 ├── architecture-overview.mmd
@@ -408,6 +436,7 @@ Coverage: 95%+
 ```
 
 **Visual Links** (GitHub):
+
 - [View Architecture Overview](https://github.com/sovren/sovren/blob/main/docs/architecture/diagrams/nostr-notifications/architecture-overview.mmd)
 - [Interactive Editor](https://mermaid.live/)
 
@@ -506,22 +535,22 @@ docs/
 
 ### US-322 Requirements
 
-| Requirement | Status | Notes |
-|------------|--------|-------|
-| Support 7 notification types | ✅ Complete | Mention, Reply, Reaction, Repost, DM, Follow, Zap |
-| Real-time NOSTR event monitoring | ✅ Complete | SubscriptionManager integration ready |
-| Persistent storage (30 days) | ✅ Complete | IndexedDB with auto-cleanup |
-| Unread count badge | ✅ Complete | Real-time updates |
-| Notification panel | ✅ Complete | Slide-out with filtering |
-| Mark as read | ✅ Complete | Individual and bulk |
-| Delete notifications | ✅ Complete | With confirmation |
-| User preferences | ✅ Complete | All settings configurable |
-| Desktop notifications | ✅ Complete | Browser Notification API |
-| Sound alerts | ✅ Complete | Web Audio API |
-| Accessibility (WCAG AA) | ✅ Complete | Tested and verified |
-| Mobile responsive | ✅ Complete | Mobile-first design |
-| Dark theme | ✅ Complete | Full support |
-| Test coverage ≥95% | ✅ Complete | 95%+ achieved |
+| Requirement                      | Status      | Notes                                             |
+| -------------------------------- | ----------- | ------------------------------------------------- |
+| Support 7 notification types     | ✅ Complete | Mention, Reply, Reaction, Repost, DM, Follow, Zap |
+| Real-time NOSTR event monitoring | ✅ Complete | SubscriptionManager integration ready             |
+| Persistent storage (30 days)     | ✅ Complete | IndexedDB with auto-cleanup                       |
+| Unread count badge               | ✅ Complete | Real-time updates                                 |
+| Notification panel               | ✅ Complete | Slide-out with filtering                          |
+| Mark as read                     | ✅ Complete | Individual and bulk                               |
+| Delete notifications             | ✅ Complete | With confirmation                                 |
+| User preferences                 | ✅ Complete | All settings configurable                         |
+| Desktop notifications            | ✅ Complete | Browser Notification API                          |
+| Sound alerts                     | ✅ Complete | Web Audio API                                     |
+| Accessibility (WCAG AA)          | ✅ Complete | Tested and verified                               |
+| Mobile responsive                | ✅ Complete | Mobile-first design                               |
+| Dark theme                       | ✅ Complete | Full support                                      |
+| Test coverage ≥95%               | ✅ Complete | 95%+ achieved                                     |
 
 ---
 
@@ -615,6 +644,7 @@ await service.addNotification({
 ### NOSTR Services (Ready for Integration)
 
 1. **SubscriptionManager**
+
    ```typescript
    // Subscribe to mentions
    subscriptionManager.subscribe({
@@ -626,6 +656,7 @@ await service.addNotification({
    ```
 
 2. **ProfileManager**
+
    ```typescript
    // Fetch author metadata
    const profile = await profileManager.getProfile(event.pubkey);
@@ -637,6 +668,7 @@ await service.addNotification({
    ```
 
 3. **NIP04Service**
+
    ```typescript
    // Decrypt DM notifications
    const decrypted = await nip04.decrypt(senderPubkey, content);

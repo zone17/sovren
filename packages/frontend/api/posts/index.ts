@@ -17,7 +17,10 @@ async function authenticateUser(req: VercelRequest): Promise<AuthResult> {
   const token = authHeader.substring(7);
 
   try {
-    const { data: { user }, error } = await supabase.auth.getUser(token);
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser(token);
 
     if (error || !user) {
       return { user: null, error: 'Invalid or expired token' };
@@ -44,8 +47,10 @@ function parseQueryParams(query: VercelRequest['query']): PostsQueryParams {
   const published = ['true', 'false', 'all'].includes(query.published as string)
     ? (query.published as 'true' | 'false' | 'all')
     : 'all';
-  const author_id = query.author_id && typeof query.author_id === 'string' ? query.author_id : undefined;
-  const search = query.search && typeof query.search === 'string' ? query.search.substring(0, 100) : undefined;
+  const author_id =
+    query.author_id && typeof query.author_id === 'string' ? query.author_id : undefined;
+  const search =
+    query.search && typeof query.search === 'string' ? query.search.substring(0, 100) : undefined;
 
   return { page, limit, offset, published, author_id, search };
 }
@@ -59,7 +64,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         error: 'Rate limit exceeded',
         message: 'Too many requests. Please try again later.',
         retryAfter: rateLimitResult.retryAfter,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
@@ -72,10 +77,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(405).json({
           error: 'Method not allowed',
           message: `${req.method} method is not supported`,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
     }
-
   } catch (error) {
     console.error('Posts API error:', error);
 
@@ -83,7 +87,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       error: 'Internal server error',
       message: 'An unexpected error occurred',
       timestamp: new Date().toISOString(),
-      requestId: req.headers['x-vercel-id'] || 'unknown'
+      requestId: req.headers['x-vercel-id'] || 'unknown',
     });
   }
 }
@@ -96,9 +100,8 @@ async function handleGetPosts(req: VercelRequest, res: VercelResponse) {
     const offset = (page - 1) * limit;
 
     // 🔍 Build query
-    let query = supabase
-      .from('posts')
-      .select(`
+    let query = supabase.from('posts').select(
+      `
         id,
         title,
         content,
@@ -107,7 +110,9 @@ async function handleGetPosts(req: VercelRequest, res: VercelResponse) {
         updated_at,
         author_id,
         users!posts_author_id_fkey(id, name)
-      `, { count: 'exact' });
+      `,
+      { count: 'exact' }
+    );
 
     // 📊 Apply filters
     if (published !== 'all') {
@@ -123,16 +128,18 @@ async function handleGetPosts(req: VercelRequest, res: VercelResponse) {
     }
 
     // 📄 Apply pagination and ordering
-    const { data: posts, error, count } = await query
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
+    const {
+      data: posts,
+      error,
+      count,
+    } = await query.order('created_at', { ascending: false }).range(offset, offset + limit - 1);
 
     if (error) {
       console.error('Posts query error:', error);
       return res.status(500).json({
         error: 'Failed to fetch posts',
         message: 'Database query failed',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
@@ -158,11 +165,10 @@ async function handleGetPosts(req: VercelRequest, res: VercelResponse) {
           published,
           author_id,
           search,
-        }
+        },
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
-
   } catch (error) {
     console.error('Get posts error:', error);
     throw error;
@@ -177,7 +183,7 @@ async function handleCreatePost(req: VercelRequest, res: VercelResponse) {
     return res.status(401).json({
       error: 'Authentication required',
       message: auth.error,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -196,7 +202,7 @@ async function handleCreatePost(req: VercelRequest, res: VercelResponse) {
         error: 'Validation failed',
         message: 'Invalid post data',
         details: validation.errors,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
@@ -213,7 +219,8 @@ async function handleCreatePost(req: VercelRequest, res: VercelResponse) {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
-      .select(`
+      .select(
+        `
         id,
         title,
         content,
@@ -222,7 +229,8 @@ async function handleCreatePost(req: VercelRequest, res: VercelResponse) {
         updated_at,
         author_id,
         users!posts_author_id_fkey(id, name)
-      `)
+      `
+      )
       .single();
 
     if (error) {
@@ -230,7 +238,7 @@ async function handleCreatePost(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({
         error: 'Post creation failed',
         message: 'Failed to create post',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
@@ -238,9 +246,8 @@ async function handleCreatePost(req: VercelRequest, res: VercelResponse) {
       success: true,
       message: 'Post created successfully',
       data: { post: newPost },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
-
   } catch (error) {
     console.error('Create post error:', error);
     throw error;

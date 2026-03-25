@@ -77,6 +77,7 @@ Top-level error boundary that catches all unhandled errors in the application.
 **Location**: `/packages/frontend/src/components/GlobalErrorBoundary.tsx`
 
 **Props**:
+
 ```typescript
 interface GlobalErrorBoundaryProps {
   children: React.ReactNode;
@@ -85,21 +86,25 @@ interface GlobalErrorBoundaryProps {
 ```
 
 **Features**:
+
 - Full-page error fallback UI
 - Sentry error reporting
 - Reload, retry, and go-home actions
 - Development vs production error displays
 
 **Example**:
+
 ```tsx
 import { GlobalErrorBoundary } from '@/components/GlobalErrorBoundary';
 
 function App() {
   return (
-    <GlobalErrorBoundary onError={(error, errorInfo) => {
-      // Custom error handling
-      console.log('Global error:', error);
-    }}>
+    <GlobalErrorBoundary
+      onError={(error, errorInfo) => {
+        // Custom error handling
+        console.log('Global error:', error);
+      }}
+    >
       <YourApp />
     </GlobalErrorBoundary>
   );
@@ -113,6 +118,7 @@ Reusable error boundary for individual features with auto-retry capability.
 **Location**: `/packages/frontend/src/components/FeatureErrorBoundary.tsx`
 
 **Props**:
+
 ```typescript
 interface FeatureErrorBoundaryProps {
   children: React.ReactNode;
@@ -125,12 +131,14 @@ interface FeatureErrorBoundaryProps {
 ```
 
 **Features**:
+
 - Auto-retry with exponential backoff
 - Feature-specific error messages
 - Custom fallback UI support
 - Configurable retry behavior
 
 **Example**:
+
 ```tsx
 import { FeatureErrorBoundary } from '@/components/FeatureErrorBoundary';
 
@@ -198,11 +206,7 @@ interface MyFeatureErrorBoundaryProps {
 
 export const MyFeatureErrorBoundary: React.FC<MyFeatureErrorBoundaryProps> = ({ children }) => {
   return (
-    <FeatureErrorBoundary
-      featureName="My Feature"
-      maxRetries={3}
-      autoRetry={true}
-    >
+    <FeatureErrorBoundary featureName="My Feature" maxRetries={3} autoRetry={true}>
       {children}
     </FeatureErrorBoundary>
   );
@@ -225,7 +229,7 @@ import { MyFeatureErrorBoundary } from './features/my-feature/ErrorBoundary';
       </ProtectedRoute>
     </Layout>
   }
-/>
+/>;
 ```
 
 3. **Add tests**:
@@ -259,11 +263,7 @@ Create a custom fallback component for specialized error handling:
 ```tsx
 import { FeatureErrorFallbackProps } from '@/components/FeatureErrorBoundary';
 
-const CustomFallback: React.FC<FeatureErrorFallbackProps> = ({
-  error,
-  onReset,
-  featureName,
-}) => {
+const CustomFallback: React.FC<FeatureErrorFallbackProps> = ({ error, onReset, featureName }) => {
   return (
     <div className="custom-error-ui">
       <h2>{featureName} is temporarily unavailable</h2>
@@ -274,12 +274,9 @@ const CustomFallback: React.FC<FeatureErrorFallbackProps> = ({
 };
 
 // Use custom fallback
-<FeatureErrorBoundary
-  featureName="My Feature"
-  fallback={CustomFallback}
->
+<FeatureErrorBoundary featureName="My Feature" fallback={CustomFallback}>
   <MyComponent />
-</FeatureErrorBoundary>
+</FeatureErrorBoundary>;
 ```
 
 ## Configuration
@@ -291,8 +288,8 @@ Customize retry behavior per feature:
 ```tsx
 <FeatureErrorBoundary
   featureName="API-Heavy Feature"
-  maxRetries={5}           // Increase retries for network-dependent features
-  autoRetry={true}         // Enable automatic retry
+  maxRetries={5} // Increase retries for network-dependent features
+  autoRetry={true} // Enable automatic retry
 >
   <Component />
 </FeatureErrorBoundary>
@@ -305,8 +302,8 @@ For sensitive features (auth, payments):
 ```tsx
 <FeatureErrorBoundary
   featureName="Payment Processing"
-  autoRetry={false}        // Disable auto-retry
-  maxRetries={0}           // No manual retries either
+  autoRetry={false} // Disable auto-retry
+  maxRetries={0} // No manual retries either
 >
   <PaymentForm />
 </FeatureErrorBoundary>
@@ -315,6 +312,7 @@ For sensitive features (auth, payments):
 ### Exponential Backoff
 
 Auto-retry uses exponential backoff:
+
 - 1st retry: 1 second
 - 2nd retry: 2 seconds
 - 3rd retry: 4 seconds
@@ -325,11 +323,13 @@ Auto-retry uses exponential backoff:
 ### User Recovery Options
 
 **Feature-Level Errors**:
+
 1. **Try Again** - Manual retry (resets component state)
 2. **Go Home** - Navigate to home page
 3. **Continue** - Use rest of app (feature isolated)
 
 **Global Errors**:
+
 1. **Reload Page** - Full page refresh
 2. **Go Home** - Navigate to home page
 3. **Try Again** - Reset error boundary state
@@ -412,6 +412,7 @@ describe('ErrorBoundary', () => {
 **Issue**: Error boundary not catching async errors
 
 **Solution**: Use `useAsyncError` hook:
+
 ```tsx
 const throwError = useAsyncError();
 
@@ -427,12 +428,13 @@ try {
 **Issue**: Error boundary not resetting after retry
 
 **Solution**: Ensure component key changes or state properly resets:
+
 ```tsx
 const [resetKey, setResetKey] = useState(0);
 
 <FeatureErrorBoundary key={resetKey} featureName="Test">
   <Component />
-</FeatureErrorBoundary>
+</FeatureErrorBoundary>;
 ```
 
 ---
@@ -440,6 +442,7 @@ const [resetKey, setResetKey] = useState(0);
 **Issue**: Sentry errors not being captured
 
 **Solution**: Verify Sentry is initialized in `main.tsx`:
+
 ```tsx
 import { sentryMonitoring } from './monitoring/sentry';
 
@@ -455,6 +458,7 @@ sentryMonitoring.init({
 **Issue**: Custom fallback not rendering
 
 **Solution**: Check fallback component signature:
+
 ```tsx
 const MyFallback: React.FC<FeatureErrorFallbackProps> = (props) => {
   // Must accept all required props
@@ -546,12 +550,14 @@ it('allows users to recover from errors', async () => {
 Always show detailed errors in development:
 
 ```tsx
-{process.env.NODE_ENV === 'development' && (
-  <details>
-    <summary>Error Details</summary>
-    <pre>{error.stack}</pre>
-  </details>
-)}
+{
+  process.env.NODE_ENV === 'development' && (
+    <details>
+      <summary>Error Details</summary>
+      <pre>{error.stack}</pre>
+    </details>
+  );
+}
 ```
 
 ## Performance Considerations
@@ -582,6 +588,7 @@ All error boundaries are WCAG AA compliant:
 ## Support
 
 For questions or issues:
+
 - GitHub Issues: [Create Issue](https://github.com/sovren/sovren/issues)
 - Team Chat: #frontend-support
 - Documentation: [Full Docs](../README.md)
@@ -589,4 +596,5 @@ For questions or issues:
 ---
 
 **Version History**:
+
 - v1.0.0 (2025-10-30) - Initial implementation with comprehensive error handling

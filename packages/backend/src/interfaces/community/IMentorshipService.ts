@@ -18,7 +18,10 @@ export interface IMentorshipService {
     data: { niche?: string; goals?: string[] }
   ): Promise<{ id: string }>;
   respondToRequest(mentorshipId: string, creatorId: string, accept: boolean): Promise<void>;
-  getMyMentorships(creatorId: string): Promise<Mentorship[]>;
+  getMyMentorships(
+    creatorId: string,
+    pagination?: { offset?: number; limit?: number }
+  ): Promise<Mentorship[]>;
   updateMentorProfile(
     profileId: string,
     creatorId: string,

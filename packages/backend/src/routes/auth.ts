@@ -3,6 +3,7 @@ import { nostrAuth } from '@/services/nostr-auth';
 import { Request, Response, Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
+import { asyncHandler } from '../utils/asyncHandler';
 
 const router = Router();
 
@@ -31,8 +32,10 @@ const AuthenticateRequestSchema = z.object({
 });
 
 // 🎲 Generate authentication challenge
-router.post('/challenge', authRateLimit, async (req: Request, res: Response) => {
-  try {
+router.post(
+  '/challenge',
+  authRateLimit,
+  asyncHandler(async (req: Request, res: Response) => {
     const challenge = await nostrAuth.generateChallenge();
 
     res.status(200).json({
@@ -44,19 +47,14 @@ router.post('/challenge', authRateLimit, async (req: Request, res: Response) => 
         message: `Please sign this challenge with your NOSTR private key to authenticate with Sovren.`,
       },
     });
-  } catch (error) {
-    console.error('Challenge generation failed:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to generate authentication challenge',
-      code: 'CHALLENGE_ERROR',
-    });
-  }
-});
+  })
+);
 
 // 🔐 Authenticate with NOSTR signature
-router.post('/authenticate', authRateLimit, async (req: Request, res: Response) => {
-  try {
+router.post(
+  '/authenticate',
+  authRateLimit,
+  asyncHandler(async (req: Request, res: Response) => {
     // Validate request body
     const validatedData = AuthenticateRequestSchema.parse(req.body);
 
@@ -94,33 +92,14 @@ router.post('/authenticate', authRateLimit, async (req: Request, res: Response) 
         expires_in: '24h',
       },
     });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      const firstError = error.errors[0];
-      // If it's a required field error, include the field name for clarity
-      let errorMessage = firstError?.message || 'Validation failed';
-      if (firstError?.code === 'invalid_type' && firstError?.expected === 'string') {
-        errorMessage = `${firstError.path.join('.')} is required`;
-      }
-      return res.status(400).json({
-        success: false,
-        error: errorMessage,
-        code: 'VALIDATION_ERROR',
-      });
-    }
-
-    console.error('Authentication failed:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Authentication service error',
-      code: 'AUTH_ERROR',
-    });
-  }
-});
+  })
+);
 
 // 🔄 Refresh JWT token
-router.post('/refresh', authenticate, async (req: Request, res: Response) => {
-  try {
+router.post(
+  '/refresh',
+  authenticate,
+  asyncHandler(async (req: Request, res: Response) => {
     if (!req.user) {
       return res.status(401).json({
         success: false,
@@ -159,19 +138,14 @@ router.post('/refresh', authenticate, async (req: Request, res: Response) => {
         expires_in: '24h',
       },
     });
-  } catch (error) {
-    console.error('Token refresh failed:', error);
-    return res.status(401).json({
-      success: false,
-      error: 'Invalid or expired token',
-      code: 'REFRESH_ERROR',
-    });
-  }
-});
+  })
+);
 
 // 🔍 Verify current authentication status
-router.get('/verify', authenticate, async (req: Request, res: Response) => {
-  try {
+router.get(
+  '/verify',
+  authenticate,
+  asyncHandler(async (req: Request, res: Response) => {
     if (!req.user) {
       return res.status(401).json({
         success: false,
@@ -193,19 +167,21 @@ router.get('/verify', authenticate, async (req: Request, res: Response) => {
         valid: true,
       },
     });
-  } catch (error) {
-    console.error('Auth verification failed:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Authentication verification error',
-      code: 'VERIFY_ERROR',
-    });
-  }
-});
+  })
+);
 
-// 🚪 Logout (client-side token invalidation)
-router.post('/logout', optionalAuth, async (req: Request, res: Response) => {
-  try {
+// 🚪 Logout (server-side token revocation + client-side cleanup)
+router.post(
+  '/logout',
+  optionalAuth,
+  asyncHandler(async (req: Request, res: Response) => {
+    // Revoke the JWT token server-side so it cannot be reused
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      await nostrAuth.revokeToken(token);
+    }
+
     res.status(200).json({
       success: true,
       message: 'Successfully logged out',
@@ -213,19 +189,14 @@ router.post('/logout', optionalAuth, async (req: Request, res: Response) => {
         instructions: 'Please delete the JWT token from your client storage',
       },
     });
-  } catch (error) {
-    console.error('Logout failed:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Logout service error',
-      code: 'LOGOUT_ERROR',
-    });
-  }
-});
+  })
+);
 
 // 📊 Authentication service statistics (admin only)
-router.get('/stats', authenticate, async (req: Request, res: Response) => {
-  try {
+router.get(
+  '/stats',
+  authenticate,
+  asyncHandler(async (req: Request, res: Response) => {
     if (!req.user || req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
@@ -245,19 +216,13 @@ router.get('/stats', authenticate, async (req: Request, res: Response) => {
         timestamp: Date.now(),
       },
     });
-  } catch (error) {
-    console.error('Stats retrieval failed:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Stats service error',
-      code: 'STATS_ERROR',
-    });
-  }
-});
+  })
+);
 
 // 🏥 Health check endpoint
-router.get('/health', async (req: Request, res: Response) => {
-  try {
+router.get(
+  '/health',
+  asyncHandler(async (req: Request, res: Response) => {
     // Test challenge generation to verify service health
     const challenge = await nostrAuth.generateChallenge();
 
@@ -270,14 +235,7 @@ router.get('/health', async (req: Request, res: Response) => {
         challenge_generated: !!challenge,
       },
     });
-  } catch (error) {
-    console.error('Health check failed:', error);
-    res.status(503).json({
-      success: false,
-      error: 'Service unhealthy',
-      code: 'HEALTH_ERROR',
-    });
-  }
-});
+  })
+);
 
 export default router;

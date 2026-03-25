@@ -119,7 +119,6 @@ _Structural changes — migration, query rewrite, error handling, injection fix_
 _Behavioral changes on top of the rewritten route_
 
 - [x] **Continue `discovery.routes.ts`** — behavioral fixes:
-
   - **#564**: Switch to `expensiveOperationRateLimiter`
   - **#565**: Change `category` to `z.enum(['Art','Writing','Music','Podcast','Education','Photography','Development','Bitcoin'])` — 8 real categories, NO "All" (that's UI-only)
   - **#567**: Collapse sort switch to `if (sortBy === 'newest') ... else ...`
@@ -142,7 +141,6 @@ _Behavioral changes on top of the rewritten route_
 _Independent of backend — no conflict risk_
 
 - [x] **#563**: Rename "Load More" to "Next Page", add "Previous Page" button
-
   - Simple pagination UI: `setPage(page - 1)` / `setPage(page + 1)`
   - Show page indicator: "Page {page} of {totalPages}"
   - "Previous Page" disabled/hidden on page 1; "Next Page" disabled when `!hasNext`
@@ -168,12 +166,10 @@ _Independent of backend — no conflict risk_
   - `useDiscovery.ts` (query key factory deferred — useMemo is sufficient for Sprint 0)
 
 - [x] **#575**: Add `role="status"` to fetching indicator; remove redundant `aria-disabled`
-
   - `DiscoveryPage.tsx`, line 126 (fetching div)
   - `CreatorCard.tsx`, line 88 (remove `aria-disabled="true"`)
 
 - [x] **#577**: Add `loading="lazy"` and `width={56} height={56}` to avatar `<img>`
-
   - `CreatorCard.tsx`, lines 19-23
 
 - [x] **Update `useDiscovery.ts` API param**: Change `sort: effectiveFilters.sortBy` to `sortBy: effectiveFilters.sortBy` to match renamed Zod field from #574
@@ -196,7 +192,6 @@ _Independent of backend — no conflict risk_
 _Depends on Phase 1 + 2 being complete_
 
 - [x] **#571**: Create `packages/backend/src/routes/v2/__tests__/discovery.routes.test.ts`
-
   - Test valid search returns correct response shape
   - Test Zod validation rejects invalid params (bad category, q too long, "All" rejected)
   - Test `escapePostgrestFilter()` escapes `,`, `.`, `(`, `)`, `*` metacharacters
@@ -206,7 +201,6 @@ _Depends on Phase 1 + 2 being complete_
   - Mock `getDatabase().client` with table-aware routing (common-solutions #7)
 
 - [x] **#572**: Create `packages/frontend/src/hooks/__tests__/useDebouncedValue.test.ts`
-
   - Test debounce delays value update
   - Test cleanup on unmount clears timeout
   - Test immediate value when delay is 0
@@ -214,7 +208,6 @@ _Depends on Phase 1 + 2 being complete_
   - Add `staleTime: 0` to test QueryClient
 
 - [x] **#578**: Clean up `CreatorCard.test.tsx`
-
   - Remove `vi.mock('react-router-dom')` and `mockNavigate`
   - Remove `renderWithRouter` — use plain `render()`
   - Remove "navigates to creator profile" test (button removed)

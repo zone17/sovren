@@ -17,8 +17,6 @@ import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import uiReducer from './slices/uiSlice';
 import cmsUiReducer from './slices/cmsUiSlice';
 import userReducer from './slices/userSlice'; // Keep for auth state only
-import navigationReducer from './slices/navigationSlice';
-import layoutReducer from './slices/layoutSlice';
 import paginationReducer from './slices/paginationSlice';
 
 // REMOVED: Server data slices
@@ -30,8 +28,6 @@ import paginationReducer from './slices/paginationSlice';
 export const reducers = {
   ui: uiReducer,
   cmsUi: cmsUiReducer,
-  navigation: navigationReducer,
-  layout: layoutReducer,
   pagination: paginationReducer,
   user: userReducer,
 };
@@ -74,19 +70,6 @@ export const selectPreviewMode = (state: RootState) => state.cmsUi.previewMode;
 // User/Auth selectors (client state)
 export const selectCurrentUser = (state: RootState) => state.user.currentUser;
 export const selectIsAuthenticated = (state: RootState) => !!state.user.currentUser;
-
-// Navigation selectors
-export const selectCurrentPath = (state: RootState) => state.navigation.currentPath;
-export const selectBreadcrumbs = (state: RootState) => state.navigation.breadcrumbs;
-export const selectNavigationTabs = (state: RootState) => state.navigation.tabs;
-export const selectIsNavigating = (state: RootState) => state.navigation.isNavigating;
-
-// Layout selectors
-export const selectWorkspaceLayout = (state: RootState) => state.layout.workspaceLayout;
-export const selectBreakpoint = (state: RootState) => state.layout.breakpoint;
-export const selectPanels = (state: RootState) => state.layout.panels;
-export const selectFocusMode = (state: RootState) => state.layout.focusModeEnabled;
-export const selectZenMode = (state: RootState) => state.layout.zenModeEnabled;
 
 /**
  * Middleware for auto-removing toasts after duration

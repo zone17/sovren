@@ -29,9 +29,9 @@ const STORY_COMPLETIONS = {
       'packages/frontend/src/services/nostr/__tests__/integration/helpers/performance-utils.ts',
       'packages/frontend/src/services/nostr/__tests__/integration/RelayPoolManager.integration.test.ts',
       'US-318-IMPLEMENTATION-STATUS.md',
-      'CHANGELOG.md'
+      'CHANGELOG.md',
     ],
-    notes: '22 integration tests, infrastructure complete (3/10 subtasks)'
+    notes: '22 integration tests, infrastructure complete (3/10 subtasks)',
   },
   'US-319': {
     status: 'completed',
@@ -51,9 +51,9 @@ const STORY_COMPLETIONS = {
       'packages/frontend/src/components/nostr/errors/__tests__/*.test.tsx',
       'docs/architecture/diagrams/us-319-error-handling/*.mmd',
       'docs/implementation-summaries/US-319-ERROR-HANDLING-UI-COMPLETE.md',
-      'CHANGELOG.md'
+      'CHANGELOG.md',
     ],
-    notes: '2,500+ lines, 8 components, 40+ Storybook stories'
+    notes: '2,500+ lines, 8 components, 40+ Storybook stories',
   },
   'US-320': {
     status: 'completed',
@@ -67,9 +67,9 @@ const STORY_COMPLETIONS = {
       'packages/frontend/src/services/nostr/WebSocketConnectionManager.ts',
       'packages/frontend/src/services/nostr/index.ts',
       'US-320-IMPLEMENTATION-COMPLETE.md',
-      'CHANGELOG.md'
+      'CHANGELOG.md',
     ],
-    notes: '2,503 lines, connection pooling, exponential backoff, health scoring'
+    notes: '2,503 lines, connection pooling, exponential backoff, health scoring',
   },
   'US-321': {
     status: 'completed',
@@ -86,9 +86,9 @@ const STORY_COMPLETIONS = {
       'packages/frontend/src/services/nostr/EventPublisherService.ts',
       'packages/frontend/src/services/nostr/SubscriptionManagerService.ts',
       'US-321-RATE-LIMITING-COMPLETE.md',
-      'CHANGELOG.md'
+      'CHANGELOG.md',
     ],
-    notes: '2,755 lines, token bucket algorithm, 25/27 tests passing'
+    notes: '2,755 lines, token bucket algorithm, 25/27 tests passing',
   },
   'US-322': {
     status: 'completed',
@@ -106,9 +106,9 @@ const STORY_COMPLETIONS = {
       'packages/frontend/src/components/nostr/backup/RestoreDialog.tsx',
       'docs/architecture/diagrams/us-322-*.mmd',
       'US-322-COMPLETION-SUMMARY.md',
-      'CHANGELOG.md'
+      'CHANGELOG.md',
     ],
-    notes: '4,300+ lines, AES-256-GCM encryption, PBKDF2 key derivation'
+    notes: '4,300+ lines, AES-256-GCM encryption, PBKDF2 key derivation',
   },
   'US-324': {
     status: 'completed',
@@ -126,9 +126,9 @@ const STORY_COMPLETIONS = {
       'docs/nostr/examples/*.ts',
       'docs/architecture/diagrams/nostr/*.mmd',
       'US-324-IMPLEMENTATION-COMPLETE.md',
-      'CHANGELOG.md'
+      'CHANGELOG.md',
     ],
-    notes: '47+ files, 30,000+ words, 6 Mermaid diagrams, 15+ code examples'
+    notes: '47+ files, 30,000+ words, 6 Mermaid diagrams, 15+ code examples',
   },
   'US-325': {
     status: 'completed',
@@ -145,9 +145,9 @@ const STORY_COMPLETIONS = {
       'docs/migration/troubleshooting.md',
       'docs/migration/checklist.md',
       'US-325-MIGRATION-SCRIPTS-COMPLETE.md',
-      'CHANGELOG.md'
+      'CHANGELOG.md',
     ],
-    notes: '7,961 lines, 7 migration scripts, interactive CLI, 50+ tests'
+    notes: '7,961 lines, 7 migration scripts, interactive CLI, 50+ tests',
   },
   'US-326': {
     status: 'completed',
@@ -170,10 +170,10 @@ const STORY_COMPLETIONS = {
       'packages/frontend/e2e/backup-recovery.spec.ts',
       'packages/frontend/e2e/performance.spec.ts',
       'US-326-E2E-TEST-SUITE-COMPLETE.md',
-      'CHANGELOG.md'
+      'CHANGELOG.md',
     ],
-    notes: '290+ tests, 4,780+ lines, 100% critical flow coverage'
-  }
+    notes: '290+ tests, 4,780+ lines, 100% critical flow coverage',
+  },
 };
 
 async function completeEpic003Stories() {
@@ -187,7 +187,7 @@ async function completeEpic003Stories() {
 
     // Find the story
     for (const phase of Object.values(tasksData.phases)) {
-      const story = phase.tasks.find(t => t.story_id === storyId);
+      const story = phase.tasks.find((t) => t.story_id === storyId);
 
       if (story) {
         // Update story status
@@ -210,7 +210,9 @@ async function completeEpic003Stories() {
           });
 
           if (fixedCount > 0) {
-            console.log(`   ✅ Completed ${fixedCount}/${story.subtasks.length} remaining subtasks`);
+            console.log(
+              `   ✅ Completed ${fixedCount}/${story.subtasks.length} remaining subtasks`
+            );
           } else {
             console.log(`   ✅ All ${story.subtasks.length} subtasks already complete`);
           }
@@ -238,7 +240,7 @@ async function completeEpic003Stories() {
   console.log(`   - Tests: 95%+ coverage across all services\n`);
 }
 
-completeEpic003Stories().catch(error => {
+completeEpic003Stories().catch((error) => {
   console.error('❌ Error:', error.message);
   process.exit(1);
 });

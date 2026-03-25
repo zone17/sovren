@@ -30,6 +30,7 @@ error TS2688: Cannot find type definition file for 'jest'.
 ### Frontend (`packages/frontend`)
 
 **Result**: ~50 errors, all in pre-existing test utility files:
+
 - `test-utils/external-dependency-mocker.ts` (24 errors — Mock type mismatches)
 - `test-utils/mockStore.ts` (6 errors — DeepPartial missing, unused vars)
 - `test-utils/test-environment-variables.ts` (12 errors — redeclared exports)
@@ -45,6 +46,7 @@ error TS2688: Cannot find type definition file for 'jest'.
 ### Shared (`packages/shared`)
 
 **Result**: 1 error (pre-existing)
+
 ```
 packages/shared/src/config/relay-config.ts(33,15): error TS2305: Module '"@shared/types/nostr"' has no exported member 'RelayMetadata'.
 ```
@@ -74,14 +76,14 @@ The test runner crashes because `jest.setup.js` imports `user-repository.ts` whi
 
 All v2 routes are properly mounted:
 
-| Route File | Import in `index.ts` | Mount Path | Status |
-|---|---|---|---|
-| `wellness.routes.ts` | Line 9 | `/wellness` | Mounted |
-| `shield.routes.ts` | Line 10 | `/shield` | Mounted |
-| `platforms.routes.ts` | Line 11 | `/platforms` | Mounted |
-| `distribute.routes.ts` | Line 12 | `/distribute` | Mounted |
-| `inbox.routes.ts` | Line 13 | `/inbox` | Mounted |
-| `analytics-crossplatform.routes.ts` | Line 14 | `/analytics/cross-platform` | Mounted |
+| Route File                          | Import in `index.ts` | Mount Path                  | Status  |
+| ----------------------------------- | -------------------- | --------------------------- | ------- |
+| `wellness.routes.ts`                | Line 9               | `/wellness`                 | Mounted |
+| `shield.routes.ts`                  | Line 10              | `/shield`                   | Mounted |
+| `platforms.routes.ts`               | Line 11              | `/platforms`                | Mounted |
+| `distribute.routes.ts`              | Line 12              | `/distribute`               | Mounted |
+| `inbox.routes.ts`                   | Line 13              | `/inbox`                    | Mounted |
+| `analytics-crossplatform.routes.ts` | Line 14              | `/analytics/cross-platform` | Mounted |
 
 The v2 router is mounted in `app.ts` at `/api/v2` (line 218).
 
@@ -94,6 +96,7 @@ The v2 router is mounted in `app.ts` at `/api/v2` (line 218).
 ### Tokens (types.ts): PASS
 
 All services have tokens registered:
+
 - Wellness (4): WellnessService, BurnoutScoringService, ScheduleService, BoundaryService
 - Provenance (4): ProvenanceService, FingerprintService, AlertService, DmcaService
 - Distribution (5): PlatformConnectionService, CrossPostService, RepurposingService, UnifiedInboxService, CrossPlatformAnalyticsService
@@ -103,12 +106,13 @@ All 14 tokens are present in `TYPES`, `SERVICE_LIFETIMES`, `SERVICE_DEPENDENCIES
 
 ### Bindings: **P1 FAIL** - Missing Phase 8 bindings
 
-| Module | Binding File | Registered in bootstrap.ts | Status |
-|---|---|---|---|
-| Phase 7 (Wellness + Provenance) | `phase7.bindings.ts` | Yes (line 94) | PASS |
-| Phase 8 (Distribution) | **MISSING** | **Not registered** | **FAIL** |
+| Module                          | Binding File         | Registered in bootstrap.ts | Status   |
+| ------------------------------- | -------------------- | -------------------------- | -------- |
+| Phase 7 (Wellness + Provenance) | `phase7.bindings.ts` | Yes (line 94)              | PASS     |
+| Phase 8 (Distribution)          | **MISSING**          | **Not registered**         | **FAIL** |
 
 **Finding P1-001**: The 5 EPIC-009 distribution services (PlatformConnectionService, CrossPostService, RepurposingService, UnifiedInboxService, CrossPlatformAnalyticsService) have DI tokens defined in `types.ts` but:
+
 1. No `phase8.bindings.ts` file exists in `container/bindings/`
 2. No binding registration in `bootstrap.ts`
 
@@ -119,6 +123,7 @@ All 14 tokens are present in `TYPES`, `SERVICE_LIFETIMES`, `SERVICE_DEPENDENCIES
 ## Frontend Components
 
 ### Content Shield (`features/content-shield/index.ts`): PASS
+
 Exports 6 components, ErrorBoundary, 6 hooks, API service, and 10 types.
 
 ### Wellness (`features/wellness/index.ts`): **P2 FAIL** - Missing component exports
@@ -126,6 +131,7 @@ Exports 6 components, ErrorBoundary, 6 hooks, API service, and 10 types.
 The barrel file exports: ErrorBoundary, 7 hooks, API service, and 19 types.
 
 **Missing component exports** (files exist but are not re-exported):
+
 - `WellnessDashboard`
 - `BurnoutRiskGauge`
 - `BoundarySettings`
@@ -143,6 +149,7 @@ The barrel file exports: ErrorBoundary, 7 hooks, API service, and 19 types.
 The barrel file exports: ErrorBoundary, 11 hooks, API service, and 19 types.
 
 **Missing component exports** (files exist but are not re-exported):
+
 - `MultiPlatformDashboard`
 - `PlatformConnector`
 - `DistributionPanel`
@@ -157,18 +164,24 @@ The barrel file exports: ErrorBoundary, 11 hooks, API service, and 19 types.
 ## Database Migrations
 
 ### SQL Syntax: PASS
+
 All 5 EPIC-009 migration files have valid SQL syntax with proper:
+
 - `CREATE TABLE IF NOT EXISTS` guards
 - Column constraints (`CHECK`, `NOT NULL`, `DEFAULT`)
 - Down migration comments
 
 ### RLS Policies: PASS
+
 All 5 new tables have:
+
 - `ALTER TABLE ... ENABLE ROW LEVEL SECURITY`
 - `CREATE POLICY ... USING (creator_id = current_setting('app.current_user_id', true))`
 
 ### Indexes: PASS
+
 Appropriate indexes on all tables:
+
 - `platform_connections`: creator, status, conditional expires
 - `cross_posts`: creator, content, status, conditional scheduled
 - `repurposed_content`: creator, source
@@ -178,6 +191,7 @@ Appropriate indexes on all tables:
 ### Duplicate Files: **P2 FAIL**
 
 **Finding P2-003**: 5 duplicate migration files with " 2.sql" suffix exist:
+
 ```
 20260215000002_add_upsert_work_pattern_function 2.sql
 20260216100000_fix_rls_creator_boundaries 2.sql
@@ -193,18 +207,22 @@ These appear to be macOS copy duplicates. Supabase CLI may attempt to run them a
 ## Security Quick Checks
 
 ### Hardcoded Secrets: PASS
+
 No hardcoded API keys, tokens, or secrets found in the new service files. Existing test files use test-only values (expected).
 
 ### OAuth Token Encryption: PASS
+
 - AES-256-GCM with random IV per encryption (`crypto.ts`)
 - Key validation enforces 32-byte requirement
 - Auth tag integrity verification on decryption
 - Encryption key sourced from environment variable (`PLATFORM_TOKEN_ENCRYPTION_KEY`)
 
 ### Token Logging: PASS
+
 Logger calls in `PlatformConnectionService` only log metadata (creatorId, platform), never token values.
 
 ### SQL Injection: PASS
+
 All database queries use the Supabase client's parameterized `.from()` / `.eq()` / `.in()` methods. No raw SQL or string interpolation in queries.
 
 ---
@@ -212,9 +230,11 @@ All database queries use the Supabase client's parameterized `.from()` / `.eq()`
 ## Behavioral Correctness
 
 ### Rule 1 - Route Mounting: PASS
+
 All routers mounted (see Route Mounting section).
 
 ### Rule 2 - Error Propagation: PASS
+
 - All Supabase errors are checked (`if (error) { throw error; }`)
 - One intentional catch for token revocation during disconnect (logs warning, still deletes from DB)
 - BurnoutScoringService has intentional graceful degradation for sensitivity lookup (returns cached/default)
@@ -228,12 +248,15 @@ The `onFailed` handler does set status to 'failed', but there is a window where 
 **Mitigation**: BullMQ's built-in retry and stall detection should catch most cases. A periodic cleanup job for stale 'publishing' records would be the fix.
 
 ### Rule 4 - Concurrency: PASS
+
 `CrossPostService.cancel()` uses conditional WHERE: `.in('status', ['queued', 'scheduled'])` preventing cancellation of already-publishing posts.
 
 ### Rule 5 - Upserts: PASS
+
 `CrossPlatformAnalyticsService.snapshotMetrics()` uses `.upsert()` for the metrics history table.
 
 ### Rule 6 - Data Persistence: PASS
+
 No in-memory Maps used for primary data storage. The one Map in PlatformConnectionService is for adapter instances (stateless config objects), not data.
 
 ---
@@ -241,13 +264,16 @@ No in-memory Maps used for primary data storage. The one Map in PlatformConnecti
 ## Additional Findings
 
 ### P3-001: No `updated_at` triggers on new tables
+
 The `cross_posts` and `repurposed_content` tables have `updated_at` columns but no database triggers to auto-update them. The services manually pass `updated_at: new Date().toISOString()` in update calls. This is functional but inconsistent -- if any code path updates without setting the value, `updated_at` will be stale.
 
 ### P3-002: Multi-platform components missing unit tests for 3 components
+
 Components with tests: MultiPlatformDashboard, UnifiedInbox, PlatformConnector (3/6).
 Components without tests: DistributionPanel, CrossPlatformAnalytics, RepurposePreview (3/6).
 
 ### P3-003: Wellness backend migration in wrong directory
+
 `20260215000001_add_delete_all_wellness_data_function.sql` is in `packages/backend/supabase/migrations/` while all other migrations are in the root `supabase/migrations/`. Supabase CLI will only pick up migrations from the configured path (usually root).
 
 ---

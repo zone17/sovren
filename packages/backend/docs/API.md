@@ -30,6 +30,7 @@ The API uses **NOSTR cryptographic authentication** combined with **JWT tokens**
 ### 🔒 Security Headers
 
 All responses include comprehensive security headers:
+
 - `Content-Security-Policy`
 - `X-Frame-Options`
 - `X-Content-Type-Options`
@@ -69,12 +70,12 @@ Content-Type: application/json
 
 #### Response Fields
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `challenge` | string | 64-character hex challenge string |
-| `timestamp` | number | Unix timestamp when challenge was created |
-| `expires_at` | number | Unix timestamp when challenge expires |
-| `message` | string | Human-readable message to sign |
+| Field        | Type   | Description                               |
+| ------------ | ------ | ----------------------------------------- |
+| `challenge`  | string | 64-character hex challenge string         |
+| `timestamp`  | number | Unix timestamp when challenge was created |
+| `expires_at` | number | Unix timestamp when challenge expires     |
+| `message`    | string | Human-readable message to sign            |
 
 #### Error Responses
 
@@ -109,13 +110,13 @@ Content-Type: application/json
 
 #### Request Fields
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `nostr_pubkey` | string | ✅ | 64-character hex NOSTR public key |
-| `challenge` | string | ✅ | Challenge from previous step |
-| `timestamp` | number | ✅ | Timestamp from challenge |
-| `signature` | string | ✅ | NOSTR signature of the challenge message |
-| `role` | string | ❌ | Requested role (supporter/creator/admin) |
+| Field          | Type   | Required | Description                              |
+| -------------- | ------ | -------- | ---------------------------------------- |
+| `nostr_pubkey` | string | ✅       | 64-character hex NOSTR public key        |
+| `challenge`    | string | ✅       | Challenge from previous step             |
+| `timestamp`    | number | ✅       | Timestamp from challenge                 |
+| `signature`    | string | ✅       | NOSTR signature of the challenge message |
+| `role`         | string | ❌       | Requested role (supporter/creator/admin) |
 
 #### Response
 
@@ -284,13 +285,13 @@ Content-Type: application/json
 
 #### Request Fields
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `username` | string | ❌ | Unique username (1-50 characters, alphanumeric + underscore) |
-| `display_name` | string | ❌ | Display name for profile (max 100 characters) |
-| `bio` | string | ❌ | Profile biography (max 500 characters) |
-| `avatar_url` | string | ❌ | URL to profile avatar image |
-| `email` | string | ❌ | Email address for notifications |
+| Field          | Type   | Required | Description                                                  |
+| -------------- | ------ | -------- | ------------------------------------------------------------ |
+| `username`     | string | ❌       | Unique username (1-50 characters, alphanumeric + underscore) |
+| `display_name` | string | ❌       | Display name for profile (max 100 characters)                |
+| `bio`          | string | ❌       | Profile biography (max 500 characters)                       |
+| `avatar_url`   | string | ❌       | URL to profile avatar image                                  |
+| `email`        | string | ❌       | Email address for notifications                              |
 
 #### Response
 
@@ -412,11 +413,11 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 #### Query Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `q` | string | ✅ | Search query (username or display name) |
-| `limit` | number | ❌ | Maximum results to return (default: 20, max: 100) |
-| `offset` | number | ❌ | Number of results to skip (default: 0) |
+| Parameter | Type   | Required | Description                                       |
+| --------- | ------ | -------- | ------------------------------------------------- |
+| `q`       | string | ✅       | Search query (username or display name)           |
+| `limit`   | number | ❌       | Maximum results to return (default: 20, max: 100) |
+| `offset`  | number | ❌       | Number of results to skip (default: 0)            |
 
 #### Response
 
@@ -494,9 +495,9 @@ Content-Type: application/json
 
 #### Request Fields
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `role` | string | ✅ | New role (supporter/creator/admin) |
+| Field  | Type   | Required | Description                        |
+| ------ | ------ | -------- | ---------------------------------- |
+| `role` | string | ✅       | New role (supporter/creator/admin) |
 
 #### Response
 
@@ -610,35 +611,36 @@ All error responses follow a consistent format:
 
 ### HTTP Status Codes
 
-| Status Code | Description | When Used |
-|-------------|-------------|-----------|
-| `200` | OK | Successful requests |
-| `201` | Created | Resource creation success |
-| `400` | Bad Request | Invalid request data |
-| `401` | Unauthorized | Authentication required |
-| `403` | Forbidden | Insufficient permissions |
-| `404` | Not Found | Resource not found |
-| `409` | Conflict | Resource already exists |
-| `422` | Unprocessable Entity | Validation errors |
-| `429` | Too Many Requests | Rate limit exceeded |
-| `500` | Internal Server Error | Server-side errors |
+| Status Code | Description           | When Used                 |
+| ----------- | --------------------- | ------------------------- |
+| `200`       | OK                    | Successful requests       |
+| `201`       | Created               | Resource creation success |
+| `400`       | Bad Request           | Invalid request data      |
+| `401`       | Unauthorized          | Authentication required   |
+| `403`       | Forbidden             | Insufficient permissions  |
+| `404`       | Not Found             | Resource not found        |
+| `409`       | Conflict              | Resource already exists   |
+| `422`       | Unprocessable Entity  | Validation errors         |
+| `429`       | Too Many Requests     | Rate limit exceeded       |
+| `500`       | Internal Server Error | Server-side errors        |
 
 ### Common Error Codes
 
-| Error Code | Description |
-|------------|-------------|
-| `INVALID_NOSTR_PUBKEY` | NOSTR public key format invalid |
-| `INVALID_SIGNATURE` | NOSTR signature verification failed |
-| `CHALLENGE_EXPIRED` | Authentication challenge expired |
-| `USER_NOT_FOUND` | User profile not found |
-| `USERNAME_TAKEN` | Username already in use |
-| `INSUFFICIENT_PERMISSIONS` | User lacks required permissions |
-| `RATE_LIMIT_EXCEEDED` | Too many requests from client |
-| `DATABASE_ERROR` | Database operation failed |
+| Error Code                 | Description                         |
+| -------------------------- | ----------------------------------- |
+| `INVALID_NOSTR_PUBKEY`     | NOSTR public key format invalid     |
+| `INVALID_SIGNATURE`        | NOSTR signature verification failed |
+| `CHALLENGE_EXPIRED`        | Authentication challenge expired    |
+| `USER_NOT_FOUND`           | User profile not found              |
+| `USERNAME_TAKEN`           | Username already in use             |
+| `INSUFFICIENT_PERMISSIONS` | User lacks required permissions     |
+| `RATE_LIMIT_EXCEEDED`      | Too many requests from client       |
+| `DATABASE_ERROR`           | Database operation failed           |
 
 ### Example Error Responses
 
 #### Validation Error
+
 ```json
 {
   "success": false,
@@ -651,6 +653,7 @@ All error responses follow a consistent format:
 ```
 
 #### Authentication Error
+
 ```json
 {
   "success": false,
@@ -660,6 +663,7 @@ All error responses follow a consistent format:
 ```
 
 #### Permission Error
+
 ```json
 {
   "success": false,
@@ -674,11 +678,11 @@ All error responses follow a consistent format:
 
 ### Rate Limiting
 
-| Endpoint Category | Limit | Window |
-|-------------------|-------|--------|
-| Authentication | 10 requests | 15 minutes |
-| User Operations | 100 requests | 15 minutes |
-| General API | 1000 requests | 15 minutes |
+| Endpoint Category | Limit         | Window     |
+| ----------------- | ------------- | ---------- |
+| Authentication    | 10 requests   | 15 minutes |
+| User Operations   | 100 requests  | 15 minutes |
+| General API       | 1000 requests | 15 minutes |
 
 ### Request Validation
 
@@ -748,7 +752,7 @@ curl -X GET http://localhost:3001/api/users/profile \
 const challengeResponse = await fetch('/api/auth/challenge', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({})
+  body: JSON.stringify({}),
 });
 
 // Authenticate
@@ -759,14 +763,14 @@ const authResponse = await fetch('/api/auth/authenticate', {
     nostr_pubkey: 'your-pubkey',
     challenge: 'challenge-from-previous-step',
     timestamp: Date.now(),
-    signature: 'nostr-signature'
-  })
+    signature: 'nostr-signature',
+  }),
 });
 
 // Use token for authenticated requests
 const token = (await authResponse.json()).data.token;
 const profileResponse = await fetch('/api/users/profile', {
-  headers: { 'Authorization': `Bearer ${token}` }
+  headers: { Authorization: `Bearer ${token}` },
 });
 ```
 
@@ -786,4 +790,4 @@ For API version history and breaking changes, see [CHANGELOG.md](../CHANGELOG.md
 
 ---
 
-*API Documentation v1.0.0 - Last Updated: Phase 1 Completion*
+_API Documentation v1.0.0 - Last Updated: Phase 1 Completion_

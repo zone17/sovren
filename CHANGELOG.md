@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+### fix(ux): P2 dark mode — add dark: variants to color-coded status badges and alert boxes — 2026-03-10
+
+**Category**: Bug Fix — Production Readiness Phase 5 UI/UX (P2-UX-004)
+**Status**: Complete
+
+Added `dark:` Tailwind variants to `bg-red-50`, `bg-green-100`, `bg-amber-50`, `bg-yellow-100` and their corresponding text colors across 7 components. QR code containers kept white (intentional — required for QR contrast).
+
+**Files modified**: `CommentList.tsx`, `CrossPlatformDashboard.tsx`, `PlatformROI.tsx`, `DistributionPanel.tsx`, `RepurposePreview.tsx`, `SupporterExperience.tsx`, `BYOKSetup.tsx`
+
+### fix(ux): P1 UI/UX polish — replace window.confirm, add 404 route, fix silent error swallowing — 2026-03-10
+
+**Category**: Bug Fix — Production Readiness Phase 5 UI/UX
+**Status**: Complete — P1-UX-001, P1-UX-002, P1-UX-003
+
+Replaced all 7 `window.confirm()` calls with accessible `ConfirmDialog` component (Radix UI Dialog, ARIA-compliant). Created reusable `ConfirmDialog` at `components/ui/confirm-dialog.tsx`. Added `NotFound` page and `path="*"` catch-all route to `App.tsx`. Wired existing `useToast` hook into components that silently swallowed errors — `NotificationSettings`, `NotificationCenter`, `ContentLibrary`, `DeploymentDashboard`, `APIResponseCache`.
+
+**Files created**: `components/ui/confirm-dialog.tsx`, `pages/NotFound.tsx`
+**Files modified**: `App.tsx`, `TemplateManager.tsx`, `BYOKSetup.tsx`, `ContentLibrary.tsx`, `SubscriptionManager.tsx`, `DeploymentDashboard.tsx`, `DMInbox.tsx`, `NotificationSettings.tsx`, `NotificationCenter.tsx`, `APIResponseCache.tsx`
+
 ### feat(discovery): Wire Discovery MVP frontend to real backend — 2026-02-26
 
 **Category**: Feature — Discovery (Squad B, Sprint 0, Slice 2)
@@ -654,21 +673,18 @@ Implemented a comprehensive hierarchical error boundary system that prevents ent
 **Key Features**:
 
 1. **Global Error Boundary**
-
    - Last line of defense against app crashes
    - Full-page error UI with reload, retry, and go-home options
    - Development vs production error displays
    - Complete Sentry error reporting with context
 
 2. **Feature Error Boundaries**
-
    - Isolates errors to specific features
    - Auto-retry with exponential backoff (1s, 2s, 4s, max 10s)
    - Configurable max retries per feature
    - Users can continue using other features during errors
 
 3. **Sentry Integration**
-
    - Automatic error capture with full context
    - Breadcrumb tracking for debugging
    - Error IDs for support reference
@@ -897,13 +913,11 @@ Created comprehensive completion documentation proving all 42 backend service im
 **Key Findings**:
 
 1. **Critical Issues (3)**:
-
    - SQL injection in lightning-payment-service.ts
    - 6 moderate npm vulnerabilities (esbuild/vite)
    - Development secrets in repository
 
 2. **Security Strengths**:
-
    - Comprehensive auth middleware (90/100)
    - Excellent security headers (CSP, HSTS)
    - Strong NOSTR key management
@@ -1369,18 +1383,15 @@ Based on agent gap analysis, these were identified as HIGH PRIORITY:
 **Root Causes Fixed**:
 
 1. **Client Code Errors**
-
    - Fixed incorrect property references (`this.websocket` → `this.socket`)
    - Replaced WebSocket API methods with Socket.IO methods (`.readyState` → `.connected`, `.send()` → `.emit()`)
    - Fixed 4 instances across realtimeService.ts (lines 285-294, 367-375, 402-414, 427-437)
 
 2. **Missing Backend Endpoints**
-
    - Added Server-Sent Events (SSE) fallback endpoint at `/events`
    - Implemented SSE event streaming with heartbeat mechanism
 
 3. **Enhanced Socket.IO Configuration**
-
    - Added explicit transport configuration (websocket + polling)
    - Configured connection timeouts (45s connect, 30s ping, 25s interval)
    - Enhanced CORS configuration for all frontend origins
@@ -1446,27 +1457,23 @@ Created a comprehensive security-engineer agent in `.claude/agents/security-engi
 **Agent Capabilities**:
 
 1. **Dependency Security Scanning**
-
    - NPM/Yarn audit analysis with severity classification
    - CVE/NVD database correlation
    - SBOM generation
    - License compliance checking
 
 2. **Static Application Security Testing (SAST)**
-
    - Code pattern analysis for security anti-patterns
    - SQL injection, XSS vulnerability scanning
    - Authentication/authorization flaw detection
    - Hardcoded secrets detection
 
 3. **Security Remediation**
-
    - Automated dependency updates (safe patches)
    - Configuration hardening
    - Breaking change analysis
 
 4. **Security Testing**
-
    - Security test suite creation
    - Penetration testing automation
    - Fuzzing test generation
@@ -1724,23 +1731,19 @@ Resolved npm security vulnerabilities by updating packages to secure versions, r
 **Packages Updated**:
 
 1. **puppeteer**: `21.6.1 -> 24.26.1`
-
    - Fixed: tar-fs path traversal vulnerabilities (3 high severity)
    - Fixed: ws DoS vulnerability (1 high severity)
    - Fixed: @puppeteer/browsers vulnerabilities
 
 2. **nodemailer**: `6.9.8/7.0.3 -> 7.0.10`
-
    - Fixed: Email domain interpretation conflict (1 moderate severity)
    - Updated in both backend and frontend packages
 
 3. **path-to-regexp**: `0.1.7 -> 6.3.0`
-
    - Fixed: ReDoS backtracking vulnerabilities (2 high severity)
    - Updated in backend package
 
 4. **Removed deprecated ipfs-http-client**: `60.0.1 -> removed`
-
    - Replaced by Helia (already in use)
    - Eliminated multiple moderate severity vulnerabilities
    - Fixed broken git dependencies
@@ -1818,21 +1821,18 @@ Eliminated all Jest ESM configuration warnings by switching from ESM to CommonJS
 **Solutions Implemented**:
 
 1. **Updated Global Jest Transform Configuration** (`jest.config.elite.ts`):
-
    - Changed `useESM: false` to use CommonJS for Jest compatibility
    - Added explicit TypeScript compiler options: `module: 'commonjs'`, `esModuleInterop: true`, `allowSyntheticDefaultImports: true`
    - Updated `transformIgnorePatterns` to properly handle node_modules ESM packages
    - Added `moduleFileExtensions` for proper file resolution
 
 2. **Updated Project-Specific Transform Configs**:
-
    - Frontend project: Added CommonJS transform with React JSX support
    - Backend project: Added CommonJS transform with backend-specific tsconfig
    - Shared project: Added CommonJS transform for consistent module resolution
    - All projects now use consistent `useESM: false` configuration
 
 3. **Installed Missing Dependencies**:
-
    - Installed `deep-equal@^2.0.5` required by `aria-query@5.1.3`
    - Fixed module resolution errors in `@testing-library` packages
    - Resolved 109 transitive dependencies
@@ -1923,7 +1923,6 @@ Eliminated all ESLint warnings in the monitoring dashboard by replacing console.
 **Solutions Implemented**:
 
 1. **Created Lightweight Logger Utility** (`monitoring/dashboard/logger.js`):
-
    - Structured logging with levels (ERROR, WARN, INFO, DEBUG)
    - Colored console output with timestamps
    - Context-aware logging (DASHBOARD context)
@@ -1931,7 +1930,6 @@ Eliminated all ESLint warnings in the monitoring dashboard by replacing console.
    - ESLint-compliant with explicit disable comments
 
 2. **Replaced All Console.log Statements**:
-
    - `server.js`: Replaced 20+ console.log with logger.info/success/error/warn
    - `public/app.js`: Removed 8 console.log statements (client-side debug logs)
    - Proper error logging with error metadata
@@ -2217,28 +2215,24 @@ Delivered a cutting-edge real-time CI/CD monitoring dashboard with comprehensive
 **Dashboard Capabilities**:
 
 1. **Real-time Monitoring**:
-
    - Live deployment progress with ETA
    - Stage-by-stage visualization
    - Automatic updates via WebSocket
    - Connection status indicator
 
 2. **Health Monitoring**:
-
    - 4 health endpoints tracked
    - Response time monitoring
    - Overall health status (healthy/degraded/unhealthy)
    - 30-second polling interval
 
 3. **Emergency Controls**:
-
    - Emergency rollback (< 2 min)
    - Retry failed deployments
    - Cancel in-progress deployments
    - Direct GitHub Actions links
 
 4. **Analytics**:
-
    - Total deployments counter
    - Success rate percentage
    - Deployment history (last 50)
@@ -2984,7 +2978,6 @@ $0 (local)             → $0 (free tier)         → $0 (free tier)
 **Infrastructure Components**:
 
 1. **Database Module (Supabase FREE tier)**:
-
    - 500MB PostgreSQL storage
    - Automatic schema creation (app, auth, storage)
    - PostgreSQL extensions (uuid-ossp, pgcrypto, pg_stat_statements)
@@ -2993,7 +2986,6 @@ $0 (local)             → $0 (free tier)         → $0 (free tier)
    - Connection pooling (50 staging, 100 production)
 
 2. **Redis Module (Upstash FREE tier)**:
-
    - 256MB memory per environment
    - 10,000 commands/day
    - Environment-specific cache profiles
@@ -3002,7 +2994,6 @@ $0 (local)             → $0 (free tier)         → $0 (free tier)
    - Automatic persistence
 
 3. **Backend Services Module (Railway FREE tier)**:
-
    - $5/month renewable credit
    - 1 replica (staging), 2 replicas (production)
    - GHCR integration for Docker images
@@ -3090,7 +3081,6 @@ $0 (local)             → $0 (free tier)         → $0 (free tier)
 **Comprehensive Test Suite** (95%+ coverage):
 
 1. **Staging Environment Tests** (`staging.test.ts`):
-
    - Environment identity validation
    - API configuration (staging endpoint, generous timeout)
    - Database configuration (moderate pool, SSL enforced)
@@ -3100,7 +3090,6 @@ $0 (local)             → $0 (free tier)         → $0 (free tier)
    - Production parity checks
 
 2. **Production Environment Tests** (`production.test.ts`):
-
    - Environment identity validation
    - API configuration (production endpoint, strict timeout)
    - Database configuration (maximum pool, SSL enforced)
@@ -3190,7 +3179,6 @@ $0 (local)             → $0 (free tier)         → $0 (free tier)
 **Comprehensive Documentation Delivered**:
 
 1. **Infrastructure README** (`infrastructure/README.md`):
-
    - Complete setup guide with prerequisites
    - Module documentation (database, redis, backend-services)
    - Environment specifications and cost breakdown
@@ -3312,14 +3300,12 @@ $0 (local)             → $0 (free tier)         → $0 (free tier)
 #### Next Steps
 
 1. **Immediate**:
-
    - Configure GitHub Secrets for staging and production
    - Run Terraform apply for both environments
    - Execute database setup scripts
    - Test environment promotion workflow
 
 2. **Short-term**:
-
    - Set up monitoring dashboards
    - Configure Slack notifications
    - Implement feature flags
@@ -3975,21 +3961,18 @@ await eventBus.emit('content.created', { contentId, userId, timestamp });
 **Infrastructure & Architecture (4 ADRs)**:
 
 1. **ADR-002: Event-Driven Architecture**
-
    - In-process event bus for service decoupling
    - Async handlers with error isolation
    - Alternative: RabbitMQ/Kafka (rejected - overkill for current scale)
    - Benefit: Loose coupling, improved performance, resilience
 
 2. **ADR-007: Feature-Based Code Organization**
-
    - Organize by business domain, not technical type
    - Self-contained feature modules with barrel exports
    - Alternative: Type-based organization (rejected - poor scalability)
    - Benefit: Improved discoverability, parallel development
 
 3. **ADR-010: Express.js for API Server**
-
    - Express.js 4.x as web framework
    - Mature middleware ecosystem
    - Alternative: Fastify (faster but smaller ecosystem), NestJS (too opinionated)
@@ -4009,14 +3992,12 @@ await eventBus.emit('content.created', { contentId, userId, timestamp });
 - Benefit: Testability (easy mocks), loose coupling, type safety
 
 6. **ADR-006: TypeScript Strict Mode**
-
    - Enforce strict TypeScript across codebase
    - 94% type coverage achieved (up from 48%)
    - Alternative: Gradual typing (rejected - doesn't prevent bugs)
    - Benefit: 40% reduction in runtime errors, better IntelliSense
 
 7. **ADR-008: Jest for Testing**
-
    - Jest with ts-jest for all testing
    - Coverage: 85%+ global, 95%+ services/repos
    - Alternative: Mocha (more setup), Vitest (less mature)
@@ -4036,7 +4017,6 @@ await eventBus.emit('content.created', { contentId, userId, timestamp });
 - Alternative: Single-layer (not optimal), database-only (too slow)
 
 10. **ADR-013: Redis for Caching and Rate Limiting**
-
     - Redis 7.x for caching, sessions, rate limiting
     - Sub-millisecond latency, rich data structures
     - Alternative: Memcached (limited features), DynamoDB (higher latency)
@@ -4051,7 +4031,6 @@ await eventBus.emit('content.created', { contentId, userId, timestamp });
 **Data & Payments (3 ADRs)**: 12. **ADR-004: Repository Pattern for Data Access** - Interface-based repositories for all data access - Database independence via abstraction - Alternative: Active Record (tight coupling), ORMs (heavy) - Benefit: Testability, centralized queries, technology independence
 
 13. **ADR-005: Lightning Network for Payments**
-
     - Bitcoin Lightning Network as primary payment rail
     - Fees: 0.1% vs 2.9% for credit cards
     - Settlements: Seconds vs 2-7 days
@@ -4134,21 +4113,18 @@ await eventBus.emit('content.created', { contentId, userId, timestamp });
 #### Documentation Suite (12 Complete Guides):
 
 1. **Setup and Installation** (8 pages, 35+ examples)
-
    - Prerequisites and system requirements (Node.js 18+, PostgreSQL 14+, Redis 6+, Docker)
    - Environment setup and configuration
    - Database, Redis, Lightning node, and NOSTR relay setup
    - First run verification and troubleshooting
 
 2. **Development Workflow** (existing guide verified comprehensive)
-
    - Feature development process with TDD
    - Git workflow and quality gates
    - Pull request and code review process
    - Deployment and emergency procedures
 
 3. **Service Development** (15 pages, 40+ examples)
-
    - Service architecture and patterns
    - Interface-first development with dependency injection
    - Repository pattern for data access
@@ -4156,7 +4132,6 @@ await eventBus.emit('content.created', { contentId, userId, timestamp });
    - Unit testing with 95%+ coverage requirements
 
 4. **API Development** (10 pages, 30+ examples)
-
    - RESTful API design and route definition
    - Controller implementation and DTO patterns
    - Validation with Zod schemas
@@ -4164,7 +4139,6 @@ await eventBus.emit('content.created', { contentId, userId, timestamp });
    - Integration testing and OpenAPI documentation
 
 5. **Testing Guide** (12 pages, 35+ examples)
-
    - Test Pyramid philosophy (80% unit, 15% integration, 5% E2E)
    - Jest unit testing with mocks and factories
    - Integration testing with test databases and Testcontainers
@@ -4172,40 +4146,34 @@ await eventBus.emit('content.created', { contentId, userId, timestamp });
    - Coverage requirements: 85%+ global, 95%+ services, 100% payments
 
 6. **Database Guide** (6 pages, 20+ examples)
-
    - Schema design with indexes and relationships
    - Database migrations (creation, execution, rollback)
    - Query optimization with EXPLAIN ANALYZE
    - Transaction management and connection pooling
 
 7. **Event Bus Guide** (4 pages, 12+ examples)
-
    - Domain event definitions (15+ event types)
    - Event publishing and subscription patterns
    - Error handling and dead letter queues
 
 8. **Caching Guide** (3 pages, 10+ examples)
-
    - Multi-layer caching (Memory → Redis → Database)
    - TTL configuration (5min to 24h by data type)
    - Cache key naming and pattern-based invalidation
 
 9. **Payment System Guide** (6 pages, 18+ examples)
-
    - Lightning Network invoice generation and verification
    - Subscription management and auto-renewal
    - Multi-currency conversion with caching
    - Webhook HMAC verification and refund processing
 
 10. **Deployment Guide** (7 pages, 15+ examples)
-
     - Production environment configuration
     - Multi-stage Docker builds and health checks
     - Database migrations in production
     - Monitoring, scaling, zero-downtime deployment (blue-green)
 
 11. **Troubleshooting** (8 pages, 25+ examples)
-
     - 30+ common issues with solutions
     - Development, testing, performance, integration, production issues
     - Diagnostic commands and escalation path
@@ -4267,34 +4235,29 @@ await eventBus.emit('content.created', { contentId, userId, timestamp });
 #### Architecture Documentation Suite:
 
 1. **System Architecture Overview** (1 diagram)
-
    - Complete system showing all 29 services organized by domain
    - Service dependencies and data flows
    - External integrations (NOSTR, Lightning, Email, Exchange APIs)
    - Color-coded by domain (Content=Blue, User=Green, Payment=Orange, Shared=Gray)
 
 2. **Service Interaction Diagrams** (4 sequence diagrams)
-
    - Content Publishing Flow: User → API → ContentPublishing → NOSTR → Analytics
    - Payment Processing Flow: Invoice → Lightning → Webhook → Confirmation
    - Subscription Lifecycle: Creation → Renewals → Cancellation
    - User Activity Tracking: Actions → Activity Service → Analytics → Recommendations
 
 3. **Data Flow Diagrams** (4 diagrams)
-
    - Read Path: Multi-layer caching (Edge → App → Query → DB, 95% hit rate)
    - Write Path: Transaction management + cache invalidation
    - Event Flow: Pub/sub with priority queuing (10K events/sec)
    - Payment Flow: Lightning invoice → Settlement → Analytics
 
 4. **Domain Architecture** (3 diagrams)
-
    - Content Domain: 6 services (Publishing, Moderation, Search, Recommendations, Analytics, Versioning)
    - User Domain: 5 services (Profile, Preferences, Activity, Relationships, Analytics)
    - Payment Domain: 7 services (Processing, Currency, Subscriptions, Refunds, Analytics, Webhooks)
 
 5. **Integration Patterns** (6 diagrams)
-
    - Event-Driven Architecture: Pub/sub with EventBus
    - Cache-Aside Pattern: Multi-layer caching strategy
    - Repository Pattern: Data access abstraction
@@ -4302,7 +4265,6 @@ await eventBus.emit('content.created', { contentId, userId, timestamp });
    - Retry Pattern: Exponential backoff with jitter
 
 6. **Deployment & Security** (2 diagrams)
-
    - Deployment Architecture: Vercel + Docker + PostgreSQL + Redis + Monitoring
    - Security Architecture: 10-layer security model (Auth, Authorization, Encryption, Compliance)
 
@@ -4368,7 +4330,6 @@ await eventBus.emit('content.created', { contentId, userId, timestamp });
 #### API Documentation Suite:
 
 1. **OpenAPI 3.0 Specification** (3,306 lines)
-
    - Complete specification for all 25 API endpoints
    - 61 Data Transfer Objects (DTOs) with detailed schemas
    - Request/response examples for all endpoints
@@ -4380,14 +4341,12 @@ await eventBus.emit('content.created', { contentId, userId, timestamp });
    - Interactive Swagger UI compatibility
 
 2. **Developer Guides**
-
    - Quick Start Guide: Get started in 5 minutes with code examples
    - Authentication & Authorization Guide: JWT + NOSTR auth, roles, permissions
    - Error Code Reference: Complete catalog of 72 error codes (E001-E599)
    - API Documentation Index: Central navigation hub
 
 3. **Code Examples**
-
    - JavaScript/Node.js: 8 working examples
    - Python: 5 working examples
    - cURL: 12 command-line examples
@@ -4439,21 +4398,18 @@ await eventBus.emit('content.created', { contentId, userId, timestamp });
 #### Performance Testing Suite:
 
 1. **k6 Load Testing** (4 comprehensive scripts)
-
    - Load Test: 100-1000 concurrent users, validates API throughput and response times
    - Stress Test: Gradual load increase to 3000 users, identifies breaking points
    - Spike Test: Traffic surge testing with rate limiting validation
    - Endurance Test: 1-hour sustained load, detects memory leaks and stability issues
 
 2. **Jest Performance Tests** (91 tests)
-
    - API Performance: 28 tests (Content, User, Payment, Analytics, Health)
    - Database Performance: 24 tests (reads, writes, transactions, connection pooling)
    - Cache Performance: 10 tests (hit rate, latency, throughput, multi-layer)
    - Payment Performance: 29 tests (100% critical path coverage)
 
 3. **Performance Targets**
-
    - Content API: p95 < 300ms, p99 < 500ms
    - User API: p95 < 200ms, p99 < 400ms
    - Payment API: p95 < 500ms, p99 < 1000ms
@@ -4512,25 +4468,21 @@ await eventBus.emit('content.created', { contentId, userId, timestamp });
 #### Issues Fixed:
 
 1. **import.meta Syntax Error** (CRITICAL)
-
    - Fixed cross-environment compatibility in relay-config.ts
    - Replaced import.meta.env with Node.js/browser compatible code
    - Unblocked ALL tests importing from shared package
 
 2. **Express path-to-regexp Incompatibility** (CRITICAL)
-
    - Locked path-to-regexp to v0.1.7 (Express 4.x compatible)
    - Added Jest module mock for reliable loading
    - Fixed: TypeError: pathRegexp is not a function
 
 3. **Custom Error Class instanceof Failures** (HIGH)
-
    - Added Object.setPrototypeOf() to error classes
    - Fixed WebhookTimestampExpiredError, InvalidWebhookSignatureError, MissingWebhookHeadersError
    - Webhook middleware now returns proper 401 responses
 
 4. **Missing Environment Variables** (MEDIUM)
-
    - Added WEBHOOK_SECRET and WEBHOOK_SECRET_ROTATION to test environment
    - Consistent test configuration across suite
 
@@ -4578,7 +4530,6 @@ await eventBus.emit('content.created', { contentId, userId, timestamp });
 #### Test Suites Delivered:
 
 1. **Service Orchestration** (65 tests)
-
    - Service dependency resolution (singleton, scoped, transient)
    - Cross-service communication via DI container
    - Event bus integration and propagation
@@ -4587,7 +4538,6 @@ await eventBus.emit('content.created', { contentId, userId, timestamp });
    - Performance: 1000+ concurrent resolutions in <1s
 
 2. **API Endpoints** (48 tests)
-
    - 25 RESTful endpoints (Payment, Subscription, User, Content, Webhook)
    - Request validation (Zod schemas)
    - Authentication/authorization flows
@@ -4596,7 +4546,6 @@ await eventBus.emit('content.created', { contentId, userId, timestamp });
    - CORS and security headers
 
 3. **Database Transactions** (56 tests)
-
    - ACID compliance (Atomicity, Consistency, Isolation, Durability)
    - Transaction rollback on failure
    - Nested transactions with savepoints
@@ -4606,7 +4555,6 @@ await eventBus.emit('content.created', { contentId, userId, timestamp });
    - Bulk operations (1000 records in <10s)
 
 4. **Event Bus** (42 tests)
-
    - Event publish/subscribe patterns
    - Wildcard subscriptions (payment.\*)
    - Event ordering and async handlers
@@ -4615,7 +4563,6 @@ await eventBus.emit('content.created', { contentId, userId, timestamp });
    - High-volume: 1000 events in <5s
 
 5. **Cache Layer** (38 tests)
-
    - Cache operations (set, get, delete, TTL)
    - Read-through and write-through caching
    - Cache invalidation strategies
@@ -4624,7 +4571,6 @@ await eventBus.emit('content.created', { contentId, userId, timestamp });
    - Performance: 1000 reads in <1s
 
 6. **External Services** (34 tests)
-
    - Lightning Network (invoice creation, payment verification)
    - Email service (SMTP, delivery tracking)
    - Nostr relay (event publishing, subscriptions)
@@ -4633,7 +4579,6 @@ await eventBus.emit('content.created', { contentId, userId, timestamp });
    - Retry with exponential backoff (1s, 2s, 4s)
 
 7. **Error Recovery** (28 tests)
-
    - Service failure recovery (DB, cache, event bus)
    - Transaction rollback and compensation
    - Network timeout handling (5s threshold)
@@ -4642,7 +4587,6 @@ await eventBus.emit('content.created', { contentId, userId, timestamp });
    - Health check monitoring
 
 8. **Concurrent Operations** (32 tests)
-
    - Race condition prevention
    - Deadlock prevention (lock ordering)
    - Resource contention handling
@@ -4666,7 +4610,6 @@ await eventBus.emit('content.created', { contentId, userId, timestamp });
 #### Quality Metrics:
 
 - **Coverage by Category**:
-
   - Service Orchestration: 97%
   - API Endpoints: 100%
   - Database Transactions: 95%
@@ -4741,7 +4684,6 @@ await eventBus.emit('content.created', { contentId, userId, timestamp });
 #### Features Delivered:
 
 1. **Content API** (`/api/v1/content`)
-
    - POST `/publish` - Publish content to platform + NOSTR
    - POST `/moderate` - Moderate content (approve/reject/flag)
    - GET `/search` - Full-text search with filters
@@ -4751,7 +4693,6 @@ await eventBus.emit('content.created', { contentId, userId, timestamp });
    - POST `/versions/:id/revert` - Revert to previous version
 
 2. **User API** (`/api/v1/users`)
-
    - GET/PUT `/profile/:id` - User profile management
    - GET/PUT `/preferences/:id` - User preferences
    - GET `/activity/:id` - Activity feed
@@ -4760,7 +4701,6 @@ await eventBus.emit('content.created', { contentId, userId, timestamp });
    - GET `/analytics/:id` - User analytics dashboard
 
 3. **Payment API** (`/api/v1/payments`)
-
    - POST/GET `/invoices` - Lightning invoice management
    - POST `/invoices/:id/pay` - Process payment
    - GET `/currency/convert` - Real-time currency conversion
@@ -4770,7 +4710,6 @@ await eventBus.emit('content.created', { contentId, userId, timestamp });
    - POST `/webhooks` - Webhook registration
 
 4. **Middleware Stack**
-
    - **Authentication**: JWT verification with NOSTR pubkey support
    - **Validation**: Zod schema validation for all inputs
    - **Rate Limiting**: 6 preset limiters (auth: 10/15min, content: 10/min, payment: 20/min, read: 100/min, expensive: 20/min, webhook: 5/15min)
@@ -4837,14 +4776,12 @@ await eventBus.emit('content.created', { contentId, userId, timestamp });
 #### Core Features:
 
 1. **Service Type Identifiers** (`types.ts`)
-
    - 29+ service token definitions
    - Lifecycle configuration (singleton/scoped/transient)
    - Dependency mapping for all services
    - Service tagging system (infrastructure, content, user, payment, analytics, blockchain)
 
 2. **Binding Modules** (`container/bindings/`)
-
    - `shared.bindings.ts`: EventBus, Cache, Email, Notification, AuditLog (5 services)
    - `content.bindings.ts`: Publishing, Moderation, Search, Recommendations, Analytics, Versioning, Creation (7 services)
    - `user.bindings.ts`: Profile, Preferences, Activity, Relationships, Analytics (5 services)
@@ -4852,7 +4789,6 @@ await eventBus.emit('content.created', { contentId, userId, timestamp });
    - Service metadata with version, description, tags, metrics
 
 3. **Application Bootstrap** (`bootstrap.ts`)
-
    - 6-phase initialization sequence (20-70ms total)
    - Phase 1: Create registry (1ms)
    - Phase 2: Register 29+ services (5-10ms)
@@ -4864,7 +4800,6 @@ await eventBus.emit('content.created', { contentId, userId, timestamp });
    - Comprehensive error handling
 
 4. **Graceful Shutdown** (`shutdown.ts`)
-
    - Configurable timeout (default 30s)
    - Ordered service disposal (reverse initialization)
    - Error collection and reporting
@@ -4874,7 +4809,6 @@ await eventBus.emit('content.created', { contentId, userId, timestamp });
    - Emergency shutdown capability
 
 5. **Comprehensive Tests** (`ServiceContainer.integration.test.ts`)
-
    - 147 integration test cases
    - Bootstrap validation
    - Phase-specific service tests (1-5)
@@ -5820,7 +5754,6 @@ These services will build on the foundation established by PaymentProcessingServ
 **Analytics Capabilities:**
 
 1. **Acquisition Metrics**:
-
    - New user tracking with source attribution (organic, referral, paid, social)
    - Conversion rate calculation (visitor → signup)
    - Growth rate analysis
@@ -5828,7 +5761,6 @@ These services will build on the foundation established by PaymentProcessingServ
    - Average time-to-signup
 
 2. **Engagement Metrics**:
-
    - Daily/Weekly/Monthly Active Users (DAU/WAU/MAU)
    - Stickiness metric (DAU/MAU ratio)
    - Session duration and action tracking
@@ -5836,7 +5768,6 @@ These services will build on the foundation established by PaymentProcessingServ
    - Time-series engagement data
 
 3. **Retention Analysis**:
-
    - Day 1, 7, 30, 90 retention rates
    - 90-day retention curve generation
    - Cohort retention tracking
@@ -5844,7 +5775,6 @@ These services will build on the foundation established by PaymentProcessingServ
    - Average user lifespan
 
 4. **Churn Prediction** (ML-Based):
-
    - Risk scoring (0-100 scale)
    - 5 weighted risk factors:
      - Days since activity (weight: 0.3)
@@ -6571,13 +6501,11 @@ These services will build on the foundation established by PaymentProcessingServ
 #### 📚 **DOCUMENTATION DELIVERED**
 
 1. **ADR-004-state-management-boundaries.md**
-
    - Complete architectural decision record
    - Performance metrics and validation
    - Migration examples
 
 2. **STATE-MANAGEMENT-GUIDELINES.md**
-
    - Comprehensive developer guide
    - Common patterns and anti-patterns
    - Code review checklist
@@ -6695,20 +6623,17 @@ These services will build on the foundation established by PaymentProcessingServ
 #### 🎯 **COMPLETED TASKS (All 10 Subtasks)**
 
 1. **Removed Server Data Slices**
-
    - ❌ Deleted postSlice.ts (server data)
    - ❌ Deleted paymentSlice.ts (server data)
    - ❌ Deleted cmsSlice.ts (server data)
    - ✅ Kept userSlice.ts (auth is client state)
 
 2. **Created UI-Only Slices**
-
    - ✅ uiSlice.ts: Theme, modals, sidebars, toasts, notifications
    - ✅ cmsUiSlice.ts: Editor state, drafts, preview mode
    - ✅ Proper state boundaries enforced
 
 3. **Refactored Store Configuration**
-
    - ✅ Replaced index.ts with UI-only configuration
    - ✅ Added toast middleware for auto-removal
    - ✅ Hydration from localStorage
@@ -6827,14 +6752,12 @@ See US-320-IMPLEMENTATION-COMPLETE.md for full implementation details.
 **Test Infrastructure** (1,300+ lines)
 
 1. **Global Setup/Teardown** (70 lines)
-
    - Browser storage cleanup
    - IndexedDB management
    - Test environment initialization
    - Automated cleanup after test runs
 
 2. **Mock Relay Server** (350+ lines)
-
    - Full NOSTR WebSocket relay implementation
    - NIP-01 compliant event handling
    - Subscription management with filters
@@ -6859,7 +6782,6 @@ See US-320-IMPLEMENTATION-COMPLETE.md for full implementation details.
 - Keyboard navigation
 
 5. **Relay Connection Tests** (300 lines, 30+ tests)
-
    - Single and multi-relay scenarios
    - Connection/disconnection flows
    - Automatic reconnection
@@ -6868,7 +6790,6 @@ See US-320-IMPLEMENTATION-COMPLETE.md for full implementation details.
    - Configuration persistence
 
 6. **Event Publishing Tests** (350 lines, 35+ tests)
-
    - Text notes with hashtags and mentions
    - Metadata, contacts, reactions, deletions
    - Multi-relay publishing
@@ -6877,7 +6798,6 @@ See US-320-IMPLEMENTATION-COMPLETE.md for full implementation details.
    - Performance benchmarks
 
 7. **Subscription Tests** (350 lines, 40+ tests)
-
    - Global and following feeds
    - Real-time event reception
    - Filter-based queries (author, kind, time, tags)
@@ -6887,7 +6807,6 @@ See US-320-IMPLEMENTATION-COMPLETE.md for full implementation details.
    - Like/repost interactions
 
 8. **Encrypted DM Tests** (350 lines, 35+ tests)
-
    - NIP-04 encryption/decryption
    - Send and receive DMs
    - Conversation grouping
@@ -6897,7 +6816,6 @@ See US-320-IMPLEMENTATION-COMPLETE.md for full implementation details.
    - Decryption error handling
 
 9. **Monitoring Tests** (300 lines, 30+ tests)
-
    - Monitoring dashboard display
    - Connection status tracking
    - Error toast notifications
@@ -6907,7 +6825,6 @@ See US-320-IMPLEMENTATION-COMPLETE.md for full implementation details.
    - Screen reader announcements
 
 10. **Backup/Recovery Tests** (350 lines, 30+ tests)
-
     - Mnemonic backup (12/24 words)
     - Encrypted file backup
     - QR code generation
@@ -7214,7 +7131,6 @@ npx playwright test --project=chromium
 **Core Components** (2,500+ lines)
 
 1. **ErrorBoundary** (290+ lines)
-
    - React Error Boundary with comprehensive error catching
    - Default and custom fallback UI support
    - Error logging to console and Sentry
@@ -7224,7 +7140,6 @@ npx playwright test --project=chromium
    - Development mode error stack display
 
 2. **ErrorToast System** (350+ lines)
-
    - Toast notification manager with queue system
    - Animated slide-in/out transitions
    - Auto-dismiss with severity-based duration (3s-7s)
@@ -7235,7 +7150,6 @@ npx playwright test --project=chromium
    - Severity-based styling (INFO, WARNING, ERROR, CRITICAL)
 
 3. **ErrorMessage Component** (320+ lines)
-
    - Generic reusable error display
    - Severity-based styling and icons
    - Error code and timestamp display
@@ -7246,7 +7160,6 @@ npx playwright test --project=chromium
    - Compact mode support
 
 4. **ConnectionErrorDisplay** (370+ lines)
-
    - Relay connection error tracking
    - Real-time connection status indicators
    - Retry individual or all relays
@@ -7256,7 +7169,6 @@ npx playwright test --project=chromium
    - Grouped error statistics
 
 5. **PublishErrorHandler** (410+ lines)
-
    - Event publish failure tracking
    - Failed/successful relay breakdown
    - Success rate calculation
@@ -7267,7 +7179,6 @@ npx playwright test --project=chromium
    - Per-error retry mechanism
 
 6. **SubscriptionErrorDisplay** (330+ lines)
-
    - Subscription error tracking
    - Filter validation error display
    - Affected relay listing
@@ -7290,7 +7201,6 @@ npx playwright test --project=chromium
 **Test Suite** (3 test files, 300+ assertions)
 
 1. **ErrorBoundary.test.tsx**
-
    - Rendering tests (children, fallback UI, custom fallback)
    - Error recovery and reset functionality
    - Auto-recovery with timer mocking
@@ -7299,7 +7209,6 @@ npx playwright test --project=chromium
    - Edge cases (no message, special characters, multiple attempts)
 
 2. **ErrorMessage.test.tsx**
-
    - All severity level rendering
    - Troubleshooting and recovery suggestions
    - Compact mode styling
@@ -7319,7 +7228,6 @@ npx playwright test --project=chromium
 **Storybook Documentation** (2 story files, 40+ stories)
 
 1. **ErrorMessage.stories.tsx**
-
    - All severity variants
    - With/without troubleshooting
    - Retry and dismiss actions
@@ -7341,21 +7249,18 @@ npx playwright test --project=chromium
 **Architecture Documentation** (4 Mermaid diagrams)
 
 1. **component-interaction.mmd**
-
    - Error boundary wrapping app
    - NOSTR service integration
    - Error handler connections
    - Toast system flow
 
 2. **data-flow.mmd**
-
    - User interaction sequence
    - Service call error handling
    - Recoverable vs critical error paths
    - Toast display and retry flow
 
 3. **state-management.mmd**
-
    - Component lifecycle states
    - Error classification and routing
    - Retry and recovery states
@@ -7436,7 +7341,6 @@ npx playwright test --project=chromium
 **Core Services** (1,700+ lines)
 
 1. **RateLimiter Service** (1,050+ lines)
-
    - Token bucket algorithm with automatic refilling
    - Multi-tier rate limits (per-relay, per-operation, global)
    - Request queuing with priority support (Critical → High → Normal → Low → Lowest)
@@ -7449,7 +7353,6 @@ npx playwright test --project=chromium
    - Dynamic configuration updates
 
 2. **RateLimitMonitor Service** (350+ lines)
-
    - Real-time metrics collection and aggregation
    - Dashboard data generation (health status, summary, time series)
    - Prometheus metrics export (15+ metrics)
@@ -7659,7 +7562,6 @@ Duration:    5.5s
 **Core Services** (2,100+ lines)
 
 1. **BackupEncryptionService** (400+ lines)
-
    - AES-256-GCM encryption with Web Crypto API
    - PBKDF2 key derivation (100,000 iterations, OWASP compliant)
    - Password strength validation (12+ chars, complexity requirements)
@@ -7668,7 +7570,6 @@ Duration:    5.5s
    - Zero-knowledge architecture (keys never stored unencrypted)
 
 2. **NOSTRBackupService** (900+ lines)
-
    - Complete backup orchestration (keys, events, configuration)
    - Multiple content types: complete, keys-only, events-only, config-only
    - Backup verification with structural and integrity checks
@@ -7868,7 +7769,6 @@ Duration:    5.5s
 #### 🎯 **COMPLETED WORK**
 
 1. **Integration Test Architecture** (305 lines)
-
    - `setup.ts`: Complete test configuration and utilities
    - Test relay configuration (env-based + fallback to public relays)
    - Performance thresholds (publish: <100ms, subscription: <500ms, cache: <5ms)
@@ -7879,7 +7779,6 @@ Duration:    5.5s
    - Test event generators and assert helpers
 
 2. **Relay Fixtures** (346 lines)
-
    - `relay-fixtures.ts`: Real and mock relay utilities
    - **RelayFixture**: Single relay connection testing with timeout
    - **MultiRelayFixture**: Multi-relay coordination and failover
@@ -7888,7 +7787,6 @@ Duration:    5.5s
    - Latency tracking and EOSE handling
 
 3. **Test Event Factory** (289 lines)
-
    - `test-events.ts`: Comprehensive NOSTR event generators
    - All event kinds: text notes, profiles, DMs, reactions, reposts, deletions
    - Advanced events: contact lists, relay lists, articles, zap requests
@@ -7897,7 +7795,6 @@ Duration:    5.5s
    - Filter factory for all common use cases
 
 4. **Performance Utilities** (378 lines)
-
    - `performance-utils.ts`: Elite performance testing tools
    - **PerformanceBenchmark**: Full suite with warmup/test runs, P95/P99 tracking
    - **LatencyMeasurement**: Percentile calculations (P50/P75/P95/P99)
@@ -7973,7 +7870,6 @@ Duration:    5.5s
 #### 📊 **Monitoring Features Implemented**
 
 1. **Connection Health Monitoring** - REAL-TIME TRACKING
-
    - **Relay Status Tracking**: Connected, disconnected, error states
    - **Health Scoring**: 0-100 score based on latency, success rate, uptime
    - **Uptime Calculation**: Percentage-based availability tracking
@@ -7982,7 +7878,6 @@ Duration:    5.5s
    - **Connection Events**: Real-time event listeners for state changes
 
 2. **Event Publishing Metrics** - COMPREHENSIVE ANALYTICS
-
    - **Success Rate Tracking**: Per-relay and global success percentages
    - **Latency Percentiles**: p50, p75, p90, p95, p99 calculations
    - **Publish Counters**: Total, successful, failed event tracking
@@ -7991,7 +7886,6 @@ Duration:    5.5s
    - **Throughput Tracking**: Events per minute calculations
 
 3. **Subscription Monitoring** - PERFORMANCE INSIGHTS
-
    - **Active Subscription Count**: Real-time subscription tracking
    - **Events Received**: Total and per-subscription event counting
    - **Events Per Second**: Throughput calculations
@@ -8000,7 +7894,6 @@ Duration:    5.5s
    - **Subscription Lifecycle**: Created, uptime, last event tracking
 
 4. **Performance Metrics** - LATENCY & THROUGHPUT
-
    - **Latency Percentiles**: p50, p75, p90, p95, p99, max, min, avg
    - **Throughput Metrics**: Events/sec, events/min, peak, average
    - **Request Counters**: Total, successful, failed requests
@@ -8009,7 +7902,6 @@ Duration:    5.5s
    - **Historical Data**: Retention window (1 hour default)
 
 5. **Intelligent Alerting System** - PROACTIVE MONITORING
-
    - **Alert Types**: 8 predefined types (relay, publish, subscription, performance)
    - **Severity Levels**: INFO, WARNING, ERROR, CRITICAL
    - **Configurable Conditions**: Enable/disable, thresholds, time windows
@@ -8027,7 +7919,6 @@ Duration:    5.5s
      - MEMORY_HIGH (Warning)
 
 6. **Metrics Export** - EXTERNAL INTEGRATION
-
    - **Prometheus Format**: Text-based exposition format
    - **JSON Export**: Complete metrics in JSON
    - **HTTP Health Endpoint**: Ready for /health endpoints
@@ -8037,7 +7928,6 @@ Duration:    5.5s
    - **Help Text**: Descriptive metric documentation
 
 7. **Health Check System** - OVERALL STATUS
-
    - **Multi-Component Checks**: Relays, publishing, subscriptions, performance
    - **Health Status**: HEALTHY, DEGRADED, UNHEALTHY
    - **Health Score**: 0-100 composite score
@@ -8178,7 +8068,6 @@ This completes the final user story (US-316) of Epic 003: NOSTR Consolidation. A
 #### 🔧 **Security Features Implemented**
 
 1. **NIP-04 Compliant Encryption** - PRODUCTION GRADE
-
    - **ECDH Key Exchange**: secp256k1 elliptic curve
    - **AES-256-CBC Encryption**: Industry-standard symmetric encryption
    - **IV Generation**: CSPRNG (crypto.getRandomValues) per message
@@ -8187,7 +8076,6 @@ This completes the final user story (US-316) of Epic 003: NOSTR Consolidation. A
    - **Roundtrip Integrity**: 100% success rate across all character sets
 
 2. **Message Threading** - ORGANIZED CONVERSATIONS
-
    - **Deterministic Thread IDs**: Sorted pubkey pair for consistency
    - **Message Ordering**: Chronological sorting by timestamp
    - **Unread Tracking**: Automatic unread count per thread
@@ -8195,7 +8083,6 @@ This completes the final user story (US-316) of Epic 003: NOSTR Consolidation. A
    - **Memory-Safe Storage**: Map-based data structures
 
 3. **Read Receipts (Kind 1515)** - MESSAGE ACKNOWLEDGMENT
-
    - **Cryptographically Signed**: Event signing via KeyManagementService
    - **Timestamp Tracking**: Precise read time recording
    - **Status API**: Check if message read
@@ -8203,7 +8090,6 @@ This completes the final user story (US-316) of Epic 003: NOSTR Consolidation. A
    - **UI Indicators**: Ready for "message seen" UI
 
 4. **Typing Indicators (Kind 20004)** - REAL-TIME PRESENCE
-
    - **Ephemeral Events**: Not persisted (temporary signals)
    - **Auto-Clear**: 3-second timeout after typing stops
    - **Debouncing**: Prevents spam from rapid typing
@@ -8211,7 +8097,6 @@ This completes the final user story (US-316) of Epic 003: NOSTR Consolidation. A
    - **Timeout Management**: No memory leaks (cleanup on destroy)
 
 5. **Message History & Pagination** - EFFICIENT RETRIEVAL
-
    - **Pagination**: Offset/limit support for large conversations
    - **Time Filtering**: Before/after timestamp filters
    - **Conversation Search**: Case-insensitive search in decrypted content
@@ -8219,7 +8104,6 @@ This completes the final user story (US-316) of Epic 003: NOSTR Consolidation. A
    - **Performance**: O(1) cache lookup for 10,000 messages
 
 6. **Forward Secrecy (Session Key Rotation)** - ADVANCED SECURITY
-
    - **Ephemeral Session Keys**: Temporary keys per conversation
    - **Automatic Rotation**: Every 100 messages (configurable threshold)
    - **Secure Destruction**: Old keys zeroed from memory
@@ -8227,7 +8111,6 @@ This completes the final user story (US-316) of Epic 003: NOSTR Consolidation. A
    - **Rollback Prevention**: Old keys cannot be restored
 
 7. **Spam Protection** - MULTI-TIER DEFENSE
-
    - **Rate Limiting**: 10 messages/minute, 200 messages/hour per sender
    - **Proof-of-Work**: Optional 16-bit difficulty for unknown senders
    - **Block Lists**: Permanent sender blocking
@@ -8410,7 +8293,6 @@ This completes the final user story (US-316) of Epic 003: NOSTR Consolidation. A
 #### 🔧 **Features Implemented**
 
 1. **Unified Architecture** - ISOMORPHIC SESSION MANAGEMENT
-
    - **Abstract Base Class**: `UnifiedSessionManager` with shared logic
    - **Backend Implementation**: `DatabaseSessionManager` with Supabase/PostgreSQL
    - **Frontend Implementation**: `BrowserSessionManager` with IndexedDB
@@ -8418,7 +8300,6 @@ This completes the final user story (US-316) of Epic 003: NOSTR Consolidation. A
    - **Consistent API**: Same methods and behavior on both platforms
 
 2. **Token Security** - ENTERPRISE-GRADE PROTECTION
-
    - **64-character Random Tokens**: 256-bit entropy
    - **SHA-256 Hashing**: Never store plain tokens
    - **Single Token Return**: Token returned ONLY on creation/refresh
@@ -8426,7 +8307,6 @@ This completes the final user story (US-316) of Epic 003: NOSTR Consolidation. A
    - **Hash Comparison**: Constant-time comparison prevents timing attacks
 
 3. **Multi-Device Support** - UP TO 5 DEVICES PER USER
-
    - **Device Fingerprinting**: Browser, OS, screen, timezone, language
    - **Session Limits**: Max 5 devices (configurable)
    - **Automatic Revocation**: Oldest session revoked when limit exceeded
@@ -8434,7 +8314,6 @@ This completes the final user story (US-316) of Epic 003: NOSTR Consolidation. A
    - **Device Statistics**: Track sessions by device type
 
 4. **Session Expiration** - DUAL-TIMEOUT SYSTEM
-
    - **Idle Timeout**: 24 hours of inactivity → auto-revoke
    - **Absolute Timeout**: 7 days from creation → auto-revoke
    - **Auto-Refresh**: Suggested at 50% lifetime (3.5 days)
@@ -8442,7 +8321,6 @@ This completes the final user story (US-316) of Epic 003: NOSTR Consolidation. A
    - **Activity Updates**: Last activity tracked on every validation
 
 5. **Activity Tracking** - COMPREHENSIVE AUDIT TRAIL
-
    - **Activity Types**: login, api_call, page_view, logout, token_refresh, timeout, invalidation
    - **Last 100 Activities**: Per-session activity log
    - **IP Address Tracking**: Record IP for security monitoring
@@ -8467,7 +8345,6 @@ This completes the final user story (US-316) of Epic 003: NOSTR Consolidation. A
    ```
 
 7. **Database Schema** - OPTIMIZED FOR PERFORMANCE
-
    - **Tables**: `unified_sessions`, `unified_session_activities`
    - **Indexes**: 15+ indexes for fast queries
    - **JSONB Support**: Device info and metadata
@@ -8476,7 +8353,6 @@ This completes the final user story (US-316) of Epic 003: NOSTR Consolidation. A
    - **Migration**: Complete up/down migration with rollback
 
 8. **Frontend Sync** - MULTI-TAB COORDINATION
-
    - **BroadcastChannel**: Real-time sync across tabs
    - **Singleton Pattern**: Single manager instance
    - **Event Broadcasting**: Session creation, refresh, revocation
@@ -8484,7 +8360,6 @@ This completes the final user story (US-316) of Epic 003: NOSTR Consolidation. A
    - **Offline Support**: Full functionality without network
 
 9. **Rate Limiting** - PREVENT ABUSE
-
    - Session creation: 10 per 15 minutes
    - Validation: 100 per minute
    - Refresh: 20 per 5 minutes
@@ -8504,19 +8379,16 @@ This completes the final user story (US-316) of Epic 003: NOSTR Consolidation. A
 Created 4 comprehensive Mermaid diagrams:
 
 1. **Session Lifecycle Diagram** (`US-311-session-lifecycle.mmd`)
-
    - Complete flow from login to logout
    - All decision points and state transitions
    - Token generation and validation process
 
 2. **Architecture Overview Diagram** (`US-311-architecture-overview.mmd`)
-
    - Frontend, backend, and database layers
    - Component relationships and data flow
    - Shared core abstractions
 
 3. **Multi-Device Flow Diagram** (`US-311-multi-device-flow.mmd`)
-
    - Sequence diagram showing device interactions
    - Session limit enforcement
    - Device-specific revocation
@@ -8673,14 +8545,12 @@ None - New feature, fully backward compatible.
 #### 🔧 **Features Implemented**
 
 1. **Two-Tier Cache Architecture** - ELITE PERFORMANCE
-
    - **Memory Cache (Hot)**: < 2ms access, 1000 events, 50MB limit
    - **IndexedDB Cache (Cold)**: < 8ms access, 10,000 events, persistent
    - **Automatic Promotion**: Cold → Hot on access (LRU-based)
    - **Indexes**: O(1) lookups by pubkey, kind, and tags
 
 2. **React Query Integration** - DECLARATIVE CACHING
-
    - **Query Hooks**: `useEvent`, `useEvents`, `useEventQuery`, `useProfile`, `useProfiles`
    - **Mutation Hooks**: `useSetEvent`, `useDeleteEvent`, `useClearCache`, `useInvalidateCache`
    - **Utility Hooks**: `useCacheStats`, `useWarmCache`, `usePreloadEvents`
@@ -8688,7 +8558,6 @@ None - New feature, fully backward compatible.
    - **Background Refresh**: Stale-while-revalidate pattern
 
 3. **TTL-Based Expiration** - INTELLIGENT CACHING
-
    - Kind 1 (Text Notes): 5 minutes TTL
    - Kind 0 (Profiles): 1 hour TTL
    - Kind 3 (Contact Lists): 1 hour TTL
@@ -8713,7 +8582,6 @@ None - New feature, fully backward compatible.
    ```
 
 5. **LRU Eviction** - MEMORY-EFFICIENT
-
    - 50MB memory limit enforced
    - Least Recently Used algorithm (O(1) eviction)
    - Access tracking with counters
@@ -8846,7 +8714,6 @@ console.log(`Hit rate: ${stats.hitRate}%`);
 #### 🔧 **Features Implemented**
 
 1. **Complete NIP-19 Entity Support** - ALL 7 TYPES
-
    - `npub` - Public keys (hex → bech32)
    - `nsec` - Private keys (hex → bech32, security-hardened)
    - `note` - Event IDs (hex → bech32)
@@ -8856,7 +8723,6 @@ console.log(`Hit rate: ${stats.hitRate}%`);
    - `naddr` - Parameterized replaceable event addresses (kinds 30000-39999)
 
 2. **Batch Operations** - HIGH PERFORMANCE
-
    - `encodeBatch()` - Encode 100+ items efficiently
    - `decodeBatch()` - Decode multiple identifiers with mixed types
    - Parallel processing for optimal performance
@@ -8880,7 +8746,6 @@ console.log(`Hit rate: ${stats.hitRate}%`);
    - Security: Auto-sanitize nsec from error messages
 
 4. **Advanced Validation** - COMPREHENSIVE
-
    - Hex string validation (64 characters, [a-fA-F0-9])
    - Relay URL validation (wss:// protocol only)
    - Address kind validation (30000-39999 range)
@@ -8977,7 +8842,6 @@ try {
 #### 🎯 **Features Implemented**
 
 1. **Read Receipts (Kind 1515)** - NEW
-
    - Custom NOSTR event kind for DM read acknowledgments
    - Automatic receipt creation when messages marked as read
    - Real-time status tracking (read/unread, timestamp, receipt event ID)
@@ -8985,7 +8849,6 @@ try {
    - API: createReadReceipt(), processReadReceipt(), isMessageRead(), getReadReceiptStatus()
 
 2. **Typing Indicators (Kind 20004)** - NEW
-
    - Ephemeral events for real-time typing status
    - Auto-clear after 3 seconds of inactivity
    - Debounced to prevent spam
@@ -8993,7 +8856,6 @@ try {
    - API: sendTypingIndicator(), processTypingIndicator(), isUserTyping(), getTypingUsers()
 
 3. **Message History & Pagination** - NEW
-
    - Efficient pagination for large conversations (default limit: 50)
    - Time-based filtering (before/after timestamps)
    - Full-text search in decrypted messages
@@ -9001,7 +8863,6 @@ try {
    - API: getMessageHistory(), searchMessages(), cacheDecryptedMessage(), getCachedMessage()
 
 4. **Forward Secrecy & Session Key Rotation** - NEW
-
    - Automatic session key generation per conversation
    - Key rotation every 100 messages
    - Ephemeral key pairs for enhanced security
@@ -9062,7 +8923,6 @@ try {
 #### 🎯 **Features Implemented**
 
 1. **UnifiedSessionManager (Abstract Base Class)** (`packages/shared/src/services/UnifiedSessionManager.ts`)
-
    - Platform-agnostic session management (isomorphic)
    - Session lifecycle: create, validate, refresh, revoke
    - Multi-device support (max 5 sessions per pubkey, configurable)
@@ -9076,7 +8936,6 @@ try {
    - Session statistics and analytics
 
 2. **DatabaseSessionManager (Backend Implementation)** (`packages/backend/src/services/unified-session-service.ts`)
-
    - PostgreSQL/Supabase persistence
    - Token hash-based lookups (SHA-256)
    - Device-specific session revocation
@@ -9110,7 +8969,6 @@ try {
 #### 🔒 **Security Features**
 
 1. **Risk Scoring Algorithm**
-
    - No IP address: +15 points
    - No user agent: +15 points
    - Mobile device: +5 points
@@ -9118,13 +8976,11 @@ try {
    - Score ranges: 0-29 (low), 30-69 (medium), 70-100 (high)
 
 2. **Session Expiration**
-
    - Absolute: 7 days from creation (configurable)
    - Idle: 24 hours of inactivity (configurable)
    - Automatic cleanup via periodic task
 
 3. **Multi-Device Management**
-
    - Track sessions across desktop, mobile, tablet
    - Revoke individual devices or all except current
    - Device fingerprinting for security validation
@@ -9157,7 +9013,6 @@ try {
 #### 📚 **Documentation**
 
 1. **API Documentation** (`docs/user-stories/US-311-unified-session-management.md`)
-
    - Complete API reference with examples
    - Configuration guide
    - Migration guide from old services
@@ -9167,7 +9022,6 @@ try {
    - Best practices
 
 2. **Architecture Diagrams** (Mermaid)
-
    - Architecture overview (`us-311-unified-session-architecture.mmd`)
    - Session lifecycle sequence diagram (`us-311-session-lifecycle.mmd`)
    - Data flow diagram (`us-311-data-flow.mmd`)
@@ -9197,14 +9051,12 @@ try {
 #### 🎨 **Architecture Highlights**
 
 1. **Isomorphic Design**
-
    - Abstract base class works in browser and Node.js
    - Platform-specific implementations extend base
    - Shared types and validation schemas
    - Consistent API across frontend/backend
 
 2. **Database Optimization**
-
    - 15+ indexes for fast queries
    - Composite indexes for common patterns
    - GIN indexes for JSONB searches
@@ -9267,7 +9119,6 @@ try {
 #### 🎯 **Features Implemented**
 
 1. **Complete Encoding Support** - All 7 NIP-19 entity types:
-
    - ✅ `npub` - Public keys (hex → bech32)
    - ✅ `nsec` - Private keys (hex → bech32) with security sanitization
    - ✅ `note` - Event IDs (hex → bech32)
@@ -9277,12 +9128,10 @@ try {
    - ✅ `naddr` - Parameterized replaceable events (kind 30000-39999)
 
 2. **Complete Decoding Support** - 6/7 entity types:
-
    - ✅ `npub`, `nsec`, `note`, `nprofile`, `nevent`, `naddr` - Fully working
    - ⚠️ `nrelay` - Not supported by nostr-tools v2.13.2 (library limitation)
 
 3. **Batch Operations** (NEW):
-
    - `encodeBatch(items)` - Encode multiple entities in one call
    - `decodeBatch(nip19s)` - Decode multiple identifiers in one call
    - Comprehensive error reporting with index tracking
@@ -9319,7 +9168,6 @@ try {
 #### 🎯 **Features Implemented**
 
 1. **Enhanced EventCacheService** (`EventCacheService.ts`)
-
    - Cache warming with filter-based preloading
    - Event preloading by ID
    - Pattern-based cache invalidation (pubkey, kind, tag patterns)
@@ -9330,7 +9178,6 @@ try {
    - Comprehensive performance analytics
 
 2. **Redis Adapter for Production** (`RedisAdapter.ts`)
-
    - Single node and Redis Cluster support
    - Connection pooling (10-50 connections)
    - Automatic reconnection with exponential backoff
@@ -9377,7 +9224,6 @@ try {
 #### 🎯 **Features Implemented**
 
 1. **RelayConfig Service** (`relay-config.ts`)
-
    - Single source of truth for NOSTR relay configuration
    - Environment-based configuration (VITE_NOSTR_RELAYS, NOSTR_RELAYS)
    - Automatic fallback to default relays
@@ -9387,13 +9233,11 @@ try {
    - Type-safe relay metadata
 
 2. **Service Updates**
-
    - `RelayPoolManager.ts` - Uses centralized RelayConfig
    - `NIP65Service.ts` - Uses centralized RelayConfig
    - `types/nostr/index.ts` - Deprecated hardcoded DEFAULT_RELAYS constant
 
 3. **Environment Configuration**
-
    - Added `VITE_NOSTR_RELAYS` for frontend (Vite environment)
    - Added `NOSTR_RELAYS` for backend (Node.js environment)
    - Updated `env.example` with comprehensive documentation
@@ -9469,7 +9313,6 @@ try {
 #### 🎯 **Features Implemented**
 
 1. **Unified Authentication Service** (`unified-nostr-auth.ts`)
-
    - Challenge-response authentication flow (NIP-42 compliant)
    - JWT token generation with NOSTR pubkey claims
    - Session management integration
@@ -9479,7 +9322,6 @@ try {
    - Suspicious pattern detection
 
 2. **Session Integration** (`session-service.ts` enhanced)
-
    - Multi-device session tracking
    - Device fingerprinting
    - Activity logging
@@ -9487,7 +9329,6 @@ try {
    - Session revocation (single and bulk)
 
 3. **React Context** (`NostrAuthContext.tsx`)
-
    - Complete authentication hooks
    - Browser extension integration
    - Auto-connect on mount
@@ -9495,7 +9336,6 @@ try {
    - Session management UI hooks
 
 4. **Express Middleware** (`nostr-auth.ts`)
-
    - JWT validation middleware
    - Role-based access control
    - Optional authentication
@@ -9765,7 +9605,6 @@ Full epic report: `/EPIC_003_NOSTR_CONSOLIDATION_COMPLETE.md`
 **Custom Event Kinds Implemented** (5 kinds, 30078-30082 range):
 
 1. ✅ **Kind 30078: Creator Profile Extended**
-
    - Enhanced creator metadata beyond NIP-01 kind 0
    - Social media links verification (Twitter, YouTube, GitHub, etc.)
    - Payment methods configuration (Lightning, LNURL, BOLT12)
@@ -9775,7 +9614,6 @@ Full epic report: `/EPIC_003_NOSTR_CONSOLIDATION_COMPLETE.md`
    - **File**: `/packages/shared/src/types/nostr/sovren-nips.ts` (800+ lines)
 
 2. ✅ **Kind 30079: Content Monetization Settings**
-
    - Paywall configuration (full, partial, time-limited)
    - Pricing tiers with benefits
    - Revenue sharing configuration
@@ -9784,7 +9622,6 @@ Full epic report: `/EPIC_003_NOSTR_CONSOLIDATION_COMPLETE.md`
    - Complete Zod schema validation
 
 3. ✅ **Kind 30080: Analytics Event**
-
    - View tracking and engagement metrics
    - Revenue analytics (total, average, transaction count)
    - Time-based analytics (hourly, daily, weekly, monthly)
@@ -9793,7 +9630,6 @@ Full epic report: `/EPIC_003_NOSTR_CONSOLIDATION_COMPLETE.md`
    - Complete Zod schema validation
 
 4. ✅ **Kind 30081: Subscription Management**
-
    - Subscription tier definitions with benefits
    - Subscriber statistics (total, active, churn rate, growth)
    - Capacity limits for exclusive tiers
@@ -9831,7 +9667,6 @@ Full epic report: `/EPIC_003_NOSTR_CONSOLIDATION_COMPLETE.md`
 **Migration Scripts Implemented** (4 comprehensive scripts):
 
 1. ✅ **migrate-keys.ts** - Key Migration to KeyManagementService
-
    - Extract keys from LocalStorage and legacy IndexedDB
    - Encrypt with AES-256-GCM (PBKDF2 key derivation)
    - Validate key formats (hex, NIP-19)
@@ -9842,7 +9677,6 @@ Full epic report: `/EPIC_003_NOSTR_CONSOLIDATION_COMPLETE.md`
    - **File**: `/scripts/nostr-migration/migrate-keys.ts` (500+ lines)
 
 2. ✅ **migrate-events.ts** - Event Migration to EventCache
-
    - Extract events from legacy storage (IndexedDB, LocalStorage)
    - Event deduplication by ID
    - Signature verification (optional)
@@ -9853,7 +9687,6 @@ Full epic report: `/EPIC_003_NOSTR_CONSOLIDATION_COMPLETE.md`
    - **File**: `/scripts/nostr-migration/migrate-events.ts` (450+ lines)
 
 3. ✅ **migrate-subscriptions.ts** - Subscription Migration to SubscriptionManager
-
    - Extract subscriptions from legacy IndexedDB
    - Active/inactive subscription detection
    - Filter validation
@@ -9864,7 +9697,6 @@ Full epic report: `/EPIC_003_NOSTR_CONSOLIDATION_COMPLETE.md`
    - **File**: `/scripts/nostr-migration/migrate-subscriptions.ts` (400+ lines)
 
 4. ✅ **validate-migration.ts** - Migration Integrity Validation
-
    - Count verification (legacy vs migrated)
    - Checksum validation (SHA-256)
    - Structure validation (schema compliance)
@@ -9914,7 +9746,6 @@ Full epic report: `/EPIC_003_NOSTR_CONSOLIDATION_COMPLETE.md`
 #### 📋 **Documentation Created - COMPLETE**
 
 1. ✅ **Sovren NIPs Specification**
-
    - Complete specification for all 5 custom event kinds
    - Event structure and content schemas
    - Use cases and examples
@@ -10051,7 +9882,6 @@ Full epic report: `/EPIC_003_NOSTR_CONSOLIDATION_COMPLETE.md`
 **Core Deliverables**:
 
 1. ✅ **FeedTimeline - Main Container Component**
-
    - **Real-time Updates**: Auto-refresh with NOSTR event subscriptions
    - **Infinite Scroll**: Intersection Observer-based pagination
    - **Filter Panel**: Author, hashtag, mention, date range filtering
@@ -10062,7 +9892,6 @@ Full epic report: `/EPIC_003_NOSTR_CONSOLIDATION_COMPLETE.md`
    - **Mobile Responsive**: 320px to desktop (mobile-first design)
 
 2. ✅ **FeedItem - Individual Event Component**
-
    - **Author Display**: Avatar, name, NIP-05 verification badge
    - **Content Rendering**: Text with parsed media, links, hashtags
    - **Image Grid**: Up to 4 images in responsive grid
@@ -10075,7 +9904,6 @@ Full epic report: `/EPIC_003_NOSTR_CONSOLIDATION_COMPLETE.md`
    - **Accessibility**: WCAG 2.1 AA compliant (ARIA labels, keyboard nav)
 
 3. ✅ **FeedFilters - Filter Control Component**
-
    - **Search Bar**: Full-text search across event content
    - **Hashtag Filter**: Add/remove multiple hashtags
    - **Author Filter**: Filter by public keys
@@ -10085,7 +9913,6 @@ Full epic report: `/EPIC_003_NOSTR_CONSOLIDATION_COMPLETE.md`
    - **Expandable Panel**: Collapsible filter controls
 
 4. ✅ **FeedSort - Sort Control Component**
-
    - **Latest Sort**: Most recent posts first (default)
    - **Popular Sort**: Most liked/reacted posts
    - **Trending Sort**: Hot topics (engagement + recency algorithm)
@@ -10183,7 +10010,6 @@ Full epic report: `/EPIC_003_NOSTR_CONSOLIDATION_COMPLETE.md`
 **Core Deliverables**:
 
 1. ✅ **NotificationService - Core Backend**
-
    - **IndexedDB Storage**: Persistent notification storage (30-day retention)
    - **Real-time Subscriptions**: Live NOSTR event monitoring
    - **Smart Filtering**: 7 notification types (mention, reply, reaction, repost, DM, follow, zap)
@@ -10193,7 +10019,6 @@ Full epic report: `/EPIC_003_NOSTR_CONSOLIDATION_COMPLETE.md`
    - **Cleanup**: Auto-removal of old notifications
 
 2. ✅ **NotificationCenter Component**
-
    - **Bell Button**: Unread count badge with accessibility
    - **Slide-out Panel**: 400px responsive panel (left/right positioning)
    - **Filter Tabs**: Filter by notification type (All, Mentions, Replies, etc.)
@@ -10204,7 +10029,6 @@ Full epic report: `/EPIC_003_NOSTR_CONSOLIDATION_COMPLETE.md`
    - **Dark Theme**: Full dark mode support
 
 3. ✅ **NotificationItem Component**
-
    - **Author Avatar**: Profile image or icon fallback
    - **Type Icons**: Unique icon per notification type
    - **Content Display**: Formatted notification messages
@@ -10215,7 +10039,6 @@ Full epic report: `/EPIC_003_NOSTR_CONSOLIDATION_COMPLETE.md`
    - **Keyboard Navigation**: Full keyboard accessibility
 
 4. ✅ **NotificationBadge Component**
-
    - **Count Display**: Number or "99+" for high counts
    - **Variants**: 5 color variants (default, primary, success, warning, danger)
    - **Sizes**: 3 sizes (sm, md, lg)
@@ -10223,7 +10046,6 @@ Full epic report: `/EPIC_003_NOSTR_CONSOLIDATION_COMPLETE.md`
    - **Zero Handling**: Hide when zero (configurable)
 
 5. ✅ **NotificationSettings Component**
-
    - **Type Toggles**: Enable/disable each notification type
    - **Sound Settings**: Volume control and enable/disable
    - **Desktop Notifications**: Browser notification integration
@@ -10231,7 +10053,6 @@ Full epic report: `/EPIC_003_NOSTR_CONSOLIDATION_COMPLETE.md`
    - **Save/Cancel**: Persistent settings storage
 
 6. ✅ **React Hooks**
-
    - **useNotifications**: Full notification CRUD operations
    - **useUnreadCount**: Real-time unread count tracking
    - **useNotificationSound**: Web Audio API sound management
@@ -10402,21 +10223,18 @@ function App() {
 **Core Deliverables**:
 
 1. ✅ **Two-Panel Layout** (Thread List + Conversation View)
-
    - **Thread List**: Contact avatars, last message preview, unread count, timestamps
    - **Conversation View**: Message bubbles, timestamps, sender/receiver styling
    - **Responsive Design**: Mobile-first, adapts to all screen sizes
    - **Modern UI**: TailwindCSS with Indigo accent colors
 
 2. ✅ **Real-Time Message Handling**
-
    - **SubscriptionManagerService**: Live DM subscription (kind 4)
    - **Auto-decryption**: NIP04Service integration for seamless decryption
    - **Event deduplication**: No duplicate messages in UI
    - **Optimistic updates**: Instant UI feedback on send
 
 3. ✅ **Message Composition**
-
    - **Text input**: Multi-line textarea with auto-resize
    - **Encryption indicator**: Visual NIP-04 lock icon
    - **Character counter**: Real-time character count
@@ -10424,7 +10242,6 @@ function App() {
    - **Send button**: Disabled when empty or sending
 
 4. ✅ **Thread Management**
-
    - **Thread sorting**: Most recent first
    - **Read/unread tracking**: Auto-mark as read on selection
    - **Unread badges**: Visual indicators for new messages
@@ -10432,7 +10249,6 @@ function App() {
    - **Thread deletion**: Confirmation dialog for deletion
 
 5. ✅ **Service Integration**
-
    - **NIP04Service**: Encryption/decryption (US-305)
    - **EventPublisherService**: Message publishing (US-303)
    - **SubscriptionManagerService**: DM subscription (US-304)
@@ -10440,7 +10256,6 @@ function App() {
    - **Error handling**: Graceful decryption and publish failures
 
 6. ✅ **Accessibility (WCAG AA)**
-
    - **ARIA labels**: All interactive elements labeled
    - **Keyboard navigation**: Full keyboard accessibility
    - **Focus indicators**: Visible focus states
@@ -10495,21 +10310,18 @@ function App() {
 **Core Deliverables**:
 
 1. ✅ **Event ID-Based Deduplication** (Primary Strategy)
-
    - **SHA-256 matching**: Event ID-based duplicate detection
    - **O(1) lookup**: LRU cache for instant verification
    - **Relay tracking**: Multi-relay event source tracking
    - **Performance**: <5ms average check time
 
 2. ✅ **Content-Based Deduplication** (Secondary Strategy)
-
    - **Hash fingerprinting**: Pubkey + Kind + Content hashing
    - **Fast comparison**: 32-bit integer hash for speed
    - **Smart exclusion**: Disabled for replaceable events
    - **Collision handling**: Event ID verification for hash matches
 
 3. ✅ **Replaceable Event Handling** (NIP-01/16/33)
-
    - **NIP-01**: Kind 0 (metadata), Kind 3 (contacts)
    - **NIP-16**: Kinds 10000-19999 (replaceable events)
    - **NIP-33**: Kinds 30000-39999 (parameterized replaceable with d-tag)
@@ -10517,21 +10329,18 @@ function App() {
    - **Coordination**: Per-pubkey + kind isolation
 
 4. ✅ **Bloom Filter Optimization**
-
    - **Probabilistic lookup**: O(1) fast rejection
    - **Configurable size**: 100,000 bits default (~12.5KB)
    - **3-hash implementation**: <1% false positive rate
    - **Memory efficient**: ~10KB for 10,000 events
 
 5. ✅ **LRU Cache Memory Management**
-
    - **Max capacity**: 10,000 events (configurable)
    - **Smart eviction**: Least recently used policy
    - **Access tracking**: Usage-based prioritization
    - **Memory bounded**: ~5MB total footprint
 
 6. ✅ **Late Arrival Window**
-
    - **5-second window**: Multi-relay late arrival handling
    - **Relay deduplication**: Track events across relays
    - **seenOn tracking**: Complete relay source list
@@ -10589,7 +10398,6 @@ function App() {
 **Core Deliverables**:
 
 1. ✅ **Identifier Parsing & Validation**
-
    - **Format**: Validates `name@domain` format per NIP-05 spec
    - **Normalization**: Lowercase conversion, whitespace trimming
    - **Character validation**: Local part (a-z, 0-9, ., \_, -), domain (RFC-compliant)
@@ -10597,7 +10405,6 @@ function App() {
    - **Security**: Sanitizes malicious inputs (XSS, path traversal, null bytes)
 
 2. ✅ **HTTP Verification System**
-
    - **Well-known endpoint**: Fetches `https://domain/.well-known/nostr.json?name=localpart`
    - **Response validation**: Verifies JSON structure, content-type header
    - **Pubkey verification**: Matches returned pubkey against expected value
@@ -10606,7 +10413,6 @@ function App() {
    - **CORS handling**: Graceful error handling for cross-origin requests
 
 3. ✅ **Intelligent Caching Layer**
-
    - **Memory cache**: In-memory Map for instant lookups
    - **TTL management**: 24-hour TTL for success, 1-hour TTL for failures
    - **Cache invalidation**: Manual refresh, automatic expiration
@@ -10614,7 +10420,6 @@ function App() {
    - **Size limits**: Configurable max cache size with LRU eviction
 
 4. ✅ **Comprehensive Error Handling**
-
    - **Network errors**: Timeout, DNS, CORS, HTTP errors (404, 500)
    - **Response errors**: Invalid JSON, missing names, wrong content-type
    - **Verification errors**: Name not found, pubkey mismatch, invalid pubkey format
@@ -10622,7 +10427,6 @@ function App() {
    - **User feedback**: Clear error messages for all failure scenarios
 
 5. ✅ **Type Safety & Validation**
-
    - **Shared types**: Consistent types across frontend/backend (`@shared/types/nip05`)
    - **Zod schemas**: Runtime validation for all inputs/outputs
    - **TypeScript strict**: 100% type coverage, no `any` types
@@ -10706,28 +10510,24 @@ const cached = await nip05.getCachedVerification('alice@example.com', pubkey);
 **Core Deliverables**:
 
 1. ✅ **Two-Tier Caching Architecture**
-
    - **Memory Cache**: Hot tier with max 1000 events (configurable), <1ms access
    - **IndexedDB Cache**: Cold tier with max 10,000 events, persistent across sessions
    - **Auto-promotion**: Frequent events promoted from IndexedDB to memory
    - **Graceful degradation**: Falls back to memory-only if IndexedDB unavailable
 
 2. ✅ **Cache Operations**
-
    - **Storage**: Single/batch event storage with metadata
    - **Retrieval**: By ID, batch retrieval, metadata queries
    - **Query**: Filter-based queries with indexed lookups
    - **Deletion**: Single/batch deletion, full cache clear
 
 3. ✅ **Intelligent Eviction Policies**
-
    - **LRU (Least Recently Used)**: Evicts oldest accessed events when memory full
    - **TTL (Time To Live)**: Per-event expiration with automatic cleanup
    - **Size-based**: Configurable limits for memory and IndexedDB
    - **Automatic deduplication**: Unique event IDs across entire cache
 
 4. ✅ **High-Performance Filter Queries**
-
    - **Indexed lookups**: Pubkey, kind, and tag indexes for O(1) filtering
    - **Combined filters**: Support for complex multi-condition queries
    - **Time range filtering**: Efficient since/until timestamp queries
@@ -10735,7 +10535,6 @@ const cached = await nip05.getCachedVerification('alice@example.com', pubkey);
    - **Performance**: Sub-10ms filter queries
 
 5. ✅ **Comprehensive Test Suite**
-
    - **44 tests total**: 100% pass rate
    - **Test categories**: Initialization, storage, retrieval, queries, eviction, etc.
    - **Edge cases**: Empty queries, concurrent operations, validation
@@ -10818,20 +10617,17 @@ const stats = await cache.getStats();
 **Core Deliverables**:
 
 1. ✅ **Frontend Service Migrations**
-
    - **nostrService.ts**: Already using consolidated types from US-308
    - **NOSTRKeyManagementService.ts**: Migrated to use consolidated key management types
    - **nostr/types.ts**: Updated with consolidated type imports and deprecation notices
    - **RelayPoolManager**: Specialized types maintained with consolidated base imports
 
 2. ✅ **Backend Service Verification**
-
    - **nostr-auth.ts**: Verified comprehensive Zod validation already in place
    - **enhanced-nostr-auth.ts**: Confirmed full schema coverage for auth flows
    - **Zero changes needed**: Backend already follows consolidated type patterns
 
 3. ✅ **Type Consolidation Benefits**
-
    - **Single Source of Truth**: All types from `@shared/types/nostr`
    - **Runtime Validation**: Zod schemas via `NostrSchemas` object
    - **Zero Breaking Changes**: Backward compatibility through type aliases
@@ -10906,7 +10702,6 @@ export type NostrKeyPair = NostrEnhancedKeyPair;
 **Core Deliverables**:
 
 1. ✅ **FilterBuilder Component** (`/packages/frontend/src/components/nostr/FilterBuilder.tsx`)
-
    - **Visual Interface**: 1000+ lines of comprehensive filter building UI
    - **Filter Fields**: Event IDs, Authors, Kinds, Tags, Time Range, Limit
    - **Real-time Validation**: Using NostrFilterSchema with error/warning/suggestion feedback
@@ -10918,7 +10713,6 @@ export type NostrKeyPair = NostrEnhancedKeyPair;
    - **Tag Filters**: Support for #e, #p, #t, #a, #d, #r, #g tags with custom tag support
 
 2. ✅ **Comprehensive Test Suite** (`/packages/frontend/src/components/nostr/__tests__/FilterBuilder.test.tsx`)
-
    - **Test Coverage**: 600+ lines, 10 test suites, 50+ test cases
    - **TDD Approach**: Tests written before implementation
    - **Coverage Areas**:
@@ -10935,7 +10729,6 @@ export type NostrKeyPair = NostrEnhancedKeyPair;
    - **Target**: ≥85% code coverage
 
 3. ✅ **Storybook Documentation** (`/packages/frontend/src/components/nostr/FilterBuilder.stories.tsx`)
-
    - **20+ Stories**: Comprehensive documentation of all variants
    - **Stories Include**:
      - Default and with initial filters
@@ -10950,7 +10743,6 @@ export type NostrKeyPair = NostrEnhancedKeyPair;
    - **Usage Examples**: Code snippets and best practices
 
 4. ✅ **Architecture Documentation** (Mermaid Diagrams)
-
    - **Component Interaction**: `/docs/architecture/diagrams/filter-builder/component-interaction.mmd`
    - **Data Flow**: `/docs/architecture/diagrams/filter-builder/data-flow.mmd`
    - **State Management**: `/docs/architecture/diagrams/filter-builder/state-management.mmd`
@@ -11035,7 +10827,6 @@ export type NostrKeyPair = NostrEnhancedKeyPair;
 **Core Deliverables**:
 
 1. ✅ **KeyManagementService** (`/packages/frontend/src/services/nostr/KeyManagementService.ts`)
-
    - **Singleton Pattern**: Single shared instance across application (870 lines)
    - **Key Generation**: Cryptographically secure with entropy validation (≥128 bits)
    - **Import/Export**: nsec, hex, npub formats with validation
@@ -11047,7 +10838,6 @@ export type NostrKeyPair = NostrEnhancedKeyPair;
    - **Security Features**: Compromise marking, security levels, no private keys in logs
 
 2. ✅ **Comprehensive Test Suite**
-
    - **Main Tests**: `/packages/frontend/src/services/nostr/__tests__/KeyManagementService.test.ts` (680 lines)
    - **Basic Tests**: `/packages/frontend/src/services/nostr/__tests__/KeyManagementService.basic.test.ts` (36 lines)
    - Coverage areas: Singleton pattern, key generation, import/export, signing, validation, storage, extensions
@@ -11055,7 +10845,6 @@ export type NostrKeyPair = NostrEnhancedKeyPair;
    - Security tests: No private key exposure in errors/logs
 
 3. ✅ **Type Integration**
-
    - Leverages US-308 consolidated types (`@sovren/shared/types/nostr-key-management`)
    - `NostrEnhancedKeyPair` - Full key pair with metadata
    - `NostrKeyManagementConfig` - Service configuration
@@ -11124,7 +10913,6 @@ export type NostrKeyPair = NostrEnhancedKeyPair;
 **Core Deliverables**:
 
 1. ✅ **Consolidated Type System** (`/packages/shared/src/types/nostr/`)
-
    - **events.ts**: Complete NOSTR event types (NIP-01), 400+ lines, 25+ types
    - **keys.ts**: Key management types (HD derivation, BIP-39, hardware wallets), 450+ lines, 20+ types
    - **relays.ts**: Relay management (NIP-11, health monitoring, load balancing), 350+ lines, 15+ types
@@ -11134,7 +10922,6 @@ export type NostrKeyPair = NostrEnhancedKeyPair;
    - **Total**: 3,250+ lines of elite TypeScript
 
 2. ✅ **Runtime Validation with Zod**
-
    - 27 comprehensive Zod schemas for all major types
    - `NostrEventSchema` - Full event validation
    - `NostrEnhancedKeyPairSchema` - Advanced key validation
@@ -11143,14 +10930,12 @@ export type NostrKeyPair = NostrEnhancedKeyPair;
    - All schemas exported in unified `NostrSchemas` object
 
 3. ✅ **Utility Functions**
-
    - Event utilities: `isReplaceableEvent()`, `getEventCoordinate()`, `extractMentions()`, etc.
    - Filter utilities: `NostrFilterBuilder`, `CommonFilters`, `validateFilter()`, `optimizeFilter()`
    - Type guards: `isNostrEvent()`, `isNostrFilter()`, `isNIPSupported()`
    - 25+ utility functions for NOSTR operations
 
 4. ✅ **Comprehensive Type Tests** (`__tests__/index.test.ts`)
-
    - 8 test suites covering all type categories
    - 70+ test cases for validation, utilities, and edge cases
    - 100% schema coverage
@@ -11276,7 +11061,6 @@ docs/
 **Core Features Implemented**:
 
 1. ✅ **RelayPoolManager Service** (`/packages/frontend/src/services/nostr/RelayPoolManager.ts`)
-
    - Singleton pattern for shared connection pool across entire application
    - Multi-relay support (configurable up to 10 concurrent relays)
    - Automatic relay discovery from environment variables
@@ -11285,7 +11069,6 @@ docs/
    - 790 lines of elite-level production code
 
 2. ✅ **Health Monitoring System**
-
    - Real-time latency tracking (exponential moving average)
    - Success rate calculation (percentage of successful operations)
    - Uptime monitoring (connection availability percentage)
@@ -11295,7 +11078,6 @@ docs/
    - Health change event emissions for reactive UI updates
 
 3. ✅ **Automatic Reconnection with Exponential Backoff**
-
    - Connection loss detection and handling
    - Exponential backoff strategy (1s, 2s, 4s, 8s, 16s)
    - Configurable max reconnection attempts (default: 5)
@@ -11304,7 +11086,6 @@ docs/
    - Smart reconnection with health-based prioritization
 
 4. ✅ **Event Publishing Features**
-
    - Broadcast to all connected relays
    - Publish to specific relay subset
    - Publish to fastest relays (latency-based selection)
@@ -11313,7 +11094,6 @@ docs/
    - Latency measurement for each publish operation
 
 5. ✅ **Subscription Aggregation**
-
    - Subscribe across multiple relays simultaneously
    - Automatic event deduplication by event ID
    - Efficient deduplication (10,000 event ID cache)
@@ -11322,7 +11102,6 @@ docs/
    - Active subscription tracking
 
 6. ✅ **Relay Selection Intelligence**
-
    - Get fastest relay (lowest latency)
    - Get fastest N relays (top performers)
    - Get healthiest relay (highest health score)
@@ -11330,7 +11109,6 @@ docs/
    - Dynamic relay prioritization based on metrics
 
 7. ✅ **Configuration Management**
-
    - Environment variable support (`NOSTR_RELAYS`)
    - Default relay fallback
    - Runtime relay addition/removal
@@ -11339,7 +11117,6 @@ docs/
    - Configurable connection limits
 
 8. ✅ **Type Safety & Interfaces** (`/packages/frontend/src/services/nostr/types.ts`)
-
    - `RelayPoolConfig` - Configuration interface
    - `RelayConnection` - Connection state tracking
    - `RelayHealthInfo` - Health metrics and status
@@ -11351,7 +11128,6 @@ docs/
    - `RelayTag` type - NIP-65 relay roles
 
 9. ✅ **Integration with NostrService**
-
    - Migrated from individual SimplePool to shared RelayPoolManager
    - All relay operations now use centralized pool
    - Backward compatibility maintained
@@ -11455,7 +11231,6 @@ NOSTR_MAX_RELAYS=10
 **Six Elite Mermaid Diagrams Created**:
 
 1. ✅ **Architecture Overview** (`payment-architecture-overview.mmd`)
-
    - Complete system architecture with all payment components
    - Frontend layer (UI, Wallet, WebSocket)
    - API Gateway layer (Auth, Rate Limiting, Webhooks)
@@ -11467,7 +11242,6 @@ NOSTR_MAX_RELAYS=10
    - Color-coded styling for component types
 
 2. ✅ **Invoice Creation Flow** (`invoice-creation-flow.mmd`)
-
    - Complete BOLT11 invoice generation sequence
    - 10-step flow from user request to real-time notification
    - Authentication and validation steps
@@ -11480,7 +11254,6 @@ NOSTR_MAX_RELAYS=10
    - Background monitoring setup
 
 3. ✅ **Payment Verification Flow** (`payment-verification-flow.mmd`) - **PAY-001**
-
    - Complete cryptographic payment verification process
    - Retry scheduler triggers (scheduled, webhook timeout, manual)
    - State validation (PENDING/FAILED only)
@@ -11494,7 +11267,6 @@ NOSTR_MAX_RELAYS=10
    - Comprehensive error handling with safe defaults
 
 4. ✅ **Webhook Processing Flow** (`webhook-processing-flow.mmd`) - **PAY-002, PAY-003**
-
    - Complete webhook security and race condition prevention
    - **Security Layer (PAY-003)**:
      - Rate limiting (100 requests/minute per IP)
@@ -11512,7 +11284,6 @@ NOSTR_MAX_RELAYS=10
    - Transaction commit (all-or-nothing)
 
 5. ✅ **Retry Logic Flow** (`retry-logic-flow.mmd`) - **PAY-009**
-
    - Enhanced exponential backoff with circuit breaker
    - **Exponential Backoff Algorithm**:
      - Base delay: 1000ms (1 second)
@@ -11624,7 +11395,6 @@ NOSTR_MAX_RELAYS=10
 **Completion Summary**:
 
 - ✅ **SubscriptionCard Component** (Reusable, accessible, mobile-responsive)
-
   - TypeScript interfaces with full type safety
   - Support for both user and creator variants
   - Status badges (active, paused, cancelled, expired, pending)
@@ -11635,7 +11405,6 @@ NOSTR_MAX_RELAYS=10
   - 95%+ test coverage with accessibility compliance
 
 - ✅ **SubscriptionManager Component** (Creator-side management)
-
   - Create, edit, delete subscription tiers
   - Pricing configuration (satoshis with multiple billing intervals)
   - Feature management per tier
@@ -11644,7 +11413,6 @@ NOSTR_MAX_RELAYS=10
   - Pause/resume subscriber access
 
 - ✅ **UserSubscriptionManager Component** (User/Supporter-side management)
-
   - View all active subscriptions
   - Auto-renewal settings management
   - Payment method management (Lightning, Bitcoin, NOSTR)
@@ -11653,7 +11421,6 @@ NOSTR_MAX_RELAYS=10
   - Pause, resume, cancel workflows with confirmation
 
 - ✅ **Service Layer Integration**:
-
   - `useUserSubscriptionService` hook with complete API integration
   - Mock service for development with realistic sample data
   - Production service with Zod validation
@@ -11661,7 +11428,6 @@ NOSTR_MAX_RELAYS=10
   - React Query caching with 30s stale time
 
 - ✅ **API Integration**:
-
   - GET/POST/PATCH/DELETE endpoints for subscriptions
   - Payment method CRUD operations
   - Subscription history retrieval and export
@@ -11669,7 +11435,6 @@ NOSTR_MAX_RELAYS=10
   - Status updates (pause, resume, cancel)
 
 - ✅ **Accessibility (WCAG 2.1 AA)**:
-
   - All components keyboard navigable
   - Proper ARIA labels and roles
   - Screen reader compatible
@@ -11678,7 +11443,6 @@ NOSTR_MAX_RELAYS=10
   - Semantic HTML throughout
 
 - ✅ **Responsive Design**:
-
   - Mobile-first approach (320px+)
   - Tablet optimized (768px+)
   - Desktop layouts (1024px+)
@@ -11686,7 +11450,6 @@ NOSTR_MAX_RELAYS=10
   - Adaptive grids (1-4 columns based on screen size)
 
 - ✅ **Comprehensive Testing**:
-
   - SubscriptionCard: 95%+ coverage
   - 48 comprehensive tests for SubscriptionCard
   - Rendering tests for all states
@@ -11696,7 +11459,6 @@ NOSTR_MAX_RELAYS=10
   - Visual state validation
 
 - ✅ **Mermaid Diagrams**:
-
   - Component Architecture diagram
   - Data Flow sequence diagram
   - Subscription Lifecycle state machine
@@ -11782,14 +11544,12 @@ Time: 0.512s
 **Validation Summary**:
 
 - ✅ **State Transition Validation**:
-
   - All 7 valid transitions verified (PENDING→PROCESSING, PENDING→EXPIRED, etc.)
   - All invalid transitions properly rejected with InvalidTransitionError
   - Terminal states (EXPIRED, REFUNDED) cannot transition - fully protected
   - State machine rules match specification 100%
 
 - ✅ **Concurrent State Update Protection**:
-
   - Race condition handling tested with concurrent transitions
   - Atomic database operations prevent state corruption
   - PostgreSQL stored procedure ensures transaction isolation
@@ -11797,21 +11557,18 @@ Time: 0.512s
   - State integrity maintained under high concurrency
 
 - ✅ **State History Tracking**:
-
   - Complete event history retrieval tested
   - All state transitions logged to payment_events table
   - Event sourcing provides full audit trail
   - History retrieval handles empty and error cases
 
 - ✅ **Batch Transition Operations**:
-
   - Bulk state transitions supported via batchTransition()
   - Success/failure breakdown returned for each transition
   - Partial failures handled gracefully
   - Useful for bulk operations (expiring pending payments)
 
 - ✅ **Comprehensive Test Suite**:
-
   - **36 tests total** - all passing (100% coverage)
   - Valid transitions: 10 tests
   - Invalid transitions: 4 tests
@@ -11890,7 +11647,6 @@ Coverage: 100% of state machine logic
 **Implementation Summary**:
 
 - ✅ **Payment List Display**:
-
   - Complete transaction history with all payment details
   - Amount in satoshis with smart formatting (thousands separator, millions format)
   - Status badges with color coding (Paid, Pending, Failed, Expired)
@@ -11899,7 +11655,6 @@ Coverage: 100% of state machine logic
   - Settlement timestamps for completed payments
 
 - ✅ **Advanced Filtering System**:
-
   - All payments (default view)
   - Paid payments only (settled transactions)
   - Pending payments (awaiting confirmation)
@@ -11908,14 +11663,12 @@ Coverage: 100% of state machine logic
   - Client-side filtering (no additional API calls)
 
 - ✅ **Sorting Capabilities**:
-
   - Date-based sorting (newest first - default)
   - Amount-based sorting (highest first)
   - Toggle between sort modes
   - Client-side sorting for instant response
 
 - ✅ **Pagination System**:
-
   - 20 payments per page for optimal performance
   - Previous/Next navigation controls
   - Page counter display
@@ -11923,20 +11676,17 @@ Coverage: 100% of state machine logic
   - Mobile and desktop-optimized controls
 
 - ✅ **Payment Actions**:
-
   - **Copy Payment Hash**: One-click clipboard copy with toast confirmation
   - **Download Receipt**: JSON receipt generation and automatic download
   - Receipt includes: ID, hash, amount, description, status, timestamps
 
 - ✅ **Real-time Updates**:
-
   - Manual refresh button for latest data
   - React Query automatic background refetching
   - 30-second cache with stale-while-revalidate
   - Optimistic UI updates
 
 - ✅ **Error Handling & Empty States**:
-
   - User-friendly error messages
   - Retry button on API failures
   - Graceful degradation
@@ -11944,7 +11694,6 @@ Coverage: 100% of state machine logic
   - Filter-specific empty states
 
 - ✅ **Mobile Responsiveness**:
-
   - Fully responsive layout (320px - 2560px)
   - Touch-optimized button sizes (44px minimum)
   - Stacked payment cards on mobile
@@ -11952,7 +11701,6 @@ Coverage: 100% of state machine logic
   - Condensed information display
 
 - ✅ **Accessibility (WCAG AA)**:
-
   - Semantic HTML with proper heading hierarchy
   - ARIA labels for all interactive elements
   - Full keyboard navigation support
@@ -11961,7 +11709,6 @@ Coverage: 100% of state machine logic
   - Logical tab order
 
 - ✅ **Elite Test Coverage (26/32 tests passing, 85.71% coverage)**:
-
   - Rendering tests (loading, empty, success states)
   - Filtering tests (all status filters)
   - Sorting tests (date and amount)
@@ -12042,34 +11789,29 @@ Coverage: 100% of state machine logic
 **Implementation Summary**:
 
 - ✅ Implemented HMAC-SHA256 signature verification for webhook endpoints
-
   - Cryptographically secure signature validation
   - Protection against payload tampering
   - Constant-time comparison to prevent timing attacks
 
 - ✅ Timestamp validation and replay attack prevention:
-
   - 5-minute timestamp tolerance window
   - Future timestamp rejection
   - IP logging for all replay attack attempts
   - Prevents webhook replay attacks
 
 - ✅ Webhook secret rotation support:
-
   - Dual secret verification (primary + rotation)
   - Zero-downtime secret rotation capability
   - Graceful fallback between secrets
   - Logging when rotation secret is used
 
 - ✅ Rate limiting (100 requests/minute per IP):
-
   - Per-IP rate limiting with sliding window
   - Automatic reset after 1-minute window
   - 429 status code with retry-after header
   - Rate limit exceeded logging with IP address
 
 - ✅ Comprehensive security logging:
-
   - IP address logging for all failed verifications
   - Missing headers detection and logging
   - Invalid signature attempts logged
@@ -12209,7 +11951,6 @@ WEBHOOK_SECRET_ROTATION=<rotation-hmac-secret>  # Optional
 **Implementation Summary**:
 
 - ✅ Created type-safe Lightning API service client (`/packages/frontend/src/lib/api/lightningApi.ts`)
-
   - Full TypeScript type safety with Zod-validated backend contracts
   - Automatic retry logic with exponential backoff
   - Request timeout protection (10s default)
@@ -12217,14 +11958,12 @@ WEBHOOK_SECRET_ROTATION=<rotation-hmac-secret>  # Optional
   - Comprehensive error handling with custom `LightningApiError` class
 
 - ✅ Integrated real backend API endpoints:
-
   - `POST /api/lightning/invoice` - Create Lightning invoices
   - `GET /api/lightning/invoice/:paymentHash` - Check invoice status
   - `GET /api/lightning/user/payments` - Get payment history
   - Poll payment status with configurable intervals (2s default, max 30 attempts)
 
 - ✅ Updated LightningPaymentButton component (`/packages/frontend/src/components/lightning/LightningPaymentButton.tsx`):
-
   - Replaced mock implementations with real API calls
   - Real-time invoice creation with backend
   - QR code generation with BOLT11 invoice
@@ -16029,43 +15768,36 @@ _Generated by Sovren Engineering Team | Elite Standards, Legendary Results_ ⭐
 **🏆 Key Deliverables**:
 
 1. **User Namespace Isolation**
-
    - `docker/security/daemon.json` - Docker daemon security configuration
    - `docker/security/subuid` - User namespace UID mapping (165536-231071)
    - `docker/security/subgid` - User namespace GID mapping (165536-231071)
 
 2. **Read-Only Filesystem Security**
-
    - `docker/security/Dockerfile.secure-base` - Secure base Dockerfile template
    - `docker/security/docker-compose.secure.yml` - Secure container orchestration
    - `docker/security/filesystem-monitor.sh` - Filesystem security monitoring
 
 3. **CI/CD Security Scanning**
-
    - `.github/workflows/docker-security-scan.yml` - Multi-scanner security pipeline
    - Integrated: Hadolint, Checkov, Trivy, Grype, Docker Scout
    - Automated vulnerability blocking for high-severity issues
 
 4. **Vulnerability Management System**
-
    - `docker/security/vulnerability-management.py` - 732-line Python management system
    - `docker/security/vulnerability-config.yaml` - Comprehensive configuration
    - Multi-scanner integration with automated remediation
 
 5. **Resource Security Controls**
-
    - `docker/security/resource-limits.yaml` - Container resource constraints
    - `docker/security/resource-monitor.sh` - Resource monitoring and enforcement
    - Memory, CPU, and PID limits with performance tracking
 
 6. **Secret Management**
-
    - `docker/security/secret-management.sh` - AES-256 encrypted secret management
    - Automated rotation with lifecycle management
    - Secure injection without filesystem exposure
 
 7. **Runtime Security Monitoring**
-
    - `docker/security/runtime-security-monitor.sh` - Real-time security monitoring
    - `docker/security/docker-security-monitor.service` - Systemd service configuration
    - Automated Slack/email alerting with incident response
@@ -16405,14 +16137,12 @@ Jest was unable to run session tests due to Haste module map collisions from dup
 **Changes Made**:
 
 1. **Jest Configuration Updates** ([jest.config.elite.ts](jest.config.elite.ts)):
-
    - Added `modulePathIgnorePatterns` to exclude `/volumes/` and backup directories
    - Added `watchPathIgnorePatterns` for file watching exclusions
    - Configured Haste module map to prevent naming collisions
    - Enhanced ignore patterns in `testPathIgnorePatterns`
 
 2. **Test Mock Fixes** ([unified-session-service.test.ts](packages/backend/src/__tests__/unified-session-service.test.ts)):
-
    - Fixed mock database `.order()` method chaining for pubkey queries
    - Enabled proper async method chaining for Supabase-like query syntax
 

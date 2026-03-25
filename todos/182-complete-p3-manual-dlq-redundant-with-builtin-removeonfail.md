@@ -3,6 +3,7 @@
 ## Priority: P3 (Nice-to-have)
 
 ## Source
+
 PR #83 — Review Agent: code-simplicity-reviewer, data-integrity-guardian
 
 ## Description
@@ -12,6 +13,7 @@ PR #83 — Review Agent: code-simplicity-reviewer, data-integrity-guardian
 `NotificationService.ts:769-780` also manually copies failed job data to a separate `notifications-dlq` queue in the `onFailed` handler.
 
 This creates two copies of failed job data:
+
 1. BullMQ's built-in failed set (retained by `removeOnFail: { count: 5000 }`)
 2. The manual `notifications-dlq` queue
 
@@ -25,8 +27,10 @@ The manual DLQ adds complexity and has a failure mode (see todo 178). If the bui
 ## Fix
 
 Choose one approach:
+
 1. Remove manual DLQ, rely on BullMQ's built-in failed job retention + Bull Board for inspection
 2. Keep manual DLQ but set `removeOnFail: true` (immediate removal from failed set) to avoid duplication
 
 ## Impact
+
 Simplicity — redundant data persistence adds maintenance burden without clear benefit.

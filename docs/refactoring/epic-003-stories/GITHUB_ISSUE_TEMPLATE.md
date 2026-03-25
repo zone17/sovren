@@ -75,10 +75,12 @@ standard-priority
 ## Testing Requirements
 
 ### Unit Tests
+
 - [ ] Test case 1
 - [ ] Test case 2
 
 ### Integration Tests
+
 - [ ] Integration test 1
 - [ ] Integration test 2
 
@@ -135,11 +137,7 @@ gh issue create \
 
 - [ ] **Given** the shared package exists
       **When** I create the NOSTR service structure
-      **Then** the following directories and files should exist:
-      - `packages/shared/src/services/nostr/core/`
-      - `packages/shared/src/services/nostr/adapters/`
-      - `packages/shared/src/services/nostr/types/`
-      - `packages/shared/src/services/nostr/index.ts`
+      **Then** the following directories and files should exist: - `packages/shared/src/services/nostr/core/` - `packages/shared/src/services/nostr/adapters/` - `packages/shared/src/services/nostr/types/` - `packages/shared/src/services/nostr/index.ts`
 
 - [ ] **Given** the core service structure is created
       **When** I add base interfaces
@@ -156,21 +154,21 @@ Create the following directory structure:
 \`\`\`typescript
 // packages/shared/src/services/nostr/types/base.ts
 export interface INostrService {
-  events: IEventManager;
-  relays: IRelayManager;
-  subscriptions: ISubscriptionManager;
-  crypto: ICryptoManager;
+events: IEventManager;
+relays: IRelayManager;
+subscriptions: ISubscriptionManager;
+crypto: ICryptoManager;
 }
 
 // packages/shared/src/services/nostr/core/index.ts
 export class NostrService implements INostrService {
-  constructor(config: NostrConfig) { }
+constructor(config: NostrConfig) { }
 }
 
 // packages/shared/src/services/nostr/index.ts
-export * from './core';
-export * from './types';
-export * from './adapters';
+export _ from './core';
+export _ from './types';
+export \* from './adapters';
 \`\`\`
 
 ## Files to Create
@@ -190,11 +188,13 @@ export * from './adapters';
 ## Testing Requirements
 
 ### Unit Tests
+
 - [ ] Service initialization test
 - [ ] Type export validation test
 - [ ] Interface completeness test
 
 ### Integration Tests
+
 - [ ] Package import test from frontend
 - [ ] Package import test from backend
 
@@ -254,38 +254,39 @@ See [STORY_BREAKDOWN.md](../epic-003-stories/STORY_BREAKDOWN.md#ns-001) for comp
 \`\`\`typescript
 // packages/frontend/src/services/nostr/migration.ts
 export class NostrServiceMigration {
-  private useNewImplementation: boolean;
-  private oldService: OldNostrService;
-  private newAdapter: BrowserNostrAdapter;
+private useNewImplementation: boolean;
+private oldService: OldNostrService;
+private newAdapter: BrowserNostrAdapter;
 
-  constructor() {
-    this.useNewImplementation = getFeatureFlag('use_new_nostr_service');
-    this.oldService = new OldNostrService();
-    this.newAdapter = new BrowserNostrAdapter();
+constructor() {
+this.useNewImplementation = getFeatureFlag('use_new_nostr_service');
+this.oldService = new OldNostrService();
+this.newAdapter = new BrowserNostrAdapter();
 
     // Listen for feature flag changes
     onFeatureFlagChange('use_new_nostr_service', (value) => {
       this.useNewImplementation = value;
       this.handleMigrationToggle();
     });
-  }
 
-  async initialize(): Promise<void> {
-    if (this.useNewImplementation) {
-      await this.newAdapter.initialize({
-        platform: 'browser',
-        relays: getDefaultRelays()
-      });
-    } else {
-      await this.oldService.initialize();
-    }
-  }
+}
 
-  get events() {
-    return this.useNewImplementation
-      ? this.newAdapter.events
-      : this.oldService.events;
-  }
+async initialize(): Promise<void> {
+if (this.useNewImplementation) {
+await this.newAdapter.initialize({
+platform: 'browser',
+relays: getDefaultRelays()
+});
+} else {
+await this.oldService.initialize();
+}
+}
+
+get events() {
+return this.useNewImplementation
+? this.newAdapter.events
+: this.oldService.events;
+}
 }
 \`\`\`
 
@@ -307,17 +308,20 @@ export class NostrServiceMigration {
 ## Testing Requirements
 
 ### Unit Tests
+
 - [ ] Feature flag toggle test
 - [ ] Old implementation used when flag disabled
 - [ ] New implementation used when flag enabled
 - [ ] Runtime toggle test
 
 ### Integration Tests
+
 - [ ] Subscription migration test
 - [ ] State preservation test
 - [ ] Rollback test
 
 ### E2E Tests
+
 - [ ] User workflow with old implementation
 - [ ] User workflow with new implementation
 - [ ] Toggle during session test
@@ -343,6 +347,7 @@ export class NostrServiceMigration {
 ## Rollback Plan
 
 If issues occur:
+
 1. Set feature flag to `false`
 2. Old implementation takes over immediately
 3. No code changes needed
@@ -482,6 +487,7 @@ Create a tracking issue:
 ## Overall Progress: XX/26 stories complete (XX%)
 
 ### Sprint 0: Core Service (X/8 complete)
+
 - [ ] NS-001 - Create Core Structure
 - [ ] NS-002 - Event Creation
 - [ ] NS-003 - Event Validation
@@ -492,6 +498,7 @@ Create a tracking issue:
 - [ ] NS-008 - NIP-07 Extension Support
 
 ### Sprint 1: Adapters (X/6 complete)
+
 - [ ] NS-009 - Define Adapter Interfaces
 - [ ] NS-010 - Browser Adapter Base
 - [ ] NS-011 - React Hooks
@@ -500,6 +507,7 @@ Create a tracking issue:
 - [ ] NS-014 - Server Event Emitter
 
 ### Sprint 2: Migration (X/8 complete)
+
 - [ ] NS-015 - Frontend Feature Flag
 - [ ] NS-016 - Frontend Event Publishing
 - [ ] NS-017 - Frontend Subscriptions
@@ -510,12 +518,14 @@ Create a tracking issue:
 - [ ] NS-022 - Backend Webhooks
 
 ### Sprint 3: Cleanup (X/4 complete)
+
 - [ ] NS-023 - Remove Frontend Code
 - [ ] NS-024 - Remove Backend Code
 - [ ] NS-025 - Architecture Documentation
 - [ ] NS-026 - Performance Validation
 
 ## Metrics
+
 - **Stories Complete**: XX/26
 - **Story Points Complete**: XX/26
 - **Estimated Days Remaining**: XX
@@ -529,26 +539,33 @@ Create a tracking issue:
 ## Epic 003 Daily Standup - [Date]
 
 ### Developer 1
+
 **Yesterday**:
+
 - Completed: [Story IDs]
 - In Progress: [Story IDs]
 
 **Today**:
+
 - Plan to work on: [Story IDs]
 
 **Blockers**: [Any blockers]
 
 ### Developer 2
+
 **Yesterday**:
+
 - Completed: [Story IDs]
 - In Progress: [Story IDs]
 
 **Today**:
+
 - Plan to work on: [Story IDs]
 
 **Blockers**: [Any blockers]
 
 ### Sprint Progress
+
 - Stories complete: XX/YY
 - On track: ✅ / ⚠️ / ❌
 - Risks: [Any new risks]
@@ -559,6 +576,7 @@ Create a tracking issue:
 ## Complete Issue Creation Reference
 
 For complete issue details, see [STORY_BREAKDOWN.md](./STORY_BREAKDOWN.md) which contains all 26 stories with full:
+
 - Acceptance criteria
 - Technical implementation
 - Code examples

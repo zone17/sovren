@@ -242,32 +242,32 @@ graph TB
 
 ## 6. Technology Stack
 
-| Layer | Technology | Version | Purpose |
-|-------|-----------|---------|---------|
-| **Frontend** | React | 18.x | UI framework |
-| | Vite | 5.x | Build tool and dev server |
-| | TypeScript | 5.3+ | Type safety |
-| | Redux Toolkit | - | State management |
-| | React Router | 6.x | Client-side routing |
-| | nostr-tools | 2.13.2 | NOSTR protocol (frontend) |
-| **Backend** | Node.js | 18+ | Runtime |
-| | Express.js | 4.x | HTTP framework |
-| | TypeScript | 5.3+ | Type safety |
-| | Zod | - | Request/response validation |
-| | jsonwebtoken | 9.x | JWT auth tokens |
-| | nostr-tools | 2.13.2 | NOSTR protocol (backend) |
-| | pg | 8.x | PostgreSQL client (direct) |
-| **Database** | PostgreSQL | 15 | Primary data store (via Supabase) |
-| | Redis | 7 | Caching and sessions |
-| **Infrastructure** | Docker | Multi-stage | Containerization |
-| | Docker Compose | - | Service orchestration |
-| | GitHub Actions | 22+ workflows | CI/CD |
-| | Vercel | - | Frontend hosting |
-| | Grafana + Prometheus | - | Monitoring |
-| | Sentry | - | Error tracking |
-| **Security** | Helmet | - | HTTP security headers |
-| | bcrypt/sodium | - | Cryptography |
-| | HashiCorp Vault | - | Secrets management |
+| Layer              | Technology           | Version       | Purpose                           |
+| ------------------ | -------------------- | ------------- | --------------------------------- |
+| **Frontend**       | React                | 18.x          | UI framework                      |
+|                    | Vite                 | 5.x           | Build tool and dev server         |
+|                    | TypeScript           | 5.3+          | Type safety                       |
+|                    | Redux Toolkit        | -             | State management                  |
+|                    | React Router         | 6.x           | Client-side routing               |
+|                    | nostr-tools          | 2.13.2        | NOSTR protocol (frontend)         |
+| **Backend**        | Node.js              | 18+           | Runtime                           |
+|                    | Express.js           | 4.x           | HTTP framework                    |
+|                    | TypeScript           | 5.3+          | Type safety                       |
+|                    | Zod                  | -             | Request/response validation       |
+|                    | jsonwebtoken         | 9.x           | JWT auth tokens                   |
+|                    | nostr-tools          | 2.13.2        | NOSTR protocol (backend)          |
+|                    | pg                   | 8.x           | PostgreSQL client (direct)        |
+| **Database**       | PostgreSQL           | 15            | Primary data store (via Supabase) |
+|                    | Redis                | 7             | Caching and sessions              |
+| **Infrastructure** | Docker               | Multi-stage   | Containerization                  |
+|                    | Docker Compose       | -             | Service orchestration             |
+|                    | GitHub Actions       | 22+ workflows | CI/CD                             |
+|                    | Vercel               | -             | Frontend hosting                  |
+|                    | Grafana + Prometheus | -             | Monitoring                        |
+|                    | Sentry               | -             | Error tracking                    |
+| **Security**       | Helmet               | -             | HTTP security headers             |
+|                    | bcrypt/sodium        | -             | Cryptography                      |
+|                    | HashiCorp Vault      | -             | Secrets management                |
 
 ## 7. Data Flow Overview
 
@@ -397,13 +397,13 @@ sequenceDiagram
 
 ### 8.2 Monitoring Stack
 
-| Tool | Purpose | Integration |
-|------|---------|-------------|
-| Prometheus | Metrics collection | Scrapes `/metrics` endpoint |
-| Grafana | Dashboards and alerting | Reads from Prometheus |
-| Sentry | Error tracking, performance | SDK in backend + frontend |
-| Structured Logger | Request/error logging | Console + log aggregator |
-| Health Endpoint | Liveness/readiness | `GET /health` checks DB, Redis, Lightning, NOSTR |
+| Tool              | Purpose                     | Integration                                      |
+| ----------------- | --------------------------- | ------------------------------------------------ |
+| Prometheus        | Metrics collection          | Scrapes `/metrics` endpoint                      |
+| Grafana           | Dashboards and alerting     | Reads from Prometheus                            |
+| Sentry            | Error tracking, performance | SDK in backend + frontend                        |
+| Structured Logger | Request/error logging       | Console + log aggregator                         |
+| Health Endpoint   | Liveness/readiness          | `GET /health` checks DB, Redis, Lightning, NOSTR |
 
 ## 9. Security Architecture
 
@@ -422,15 +422,15 @@ sequenceDiagram
 
 ### 9.3 Defense in Depth
 
-| Layer | Protection |
-|-------|-----------|
-| HTTP | Helmet (CSP, X-Frame-Options, HSTS, XSS) |
-| CORS | Origin whitelist (sovren.app in prod, localhost in dev) |
+| Layer         | Protection                                                |
+| ------------- | --------------------------------------------------------- |
+| HTTP          | Helmet (CSP, X-Frame-Options, HSTS, XSS)                  |
+| CORS          | Origin whitelist (sovren.app in prod, localhost in dev)   |
 | Rate Limiting | Per-endpoint limits (10 req/15min for auth, 1000 general) |
-| Input | Zod schema validation on all endpoints |
-| SQL | Parameterized queries via Supabase client (no raw SQL) |
-| Secrets | HashiCorp Vault for credential management and rotation |
-| Dependencies | Dependabot, `npm audit`, Trivy container scanning |
+| Input         | Zod schema validation on all endpoints                    |
+| SQL           | Parameterized queries via Supabase client (no raw SQL)    |
+| Secrets       | HashiCorp Vault for credential management and rotation    |
+| Dependencies  | Dependabot, `npm audit`, Trivy container scanning         |
 
 ## 10. Scalability Considerations
 
@@ -448,15 +448,15 @@ The modular monolith is appropriate for the current team size (<5 developers). T
 
 ## 11. Key Architectural Patterns
 
-| Pattern | Where Used | Purpose |
-|---------|-----------|---------|
-| Dependency Injection | ServiceContainer + TYPES | Loose coupling, testability |
-| Event-Driven | EventBusService | Async processing, decoupling |
-| Repository | *Repository classes | Data access abstraction |
-| Cache-Aside | CacheService (Redis) | Performance, DB load reduction |
-| Circuit Breaker | External service calls | Fault tolerance |
-| Factory | ServiceFactory, *Factory | Service instantiation |
-| State Machine | PaymentStateMachine | Payment lifecycle management |
+| Pattern              | Where Used                | Purpose                        |
+| -------------------- | ------------------------- | ------------------------------ |
+| Dependency Injection | ServiceContainer + TYPES  | Loose coupling, testability    |
+| Event-Driven         | EventBusService           | Async processing, decoupling   |
+| Repository           | \*Repository classes      | Data access abstraction        |
+| Cache-Aside          | CacheService (Redis)      | Performance, DB load reduction |
+| Circuit Breaker      | External service calls    | Fault tolerance                |
+| Factory              | ServiceFactory, \*Factory | Service instantiation          |
+| State Machine        | PaymentStateMachine       | Payment lifecycle management   |
 
 ## 12. Monorepo Package Structure
 

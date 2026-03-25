@@ -69,18 +69,10 @@ router.post(
 );
 
 // Get payment by ID
-router.get(
-  '/:id',
-  authenticate,
-  controller.getPayment.bind(controller)
-);
+router.get('/:id', authenticate, controller.getPayment.bind(controller));
 
 // List payments
-router.get(
-  '/',
-  authenticate,
-  controller.listPayments.bind(controller)
-);
+router.get('/', authenticate, controller.listPayments.bind(controller));
 
 // Update payment
 router.patch(
@@ -91,11 +83,7 @@ router.patch(
 );
 
 // Cancel payment
-router.delete(
-  '/:id',
-  authenticate,
-  controller.cancelPayment.bind(controller)
-);
+router.delete('/:id', authenticate, controller.cancelPayment.bind(controller));
 
 export default router;
 ```
@@ -139,11 +127,7 @@ export class PaymentController {
    * Create new payment
    * POST /api/v1/payments
    */
-  async createPayment(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
+  async createPayment(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const dto: CreatePaymentDTO = req.body;
       const userId = req.user!.id;
@@ -152,17 +136,16 @@ export class PaymentController {
 
       const payment = await this.paymentService.createPayment({
         ...dto,
-        userId
+        userId,
       });
 
       const response: ApiResponse = {
         success: true,
         data: payment,
-        message: 'Payment created successfully'
+        message: 'Payment created successfully',
       };
 
       res.status(201).json(response);
-
     } catch (error) {
       next(error);
     }
@@ -172,11 +155,7 @@ export class PaymentController {
    * Get payment by ID
    * GET /api/v1/payments/:id
    */
-  async getPayment(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
+  async getPayment(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params;
       const userId = req.user!.id;
@@ -186,16 +165,15 @@ export class PaymentController {
       if (!payment) {
         res.status(404).json({
           success: false,
-          error: { message: 'Payment not found', code: 'NOT_FOUND' }
+          error: { message: 'Payment not found', code: 'NOT_FOUND' },
         });
         return;
       }
 
       res.status(200).json({
         success: true,
-        data: payment
+        data: payment,
       });
-
     } catch (error) {
       next(error);
     }
@@ -205,11 +183,7 @@ export class PaymentController {
    * List payments with pagination
    * GET /api/v1/payments?page=1&limit=20
    */
-  async listPayments(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
+  async listPayments(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const userId = req.user!.id;
       const page = parseInt(req.query.page as string) || 1;
@@ -217,7 +191,7 @@ export class PaymentController {
 
       const result = await this.paymentService.listPayments(userId, {
         page,
-        limit
+        limit,
       });
 
       res.status(200).json({
@@ -227,10 +201,9 @@ export class PaymentController {
           page,
           limit,
           total: result.total,
-          totalPages: Math.ceil(result.total / limit)
-        }
+          totalPages: Math.ceil(result.total / limit),
+        },
       });
-
     } catch (error) {
       next(error);
     }
@@ -302,7 +275,7 @@ export function toPaymentDTO(payment: Payment): PaymentResponseDTO {
     status: payment.status,
     invoice: payment.invoice,
     expiresAt: payment.expiresAt,
-    createdAt: payment.createdAt
+    createdAt: payment.createdAt,
   };
   // Exclude: userId, privateMetadata, internalStatus
 }
@@ -320,52 +293,47 @@ import { z } from 'zod';
 
 export const createPaymentSchema = z.object({
   body: z.object({
-    amount: z.number()
+    amount: z
+      .number()
       .positive('Amount must be positive')
       .max(100_000_000, 'Amount exceeds maximum (1 BTC)'),
 
-    currency: z.enum(['BTC', 'USD', 'EUR', 'GBP'])
-      .default('BTC'),
+    currency: z.enum(['BTC', 'USD', 'EUR', 'GBP']).default('BTC'),
 
-    description: z.string()
-      .min(1)
-      .max(500)
-      .optional(),
+    description: z.string().min(1).max(500).optional(),
 
-    metadata: z.record(z.any())
-      .optional()
-  })
+    metadata: z.record(z.any()).optional(),
+  }),
 });
 
 export const updatePaymentSchema = z.object({
   params: z.object({
-    id: z.string().uuid('Invalid payment ID')
+    id: z.string().uuid('Invalid payment ID'),
   }),
 
   body: z.object({
-    status: z.enum(['pending', 'completed', 'failed', 'canceled'])
-      .optional(),
+    status: z.enum(['pending', 'completed', 'failed', 'canceled']).optional(),
 
-    metadata: z.record(z.any())
-      .optional()
-  })
+    metadata: z.record(z.any()).optional(),
+  }),
 });
 
 export const listPaymentsSchema = z.object({
   query: z.object({
-    page: z.string()
-      .transform(val => parseInt(val, 10))
-      .refine(val => val > 0, 'Page must be positive')
+    page: z
+      .string()
+      .transform((val) => parseInt(val, 10))
+      .refine((val) => val > 0, 'Page must be positive')
       .default('1'),
 
-    limit: z.string()
-      .transform(val => parseInt(val, 10))
-      .refine(val => val > 0 && val <= 100, 'Limit must be 1-100')
+    limit: z
+      .string()
+      .transform((val) => parseInt(val, 10))
+      .refine((val) => val > 0 && val <= 100, 'Limit must be 1-100')
       .default('20'),
 
-    status: z.enum(['pending', 'completed', 'failed', 'canceled'])
-      .optional()
-  })
+    status: z.enum(['pending', 'completed', 'failed', 'canceled']).optional(),
+  }),
 });
 ```
 
@@ -382,7 +350,7 @@ export function validateRequest(schema: ZodSchema) {
       const validated = await schema.parseAsync({
         body: req.body,
         query: req.query,
-        params: req.params
+        params: req.params,
       });
 
       // Replace with validated data
@@ -391,7 +359,6 @@ export function validateRequest(schema: ZodSchema) {
       req.params = validated.params || req.params;
 
       next();
-
     } catch (error) {
       if (error instanceof z.ZodError) {
         res.status(400).json({
@@ -399,11 +366,11 @@ export function validateRequest(schema: ZodSchema) {
           error: {
             message: 'Validation failed',
             code: 'VALIDATION_ERROR',
-            details: error.errors.map(err => ({
+            details: error.errors.map((err) => ({
               path: err.path.join('.'),
-              message: err.message
-            }))
-          }
+              message: err.message,
+            })),
+          },
         });
       } else {
         next(error);
@@ -424,18 +391,14 @@ export function validateRequest(schema: ZodSchema) {
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-export async function authenticate(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> {
+export async function authenticate(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const token = extractToken(req);
 
     if (!token) {
       res.status(401).json({
         success: false,
-        error: { message: 'No authentication token provided', code: 'UNAUTHORIZED' }
+        error: { message: 'No authentication token provided', code: 'UNAUTHORIZED' },
       });
       return;
     }
@@ -444,11 +407,10 @@ export async function authenticate(
     req.user = decoded as any;
 
     next();
-
   } catch (error) {
     res.status(401).json({
       success: false,
-      error: { message: 'Invalid or expired token', code: 'UNAUTHORIZED' }
+      error: { message: 'Invalid or expired token', code: 'UNAUTHORIZED' },
     });
   }
 }
@@ -470,15 +432,11 @@ import rateLimit from 'express-rate-limit';
 import RedisStore from 'rate-limit-redis';
 import { redisClient } from '@/config/redis';
 
-export function createRateLimiter(options: {
-  max: number;
-  windowMs: number;
-  message?: string;
-}) {
+export function createRateLimiter(options: { max: number; windowMs: number; message?: string }) {
   return rateLimit({
     store: new RedisStore({
       client: redisClient,
-      prefix: 'rl:'
+      prefix: 'rl:',
     }),
     max: options.max,
     windowMs: options.windowMs,
@@ -486,24 +444,24 @@ export function createRateLimiter(options: {
       success: false,
       error: {
         message: options.message || 'Too many requests',
-        code: 'RATE_LIMIT_EXCEEDED'
-      }
+        code: 'RATE_LIMIT_EXCEEDED',
+      },
     },
     standardHeaders: true,
-    legacyHeaders: false
+    legacyHeaders: false,
   });
 }
 
 // Usage
 export const apiRateLimit = createRateLimiter({
   max: 100,
-  windowMs: 15 * 60 * 1000  // 15 minutes
+  windowMs: 15 * 60 * 1000, // 15 minutes
 });
 
 export const authRateLimit = createRateLimiter({
   max: 5,
   windowMs: 15 * 60 * 1000,
-  message: 'Too many login attempts'
+  message: 'Too many login attempts',
 });
 ```
 
@@ -518,12 +476,7 @@ export const authRateLimit = createRateLimiter({
 import { Request, Response, NextFunction } from 'express';
 import { ServiceError } from '@/types/errors';
 
-export function errorHandler(
-  error: Error,
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void {
+export function errorHandler(error: Error, req: Request, res: Response, next: NextFunction): void {
   // Log error
   console.error('Error:', error);
 
@@ -533,8 +486,8 @@ export function errorHandler(
       success: false,
       error: {
         message: error.message,
-        code: error.code
-      }
+        code: error.code,
+      },
     });
     return;
   }
@@ -544,8 +497,8 @@ export function errorHandler(
     success: false,
     error: {
       message: 'Internal server error',
-      code: 'INTERNAL_ERROR'
-    }
+      code: 'INTERNAL_ERROR',
+    },
   });
 }
 ```
@@ -577,7 +530,7 @@ describe('Payment API', () => {
         .send({
           amount: 10000,
           currency: 'BTC',
-          description: 'Test payment'
+          description: 'Test payment',
         })
         .expect(201);
 
@@ -592,7 +545,7 @@ describe('Payment API', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           amount: -100,
-          currency: 'BTC'
+          currency: 'BTC',
         })
         .expect(400);
 
@@ -601,10 +554,7 @@ describe('Payment API', () => {
     });
 
     it('should require authentication', async () => {
-      await request(app)
-        .post('/api/v1/payments')
-        .send({ amount: 10000 })
-        .expect(401);
+      await request(app).post('/api/v1/payments').send({ amount: 10000 }).expect(401);
     });
   });
 });

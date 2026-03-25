@@ -1295,9 +1295,9 @@ After completing this training:
 ## 🎓 **Certification**
 
 **Training Module**: Browser Extension Integration (US-215)
-**Completion Date**: ******\_\_\_\_******
-**Engineer**: ******\_\_\_\_******
-**Instructor**: ******\_\_\_\_******
+**Completion Date**: **\*\***\_\_\_\_**\*\***
+**Engineer**: **\*\***\_\_\_\_**\*\***
+**Instructor**: **\*\***\_\_\_\_**\*\***
 
 **Skills Demonstrated**:
 

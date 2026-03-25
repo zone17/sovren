@@ -52,6 +52,7 @@ graph TD
 ### React Query (Server State)
 
 **Use React Query for:**
+
 - API data fetching
 - Server state synchronization
 - Background refetching
@@ -60,6 +61,7 @@ graph TD
 - Infinite queries/pagination
 
 **Examples:**
+
 ```typescript
 // ✅ Good: Server data with caching
 const { data: users } = useUsersQuery();
@@ -71,19 +73,20 @@ const mutation = useCreatePostMutation({
     // Optimistic update
     await queryClient.cancelQueries(['posts']);
     const previousPosts = queryClient.getQueryData(['posts']);
-    queryClient.setQueryData(['posts'], old => [...old, newPost]);
+    queryClient.setQueryData(['posts'], (old) => [...old, newPost]);
     return { previousPosts };
   },
   onError: (err, newPost, context) => {
     // Rollback on error
     queryClient.setQueryData(['posts'], context.previousPosts);
-  }
+  },
 });
 ```
 
 ### Redux Toolkit (UI State)
 
 **Use Redux for:**
+
 - Theme preferences
 - Modal/drawer states
 - Selected items
@@ -93,6 +96,7 @@ const mutation = useCreatePostMutation({
 - Layout preferences
 
 **Examples:**
+
 ```typescript
 // ✅ Good: UI state that needs to be shared
 const { theme, setTheme } = useUIState();
@@ -105,12 +109,14 @@ const { notifications, addNotification, dismissNotification } = useNotifications
 ### React Context (Auth State)
 
 **Use Context for:**
+
 - User authentication state
 - User permissions/roles
 - Session management
 - Feature flags (user-specific)
 
 **Examples:**
+
 ```typescript
 // ✅ Good: Auth state with context
 const { user, isAuthenticated, login, logout } = useAuth();
@@ -125,6 +131,7 @@ if (hasPermission('admin.users.edit')) {
 ### Local State (Component State)
 
 **Use local state for:**
+
 - Form inputs (simple forms)
 - Toggle states (local only)
 - Hover/focus states
@@ -132,6 +139,7 @@ if (hasPermission('admin.users.edit')) {
 - Temporary UI states
 
 **Examples:**
+
 ```typescript
 // ✅ Good: Local-only state
 const [isOpen, setIsOpen] = useState(false);
@@ -154,12 +162,12 @@ interface UIState {
 }
 
 // Actions
-uiSlice.actions.setTheme(theme)
-uiSlice.actions.toggleSidebar()
-uiSlice.actions.setSelectedItem(id)
-uiSlice.actions.addNotification(notification)
-uiSlice.actions.openModal(modalId)
-uiSlice.actions.closeModal(modalId)
+uiSlice.actions.setTheme(theme);
+uiSlice.actions.toggleSidebar();
+uiSlice.actions.setSelectedItem(id);
+uiSlice.actions.addNotification(notification);
+uiSlice.actions.openModal(modalId);
+uiSlice.actions.closeModal(modalId);
 ```
 
 ### Auth Slice (`authSlice`)
@@ -218,15 +226,9 @@ Consistent query key structure for cache management:
 
 ```typescript
 // Query key patterns
-['users']                    // All users
-['users', userId]            // Single user
-['users', { filter: value }] // Filtered users
-
-['posts']                    // All posts
-['posts', postId]            // Single post
-['posts', { userId }]        // User's posts
-
-['comments', postId]         // Post comments
+['users'][('users', userId)][ // All users // Single user
+  ('users', { filter: value })
+]['posts'][('posts', postId)][('posts', { userId })][('comments', postId)]; // Filtered users // All posts // Single post // User's posts // Post comments
 ```
 
 ## Code Examples
@@ -344,6 +346,7 @@ function UserList() {
 ### Migrating from Redux to React Query
 
 **Before (Redux for server state):**
+
 ```typescript
 // ❌ Old pattern
 const dispatch = useDispatch();
@@ -356,6 +359,7 @@ useEffect(() => {
 ```
 
 **After (React Query for server state):**
+
 ```typescript
 // ✅ New pattern
 const { data: users, isLoading } = useUsersQuery();
@@ -365,6 +369,7 @@ const { data: users, isLoading } = useUsersQuery();
 ### Migrating UI State to Redux
 
 **Before (Local state duplicated):**
+
 ```typescript
 // ❌ Old pattern - duplicated in multiple components
 const [theme, setTheme] = useState('light');
@@ -372,6 +377,7 @@ const [sidebarOpen, setSidebarOpen] = useState(false);
 ```
 
 **After (Centralized in Redux):**
+
 ```typescript
 // ✅ New pattern - shared across app
 const { theme, setTheme, sidebarOpen, toggleSidebar } = useUIState();
@@ -431,25 +437,30 @@ it('should update theme', () => {
 ### Common Issues
 
 **1. Unnecessary Re-renders**
+
 - Check selector specificity
 - Use `shallowEqual` for object selections
 - Memoize computed values
 
 **2. Stale Closures**
+
 - Use query key dependencies correctly
 - Include all dependencies in query keys
 
 **3. Cache Invalidation**
+
 - Use consistent query keys
 - Invalidate related queries after mutations
 
 **4. Memory Leaks**
+
 - Clean up subscriptions
 - Use proper query garbage collection
 
 ### Debug Tools
 
 **React Query DevTools:**
+
 ```typescript
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
@@ -464,6 +475,7 @@ function App() {
 ```
 
 **Redux DevTools:**
+
 ```typescript
 const store = configureStore({
   reducer: rootReducer,
@@ -521,7 +533,7 @@ function useSelection<T>() {
   return {
     selected: Array.from(selected),
     toggle: (item: T) => {
-      setSelected(prev => {
+      setSelected((prev) => {
         const next = new Set(prev);
         if (next.has(item)) {
           next.delete(item);

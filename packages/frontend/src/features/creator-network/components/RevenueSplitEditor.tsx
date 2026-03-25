@@ -64,7 +64,7 @@ const RevenueSplitEditor: React.FC<RevenueSplitEditorProps> = ({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-gray-900">Revenue Split</h3>
+        <h3 className="text-sm font-semibold text-foreground">Revenue Split</h3>
         <span
           className={`text-xs font-medium ${
             isValid ? 'text-green-600' : totalBps > 10000 ? 'text-red-600' : 'text-yellow-600'
@@ -87,7 +87,7 @@ const RevenueSplitEditor: React.FC<RevenueSplitEditorProps> = ({
               value={entry.creatorId}
               onChange={(e) => updateCreatorId(i, e.target.value)}
               disabled={disabled}
-              className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none disabled:bg-gray-50"
+              className="flex-1 rounded-md border border-border px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none disabled:bg-muted"
               aria-label={`Collaborator ${i + 1} creator ID`}
             />
             <div className="flex items-center gap-1">
@@ -99,15 +99,15 @@ const RevenueSplitEditor: React.FC<RevenueSplitEditorProps> = ({
                 value={(entry.splitBps / 100).toFixed(2)}
                 onChange={(e) => updateEntry(i, e.target.value)}
                 disabled={disabled}
-                className="w-20 rounded-md border border-gray-300 px-2 py-2 text-sm text-right focus:border-indigo-500 focus:outline-none disabled:bg-gray-50"
+                className="w-20 rounded-md border border-border px-2 py-2 text-sm text-right focus:border-indigo-500 focus:outline-none disabled:bg-muted"
                 aria-label={`Split percentage for collaborator ${i + 1}`}
               />
-              <span className="text-sm text-gray-500">%</span>
+              <span className="text-sm text-muted-foreground">%</span>
             </div>
             {!disabled && (
               <button
                 onClick={() => removeEntry(i)}
-                className="text-gray-400 hover:text-red-500 text-lg leading-none"
+                className="text-muted-foreground/60 hover:text-red-500 text-lg leading-none"
                 aria-label={`Remove collaborator ${i + 1}`}
               >
                 ×
@@ -131,16 +131,16 @@ const RevenueSplitEditor: React.FC<RevenueSplitEditorProps> = ({
       {entries.length > 0 && (
         <div
           className={`rounded-lg p-3 text-sm ${
-            isValid ? 'bg-green-50 border border-green-200' : 'bg-gray-50 border border-gray-200'
+            isValid ? 'bg-green-50 border border-green-200' : 'bg-muted border border-border'
           }`}
           aria-label="Split preview"
         >
-          <p className="text-xs font-semibold text-gray-700 mb-2">
+          <p className="text-xs font-semibold text-foreground mb-2">
             Preview: For a {previewSats.toLocaleString()} sat payment
           </p>
           <ul className="space-y-1">
             {entries.map((entry, i) => (
-              <li key={i} className="flex justify-between text-xs text-gray-600">
+              <li key={i} className="flex justify-between text-xs text-muted-foreground">
                 <span className="truncate max-w-[180px]">
                   {entry.displayName ?? (entry.creatorId || `Collaborator ${i + 1}`)}
                 </span>

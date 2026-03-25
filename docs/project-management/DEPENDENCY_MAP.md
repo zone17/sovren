@@ -22,6 +22,7 @@ This document maps all dependencies between user stories in the Sovren Productio
 **Diagram**: [epic-dependencies.mmd](../architecture/diagrams/project-management/epic-dependencies.mmd)
 
 **Key Insights**:
+
 - EPIC 1 (Immediate Blockers) MUST complete before EPIC 2 starts
 - Within EPIC 2, three parallel streams: NOSTR Auth, Content Creation, Lightning Payments
 - EPIC 3 (Integration) requires completion of all EPIC 2 streams
@@ -43,6 +44,7 @@ This document maps all dependencies between user stories in the Sovren Productio
 **Diagram**: [parallel-streams.mmd](../architecture/diagrams/project-management/parallel-streams.mmd)
 
 **Parallelization Opportunities**:
+
 - Week 1: Sequential (foundation work)
 - Week 2: Sequential (NOSTR auth design-first approach)
 - Weeks 3-4: **3 parallel streams** (Content, Lightning, Subscriptions)
@@ -120,6 +122,7 @@ Testing Phase (1 day):
 ```
 
 **Blocks**:
+
 - Required for user onboarding
 - Blocks content creation (users must auth first)
 - Blocks payment flow (auth required for transactions)
@@ -154,11 +157,13 @@ Testing Phase (1 day):
 ```
 
 **Blocks**:
+
 - Required for creators to publish
 - Blocks analytics (no content = no data)
 - Blocks discovery (need content to discover)
 
 **Parallel With**:
+
 - Stream C (Subscription Tiers) - different components, no conflicts
 - Can start after NOSTR Auth design phase complete (with mocked auth)
 
@@ -188,11 +193,13 @@ Validation (0.5 days):
 ```
 
 **Blocks**:
+
 - Required for monetization
 - Blocks subscription management
 - Critical for MVP launch
 
 **Parallel With**:
+
 - Stream B (Content Creation) - different feature modules
 - Can start after NOSTR Auth implementation complete
 
@@ -233,6 +240,7 @@ Validation (0.5 days):
 **Can run in parallel with**: Stream D (independent testing)
 
 **Blocks**:
+
 - EPIC 4 (Production) - Must verify all functionality works end-to-end
 
 ---
@@ -358,6 +366,7 @@ Performance Optimization (2 days):
 **Risk Level**: CRITICAL
 **Impact**: Blocks all development
 **Mitigation**:
+
 - Prioritize completion in Week 1
 - Allocate dedicated developer
 - No parallel work until complete
@@ -367,6 +376,7 @@ Performance Optimization (2 days):
 **Risk Level**: HIGH
 **Impact**: Blocks content creation and payments
 **Mitigation**:
+
 - Use design-first approach
 - Implement with mocked backend initially
 - Parallel implementation of auth UI while backend finalizes
@@ -376,6 +386,7 @@ Performance Optimization (2 days):
 **Risk Level**: HIGH
 **Impact**: Blocks monetization (critical for MVP)
 **Mitigation**:
+
 - Early validation of Lightning service
 - Use testnet for development
 - Have lightning-network-specialist validate early
@@ -387,25 +398,25 @@ Performance Optimization (2 days):
 
 ### Hard Blockers (Cannot Proceed Without)
 
-| Story | Blocked By | Reason | Mitigation |
-|-------|-----------|--------|------------|
-| #12-52 (All EPIC 2) | #5, #6, #11 | Tests must pass | Complete Week 1 foundation first |
-| #17-21 (Auth Impl) | #12-16 (Auth Design) | Cannot implement without design | Use design-first workflow |
-| #22-26 (Auth Tests) | #17-21 (Auth Impl) | Cannot test without code | Follow TDD where possible |
-| #32-36 (Content Impl) | #27-31 (Content Design) | Cannot implement without design | Design-first workflow |
-| #47-51 (Payment Impl) | #42-46 (Payment Design) | Cannot implement without design | Design-first workflow |
-| #53-58 (Integration) | #22-26, #37-41, #52 (All testing complete) | Need complete features to integrate | Ensure all feature testing done |
-| #63-71 (Production) | #53-58 (Integration complete) | Need stable integration | E2E tests must pass 100% |
-| #71 (Final Review) | #63-70 (All production tasks) | Final gate | Cannot launch without all approvals |
+| Story                 | Blocked By                                 | Reason                              | Mitigation                          |
+| --------------------- | ------------------------------------------ | ----------------------------------- | ----------------------------------- |
+| #12-52 (All EPIC 2)   | #5, #6, #11                                | Tests must pass                     | Complete Week 1 foundation first    |
+| #17-21 (Auth Impl)    | #12-16 (Auth Design)                       | Cannot implement without design     | Use design-first workflow           |
+| #22-26 (Auth Tests)   | #17-21 (Auth Impl)                         | Cannot test without code            | Follow TDD where possible           |
+| #32-36 (Content Impl) | #27-31 (Content Design)                    | Cannot implement without design     | Design-first workflow               |
+| #47-51 (Payment Impl) | #42-46 (Payment Design)                    | Cannot implement without design     | Design-first workflow               |
+| #53-58 (Integration)  | #22-26, #37-41, #52 (All testing complete) | Need complete features to integrate | Ensure all feature testing done     |
+| #63-71 (Production)   | #53-58 (Integration complete)              | Need stable integration             | E2E tests must pass 100%            |
+| #71 (Final Review)    | #63-70 (All production tasks)              | Final gate                          | Cannot launch without all approvals |
 
 ### Soft Blockers (Can Work Around)
 
-| Story | Soft Blocker | Workaround |
-|-------|-------------|------------|
-| #17-21 (Auth Impl) | Backend auth API | Use mocked API responses during development |
+| Story                 | Soft Blocker        | Workaround                                    |
+| --------------------- | ------------------- | --------------------------------------------- |
+| #17-21 (Auth Impl)    | Backend auth API    | Use mocked API responses during development   |
 | #32-36 (Content Impl) | Backend content API | Use MSW (Mock Service Worker) for API mocking |
-| #47-51 (Payment Impl) | Lightning service | Use Lightning testnet and mock invoices |
-| #22-26 (Auth Tests) | Backend integration | Mock API calls, integration tests can wait |
+| #47-51 (Payment Impl) | Lightning service   | Use Lightning testnet and mock invoices       |
+| #22-26 (Auth Tests)   | Backend integration | Mock API calls, integration tests can wait    |
 
 ---
 
@@ -413,25 +424,25 @@ Performance Optimization (2 days):
 
 ### Epic Dependency Matrix
 
-| Epic | Depends On | Blocks | Can Parallelize With |
-|------|-----------|--------|---------------------|
-| EPIC 1 (Immediate) | None | EPIC 2, 3, 4 | None (foundation) |
-| EPIC 2 (Frontend) | EPIC 1 | EPIC 3, 4 | Internal streams can parallelize |
-| EPIC 3 (Integration) | EPIC 2 | EPIC 4 | A11y stream can parallelize with E2E |
-| EPIC 4 (Production) | EPIC 3 | Launch | Infrastructure can parallelize with Security/Perf |
+| Epic                 | Depends On | Blocks       | Can Parallelize With                              |
+| -------------------- | ---------- | ------------ | ------------------------------------------------- |
+| EPIC 1 (Immediate)   | None       | EPIC 2, 3, 4 | None (foundation)                                 |
+| EPIC 2 (Frontend)    | EPIC 1     | EPIC 3, 4    | Internal streams can parallelize                  |
+| EPIC 3 (Integration) | EPIC 2     | EPIC 4       | A11y stream can parallelize with E2E              |
+| EPIC 4 (Production)  | EPIC 3     | Launch       | Infrastructure can parallelize with Security/Perf |
 
 ### Story Dependency Matrix (Sample)
 
-| Story | Depends On | Blocks | Parallel With |
-|-------|-----------|--------|---------------|
-| #5 (Fix Jest) | None | #9, #11, EPIC 2 | #7, #8 |
-| #12 (Auth Design) | #11 | #17 | None |
-| #17 (Auth Impl) | #12 | #22 | None |
-| #27 (Content Design) | #22 (Auth complete) | #32 | #42 (Payment Design) |
-| #32 (Content Impl) | #27 | #37 | #47 (Payment Impl) |
-| #42 (Payment Design) | #22 (Auth complete) | #47 | #27 (Content Design) |
-| #53 (E2E Testing) | #37, #52 (All features) | #63 | #59 (A11y Audit) |
-| #63 (Security) | #53 | #71 | #69 (Monitoring) |
+| Story                | Depends On              | Blocks          | Parallel With        |
+| -------------------- | ----------------------- | --------------- | -------------------- |
+| #5 (Fix Jest)        | None                    | #9, #11, EPIC 2 | #7, #8               |
+| #12 (Auth Design)    | #11                     | #17             | None                 |
+| #17 (Auth Impl)      | #12                     | #22             | None                 |
+| #27 (Content Design) | #22 (Auth complete)     | #32             | #42 (Payment Design) |
+| #32 (Content Impl)   | #27                     | #37             | #47 (Payment Impl)   |
+| #42 (Payment Design) | #22 (Auth complete)     | #47             | #27 (Content Design) |
+| #53 (E2E Testing)    | #37, #52 (All features) | #63             | #59 (A11y Audit)     |
+| #63 (Security)       | #53                     | #71             | #69 (Monitoring)     |
 
 ---
 
@@ -440,17 +451,20 @@ Performance Optimization (2 days):
 ### Maximum Parallelization Points
 
 #### Week 1: 2 parallel threads
+
 - Thread 1: #5 → #6 → #11 (test infrastructure)
 - Thread 2: #7, #8 (cleanup and updates)
 
 **Developers Needed**: 2
 
 #### Week 2: 1 thread (sequential design-first)
+
 - Thread 1: #12 → #17 → #22 (NOSTR auth)
 
 **Developers Needed**: 3 (1 design, 1 implementation, 1 testing - sequential handoff)
 
 #### Weeks 3-4: 3 parallel threads (MAXIMUM PARALLELIZATION)
+
 - Thread 1: #27 → #32 → #37 (Content Creation)
 - Thread 2: #42 → #47 → #52 (Lightning Payments)
 - Thread 3: #48-52 (Subscription Tiers - overlap with Thread 2)
@@ -458,12 +472,14 @@ Performance Optimization (2 days):
 **Developers Needed**: 6-9 (2-3 per thread: design, implementation, testing)
 
 #### Week 5: 2 parallel threads
+
 - Thread 1: #53 → #58 (E2E Testing + NOSTR Validation)
 - Thread 2: #59 → #62 (Accessibility Audit)
 
 **Developers Needed**: 3 (2 for E2E, 1 for A11y)
 
 #### Week 6: 2 parallel threads
+
 - Thread 1: #63 → #66 (Security → Performance)
 - Thread 2: #69, #70 (Monitoring, API Docs)
 
@@ -507,12 +523,14 @@ Performance Optimization (2 days):
 ### Success Metrics
 
 **Velocity Tracking**:
+
 - Week 1: 7 stories (foundation) - 100% completion required
 - Weeks 2-4: 41 stories (frontend) - Target 90%+ completion
 - Week 5: 10 stories (integration) - 100% completion required
 - Week 6: 9 stories (production) - 100% completion required
 
 **Critical Path Monitoring**:
+
 - Track critical path stories daily
 - Any delay > 1 day triggers escalation
 - Re-plan if critical path at risk
@@ -554,6 +572,7 @@ Performance Optimization (2 days):
 ### Full Story List by Epic
 
 #### EPIC 1: Immediate Blockers (#5-11)
+
 - #5: Fix Jest Configuration
 - #6: Security Remediation
 - #7: Commit US-007 Work
@@ -563,27 +582,33 @@ Performance Optimization (2 days):
 - #11: Validate Test Suite
 
 #### EPIC 2: Frontend (#12-52)
+
 **NOSTR Auth (#12-26)**:
+
 - #12-16: Design Phase
 - #17-21: Implementation Phase
 - #22-26: Testing Phase
 
 **Content Creation (#27-41)**:
+
 - #27-31: Design Phase
 - #32-36: Implementation Phase
 - #37-41: Testing Phase
 
 **Lightning Payments (#42-52)**:
+
 - #42-46: Design Phase
 - #47-51: Implementation Phase
 - #52: Lightning Validation
 
 #### EPIC 3: Integration (#53-62)
+
 - #53-57: E2E Testing (5 flows)
 - #58: NOSTR Protocol Validation
 - #59-62: Accessibility Audit
 
 #### EPIC 4: Production (#63-71)
+
 - #63-65: Security Audit (Frontend, Backend, Lightning)
 - #66-68: Performance Optimization
 - #69: Monitoring & Observability

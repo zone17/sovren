@@ -1,7 +1,7 @@
 ---
 status: complete
 priority: p3
-issue_id: "411"
+issue_id: '411'
 tags: [code-review, infra, quality, pr-87]
 dependencies: []
 ---
@@ -29,10 +29,12 @@ Additionally, the check uses `-v '^\s*//'` which doesn't work for single-line co
 **Approach:** Use `git diff --cached` to check only newly-added lines, not pre-existing TODOs.
 
 **Pros:**
+
 - Won't block on pre-existing TODOs
 - Only flags new TODOs being added
 
 **Cons:**
+
 - More complex grep pipeline
 
 **Effort:** 30 minutes
@@ -46,10 +48,12 @@ Additionally, the check uses `-v '^\s*//'` which doesn't work for single-line co
 **Approach:** Print the warning but don't increment `$ERRORS`.
 
 **Pros:**
+
 - Informational, non-blocking
 - Simple change
 
 **Cons:**
+
 - Developers may ignore
 
 **Effort:** 5 minutes
@@ -63,6 +67,7 @@ Option 1: scope to newly-added lines only. This prevents false positives on pre-
 ## Technical Details
 
 **Affected files:**
+
 - `scripts/check-antipatterns.sh` (check 1c)
 
 ## Acceptance Criteria

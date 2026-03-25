@@ -469,14 +469,12 @@ export class PayoutComplianceService {
 ### Creator Benefits Delivered
 
 - **Financial Benefits**:
-
   - 99.9% fee reduction compared to traditional payment processors
   - Instant access to earnings (no 3-7 day processing delays)
   - Global accessibility without banking restrictions
   - Transparent fee structure with no hidden costs
 
 - **User Experience Benefits**:
-
   - One-click payout initiation
   - Real-time balance and analytics
   - Mobile-optimized interface

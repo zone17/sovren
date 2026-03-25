@@ -74,10 +74,10 @@ const ToastItem: React.FC<{ toast: Toast; onDismiss: () => void }> = ({ toast, o
       aria-live="polite"
     >
       {icons[toast.type]}
-      <p className="flex-1 text-sm text-gray-900 dark:text-gray-100">{toast.message}</p>
+      <p className="flex-1 text-sm text-foreground">{toast.message}</p>
       <button
         onClick={onDismiss}
-        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+        className="text-muted-foreground/60 hover:text-muted-foreground transition-colors"
         aria-label="Dismiss notification"
       >
         <XMarkIcon className="w-4 h-4" />
@@ -96,7 +96,7 @@ const NotificationItem: React.FC<{
     success: 'bg-green-50 dark:bg-green-900/10',
     error: 'bg-red-50 dark:bg-red-900/10',
     warning: 'bg-yellow-50 dark:bg-yellow-900/10',
-    info: 'bg-white dark:bg-gray-800',
+    info: 'bg-card',
   };
 
   useEffect(() => {
@@ -115,7 +115,7 @@ const NotificationItem: React.FC<{
       className={`
         relative p-4 rounded-lg border shadow-lg
         ${bgColors[notification.type]}
-        ${!notification.read ? 'border-blue-400' : 'border-gray-200 dark:border-gray-700'}
+        ${!notification.read ? 'border-blue-400' : 'border-border'}
       `}
       role="alert"
       aria-live={notification.type === 'error' ? 'assertive' : 'polite'}
@@ -126,10 +126,10 @@ const NotificationItem: React.FC<{
       )}
 
       <div className="flex items-start gap-3">
-        <BellIcon className="w-5 h-5 text-gray-500 flex-shrink-0 mt-0.5" />
+        <BellIcon className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
         <div className="flex-1">
-          <h3 className="font-semibold text-gray-900 dark:text-gray-100">{notification.title}</h3>
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{notification.message}</p>
+          <h3 className="font-semibold text-foreground">{notification.title}</h3>
+          <p className="mt-1 text-sm text-muted-foreground">{notification.message}</p>
           {notification.actionUrl && (
             <a
               href={notification.actionUrl}
@@ -141,7 +141,7 @@ const NotificationItem: React.FC<{
         </div>
         <button
           onClick={onDismiss}
-          className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+          className="text-muted-foreground/60 hover:text-muted-foreground"
           aria-label="Dismiss notification"
         >
           <XMarkIcon className="w-4 h-4" />

@@ -1,7 +1,7 @@
 ---
 status: complete
 priority: p2
-issue_id: "414"
+issue_id: '414'
 tags: [code-review, infra, breaking-change, pr-87]
 dependencies: []
 ---
@@ -11,6 +11,7 @@ dependencies: []
 ## Problem Statement
 
 The `.env.example` renames 4 LNBits environment variables:
+
 - `LNBITS_URL` -> `LNBITS_API_URL`
 - `LNBITS_API_KEY` -> `LNBITS_ADMIN_KEY`
 - (new) `LNBITS_INVOICE_READ_KEY`
@@ -33,10 +34,12 @@ Existing developers with `.env` files using the old names will silently lose the
 **Approach:** Check for old names as fallback: `process.env.LNBITS_API_URL || process.env.LNBITS_URL`. Emit a deprecation warning when old names are used.
 
 **Pros:**
+
 - Zero breakage for existing developers
 - Graceful migration path
 
 **Cons:**
+
 - Slightly more complex env handling
 
 **Effort:** 30 minutes
@@ -50,10 +53,12 @@ Existing developers with `.env` files using the old names will silently lose the
 **Approach:** Add a CHANGELOG entry and migration note in the PR description. No code change.
 
 **Pros:**
+
 - Simple
 - Forces developers to update
 
 **Cons:**
+
 - Anyone who misses the note will have silent failures
 
 **Effort:** 10 minutes
@@ -67,6 +72,7 @@ Option 1: add backward-compatible fallback with deprecation warning. This is the
 ## Technical Details
 
 **Affected files:**
+
 - `packages/backend/.env.example`
 - `packages/backend/src/utils/env-validation.ts`
 
@@ -92,6 +98,7 @@ Option 1: add backward-compatible fallback with deprecation warning. This is the
 **By:** Claude Code (PR #87 review)
 
 **Actions:**
+
 - Identified 4 renamed env variables with no backward compatibility
 - Verified env-validation only checks new names
 

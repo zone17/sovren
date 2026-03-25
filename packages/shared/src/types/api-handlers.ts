@@ -6,6 +6,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
+import { UserRole } from './user';
 
 // ========================================
 // Core Request/Response Types
@@ -17,7 +18,7 @@ import { z } from 'zod';
 export interface TypedRequest<
   TBody = unknown,
   TParams = Record<string, string>,
-  TQuery = Record<string, string>
+  TQuery = Record<string, string>,
 > extends Omit<Request, 'body' | 'params' | 'query' | 'user'> {
   body: TBody;
   params: TParams;
@@ -47,15 +48,7 @@ export interface AuthenticatedUser {
   expiresAt: number;
 }
 
-/**
- * User Roles
- */
-export enum UserRole {
-  ADMIN = 'admin',
-  CREATOR = 'creator',
-  USER = 'user',
-  GUEST = 'guest',
-}
+// UserRole is imported from ./user (canonical location)
 
 // ========================================
 // API Response Types
@@ -157,7 +150,7 @@ export type AsyncRouteHandler<
   TBody = unknown,
   TParams = Record<string, string>,
   TQuery = Record<string, string>,
-  TResponse = unknown
+  TResponse = unknown,
 > = (
   req: TypedRequest<TBody, TParams, TQuery>,
   res: TypedResponse<TResponse>,
@@ -171,7 +164,7 @@ export type SyncRouteHandler<
   TBody = unknown,
   TParams = Record<string, string>,
   TQuery = Record<string, string>,
-  TResponse = unknown
+  TResponse = unknown,
 > = (
   req: TypedRequest<TBody, TParams, TQuery>,
   res: TypedResponse<TResponse>,
@@ -185,8 +178,10 @@ export type RouteHandler<
   TBody = unknown,
   TParams = Record<string, string>,
   TQuery = Record<string, string>,
-  TResponse = unknown
-> = AsyncRouteHandler<TBody, TParams, TQuery, TResponse> | SyncRouteHandler<TBody, TParams, TQuery, TResponse>;
+  TResponse = unknown,
+> =
+  | AsyncRouteHandler<TBody, TParams, TQuery, TResponse>
+  | SyncRouteHandler<TBody, TParams, TQuery, TResponse>;
 
 /**
  * Middleware Handler
@@ -194,7 +189,7 @@ export type RouteHandler<
 export type MiddlewareHandler<
   TBody = unknown,
   TParams = Record<string, string>,
-  TQuery = Record<string, string>
+  TQuery = Record<string, string>,
 > = (
   req: TypedRequest<TBody, TParams, TQuery>,
   res: Response,
@@ -221,7 +216,7 @@ export type ErrorHandler = (
 export interface RouteValidationSchemas<
   TBody = unknown,
   TParams = Record<string, string>,
-  TQuery = Record<string, string>
+  TQuery = Record<string, string>,
 > {
   body?: z.ZodSchema<TBody>;
   params?: z.ZodSchema<TParams>;
@@ -248,7 +243,7 @@ export interface RouteConfig<
   TBody = unknown,
   TParams = Record<string, string>,
   TQuery = Record<string, string>,
-  TResponse = unknown
+  TResponse = unknown,
 > {
   path: string;
   method: HttpMethod;
@@ -488,7 +483,7 @@ export interface VersionedRouteConfig<
   TBody = unknown,
   TParams = Record<string, string>,
   TQuery = Record<string, string>,
-  TResponse = unknown
+  TResponse = unknown,
 > extends RouteConfig<TBody, TParams, TQuery, TResponse> {
   version: ApiVersion;
   deprecated?: boolean;
@@ -509,12 +504,14 @@ export type ExtractBody<T> = T extends RouteHandler<infer TBody, any, any, any> 
 /**
  * Extract Response Type from Route Handler
  */
-export type ExtractResponse<T> = T extends RouteHandler<any, any, any, infer TResponse> ? TResponse : never;
+export type ExtractResponse<T> =
+  T extends RouteHandler<any, any, any, infer TResponse> ? TResponse : never;
 
 /**
  * Extract Params Type from Route Handler
  */
-export type ExtractParams<T> = T extends RouteHandler<any, infer TParams, any, any> ? TParams : never;
+export type ExtractParams<T> =
+  T extends RouteHandler<any, infer TParams, any, any> ? TParams : never;
 
 /**
  * Extract Query Type from Route Handler
@@ -534,7 +531,7 @@ export type SafeRouteHandler<
   TBody = unknown,
   TParams = Record<string, string>,
   TQuery = Record<string, string>,
-  TResponse = unknown
+  TResponse = unknown,
 > = (
   req: TypedRequest<TBody, TParams, TQuery>,
   res: TypedResponse<TResponse>,
@@ -647,10 +644,20 @@ export namespace AuthAPI {
 
   // Route Handlers
   export type ChallengeHandler = AsyncRouteHandler<never, never, never, ChallengeResponse>;
-  export type AuthenticateHandler = AsyncRouteHandler<AuthenticateRequest, never, never, AuthenticateResponse>;
+  export type AuthenticateHandler = AsyncRouteHandler<
+    AuthenticateRequest,
+    never,
+    never,
+    AuthenticateResponse
+  >;
   export type RefreshHandler = AsyncRouteHandler<never, never, never, RefreshResponse>;
   export type VerifyHandler = AsyncRouteHandler<never, never, never, VerifyResponse>;
-  export type LogoutHandler = AsyncRouteHandler<never, never, never, { message: string; instructions: string }>;
+  export type LogoutHandler = AsyncRouteHandler<
+    never,
+    never,
+    never,
+    { message: string; instructions: string }
+  >;
   export type StatsHandler = AsyncRouteHandler<never, never, never, StatsResponse>;
   export type HealthHandler = AsyncRouteHandler<never, never, never, HealthResponse>;
 }
@@ -723,8 +730,18 @@ export namespace NostrAPI {
   }
 
   // Route Handlers
-  export type PublishEventHandler = AsyncRouteHandler<PublishEventRequest, never, never, PublishEventResponse>;
-  export type QueryEventsHandler = AsyncRouteHandler<QueryEventsRequest, never, never, QueryEventsResponse>;
+  export type PublishEventHandler = AsyncRouteHandler<
+    PublishEventRequest,
+    never,
+    never,
+    PublishEventResponse
+  >;
+  export type QueryEventsHandler = AsyncRouteHandler<
+    QueryEventsRequest,
+    never,
+    never,
+    QueryEventsResponse
+  >;
   export type AddRelayHandler = AsyncRouteHandler<AddRelayRequest, never, never, RelayInfo>;
   export type GetRelaysHandler = AsyncRouteHandler<never, never, never, RelayInfo[]>;
 }
@@ -836,14 +853,54 @@ export namespace LightningAPI {
 
   // Route Handlers
   export type GetNodeInfoHandler = AsyncRouteHandler<never, never, never, NodeInfoResponse>;
-  export type CreateInvoiceHandler = AsyncRouteHandler<CreateInvoiceRequest, never, never, CreateInvoiceResponse>;
-  export type CheckInvoiceHandler = AsyncRouteHandler<never, InvoiceStatusParams, never, InvoiceStatusResponse>;
-  export type MakePaymentHandler = AsyncRouteHandler<MakePaymentRequest, never, never, MakePaymentResponse>;
-  export type CreateSubscriptionHandler = AsyncRouteHandler<CreateSubscriptionRequest, never, never, SubscriptionResponse>;
-  export type CancelSubscriptionHandler = AsyncRouteHandler<never, { subscriptionId: string }, never, SubscriptionResponse>;
-  export type GetPaymentHistoryHandler = AsyncRouteHandler<never, never, never, PaymentHistoryItem[]>;
-  export type GetSubscriptionsHandler = AsyncRouteHandler<never, never, never, SubscriptionResponse[]>;
-  export type ProcessPayoutHandler = AsyncRouteHandler<ProcessPayoutRequest, never, never, PayoutResponse>;
+  export type CreateInvoiceHandler = AsyncRouteHandler<
+    CreateInvoiceRequest,
+    never,
+    never,
+    CreateInvoiceResponse
+  >;
+  export type CheckInvoiceHandler = AsyncRouteHandler<
+    never,
+    InvoiceStatusParams,
+    never,
+    InvoiceStatusResponse
+  >;
+  export type MakePaymentHandler = AsyncRouteHandler<
+    MakePaymentRequest,
+    never,
+    never,
+    MakePaymentResponse
+  >;
+  export type CreateSubscriptionHandler = AsyncRouteHandler<
+    CreateSubscriptionRequest,
+    never,
+    never,
+    SubscriptionResponse
+  >;
+  export type CancelSubscriptionHandler = AsyncRouteHandler<
+    never,
+    { subscriptionId: string },
+    never,
+    SubscriptionResponse
+  >;
+  export type GetPaymentHistoryHandler = AsyncRouteHandler<
+    never,
+    never,
+    never,
+    PaymentHistoryItem[]
+  >;
+  export type GetSubscriptionsHandler = AsyncRouteHandler<
+    never,
+    never,
+    never,
+    SubscriptionResponse[]
+  >;
+  export type ProcessPayoutHandler = AsyncRouteHandler<
+    ProcessPayoutRequest,
+    never,
+    never,
+    PayoutResponse
+  >;
   export type GetPayoutsHandler = AsyncRouteHandler<never, never, never, PayoutResponse[]>;
 }
 
@@ -876,11 +933,31 @@ export namespace ContentAPI {
     nostrEventId?: string;
   }
 
-  export type CreateContentHandler = AsyncRouteHandler<CreateContentRequest, never, never, ContentResponse>;
+  export type CreateContentHandler = AsyncRouteHandler<
+    CreateContentRequest,
+    never,
+    never,
+    ContentResponse
+  >;
   export type GetContentHandler = AsyncRouteHandler<never, { id: string }, never, ContentResponse>;
-  export type UpdateContentHandler = AsyncRouteHandler<Partial<CreateContentRequest>, { id: string }, never, ContentResponse>;
-  export type DeleteContentHandler = AsyncRouteHandler<never, { id: string }, never, { success: boolean }>;
-  export type ListContentHandler = AsyncRouteHandler<never, never, PaginationQuery, PaginatedResponse<ContentResponse>>;
+  export type UpdateContentHandler = AsyncRouteHandler<
+    Partial<CreateContentRequest>,
+    { id: string },
+    never,
+    ContentResponse
+  >;
+  export type DeleteContentHandler = AsyncRouteHandler<
+    never,
+    { id: string },
+    never,
+    { success: boolean }
+  >;
+  export type ListContentHandler = AsyncRouteHandler<
+    never,
+    never,
+    PaginationQuery,
+    PaginatedResponse<ContentResponse>
+  >;
 }
 
 /**
@@ -912,7 +989,12 @@ export namespace UserAPI {
   }
 
   export type GetProfileHandler = AsyncRouteHandler<never, { pubkey: string }, never, UserProfile>;
-  export type UpdateProfileHandler = AsyncRouteHandler<UpdateProfileRequest, never, never, UserProfile>;
+  export type UpdateProfileHandler = AsyncRouteHandler<
+    UpdateProfileRequest,
+    never,
+    never,
+    UserProfile
+  >;
   export type GetCurrentUserHandler = AsyncRouteHandler<never, never, never, UserProfile>;
 }
 

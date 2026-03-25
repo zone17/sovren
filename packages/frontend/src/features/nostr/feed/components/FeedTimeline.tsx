@@ -169,7 +169,7 @@ export const FeedTimeline = memo<FeedTimelineProps>(
 
     return (
       <div
-        className={`feed-timeline flex flex-col h-full bg-white dark:bg-gray-900 ${className}`}
+        className={`feed-timeline flex flex-col h-full bg-card ${className}`}
         role="feed"
         aria-busy={isLoading}
         aria-live="polite"
@@ -181,11 +181,11 @@ export const FeedTimeline = memo<FeedTimelineProps>(
         <FeedSortComponent currentSort={currentSort} onChange={handleSortChange} />
 
         {/* Refresh Button */}
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="p-4 border-b border-border">
           <button
             onClick={handleRefresh}
             disabled={isLoading}
-            className="w-full py-2 px-4 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full py-2 px-4 bg-blue-500 hover:bg-blue-600 disabled:bg-muted disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
             aria-label="Refresh feed"
           >
             {isLoading ? (
@@ -242,14 +242,14 @@ export const FeedTimeline = memo<FeedTimelineProps>(
                   {isLoading ? (
                     <Loader2 className="w-6 h-6 animate-spin text-blue-500" aria-hidden="true" />
                   ) : (
-                    <span className="text-sm text-gray-500">Scroll for more</span>
+                    <span className="text-sm text-muted-foreground">Scroll for more</span>
                   )}
                 </div>
               )}
 
               {/* End of Feed */}
               {!hasMore && events.length > 0 && (
-                <div className="p-8 text-center text-gray-500 dark:text-gray-400 text-sm">
+                <div className="p-8 text-center text-muted-foreground text-sm">
                   You've reached the end of the feed
                 </div>
               )}

@@ -41,31 +41,31 @@
   --border-focus: #5e5e62;
 
   /* Epic Color Coding */
-  --epic-003-color: #8b5cf6;    /* Purple - NOSTR Consolidation */
+  --epic-003-color: #8b5cf6; /* Purple - NOSTR Consolidation */
   --epic-003-bg: rgba(139, 92, 246, 0.1);
   --epic-003-border: rgba(139, 92, 246, 0.3);
 
-  --epic-004-color: #3b82f6;    /* Blue - State Management */
+  --epic-004-color: #3b82f6; /* Blue - State Management */
   --epic-004-bg: rgba(59, 130, 246, 0.1);
   --epic-004-border: rgba(59, 130, 246, 0.3);
 
-  --epic-005-color: #10b981;    /* Green - Backend Services */
+  --epic-005-color: #10b981; /* Green - Backend Services */
   --epic-005-bg: rgba(16, 185, 129, 0.1);
   --epic-005-border: rgba(16, 185, 129, 0.3);
 
-  --epic-006-color: #f59e0b;    /* Amber - Future Epic */
+  --epic-006-color: #f59e0b; /* Amber - Future Epic */
   --epic-006-bg: rgba(245, 158, 11, 0.1);
   --epic-006-border: rgba(245, 158, 11, 0.3);
 
-  --epic-007-color: #ef4444;    /* Red - Future Epic */
+  --epic-007-color: #ef4444; /* Red - Future Epic */
   --epic-007-bg: rgba(239, 68, 68, 0.1);
   --epic-007-border: rgba(239, 68, 68, 0.3);
 
-  --epic-008-color: #06b6d4;    /* Cyan - Future Epic */
+  --epic-008-color: #06b6d4; /* Cyan - Future Epic */
   --epic-008-bg: rgba(6, 182, 212, 0.1);
   --epic-008-border: rgba(6, 182, 212, 0.3);
 
-  --epic-009-color: #ec4899;    /* Pink - Future Epic */
+  --epic-009-color: #ec4899; /* Pink - Future Epic */
   --epic-009-bg: rgba(236, 72, 153, 0.1);
   --epic-009-border: rgba(236, 72, 153, 0.3);
 
@@ -94,7 +94,9 @@
   --space-12: 3rem;
 
   /* Typography */
-  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
+    'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   --font-mono: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Courier New', monospace;
 
   /* Transitions */
@@ -330,7 +332,8 @@ h3 {
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -405,7 +408,7 @@ h3 {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, transparent 70%);
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
   opacity: 0;
   transition: opacity var(--transition-fast);
   pointer-events: none;
@@ -437,10 +440,18 @@ h3 {
 }
 
 /* Status-specific colors */
-.stat-card-completed::before { background: var(--status-completed); }
-.stat-card-active::before { background: var(--status-active); }
-.stat-card-blocked::before { background: var(--status-blocked); }
-.stat-card-total::before { background: var(--accent-info); }
+.stat-card-completed::before {
+  background: var(--status-completed);
+}
+.stat-card-active::before {
+  background: var(--status-active);
+}
+.stat-card-blocked::before {
+  background: var(--status-blocked);
+}
+.stat-card-total::before {
+  background: var(--accent-info);
+}
 
 .stat-icon {
   font-size: clamp(1.75rem, 4vw, 2.5rem);
@@ -533,8 +544,12 @@ h3 {
 }
 
 @keyframes shine {
-  0% { left: -100%; }
-  100% { left: 100%; }
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
 }
 
 /* ============================================
@@ -644,8 +659,13 @@ h3 {
 }
 
 @keyframes pulse-agent {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 .agent-item-info {
@@ -852,8 +872,12 @@ h3 {
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Export Button */
@@ -1233,7 +1257,7 @@ h3 {
   user-select: none;
 }
 
-.auto-scroll-toggle input[type="checkbox"] {
+.auto-scroll-toggle input[type='checkbox'] {
   width: 16px;
   height: 16px;
   cursor: pointer;
@@ -1306,10 +1330,18 @@ h3 {
   min-width: 60px;
 }
 
-.log-level.INFO { color: var(--accent-info); }
-.log-level.SUCCESS { color: var(--accent-success); }
-.log-level.WARNING { color: var(--accent-warning); }
-.log-level.ERROR { color: var(--accent-error); }
+.log-level.INFO {
+  color: var(--accent-info);
+}
+.log-level.SUCCESS {
+  color: var(--accent-success);
+}
+.log-level.WARNING {
+  color: var(--accent-warning);
+}
+.log-level.ERROR {
+  color: var(--accent-error);
+}
 
 .log-agent {
   color: var(--text-secondary);
@@ -2731,7 +2763,6 @@ body::before {
   border: 2px dashed var(--accent-primary);
 }
 
-
 /* Epic Label on Kanban Cards */
 .kanban-card-epic {
   background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.15));
@@ -2748,49 +2779,49 @@ body::before {
 }
 
 /* Epic-specific color coding */
-.kanban-card-epic[data-epic="003"],
+.kanban-card-epic[data-epic='003'],
 .epic-003 {
   background: linear-gradient(135deg, var(--epic-003-bg), var(--epic-003-bg));
   border-color: var(--epic-003-border);
   color: var(--epic-003-color);
 }
 
-.kanban-card-epic[data-epic="004"],
+.kanban-card-epic[data-epic='004'],
 .epic-004 {
   background: linear-gradient(135deg, var(--epic-004-bg), var(--epic-004-bg));
   border-color: var(--epic-004-border);
   color: var(--epic-004-color);
 }
 
-.kanban-card-epic[data-epic="005"],
+.kanban-card-epic[data-epic='005'],
 .epic-005 {
   background: linear-gradient(135deg, var(--epic-005-bg), var(--epic-005-bg));
   border-color: var(--epic-005-border);
   color: var(--epic-005-color);
 }
 
-.kanban-card-epic[data-epic="006"],
+.kanban-card-epic[data-epic='006'],
 .epic-006 {
   background: linear-gradient(135deg, var(--epic-006-bg), var(--epic-006-bg));
   border-color: var(--epic-006-border);
   color: var(--epic-006-color);
 }
 
-.kanban-card-epic[data-epic="007"],
+.kanban-card-epic[data-epic='007'],
 .epic-007 {
   background: linear-gradient(135deg, var(--epic-007-bg), var(--epic-007-bg));
   border-color: var(--epic-007-border);
   color: var(--epic-007-color);
 }
 
-.kanban-card-epic[data-epic="008"],
+.kanban-card-epic[data-epic='008'],
 .epic-008 {
   background: linear-gradient(135deg, var(--epic-008-bg), var(--epic-008-bg));
   border-color: var(--epic-008-border);
   color: var(--epic-008-color);
 }
 
-.kanban-card-epic[data-epic="009"],
+.kanban-card-epic[data-epic='009'],
 .epic-009 {
   background: linear-gradient(135deg, var(--epic-009-bg), var(--epic-009-bg));
   border-color: var(--epic-009-border);
@@ -3032,7 +3063,6 @@ body::before {
     grid-template-columns: 1fr;
   }
 }
-
 
 /* ============================================
    SUBTASK TRACKING SYSTEM

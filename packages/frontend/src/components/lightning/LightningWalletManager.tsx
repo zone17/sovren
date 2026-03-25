@@ -220,8 +220,8 @@ export const LightningWalletManager: React.FC<LightningWalletManagerProps> = ({
         ) : walletInfo ? (
           <div className="space-y-6">
             {/* Balance */}
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="text-sm text-gray-500 mb-1">Available Balance</div>
+            <div className="bg-muted p-4 rounded-lg">
+              <div className="text-sm text-muted-foreground mb-1">Available Balance</div>
               <div className="text-3xl font-bold">{formatBalance(walletInfo.balance)}</div>
             </div>
 
@@ -229,7 +229,7 @@ export const LightningWalletManager: React.FC<LightningWalletManagerProps> = ({
             <div>
               <div className="text-sm font-medium mb-2">Connected Node</div>
               {walletInfo.connectedNode ? (
-                <div className="bg-gray-50 p-3 rounded-lg text-sm font-mono break-all">
+                <div className="bg-muted p-3 rounded-lg text-sm font-mono break-all">
                   {walletInfo.connectedNode}
                 </div>
               ) : (
@@ -345,7 +345,7 @@ export const LightningWalletManager: React.FC<LightningWalletManagerProps> = ({
           </div>
         ) : (
           <div className="text-center py-8">
-            <p className="text-gray-500">Failed to load wallet information</p>
+            <p className="text-muted-foreground">Failed to load wallet information</p>
             <Button onClick={() => window.location.reload()} className="mt-4">
               Retry
             </Button>
