@@ -215,7 +215,7 @@ try {
     enqueuedIds.push(row.id);
   }
 } catch (err) {
-  const failedIds = (inserted || []).map((r) => r.id).filter((id) => !enqueuedIds.includes(id));
+  const failedIds = (inserted || []).map(r => r.id).filter(id => !enqueuedIds.includes(id));
 
   logger.error('[Service] Enqueue failed mid-loop; compensating', {
     enqueuedCount: enqueuedIds.length,
@@ -769,9 +769,9 @@ await service.doThing(idResult.data, ...);
 // Frontend render-time guard (defense in depth):
 {
   avatarUrl && /^https?:\/\//i.test(avatarUrl) ? (
-    <img src={avatarUrl} alt={displayName} className="..." />
+    <img src={avatarUrl} alt={displayName} className='...' />
   ) : (
-    <div aria-hidden="true">{/* initials fallback */}</div>
+    <div aria-hidden='true'>{/* initials fallback */}</div>
   );
 }
 ```
@@ -783,7 +783,7 @@ const avatarUrlSchema = z
   .string()
   .url()
   .refine(
-    (url) => {
+    url => {
       try {
         return ['https:', 'http:'].includes(new URL(url).protocol);
       } catch {
@@ -932,7 +932,7 @@ WHERE t.rowsecurity AND NOT EXISTS (
 **Rule:** Every HMAC, token, or signature comparison uses `crypto.timingSafeEqual()`. The `===` operator on cryptographic values is a P1 regardless of context.
 
 ```typescript
-import { timingSafeEqual, createHmac } from 'crypto';
+import { timingSafeEqual, createHmac, createHash } from 'crypto';
 
 function verifyHmacSignature(
   payload: string | Buffer,
@@ -942,17 +942,107 @@ function verifyHmacSignature(
   if (!secret) {
     throw new Error('HMAC secret must be configured — refusing to verify with empty secret');
   }
-  const expected = createHmac('sha256', secret).update(payload).digest();
-  const actual = Buffer.from(receivedSig.replace(/^sha256=/, ''), 'hex');
-
-  if (expected.length !== actual.length) return false;
-  return timingSafeEqual(expected, actual);
+  const expected = createHmac('sha256', secret).update(payload).digest('hex');
+  // Hash both to fixed-length digests — eliminates length oracle leak.
+  // A length pre-check (if a.length !== b.length) leaks timing information.
+  const aBuf = createHash('sha256').update(receivedSig).digest();
+  const bBuf = createHash('sha256').update(expected).digest();
+  return timingSafeEqual(aBuf, bBuf);
 }
 ```
+
+**Anti-pattern (P1):** `if (a.length !== b.length) return false` before `timingSafeEqual` — leaks length via timing. Always hash to fixed length first.
 
 **Additional rule:** If the secret is empty or missing, the function must throw — never silently verify. Empty-string HMAC is forgeable by anyone who knows the payload.
 
 **Detection:** `grep -rn '=== .*sig\|sig.*===\|=== .*hash\|hash.*===' packages/backend/src/` — any match is P1. Also: `grep -rn "SECRET.*||.*''" packages/backend/src/` for empty secret fallbacks.
+
+---
+
+## 20. IDOR Prevention — Two-Layer Ownership Enforcement (15 endpoints — Audit PRs #171-175)
+
+**Recurrence:** 15 IDOR vulnerabilities across user and payment endpoints. Routes had `authenticate` but no ownership check.
+
+**Rule:** Every route accessing user-owned resources needs BOTH authentication (who are you?) AND ownership verification (is this yours?).
+
+### 20a. Route-Level Middleware (user routes)
+
+```typescript
+function requireOwnership(req: Request, res: Response, next: NextFunction): void {
+  const user = (req as any).user;
+  if (!user || user.nostr_pubkey !== req.params.id) {
+    res.status(403).json({ success: false, error: 'Forbidden' });
+    return;
+  }
+  next();
+}
+
+// Apply after authenticate on routes where :id = the requesting user
+router.put('/profile/:id', authenticate, requireOwnership, ...);
+```
+
+### 20b. Controller-Level Verification (payment routes)
+
+```typescript
+const invoice = await this.invoiceService.getInvoice(invoiceId);
+if (
+  invoice.creator_id !== req.user.nostr_pubkey &&
+  invoice.recipient_id !== req.user.nostr_pubkey
+) {
+  res.status(403).json({ success: false, error: 'Forbidden' });
+  return;
+}
+```
+
+**Detection:** `grep -rn "req.params.id" src/routes/ | grep -v "requireOwnership\|nostr_pubkey"` — any route using `:id` without ownership check is a candidate P1.
+
+---
+
+## 21. Payment Idempotency Keys Required on All Mutations (3 endpoints — Audit PR #175)
+
+**Recurrence:** 3 payment endpoints (invoices, subscriptions, refunds) had no idempotency protection. Network retries or double-clicks could create duplicate payments.
+
+**Rule:** All POST endpoints that create financial records must check for `Idempotency-Key` header. Cache response in Redis with 24h TTL. Return cached response on duplicate key.
+
+```typescript
+// middleware/idempotency.ts
+const key = req.headers['idempotency-key'];
+if (!key) return next(); // optional for non-financial endpoints
+const cached = await redis.get(`idempotency:${key}`);
+if (cached) {
+  const { status, body } = JSON.parse(cached);
+  return res.status(status).json(body);
+}
+// Intercept res.json to cache the response
+```
+
+**Detection:** `grep -rn "router.post.*payment\|router.post.*invoice\|router.post.*subscription\|router.post.*refund" src/routes/` — any payment POST without `idempotency` middleware is P1.
+
+---
+
+## 22. Circuit Breakers on All External Service Calls (4 service types — Audit PR #173)
+
+**Recurrence:** Only `PaymentRetryService` had circuit breakers. Supabase, LNBits, NOSTR relays, and email had no protection against cascading failures.
+
+**Rule:** Every HTTP or WebSocket call to an external service must be wrapped in a circuit breaker with service-appropriate thresholds.
+
+```typescript
+import CircuitBreaker from 'opossum';
+const breaker = new CircuitBreaker(externalCall, {
+  timeout: 10000, // fail fast
+  errorThresholdPercentage: 50,
+  resetTimeout: 30000, // try again after 30s
+});
+```
+
+| Service      | Timeout | Error Threshold | Reset |
+| ------------ | ------- | --------------- | ----- |
+| Supabase     | 15s     | 50%             | 30s   |
+| LNBits       | 10s     | 40%             | 60s   |
+| NOSTR relays | 20s     | 60%             | 45s   |
+| Email/SMTP   | 30s     | 70%             | 60s   |
+
+**Detection:** `grep -rn "fetch\|axios\|got\|http.request" src/services/ | grep -v "CircuitBreaker\|breaker"` — external calls without circuit breaker wrapping are candidates.
 
 ---
 
