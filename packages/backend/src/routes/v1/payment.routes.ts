@@ -11,6 +11,7 @@ import { TYPES } from '../../container/types';
 import { authenticate, requireNostrSignature } from '../../middleware/auth';
 import { validate } from '../../middleware/validation-middleware';
 import { rateLimiters } from '../../middleware/rate-limit-middleware';
+import { idempotency } from '../../middleware/idempotency';
 import { PaymentValidators } from '../../validators/payment';
 import { PaymentController } from '../../controllers/payment/PaymentController';
 
@@ -53,6 +54,7 @@ function getController(): PaymentController {
 router.post(
   '/invoices',
   authenticate,
+  idempotency,
   requireNostrSignature,
   rateLimiters.payment.createInvoice,
   validate({ body: PaymentValidators.createInvoice }),
@@ -234,6 +236,7 @@ router.get(
 router.post(
   '/subscriptions',
   authenticate,
+  idempotency,
   requireNostrSignature,
   rateLimiters.payment.createSubscription,
   validate({ body: PaymentValidators.createSubscription }),
@@ -339,6 +342,7 @@ router.delete(
 router.post(
   '/refunds',
   authenticate,
+  idempotency,
   requireNostrSignature,
   rateLimiters.payment.createRefund,
   validate({ body: PaymentValidators.createRefund }),

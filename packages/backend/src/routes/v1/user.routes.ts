@@ -35,6 +35,8 @@ function requireOwnership(req: Request, res: Response, next: NextFunction): void
  * Lazily resolve the UserController from the DI container.
  */
 import type { UserController } from '../../controllers/user/UserController';
+import type { UserDeletionService } from '../../services/user/UserDeletionService';
+import type { UserDataExportService } from '../../services/user/UserDataExportService';
 
 let _userController: UserController | null = null;
 function getController(): UserController {
@@ -42,6 +44,22 @@ function getController(): UserController {
     _userController = container.resolve(TYPES.UserController);
   }
   return _userController;
+}
+
+let _deletionService: UserDeletionService | null = null;
+function getDeletionService(): UserDeletionService {
+  if (!_deletionService) {
+    _deletionService = container.resolve(TYPES.UserDeletionService) as unknown as UserDeletionService;
+  }
+  return _deletionService;
+}
+
+let _exportService: UserDataExportService | null = null;
+function getExportService(): UserDataExportService {
+  if (!_exportService) {
+    _exportService = container.resolve(TYPES.UserDataExportService) as unknown as UserDataExportService;
+  }
+  return _exportService;
 }
 
 /**
@@ -645,6 +663,72 @@ router.put(
   validate({ params: UserValidators.userIdParam }),
   (req: Request, res: Response, next: NextFunction) =>
     getController().updatePrivacySettings(req, res, next)
+);
+
+// === GDPR Compliance Endpoints ===
+
+/**
+ * @openapi
+ * /api/v1/users/account:
+ *   delete:
+ *     summary: Delete authenticated user's account (GDPR right to erasure)
+ *     tags: [Users, GDPR]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Account soft-deleted; hard deletion scheduled after 30-day grace period
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: User not found
+ */
+router.delete(
+  '/account',
+  authenticate,
+  rateLimiters.user.deleteAccount,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = (req as any).user;
+      const userId: string = user?.id ?? user?.sub;
+      const result = await getDeletionService().softDeleteAccount(userId);
+      res.status(200).json({ success: true, data: result });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * @openapi
+ * /api/v1/users/data-export:
+ *   post:
+ *     summary: Request a full data export (GDPR right of access / portability)
+ *     tags: [Users, GDPR]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       202:
+ *         description: Export job queued; data returned synchronously for small accounts
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: User not found
+ */
+router.post(
+  '/data-export',
+  authenticate,
+  rateLimiters.user.dataExport,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = (req as any).user;
+      const userId: string = user?.id ?? user?.sub;
+      const exportData = await getExportService().exportUserData(userId);
+      res.status(200).json({ success: true, data: exportData });
+    } catch (error) {
+      next(error);
+    }
+  }
 );
 
 export default router;
