@@ -25,7 +25,9 @@ services:
       - NOSTR_RELAYS=${NOSTR_RELAYS}
       - REDIS_URL=redis://redis:6379
     networks:
-      - sovren-network
+      - internal-network
+      - gateway-network
+      - monitoring-network
     depends_on:
       - redis
     restart: unless-stopped
@@ -80,7 +82,7 @@ services:
     ports:
       - '8080:8080'
     networks:
-      - sovren-network
+      - gateway-network
     depends_on:
       - backend
     restart: unless-stopped
@@ -134,7 +136,7 @@ services:
       - ./redis-prod.conf:/usr/local/etc/redis/redis.conf:ro
     command: redis-server /usr/local/etc/redis/redis.conf
     networks:
-      - sovren-network
+      - internal-network
     restart: unless-stopped
     healthcheck:
       test: ['CMD', 'redis-cli', 'ping']
@@ -178,7 +180,7 @@ services:
     depends_on:
       - frontend
     networks:
-      - sovren-network
+      - gateway-network
     restart: unless-stopped
     healthcheck:
       test: ['CMD', 'curl', '-f', 'http://localhost/health']
@@ -223,7 +225,7 @@ services:
       - certbot_www:/var/www/certbot
     command: certonly --webroot --webroot-path=/var/www/certbot --email ${SSL_EMAIL} --agree-tos --no-eff-email -d ${DOMAIN}
     networks:
-      - sovren-network
+      - gateway-network
     # 🔒 Security Hardening
     read_only: true
     tmpfs:
@@ -251,7 +253,7 @@ services:
       - '--storage.tsdb.retention.time=200h'
       - '--web.enable-lifecycle'
     networks:
-      - sovren-network
+      - monitoring-network
     restart: unless-stopped
     deploy:
       resources:
@@ -279,7 +281,7 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
     networks:
-      - sovren-network
+      - monitoring-network
     depends_on:
       - prometheus
     restart: unless-stopped
@@ -306,7 +308,7 @@ services:
       - ./fluentd.conf:/fluentd/etc/fluent.conf:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
     networks:
-      - sovren-network
+      - monitoring-network
     restart: unless-stopped
     deploy:
       resources:
@@ -347,9 +349,10 @@ volumes:
   certbot_www:
     driver: local
 
-# Production network with enhanced security
+# Production networks with segmented security zones
 networks:
-  sovren-network:
+  # Internal network: backend <-> redis only (no external ingress)
+  internal-network:
     driver: bridge
     enable_ipv6: false
     ipam:
@@ -357,6 +360,34 @@ networks:
       config:
         - subnet: 172.21.0.0/16
           gateway: 172.21.0.1
+    driver_opts:
+      com.docker.network.bridge.enable_icc: 'false'
+      com.docker.network.bridge.enable_ip_masquerade: 'true'
+      com.docker.network.driver.mtu: '1450'
+
+  # Gateway network: nginx-lb <-> frontend <-> backend (ingress path / DMZ)
+  gateway-network:
+    driver: bridge
+    enable_ipv6: false
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.22.0.0/16
+          gateway: 172.22.0.1
+    driver_opts:
+      com.docker.network.bridge.enable_icc: 'false'
+      com.docker.network.bridge.enable_ip_masquerade: 'true'
+      com.docker.network.driver.mtu: '1450'
+
+  # Monitoring network: prometheus + grafana + fluentd <-> backend (observability)
+  monitoring-network:
+    driver: bridge
+    enable_ipv6: false
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.23.0.0/16
+          gateway: 172.23.0.1
     driver_opts:
       com.docker.network.bridge.enable_icc: 'false'
       com.docker.network.bridge.enable_ip_masquerade: 'true'
