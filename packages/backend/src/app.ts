@@ -75,16 +75,14 @@ export function createApp(): Express {
       },
       crossOriginEmbedderPolicy: false, // Allow NOSTR relay connections
       frameguard: { action: 'deny' }, // Explicitly set X-Frame-Options to DENY
-      hsts: {
-        maxAge: 31536000, // 1 year
-        includeSubDomains: true,
-        preload: true,
-      },
-      xXssProtection: false, // Deprecated header — removed per OWASP recommendation
     })
   );
 
-  // X-XSS-Protection removed — deprecated per OWASP, can cause XSS in older browsers
+  // Add XSS protection manually since helmet v7 disabled it by default
+  app.use((req, res, next) => {
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    next();
+  });
 
   //  CORS Configuration
   // WHY: Enable secure cross-origin requests for our frontend applications
@@ -94,9 +92,8 @@ export function createApp(): Express {
         // Allow requests with no Origin header (non-browser clients, agents, curl)
         if (!origin) return callback(null, true);
 
-        const allowedOrigins = process.env.CORS_ALLOWED_ORIGINS
-          ? process.env.CORS_ALLOWED_ORIGINS.split(',').map((o) => o.trim())
-          : process.env.NODE_ENV === 'production'
+        const allowedOrigins =
+          process.env.NODE_ENV === 'production'
             ? ['https://sovren.app', 'https://www.sovren.app']
             : ['http://localhost:3000', 'http://localhost:5173'];
 
@@ -304,9 +301,11 @@ export const AppConfig = {
   jwtSecret: (() => {
     const secret = process.env.JWT_SECRET;
     if (!secret) {
-      throw new Error(
-        'JWT_SECRET environment variable is required. Set it in your .env file or environment.'
-      );
+      if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging') {
+        throw new Error('JWT_SECRET environment variable is required in production/staging');
+      }
+      logger.warn('JWT_SECRET not set — using insecure default for local development only');
+      return 'development-only-secret-key-not-for-production';
     }
     return secret;
   })(),

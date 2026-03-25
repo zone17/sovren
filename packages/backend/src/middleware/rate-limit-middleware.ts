@@ -247,6 +247,14 @@ export const rateLimiters = {
     }),
     analytics: expensiveOperationRateLimiter,
     read: readOnlyRateLimiter,
+    deleteAccount: createRateLimiter({
+      windowMs: 60 * 60 * 1000, // 1 hour
+      max: 3, // 3 deletion attempts per hour — high-stakes, low-frequency
+    }),
+    dataExport: createRateLimiter({
+      windowMs: 24 * 60 * 60 * 1000, // 24 hours
+      max: 5, // 5 export requests per day
+    }),
   },
 
   // Payment API rate limiters

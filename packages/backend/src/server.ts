@@ -7,7 +7,6 @@ import { initializeContainer, container } from './container';
 import { TYPES } from './container/types';
 import type { QueueService } from './services/queue/QueueService';
 import logger from './lib/logger';
-import { Sentry } from './lib/sentry';
 
 // Load environment variables
 dotenv.config();
@@ -59,20 +58,6 @@ async function startServer(): Promise<void> {
     // Initialize DI container before routes are registered
     try {
       await initializeContainer();
-
-      // Eager initialization (#702/#728): resolve NotificationPersistenceService at startup
-      // and call subscribeToEvents() exactly ONCE so subscriptions activate immediately.
-      // The factory no longer calls subscribeToEvents() to avoid double-registration.
-      try {
-        const notificationService = container.resolve(
-          TYPES.NotificationPersistenceService
-        ) as unknown as { subscribeToEvents(): void };
-        notificationService.subscribeToEvents();
-      } catch {
-        logger.warn(
-          'NotificationPersistenceService eager init failed — events will activate on first request'
-        );
-      }
     } catch (err) {
       logger.warn('DI container initialization failed — continuing without DI', {
         error: (err as Error).message,
@@ -346,23 +331,31 @@ async function gracefulShutdown(signal: string): Promise<void> {
  * 🔥 Error Handlers
  * WHY: Prevent the process from crashing and log critical errors
  */
-process.on('uncaughtException', async (error: Error) => {
+process.on('uncaughtException', (error: Error) => {
   logger.error('Uncaught exception — process will exit', {
     error: error.message,
     stack: error.stack,
   });
-  Sentry.captureException(error);
-  await Sentry.flush(2000).catch(() => {});
+  try {
+    const Sentry = require('@sentry/node');
+    Sentry.captureException(error);
+  } catch (_) {
+    // Sentry not available — already logged above
+  }
   process.exit(1);
 });
 
-process.on('unhandledRejection', async (reason: any) => {
+process.on('unhandledRejection', (reason: any) => {
   logger.error('Unhandled promise rejection', { reason });
-  Sentry.captureException(reason instanceof Error ? reason : new Error(String(reason)));
+  try {
+    const Sentry = require('@sentry/node');
+    Sentry.captureException(reason instanceof Error ? reason : new Error(String(reason)));
+  } catch (_) {
+    // Sentry not available — already logged above
+  }
 
   if (AppConfig.isProduction) {
     logger.error('Exiting due to unhandled rejection in production');
-    await Sentry.flush(2000).catch(() => {});
     process.exit(1);
   }
 });

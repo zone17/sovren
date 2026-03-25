@@ -207,6 +207,14 @@ export const TYPES = {
     'UserAnalyticsService',
     'User behavior analytics'
   ),
+  UserDeletionService: new ServiceToken<Record<string, unknown>>(
+    'UserDeletionService',
+    'GDPR account soft/hard deletion and NIP-09 broadcast'
+  ),
+  UserDataExportService: new ServiceToken<Record<string, unknown>>(
+    'UserDataExportService',
+    'GDPR data portability export aggregator'
+  ),
 
   // ======================
   // PHASE 5: Payment Services (7 services)

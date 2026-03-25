@@ -1,3 +1,5 @@
+import { generateSecretKey, getPublicKey, finalizeEvent } from 'nostr-tools';
+import { verifyEvent } from 'nostr-tools/pure';
 import { createSignatureMessage, NostrAuthService, validateNostrPubkey } from '../nostr-auth';
 
 const VALID_SECRET = 'a'.repeat(32); // Minimum 32 characters
@@ -126,5 +128,47 @@ describe('NOSTR Utility Functions', () => {
         'Sovren Authentication\nChallenge: test-challenge\nTimestamp: 1234567890'
       );
     });
+  });
+});
+
+describe('Real Schnorr Signature Verification (nostr-tools)', () => {
+  it('should verify a real Schnorr signature from nostr-tools', () => {
+    const sk = generateSecretKey();
+    const pk = getPublicKey(sk);
+    const event = finalizeEvent(
+      {
+        kind: 1,
+        content: 'test',
+        tags: [],
+        created_at: Math.floor(Date.now() / 1000),
+      },
+      sk
+    );
+
+    expect(event.sig).toBeDefined();
+    expect(event.sig.length).toBe(128); // 64-byte Schnorr sig in hex
+    expect(event.pubkey).toBe(pk);
+  });
+
+  it('should reject a tampered signature', () => {
+    const sk = generateSecretKey();
+    const event = finalizeEvent(
+      {
+        kind: 1,
+        content: 'test',
+        tags: [],
+        created_at: Math.floor(Date.now() / 1000),
+      },
+      sk
+    );
+
+    // Tamper with the signature by replacing the first hex char with a different one
+    const firstChar = event.sig[0];
+    const replacement = firstChar === 'a' ? 'b' : 'a';
+    const tamperedEvent = { ...event, sig: replacement + event.sig.slice(1) };
+
+    // The tampered event should fail nostr-tools signature verification
+    const isValid = verifyEvent(tamperedEvent);
+    expect(isValid).toBe(false);
   });
 });

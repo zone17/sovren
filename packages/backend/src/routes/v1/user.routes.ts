@@ -16,9 +16,27 @@ import { UserValidators } from '../../validators/user';
 const router = Router();
 
 /**
+ * Ownership guard: verifies the authenticated user's nostr_pubkey matches :id.
+ * Use on routes where :id refers to the requesting user's own resource.
+ */
+function requireOwnership(req: Request, res: Response, next: NextFunction): void {
+  const user = (req as any).user;
+  if (!user || user.nostr_pubkey !== req.params.id) {
+    res.status(403).json({
+      success: false,
+      error: 'Forbidden: you can only access your own resources',
+    });
+    return;
+  }
+  next();
+}
+
+/**
  * Lazily resolve the UserController from the DI container.
  */
 import type { UserController } from '../../controllers/user/UserController';
+import type { UserDeletionService } from '../../services/user/UserDeletionService';
+import type { UserDataExportService } from '../../services/user/UserDataExportService';
 
 let _userController: UserController | null = null;
 function getController(): UserController {
@@ -26,6 +44,22 @@ function getController(): UserController {
     _userController = container.resolve(TYPES.UserController);
   }
   return _userController;
+}
+
+let _deletionService: UserDeletionService | null = null;
+function getDeletionService(): UserDeletionService {
+  if (!_deletionService) {
+    _deletionService = container.resolve(TYPES.UserDeletionService) as unknown as UserDeletionService;
+  }
+  return _deletionService;
+}
+
+let _exportService: UserDataExportService | null = null;
+function getExportService(): UserDataExportService {
+  if (!_exportService) {
+    _exportService = container.resolve(TYPES.UserDataExportService) as unknown as UserDataExportService;
+  }
+  return _exportService;
 }
 
 /**
@@ -83,6 +117,7 @@ router.get(
 router.put(
   '/profile/:id',
   authenticate,
+  requireOwnership,
   rateLimiters.user.updateProfile,
   validate({ params: UserValidators.userIdParam, body: UserValidators.updateUserProfile }),
   (req: Request, res: Response, next: NextFunction) => getController().updateProfile(req, res, next)
@@ -109,6 +144,7 @@ router.put(
 router.get(
   '/preferences/:id',
   authenticate,
+  requireOwnership,
   rateLimiters.user.read,
   validate({ params: UserValidators.userIdParam }),
   (req: Request, res: Response, next: NextFunction) =>
@@ -142,6 +178,7 @@ router.get(
 router.put(
   '/preferences/:id',
   authenticate,
+  requireOwnership,
   rateLimiters.user.updatePreferences,
   validate({ params: UserValidators.userIdParam, body: UserValidators.updateUserPreferences }),
   (req: Request, res: Response, next: NextFunction) =>
@@ -169,6 +206,7 @@ router.put(
 router.get(
   '/activity/:id',
   authenticate,
+  requireOwnership,
   rateLimiters.user.read,
   validate({ params: UserValidators.userIdParam }),
   (req: Request, res: Response, next: NextFunction) => getController().getActivity(req, res, next)
@@ -249,6 +287,7 @@ router.delete(
 router.get(
   '/analytics/:id',
   authenticate,
+  requireOwnership,
   rateLimiters.user.analytics,
   validate({ params: UserValidators.userIdParam }),
   (req: Request, res: Response, next: NextFunction) =>
@@ -430,6 +469,7 @@ router.get(
 router.get(
   '/:id/blocked',
   authenticate,
+  requireOwnership,
   rateLimiters.user.read,
   validate({ params: UserValidators.userIdParam }),
   (req: Request, res: Response, next: NextFunction) =>
@@ -563,6 +603,7 @@ router.get(
 router.get(
   '/:id/relationships/export',
   authenticate,
+  requireOwnership,
   rateLimiters.user.read,
   validate({ params: UserValidators.userIdParam }),
   (req: Request, res: Response, next: NextFunction) =>
@@ -590,6 +631,7 @@ router.get(
 router.post(
   '/:id/follows/import',
   authenticate,
+  requireOwnership,
   rateLimiters.user.follow,
   validate({ params: UserValidators.userIdParam }),
   (req: Request, res: Response, next: NextFunction) => getController().importFollows(req, res, next)
@@ -616,10 +658,77 @@ router.post(
 router.put(
   '/:id/privacy-settings',
   authenticate,
+  requireOwnership,
   rateLimiters.user.updateProfile,
   validate({ params: UserValidators.userIdParam }),
   (req: Request, res: Response, next: NextFunction) =>
     getController().updatePrivacySettings(req, res, next)
+);
+
+// === GDPR Compliance Endpoints ===
+
+/**
+ * @openapi
+ * /api/v1/users/account:
+ *   delete:
+ *     summary: Delete authenticated user's account (GDPR right to erasure)
+ *     tags: [Users, GDPR]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Account soft-deleted; hard deletion scheduled after 30-day grace period
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: User not found
+ */
+router.delete(
+  '/account',
+  authenticate,
+  rateLimiters.user.deleteAccount,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = (req as any).user;
+      const userId: string = user?.id ?? user?.sub;
+      const result = await getDeletionService().softDeleteAccount(userId);
+      res.status(200).json({ success: true, data: result });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * @openapi
+ * /api/v1/users/data-export:
+ *   post:
+ *     summary: Request a full data export (GDPR right of access / portability)
+ *     tags: [Users, GDPR]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       202:
+ *         description: Export job queued; data returned synchronously for small accounts
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: User not found
+ */
+router.post(
+  '/data-export',
+  authenticate,
+  rateLimiters.user.dataExport,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = (req as any).user;
+      const userId: string = user?.id ?? user?.sub;
+      const exportData = await getExportService().exportUserData(userId);
+      res.status(200).json({ success: true, data: exportData });
+    } catch (error) {
+      next(error);
+    }
+  }
 );
 
 export default router;
