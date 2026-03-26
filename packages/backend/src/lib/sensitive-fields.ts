@@ -28,6 +28,11 @@ export const SENSITIVE_FIELDS = [
   'secretKey',
   'secret_key',
   'email',
+  'ip_address',
+  'user_agent',
+  'city',
+  'region',
+  'country',
 ] as const;
 
 const SENSITIVE_REGEX = new RegExp(

@@ -224,6 +224,7 @@ export class SupabasePaymentStore implements PaymentPersistence {
       this.supabase = supabase;
     } else {
       const url = process.env.SUPABASE_URL;
+      // Uses service role key — bypasses RLS. Only use for admin/background operations.
       const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
       if (!url || !key) {
         throw new Error('SupabasePaymentStore requires SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY');

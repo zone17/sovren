@@ -18,6 +18,7 @@ import {
 } from '../../services/payment';
 import { asyncHandler } from '../../middleware/error-handler-middleware';
 import { createApiResponse } from '../../utils/api-response';
+import { businessMetrics } from '../../middleware/deployment-monitoring';
 
 export class PaymentController {
   constructor(
@@ -59,6 +60,8 @@ export class PaymentController {
     const startTime = Date.now();
     const invoiceId = req.params.id;
     const paymentResult = await this.paymentService.processPayment(invoiceId, req.body);
+
+    businessMetrics.paymentsTotal.inc({ status: 'success' });
 
     res.status(200).json(createApiResponse(req, paymentResult, startTime));
   });

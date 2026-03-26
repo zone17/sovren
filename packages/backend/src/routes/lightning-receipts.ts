@@ -402,7 +402,7 @@ router.post('/:receiptId/verify', receiptAccessLimit, async (req: Request, res: 
  */
 router.get('/analytics/summary', receiptAccessLimit, async (req: Request, res: Response) => {
   try {
-    // TODO: Implement analytics aggregation
+    // TODO(backlog): Implement analytics aggregation
     // This would typically require database queries to aggregate receipt data
 
     const analyticsData = {

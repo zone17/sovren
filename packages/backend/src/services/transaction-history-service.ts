@@ -520,7 +520,8 @@ export class TransactionHistoryService extends EventEmitter {
         .eq('status', 'completed')
         .gte('completed_at', startDate.toISOString())
         .lte('completed_at', endDate.toISOString())
-        .order('completed_at', { ascending: true });
+        .order('completed_at', { ascending: true })
+        .limit(10000);
 
       if (error) throw error;
 

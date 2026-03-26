@@ -29,7 +29,7 @@ export const FeedTimeline = memo<FeedTimelineProps>(
   }) => {
     // State
     const [currentSort, setCurrentSort] = useState<FeedSort>(initialSort);
-    const [currentUserPubkey] = useState<string | undefined>(undefined); // TODO: Get from auth context
+    const [currentUserPubkey] = useState<string | undefined>(undefined); // TODO(SOV-AUTH-001): Get from auth context — replace with useAuthContext().nostr_pubkey
 
     // Hooks
     const { filters, updateFilters } = useFeedFilters(initialFilters);
@@ -112,13 +112,13 @@ export const FeedTimeline = memo<FeedTimelineProps>(
     // Handle sort change
     const handleSortChange = useCallback((newSort: FeedSort) => {
       setCurrentSort(newSort);
-      // TODO: Re-sort events or re-subscribe with sort parameter
+      // TODO(backlog): Re-sort events or re-subscribe with sort parameter
     }, []);
 
     // Handle like event
     const handleLike = useCallback(
       (event: any) => {
-        // TODO: Publish kind 7 reaction event
+        // TODO(SOV-NOSTR-001): Publish kind 7 reaction event via nostr-tools signEvent
         console.log('Like event:', event.id);
         // Optimistic update
         // addOptimisticUpdate(reactionEvent);
@@ -129,7 +129,7 @@ export const FeedTimeline = memo<FeedTimelineProps>(
     // Handle repost event
     const handleRepost = useCallback(
       (event: any) => {
-        // TODO: Publish kind 6 repost event
+        // TODO(SOV-NOSTR-002): Publish kind 6 repost event via nostr-tools signEvent
         console.log('Repost event:', event.id);
         // Optimistic update
         // addOptimisticUpdate(repostEvent);
@@ -139,7 +139,7 @@ export const FeedTimeline = memo<FeedTimelineProps>(
 
     // Handle reply event
     const handleReply = useCallback((event: any) => {
-      // TODO: Navigate to compose view with reply context
+      // TODO(backlog): Navigate to compose view with reply context
       console.log('Reply to event:', event.id);
     }, []);
 

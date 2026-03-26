@@ -6,6 +6,7 @@ import {
   SessionConfig,
 } from '../../../shared/src/services/UnifiedSessionManager';
 import { SupabaseDatabase } from '../config/database';
+import { getRedisClient } from '../lib/redis';
 
 /**
  * 🔐 US-311: Database-backed Session Manager
@@ -84,6 +85,13 @@ export class DatabaseSessionManager extends UnifiedSessionManager {
 
   protected async retrieveSessionByTokenHash(tokenHash: string): Promise<Session | null> {
     try {
+      // Check Redis cache first
+      const redis = getRedisClient();
+      const cached = await redis.get(`session:${tokenHash}`);
+      if (cached) {
+        return JSON.parse(cached) as Session;
+      }
+
       const { data, error } = await this.client
         .from('unified_sessions')
         .select('*')
@@ -95,7 +103,15 @@ export class DatabaseSessionManager extends UnifiedSessionManager {
         return null;
       }
 
-      return this.mapDatabaseRowToSession(data);
+      const session = this.mapDatabaseRowToSession(data);
+
+      // Cache result with TTL matching session expiry
+      const ttlSeconds = Math.floor((session.expires_at - Date.now()) / 1000);
+      if (ttlSeconds > 0) {
+        await redis.setex(`session:${tokenHash}`, ttlSeconds, JSON.stringify(session));
+      }
+
+      return session;
     } catch (error) {
       console.warn('Failed to retrieve session by token hash:', error);
       return null;

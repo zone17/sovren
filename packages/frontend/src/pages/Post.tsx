@@ -42,7 +42,7 @@ const Post: React.FC = () => {
               variant="default"
               className="bg-gradient-to-r from-violet-600 to-purple-600 shadow-[0_4px_16px_rgba(139,92,246,0.3)] text-white transition-all duration-150"
               onClick={() => {
-                // TODO: Implement payment
+                // TODO(SOV-PAY-001): Implement Lightning payment — wire up POST /api/v1/payments/invoices
               }}
             >
               Support Creator
@@ -53,7 +53,7 @@ const Post: React.FC = () => {
         <div className="mt-12 border-t border-border pt-8">
           <h2 className="text-2xl font-bold text-foreground font-display">Comments</h2>
           <div className="mt-6 space-y-6">
-            {/* TODO: Implement comments */}
+            {/* TODO(backlog): Implement comments — wire up GET /api/v2/comments/:contentId */}
             <p className="text-muted-foreground">Comments coming soon...</p>
           </div>
         </div>

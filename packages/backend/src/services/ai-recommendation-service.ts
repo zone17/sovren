@@ -404,6 +404,7 @@ export class AIRecommendationService {
 }
 
 export const createAIRecommendationService = (config: Partial<AIServiceConfig> = {}) => {
+  // Uses service role key — bypasses RLS. Only use for admin/background operations.
   const defaultConfig: AIServiceConfig = {
     supabaseUrl: process.env.SUPABASE_URL || '',
     supabaseKey: process.env.SUPABASE_SERVICE_ROLE_KEY || '',

@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ts-nocheck — TODO(SOV-TS-001): Full TS cleanup needed (asyncHandler return types, Session type mismatches)
 /**
  * 🔐 US-311: Unified Session Management API Routes
  * WHY: RESTful API for unified NOSTR session management across devices
@@ -20,6 +20,7 @@ import { z } from 'zod';
 import { DatabaseSessionManager } from '../services/DatabaseSessionManager';
 import { SessionMetadata } from '@shared/services/UnifiedSessionManager';
 import { authenticate, requireAuth } from '../middleware/auth';
+import logger from '../lib/logger';
 
 const router = express.Router();
 
@@ -27,6 +28,8 @@ const router = express.Router();
 // CONFIGURATION
 // =====================================================
 
+// Uses service role key — bypasses RLS. Only use for admin/background operations.
+// Session management requires cross-user write access (e.g. expiry enforcement, device revocation).
 const sessionManager = new DatabaseSessionManager({
   supabaseUrl: process.env.SUPABASE_URL || '',
   supabaseKey: process.env.SUPABASE_SERVICE_KEY || '',
@@ -169,7 +172,7 @@ const RevokeDeviceSchema = z.object({
 router.post(
   '/create',
   createSessionRateLimit,
-  asyncHandler(async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
     try {
       const validatedData = CreateSessionSchema.parse(req.body);
 
@@ -193,9 +196,9 @@ router.post(
             device_info: session.device_info,
             created_at: session.created_at,
             expires_at: session.expires_at,
-            last_activity: session.last_activity,
+            last_activity: (session as any).last_activity_at ?? (session as any).last_activity,
           },
-          token: session.token, // Only time token is returned!
+          token: (session as any).token, // Only time token is returned!
         },
         message: 'Session created successfully',
         timestamp: new Date().toISOString(),
@@ -210,7 +213,7 @@ router.post(
         });
       }
 
-      console.error('Session creation failed:', error);
+      logger.error('Session creation failed', { error });
       return res.status(500).json({
         success: false,
         error: error instanceof Error ? error.message : 'Session creation failed',
@@ -293,7 +296,7 @@ router.post(
         });
       }
 
-      console.error('Session validation failed:', error);
+      logger.error('Session validation failed', { error });
       return res.status(500).json({
         success: false,
         error: 'Session validation failed',
@@ -362,7 +365,7 @@ router.post(
         });
       }
 
-      console.error('Session refresh failed:', error);
+      logger.error('Session refresh failed', { error });
       return res.status(500).json({
         success: false,
         error: error instanceof Error ? error.message : 'Session refresh failed',
@@ -412,7 +415,7 @@ router.delete(
         });
       }
 
-      console.error('Session revocation failed:', error);
+      logger.error('Session revocation failed', { error });
       return res.status(500).json({
         success: false,
         error: error instanceof Error ? error.message : 'Session revocation failed',
@@ -462,7 +465,7 @@ router.delete(
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      console.error('Bulk session revocation failed:', error);
+      logger.error('Bulk session revocation failed', { error });
       return res.status(500).json({
         success: false,
         error: error instanceof Error ? error.message : 'Bulk revocation failed',
@@ -516,7 +519,7 @@ router.delete(
         });
       }
 
-      console.error('Device revocation failed:', error);
+      logger.error('Device revocation failed', { error });
       return res.status(500).json({
         success: false,
         error: error instanceof Error ? error.message : 'Device revocation failed',
@@ -572,7 +575,7 @@ router.get(
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      console.error('Session listing failed:', error);
+      logger.error('Session listing failed', { error });
       return res.status(500).json({
         success: false,
         error: 'Session listing failed',
@@ -615,7 +618,7 @@ router.get(
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      console.error('Stats retrieval failed:', error);
+      logger.error('Stats retrieval failed', { error });
       return res.status(500).json({
         success: false,
         error: 'Stats retrieval failed',
@@ -665,7 +668,7 @@ router.get(
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      console.error('Activities retrieval failed:', error);
+      logger.error('Activities retrieval failed', { error });
       return res.status(500).json({
         success: false,
         error: 'Activities retrieval failed',
@@ -701,7 +704,7 @@ router.post(
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      console.error('Session cleanup failed:', error);
+      logger.error('Session cleanup failed', { error });
       return res.status(500).json({
         success: false,
         error: error instanceof Error ? error.message : 'Cleanup failed',
@@ -743,7 +746,7 @@ router.get('/health', async (req: Request, res: Response) => {
 // =====================================================
 
 router.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error('Unified session route error:', err);
+  logger.error('Unified session route error', { error: err });
 
   return res.status(500).json({
     success: false,
