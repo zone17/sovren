@@ -1,6 +1,16 @@
+-- ⚠️  DEPRECATED: This file is no longer the source of truth
+-- This parallel schema definition was archived on 2026-03-26 (DB-004)
+-- The canonical schema is now tracked exclusively in supabase/migrations/
+--
+-- Previous Reference:
 -- 🗄️ SOVREN DATABASE SCHEMA V2.0
 -- Elite PostgreSQL schema for NOSTR-native creator monetization platform
 -- Updated with Lightning Network integration for Bitcoin payments
+--
+-- Migration Path:
+-- All schema changes MUST be applied via supabase/migrations/*.sql files
+-- This archived file is retained for historical reference only
+-- See docs/development/BRANCHING_STRATEGY.md for database change procedures
 
 -- Enable necessary extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
