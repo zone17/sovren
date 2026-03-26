@@ -315,6 +315,7 @@ export class PayoutManagementService extends EventEmitter {
    * US-064: Process Automated Payouts
    * Processes scheduled payouts automatically
    */
+  // WARNING: Under multi-instance deployment, this method will double-execute. Use pg_try_advisory_xact_lock or move to BullMQ.
   async processAutomatedPayouts(): Promise<void> {
     try {
       // Get due payout schedules
@@ -328,6 +329,7 @@ export class PayoutManagementService extends EventEmitter {
 
       this.logger.info(`Processing ${dueSchedules?.length || 0} automated payouts`);
 
+      // TODO(SOV-PERF-001): Use Promise.allSettled with p-limit(5) or push to BullMQ for distributed processing
       // Process each schedule
       for (const schedule of dueSchedules || []) {
         await this.processScheduledPayout(schedule);

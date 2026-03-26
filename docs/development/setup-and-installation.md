@@ -260,12 +260,11 @@ GRANT ALL PRIVILEGES ON DATABASE sovren_dev TO sovren;
 ```bash
 cd packages/backend
 
-# Run migrations (when Prisma is integrated)
-npx prisma migrate dev
+# Run migrations with Supabase CLI
+supabase db push
 
-# Verify schema
-npx prisma studio
-# Opens database GUI at http://localhost:5555
+# Verify schema (connect to local or remote Supabase project)
+supabase db diff
 ```
 
 ### Test Data Seeding

@@ -771,7 +771,7 @@ export class ContentManagementService {
       searchQuery = searchQuery.eq('is_premium', filters.is_premium);
     }
 
-    searchQuery = searchQuery.order('view_count', { ascending: false });
+    searchQuery = searchQuery.order('view_count', { ascending: false }).limit(50);
 
     const { data, error } = await searchQuery;
     if (error) throw new ServiceError(`Search failed: ${error.message}`);

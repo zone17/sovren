@@ -1,5 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "_sec013_style_src_note": "SEC-013: style-src 'unsafe-inline' is required for inline styles injected by CSS-in-JS libraries (Tailwind JIT, emotion). Known limitation — acceptable until a nonce-based CSP or full style-extraction build is adopted.",
   "version": 2,
   "name": "sovren-monorepo",
   "public": false,

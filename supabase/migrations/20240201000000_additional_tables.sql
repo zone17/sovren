@@ -1,3 +1,4 @@
+-- NOTE: High-volume tables (content_analytics, user_behavior_events, session_activity, payment_events) should be partitioned by created_at when data exceeds 10M rows. See docs/plans/ for partitioning strategy.
 -- =============================================================================
 -- ADDITIONAL TABLES MIGRATION
 -- Consolidates all tables from archived migrations + backend code references

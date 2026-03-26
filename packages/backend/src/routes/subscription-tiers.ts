@@ -21,11 +21,13 @@ const router = express.Router();
 
 // Lazy singleton — deferred to first request to avoid side effects at module load
 let _subscriptionService: SubscriptionManagementService | null = null;
+let _lightningServiceHealthy = true;
 function getSubscriptionService(): SubscriptionManagementService {
   if (!_subscriptionService) {
     const lightningService = new LightningPaymentService();
     lightningService.initialize().catch((err) => {
-      logger.error('Failed to initialize LightningPaymentService', { error: err });
+      _lightningServiceHealthy = false;
+      logger.warn('Failed to initialize LightningPaymentService — payment features degraded', { error: err });
     });
     _subscriptionService = new SubscriptionManagementService(lightningService);
   }

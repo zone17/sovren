@@ -171,6 +171,7 @@ router.get(
 );
 
 // 🚪 Logout (server-side token revocation + client-side cleanup)
+// TODO(SOV-SEC-002): Implement Redis JWT blacklist — add token jti to Redis with TTL matching remaining JWT lifetime. Check blacklist in authenticate middleware.
 router.post(
   '/logout',
   optionalAuth,

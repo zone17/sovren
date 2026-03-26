@@ -41,6 +41,7 @@ async function startServer(): Promise<void> {
   try {
     logger.info('Starting Sovren API Server');
 
+    // TODO(SOV-INFRA-001): Wire SecretsService.loadAll() at startup to replace .env-based secrets with AWS Secrets Manager
     // Validate environment configuration
     if (AppConfig.isProduction && !process.env.JWT_SECRET) {
       throw new Error('JWT_SECRET environment variable is required in production');

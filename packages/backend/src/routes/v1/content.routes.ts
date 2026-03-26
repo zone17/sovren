@@ -139,6 +139,37 @@ router.get(
 router.get(
   '/analytics/:id',
   authenticate,
+  // SEC-015: Ownership verification — ensure the authenticated user owns the content
+  // before exposing analytics data. Admins bypass this check.
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const contentId = req.params.id;
+      const requestingUser = req.user;
+
+      if (!requestingUser) {
+        return res.status(401).json({ success: false, error: 'Unauthorized', code: 'UNAUTHENTICATED' });
+      }
+
+      // Admins may view any content analytics
+      if (requestingUser.role === 'admin') {
+        return next();
+      }
+
+      // Resolve content creation service to check ownership
+      const creationService = container.resolve<{ getContent: (id: string) => Promise<{ authorId: string }> }>(
+        TYPES.ContentCreationService
+      );
+      const content = await creationService.getContent(contentId);
+
+      if (!content || content.authorId !== requestingUser.nostr_pubkey) {
+        return res.status(403).json({ success: false, error: 'Access denied', code: 'FORBIDDEN' });
+      }
+
+      return next();
+    } catch (err) {
+      return next(err);
+    }
+  },
   rateLimiters.content.analytics,
   validate({ params: ContentValidators.contentIdParam }),
   (req: Request, res: Response, next: NextFunction) =>
