@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { TTLCache } from '../utils/ttl-cache';
 import { createPaymentStore, type PaymentPersistence } from './payment-persistence';
 import { verifyWebhookHmac } from '../lib/webhook-security';
+import logger from '../lib/logger';
 
 // 🌩️ ELITE LIGHTNING NETWORK SERVICE
 // Comprehensive Bitcoin Lightning Network integration for Sovren
@@ -216,15 +217,15 @@ export class LightningService extends EventEmitter {
       await this.testConnection();
 
       this.isInitialized = true;
-      console.log('⚡ Lightning Network service initialized successfully');
-      console.log(`📡 Connected to LNbits: ${this.config.lnbitsUrl}`);
-      console.log(`💳 Wallet ID: ${this.config.lnbitsWalletId}`);
-      console.log(`🔗 LNURL-pay: ${this.config.enableLnurlPay ? 'Enabled' : 'Disabled'}`);
-      console.log(
-        `📧 Lightning Address: ${this.config.enableLightningAddress ? 'Enabled' : 'Disabled'}`
+      logger.info('Lightning Network service initialized successfully');
+      logger.info(`Connected to LNbits: ${this.config.lnbitsUrl}`);
+      logger.info(`Wallet ID: ${this.config.lnbitsWalletId}`);
+      logger.info(`LNURL-pay: ${this.config.enableLnurlPay ? 'Enabled' : 'Disabled'}`);
+      logger.info(
+        `Lightning Address: ${this.config.enableLightningAddress ? 'Enabled' : 'Disabled'}`
       );
     } catch (error) {
-      console.error('❌ Failed to initialize Lightning service:', error);
+      logger.error('Failed to initialize Lightning service:', error);
       throw new Error(
         `Lightning service initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
@@ -240,7 +241,7 @@ export class LightningService extends EventEmitter {
       if (!response.name) {
         throw new Error('Invalid wallet response from LNbits');
       }
-      console.log(`✅ LNbits connection verified - Wallet: ${response.name}`);
+      logger.info(`LNbits connection verified - Wallet: ${response.name}`);
     } catch (error) {
       throw new Error(
         `LNbits connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -379,14 +380,14 @@ export class LightningService extends EventEmitter {
       // Emit event
       this.emit('invoice:created', invoice);
 
-      console.log(`⚡ Created Lightning invoice: ${invoiceId} for ${params.amount} sats`);
+      logger.info(`Created Lightning invoice: ${invoiceId} for ${params.amount} sats`);
 
       return {
         success: true,
         invoice,
       };
     } catch (error) {
-      console.error('❌ Failed to create Lightning invoice:', error);
+      logger.error('Failed to create Lightning invoice:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -471,7 +472,7 @@ export class LightningService extends EventEmitter {
         invoice,
       };
     } catch (error) {
-      console.error('❌ Failed to check invoice status:', error);
+      logger.error('Failed to check invoice status:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -536,7 +537,7 @@ export class LightningService extends EventEmitter {
       // Encode as LNURL
       const lnurlString = this.encodeLnurl(callbackUrl);
 
-      console.log(`🔗 Generated LNURL-pay for creator: ${params.creatorId}`);
+      logger.info(`Generated LNURL-pay for creator: ${params.creatorId}`);
 
       return {
         success: true,
@@ -544,7 +545,7 @@ export class LightningService extends EventEmitter {
         qrCode: await this.generateQrCode(lnurlString),
       };
     } catch (error) {
-      console.error('❌ Failed to generate LNURL-pay:', error);
+      logger.error('Failed to generate LNURL-pay:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -596,8 +597,8 @@ export class LightningService extends EventEmitter {
         updated_at: Date.now(),
       };
 
-      console.log(
-        `📧 Created Lightning address: ${lightningAddressString} for creator: ${params.creatorId}`
+      logger.info(
+        `Created Lightning address: ${lightningAddressString} for creator: ${params.creatorId}`
       );
 
       return {
@@ -605,7 +606,7 @@ export class LightningService extends EventEmitter {
         lightningAddress,
       };
     } catch (error) {
-      console.error('❌ Failed to create Lightning address:', error);
+      logger.error('Failed to create Lightning address:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -700,7 +701,7 @@ export class LightningService extends EventEmitter {
           this.emit('invoice:paid', payment);
           this.emit('payment:completed', payment);
 
-          console.log(`⚡ Processed Lightning payment: ${payment.id} for ${payment.amount} sats`);
+          logger.info(`Processed Lightning payment: ${payment.id} for ${payment.amount} sats`);
 
           return {
             success: true,
@@ -713,7 +714,7 @@ export class LightningService extends EventEmitter {
         success: true,
       };
     } catch (error) {
-      console.error('❌ Failed to process Lightning webhook:', error);
+      logger.error('Failed to process Lightning webhook:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -760,7 +761,7 @@ export class LightningService extends EventEmitter {
         total: payments.length,
       };
     } catch (error) {
-      console.error('❌ Failed to get creator payments:', error);
+      logger.error('Failed to get creator payments:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -806,7 +807,7 @@ export class LightningService extends EventEmitter {
         },
       };
     } catch (error) {
-      console.error('❌ Failed to get Lightning stats:', error);
+      logger.error('Failed to get Lightning stats:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',

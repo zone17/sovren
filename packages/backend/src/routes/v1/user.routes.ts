@@ -576,7 +576,7 @@ router.put(
 router.get(
   '/:id/recommendations',
   authenticate,
-  rateLimiters.user.read,
+  rateLimiters.user.analytics, // expensive operation — use dedicated limiter (20 req/min)
   validate({ params: UserValidators.userIdParam }),
   (req: Request, res: Response, next: NextFunction) =>
     getController().getRecommendations(req, res, next)

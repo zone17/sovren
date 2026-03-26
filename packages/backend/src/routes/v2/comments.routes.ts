@@ -162,7 +162,7 @@ router.delete(
 
     await getCommentsService().deleteComment(getAuthUser(req).nostr_pubkey, commentIdResult.data);
 
-    res.json(createApiResponse(req, null));
+    res.status(204).send();
   })
 );
 

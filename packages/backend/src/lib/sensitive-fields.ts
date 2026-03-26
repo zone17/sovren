@@ -27,6 +27,7 @@ export const SENSITIVE_FIELDS = [
   'signingKey',
   'secretKey',
   'secret_key',
+  'email',
 ] as const;
 
 const SENSITIVE_REGEX = new RegExp(

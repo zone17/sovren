@@ -224,14 +224,8 @@ export default defineConfig(async ({ mode, command }) => {
             // Charts and analytics
             charts: ['recharts'],
 
-            // Animation libraries
-            animations: ['framer-motion'],
-
             // API and data fetching
             api: ['@tanstack/react-query', '@supabase/supabase-js'],
-
-            // IPFS and distributed storage
-            ipfs: ['@helia/http', '@helia/unixfs', 'helia', 'arweave'],
 
             // Payment processing
             payments: ['stripe'],

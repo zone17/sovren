@@ -52,7 +52,7 @@ This documentation reflects the complete **Phase 1-7 implementation of Epic 005:
 
 Detailed documentation for all 25 endpoints organized by domain:
 
-4. **[Content API Reference](./reference/content-api.md)** - 7 endpoints
+4. **Content API Reference** _(Coming Soon)_ - 7 endpoints
    - `POST /content/publish` - Publish new content
    - `POST /content/moderate` - Moderate content
    - `GET /content/search` - Search content
@@ -61,7 +61,7 @@ Detailed documentation for all 25 endpoints organized by domain:
    - `GET /content/versions/{id}` - Get version history
    - `POST /content/versions/{id}/revert` - Revert to version
 
-5. **[User API Reference](./reference/user-api.md)** - 8 endpoints
+5. **User API Reference** _(Coming Soon)_ - 8 endpoints
    - `GET /users/profile/{id}` - Get user profile
    - `PUT /users/profile/{id}` - Update user profile
    - `GET /users/preferences/{id}` - Get user preferences
@@ -71,7 +71,7 @@ Detailed documentation for all 25 endpoints organized by domain:
    - `DELETE /users/relationships/unfollow` - Unfollow a user
    - `GET /users/analytics/{id}` - Get user analytics
 
-6. **[Payment API Reference](./reference/payment-api.md)** - 10 endpoints
+6. **Payment API Reference** _(Coming Soon)_ - 10 endpoints
    - `POST /payments/invoices` - Create invoice
    - `GET /payments/invoices/{id}` - Get invoice details
    - `POST /payments/invoices/{id}/pay` - Pay invoice
@@ -85,10 +85,10 @@ Detailed documentation for all 25 endpoints organized by domain:
 
 ### Examples & Guides
 
-7. **[Request/Response Examples](./examples/)** - Complete examples for all endpoints
-   - [Content Examples](./examples/content-examples.md)
-   - [User Examples](./examples/user-examples.md)
-   - [Payment Examples](./examples/payment-examples.md)
+7. **Request/Response Examples** _(Coming Soon)_
+   - Content Examples _(Coming Soon)_
+   - User Examples _(Coming Soon)_
+   - Payment Examples _(Coming Soon)_
 
 8. **[Error Code Reference](./errors.md)** - Complete error catalog
    - HTTP status codes
@@ -111,7 +111,7 @@ Detailed documentation for all 25 endpoints organized by domain:
 
 ### Tools & Resources
 
-11. **[Postman Collection](./postman/sovren-api.postman_collection.json)** - Ready-to-use API client
+11. **Postman Collection** _(Coming Soon)_
     - All 25 endpoints pre-configured
     - Environment variables
     - Auto-refresh authentication

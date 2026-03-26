@@ -5,6 +5,7 @@
  * Provides consistent error response format and logging
  */
 
+import crypto from 'crypto';
 import { NextFunction, Request, Response } from 'express';
 import { ZodError } from 'zod';
 import { getCorrelationId } from './correlation-id';
@@ -244,7 +245,7 @@ function logError(error: Error | AppError, req: Request, requestId: string): voi
     url: req.url,
     method: req.method,
     ip: req.ip,
-    user: req.user?.nostr_pubkey,
+    user: crypto.createHash('sha256').update(req.user?.nostr_pubkey || '').digest('hex').slice(0, 8),
   };
 
   if (error instanceof AppError && error.isOperational) {

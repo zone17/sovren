@@ -14,6 +14,16 @@ import metricsRoutes from './metrics.routes';
 const router = Router();
 
 /**
+ * Deprecation middleware — informs clients that v1 is deprecated and v2 is available.
+ * Applied to all v1 routes so any client hitting /api/v1/* receives the headers.
+ */
+router.use((req, res, next) => {
+  res.set('Deprecation', 'true');
+  res.set('Link', '</api/v2>; rel="successor-version"');
+  next();
+});
+
+/**
  * Mount domain-specific routers
  */
 router.use('/content', contentRoutes);

@@ -133,7 +133,7 @@ services:
     container_name: sovren-redis-prod
     volumes:
       - redis_data:/data
-      - ./redis-prod.conf:/usr/local/etc/redis/redis.conf:ro
+      - ./docker/redis/redis-prod.conf:/usr/local/etc/redis/redis.conf:ro
     command: redis-server /usr/local/etc/redis/redis.conf
     networks:
       - internal-network
@@ -174,7 +174,7 @@ services:
       - '80:80'
       - '443:443'
     volumes:
-      - ./nginx-lb.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/nginx-lb.conf:/etc/nginx/nginx.conf:ro
       - ./ssl:/etc/nginx/ssl:ro
       - certbot_data:/etc/letsencrypt:ro
     depends_on:
@@ -242,7 +242,7 @@ services:
     ports:
       - '9090:9090'
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./prometheus-alerts.yml:/etc/prometheus/rules/alerts.yml:ro
       - prometheus_data:/prometheus
     command:
@@ -305,7 +305,7 @@ services:
     image: fluent/fluentd:latest
     container_name: sovren-fluentd
     volumes:
-      - ./fluentd.conf:/fluentd/etc/fluent.conf:ro
+      - ./docker/fluentd/fluentd.conf:/fluentd/etc/fluent.conf:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
     networks:
       - monitoring-network

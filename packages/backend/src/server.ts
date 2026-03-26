@@ -90,6 +90,7 @@ async function startServer(): Promise<void> {
     });
 
     // Configure server settings
+    server.setTimeout(AppConfig.responseTimeout);
     server.keepAliveTimeout = AppConfig.keepAliveTimeout;
     server.headersTimeout = AppConfig.keepAliveTimeout + 1000;
 
@@ -383,5 +384,5 @@ if (require.main === module) {
   });
 }
 
-// Export for testing
-export { gracefulShutdown, startServer };
+// Export for testing and health endpoint shutdown check
+export { gracefulShutdown, startServer, isShuttingDown };

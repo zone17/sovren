@@ -395,7 +395,7 @@ export class ContentModerationServiceFactory extends SafeServiceFactory<IContent
 
     // Import the actual service implementation
     const { ContentModerationService } =
-      await import('../../services/content/ContentModerationService.v2');
+      await import('../../services/content/ContentModerationService');
 
     // Create mock/stub dependencies
     const auditLog: any = {

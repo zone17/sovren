@@ -128,24 +128,32 @@ export class CreatorRecommendationService {
 
       if (error) throw error;
 
-      const matches = await Promise.all(
-        similarities.map(async (sim: any) => {
-          const creatorProfile = await this.getCreatorProfile(sim.recommended_creator_id);
-          return {
-            creatorId: sim.recommended_creator_id,
-            creatorProfile: creatorProfile || {},
-            similarity: {
-              overallSimilarity: sim.recommendation_score,
-              contentSimilarity: sim.recommendation_score,
-              topicSimilarity: sim.recommendation_score,
-              calculationMethod: 'algorithmic',
-              confidenceScore: 0.85,
-            },
-            matchReasons: [sim.primary_reason],
-            confidenceScore: sim.recommendation_score,
-          };
-        })
-      );
+      // Batch-load all creator profiles in a single query instead of N individual calls
+      const recommendedIds = similarities.map((sim: any) => sim.recommended_creator_id);
+      const { data: profileRows, error: profileError } = await this.supabase
+        .from('creator_profiles')
+        .select('*')
+        .in('creator_id', recommendedIds);
+      if (profileError) throw profileError;
+
+      const profileMap = new Map<string, CreatorProfile>();
+      for (const row of profileRows ?? []) {
+        profileMap.set(row.creator_id, this.mapCreatorProfile(row));
+      }
+
+      const matches = similarities.map((sim: any) => ({
+        creatorId: sim.recommended_creator_id,
+        creatorProfile: profileMap.get(sim.recommended_creator_id) ?? {},
+        similarity: {
+          overallSimilarity: sim.recommendation_score,
+          contentSimilarity: sim.recommendation_score,
+          topicSimilarity: sim.recommendation_score,
+          calculationMethod: 'algorithmic',
+          confidenceScore: 0.85,
+        },
+        matchReasons: [sim.primary_reason],
+        confidenceScore: sim.recommendation_score,
+      }));
 
       return {
         targetCreatorId: request.targetCreatorId,

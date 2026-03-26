@@ -11,6 +11,7 @@ import express, { Request, Response } from 'express';
 import { z } from 'zod';
 import { authenticate, requireCreator, getAuthUser } from '../middleware/auth';
 import { validate } from '../middleware/validation-middleware';
+import { rateLimiters } from '../middleware/rate-limit-middleware';
 import { asyncHandler } from '../utils/asyncHandler';
 import { createApiResponse } from '../utils/api-response';
 import { AuthorizationError, ValidationError } from '../utils/errors';
@@ -47,6 +48,7 @@ router.get(
 // POST /api/lightning/invoice
 router.post(
   '/invoice',
+  rateLimiters.payment.createInvoice,
   authenticate,
   validate({ body: CreateInvoiceBodySchema }),
   asyncHandler(async (req: Request, res: Response) => {

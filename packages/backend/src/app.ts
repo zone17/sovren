@@ -89,7 +89,10 @@ export function createApp(): Express {
   app.use(
     cors({
       origin: (origin, callback) => {
-        // Allow requests with no Origin header (non-browser clients, agents, curl)
+        // Allow requests with no Origin header (non-browser clients, agents, curl).
+        // SECURITY ASSUMPTION: All authenticated API calls use Bearer token auth (Authorization header).
+        // No session cookies are issued, so there is no CSRF risk from allowing originless requests.
+        // If cookie-based auth is ever introduced, this assumption must be re-evaluated.
         if (!origin) return callback(null, true);
 
         const allowedOrigins =
@@ -119,7 +122,7 @@ export function createApp(): Express {
   );
 
   // ⚡ Rate Limiting (via rate-limit-middleware)
-  app.use(createRateLimiter({ windowMs: 15 * 60 * 1000, max: 1000 }));
+  app.use(createRateLimiter({ windowMs: 15 * 60 * 1000, max: 300 }));
 
   // Request Processing Middleware
   app.use(
