@@ -25,6 +25,14 @@ const PaginationSchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
 
+// Cursor-based pagination schema for live feeds (content feed, comments, transaction history).
+// Cursor format: ISO datetime + "|" + UUID, e.g. "2026-03-25T10:00:00.000Z|some-uuid"
+export const CursorPaginationSchema = z.object({
+  cursor: z.string().optional(), // ISO date + UUID composite: "2026-03-25T10:00:00Z|uuid"
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  direction: z.enum(['next', 'prev']).default('next'),
+});
+
 const TimeRangeSchema = z.object({
   start: z.string().datetime().optional(),
   end: z.string().datetime().optional(),
@@ -136,8 +144,12 @@ export const ListContentSchema = z.object({
   sort: z.enum(['date', 'popularity', 'relevance', 'price']).optional().default('date'),
   contentType: z.enum(['article', 'video', 'audio', 'image', 'nostr-event']).optional(),
   tags: z.string().optional(), // comma-separated
+  // Offset pagination (kept for backwards compatibility and admin/analytics use)
   page: z.coerce.number().int().min(1).optional().default(1),
   limit: z.coerce.number().int().min(1).max(100).optional().default(20),
+  // Cursor pagination (preferred for live feeds — use cursor + direction instead of page)
+  cursor: z.string().optional(), // ISO date + UUID composite: "2026-03-25T10:00:00Z|uuid"
+  direction: z.enum(['next', 'prev']).optional().default('next'),
 });
 
 export const UpdateContentSchema = z.object({
@@ -183,6 +195,7 @@ export const ContentValidators = {
   contentQuery: ContentQuerySchema,
   listContent: ListContentSchema,
   updateContent: UpdateContentSchema,
+  cursorPagination: CursorPaginationSchema,
 } as const;
 
 export type ContentValidatorKeys = keyof typeof ContentValidators;

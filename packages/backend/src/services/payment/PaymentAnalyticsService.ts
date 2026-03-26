@@ -1,4 +1,15 @@
 // @ts-nocheck
+// TODO(SOV-REFACTOR-002): This file is 1907 lines. Decompose into:
+// - RevenueAnalyticsService (getRevenueAnalytics, getRevenueByPeriod, getRevenueTimeSeries, getRevenueTrend,
+//   getConsolidatedRevenue, getRevenueBreakdownInBaseCurrency — ~300 lines)
+// - TransactionAnalyticsService (getTransactionVolume, getSuccessRateAnalytics, getTransactionCountByPeriod,
+//   getCurrencyDistribution, getPaymentMethodAnalytics — ~350 lines)
+// - CustomerAnalyticsService (getTopCustomers, getARPU, getCustomerLifetimeValue, getChurnImpact,
+//   getMRRAnalytics, comparePeriods — ~300 lines)
+// - PaymentAnalyticsHelpers (pure/stateless math: formatTimeKey, parseTimeKey, calculateTrend, calculateVolatility,
+//   calculateSMA, calculateEMA, forecastRevenue, detectSeasonality — ~150 lines) ← extract first (lowest risk)
+// - PaymentAnalyticsExportService (exportAnalytics, getExport, listExports, deleteExport, formatAsCSV — ~100 lines)
+// Keep PaymentAnalyticsService as a thin façade + cache/event wiring layer.
 /**
  * PaymentAnalyticsService Implementation
  * User Story: US-E5-028
