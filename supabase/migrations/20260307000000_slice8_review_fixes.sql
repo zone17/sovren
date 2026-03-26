@@ -6,7 +6,7 @@
 --        #748 (trigger silent on missing creators row), #756 (unbatched backfill)
 -- =============================================================================
 
-BEGIN;
+-- BEGIN removed: Supabase runs each migration in an implicit transaction
 
 -- ---------------------------------------------------------------------------
 -- Fix #725: Change uuid_generate_v4() → gen_random_uuid() on notifications
@@ -193,4 +193,4 @@ BEGIN
 END;
 $$;
 
-COMMIT;
+-- COMMIT removed: Supabase runs each migration in an implicit transaction

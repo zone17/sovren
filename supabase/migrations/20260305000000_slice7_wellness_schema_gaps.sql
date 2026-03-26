@@ -6,7 +6,7 @@
 -- Wrapped in explicit transaction for atomicity.
 -- Dedup uses CTE + ROW_NUMBER (O(n log n)) instead of NOT IN (O(n²)).
 
-BEGIN;
+-- BEGIN removed: Supabase runs each migration in an implicit transaction
 
 -- ============================================================================
 -- 1. creator_boundaries — 12 new columns
@@ -125,7 +125,7 @@ SET score = GREATEST(0, LEAST(100, ROUND(risk_score)::integer)),
     END
 WHERE score IS NULL AND risk_score IS NOT NULL;
 
-COMMIT;
+-- COMMIT removed: Supabase runs each migration in an implicit transaction
 
 -- ============================================================================
 -- ROLLBACK (manual — uncomment to revert)

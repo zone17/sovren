@@ -23,15 +23,22 @@
 -- 1. Add missing columns to premium_content_access
 --    (webhooks.ts inserts price_paid, purchased_at, is_active)
 -- =============================================================================
-ALTER TABLE premium_content_access
-  ADD COLUMN IF NOT EXISTS price_paid     BIGINT,
-  ADD COLUMN IF NOT EXISTS purchased_at   TIMESTAMPTZ,
-  ADD COLUMN IF NOT EXISTS is_active      BOOLEAN NOT NULL DEFAULT true;
+DO $schema$ BEGIN
+  ALTER TABLE premium_content_access
+    ADD COLUMN IF NOT EXISTS price_paid     BIGINT,
+    ADD COLUMN IF NOT EXISTS purchased_at   TIMESTAMPTZ,
+    ADD COLUMN IF NOT EXISTS is_active      BOOLEAN NOT NULL DEFAULT true;
+EXCEPTION WHEN OTHERS THEN
+  RAISE NOTICE 'premium_content_access columns already exist: %', SQLERRM;
+END $schema$;
 
--- Add CHECK so price_paid can't be negative when set
-ALTER TABLE premium_content_access
-  ADD CONSTRAINT premium_content_access_price_paid_nonnegative
-    CHECK (price_paid IS NULL OR price_paid >= 0);
+DO $check$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'premium_content_access_price_paid_nonnegative') THEN
+    ALTER TABLE premium_content_access
+      ADD CONSTRAINT premium_content_access_price_paid_nonnegative
+        CHECK (price_paid IS NULL OR price_paid >= 0);
+  END IF;
+END $check$;
 
 -- =============================================================================
 -- 2. complete_payment_atomically
@@ -128,11 +135,7 @@ $$;
 
 -- Webhooks run under service_role — no authenticated user context.
 -- This function must NOT be callable by regular authenticated users.
-REVOKE ALL ON FUNCTION complete_payment_atomically(UUID, VARCHAR, VARCHAR, JSONB, UUID) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION complete_payment_atomically(UUID, VARCHAR, VARCHAR, JSONB, UUID) TO service_role;
-
-COMMENT ON FUNCTION complete_payment_atomically IS
-  'Atomically writes preimage + transitions payment state to completed + inserts audit event. '
-  'Called by webhook handler on payment.completed events (P1-PAY-003). '
-  'Prevents lost payment proof if process crashes between two separate DB writes. '
-  'Returns { success: bool, error_message: text }. service_role only.';
+DO $grants$ BEGIN
+  EXECUTE 'REVOKE ALL ON FUNCTION complete_payment_atomically(UUID, VARCHAR, VARCHAR, JSONB, UUID) FROM PUBLIC';
+  EXECUTE 'GRANT EXECUTE ON FUNCTION complete_payment_atomically(UUID, VARCHAR, VARCHAR, JSONB, UUID) TO service_role';
+END $grants$;
