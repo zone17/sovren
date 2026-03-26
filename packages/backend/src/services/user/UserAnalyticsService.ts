@@ -1,4 +1,15 @@
 // @ts-nocheck
+// TODO(SOV-REFACTOR-001): This file is 2103 lines. Decompose into:
+// - UserAcquisitionService (getUserAcquisitionMetrics, aggregateSignupSources, calculateConversionRate, getTopReferrers — ~250 lines)
+// - UserEngagementService (getEngagementMetrics, getRetentionMetrics, getCohortAnalysis, getEngagementTimeSeries — ~300 lines)
+// - UserSegmentationService (segmentUsers, getUserSegment, analyzeUserJourney, calculateLifetimeValue — ~250 lines)
+// - UserChurnService (analyzeChurn, predictUserChurn, generateChurnPredictions, analyzeChurnRiskSegments — ~200 lines)
+// - UserAnalyticsHelpers (pure/stateless helpers: calculateChurnRiskScore, getRiskLevel, generateRetentionActions,
+//   determineGrowthType, projectGrowth, identifySeasonality, calculateRecencyScore, calculateLoyaltyScore,
+//   calculateAccountAge, formatAsCSV, generateExportId — ~200 lines) ← extract first (lowest risk)
+// - UserAnalyticsAggregator (processAggregations, aggregateUserActivity, aggregateEngagementMetrics,
+//   updateUserHealthScores, cleanupOldAggregations — ~120 lines)
+// Keep UserAnalyticsService as a thin façade delegating to the above.
 /**
  * User Analytics Service Implementation
  * User Story: US-E5-023
@@ -23,6 +34,19 @@
  */
 
 import crypto from 'crypto';
+import {
+  calculateChurnRiskScore,
+  getRiskLevel,
+  generateRetentionActions,
+  determineGrowthType,
+  projectGrowth,
+  identifySeasonality,
+  calculateRecencyScore,
+  calculateLoyaltyScore,
+  calculateAccountAge,
+  formatAsCSV,
+  generateExportId,
+} from './UserAnalyticsHelpers';
 import { injectable, inject } from 'inversify';
 import { TYPES } from '../../container/types';
 import { IUserAnalyticsService } from '../../interfaces/user/IUserAnalyticsService';
@@ -1787,144 +1811,41 @@ export class UserAnalyticsService implements IUserAnalyticsService {
   }
 
   private calculateChurnRiskScore(factors: ChurnRiskFactor[]): number {
-    let score = 0;
-
-    factors.forEach((factor) => {
-      let factorScore = 0;
-
-      // Normalize factor value to 0-100 scale
-      if (factor.factor === 'days_since_activity') {
-        factorScore = Math.min((factor.value / 30) * 100, 100);
-      } else if (factor.factor === 'engagement_score') {
-        factorScore = 100 - factor.value;
-      } else if (factor.factor === 'subscription_status') {
-        factorScore = 100 - factor.value;
-      } else if (factor.factor === 'account_age') {
-        factorScore = factor.value < 30 ? 50 : 0;
-      } else if (factor.factor === 'activity_level') {
-        factorScore = 100 - factor.value;
-      }
-
-      score += factorScore * factor.weight;
-    });
-
-    return Math.round(Math.min(score, 100));
+    return calculateChurnRiskScore(factors);
   }
 
   private getRiskLevel(riskScore: number): 'low' | 'medium' | 'high' | 'critical' {
-    if (riskScore >= 75) return 'critical';
-    if (riskScore >= 50) return 'high';
-    if (riskScore >= 25) return 'medium';
-    return 'low';
+    return getRiskLevel(riskScore);
   }
 
   private generateRetentionActions(factors: ChurnRiskFactor[], riskLevel: string): string[] {
-    const actions: string[] = [];
-
-    factors.forEach((factor) => {
-      if (factor.impact === 'negative') {
-        switch (factor.factor) {
-          case 'days_since_activity':
-            actions.push('Send re-engagement email with personalized content');
-            break;
-          case 'engagement_score':
-            actions.push('Recommend high-engagement content based on preferences');
-            break;
-          case 'subscription_status':
-            actions.push('Offer limited-time subscription discount');
-            break;
-          case 'account_age':
-            actions.push('Provide onboarding assistance and tutorials');
-            break;
-          case 'activity_level':
-            actions.push('Gamify experience with challenges and rewards');
-            break;
-        }
-      }
-    });
-
-    if (riskLevel === 'critical') {
-      actions.push('Immediate intervention: Personal outreach from support team');
-    }
-
-    return actions;
+    return generateRetentionActions(factors, riskLevel);
   }
 
   private determineGrowthType(
     trends: TrendPoint[]
   ): 'linear' | 'exponential' | 'plateau' | 'declining' {
-    if (trends.length < 3) return 'linear';
-
-    const recentTrends = trends.slice(-10);
-    const upTrends = recentTrends.filter((t) => t.trend === 'up').length;
-    const downTrends = recentTrends.filter((t) => t.trend === 'down').length;
-
-    if (upTrends > 7) return 'exponential';
-    if (downTrends > 7) return 'declining';
-    if (upTrends < 3 && downTrends < 3) return 'plateau';
-    return 'linear';
+    return determineGrowthType(trends);
   }
 
   private projectGrowth(trends: TrendPoint[]): GrowthProjection {
-    if (trends.length < 2) {
-      return {
-        method: 'linear',
-        projectedUsers: 0,
-        projectionDate: new Date(),
-        confidenceInterval: { lower: 0, upper: 0 },
-      };
-    }
-
-    // Simple linear projection
-    const recentTrends = trends.slice(-30); // Last 30 days
-    const avgDailyGrowth =
-      recentTrends.length > 1
-        ? (recentTrends[recentTrends.length - 1].value - recentTrends[0].value) /
-          recentTrends.length
-        : 0;
-
-    const projectionDate = new Date();
-    projectionDate.setDate(projectionDate.getDate() + 30); // 30 days ahead
-
-    const currentValue = trends[trends.length - 1].value;
-    const projectedUsers = Math.round(currentValue + avgDailyGrowth * 30);
-
-    return {
-      method: 'linear',
-      projectedUsers,
-      projectionDate,
-      confidenceInterval: {
-        lower: Math.round(projectedUsers * 0.8),
-        upper: Math.round(projectedUsers * 1.2),
-      },
-      accuracy: 85,
-    };
+    return projectGrowth(trends);
   }
 
   private identifySeasonality(trends: TrendPoint[]): SeasonalityPattern[] {
-    // Simplified seasonality detection
-    return [
-      {
-        pattern: 'weekly',
-        peakPeriods: ['Monday', 'Wednesday'],
-        averageVariance: 15,
-      },
-    ];
+    return identifySeasonality(trends);
   }
 
   private calculateRecencyScore(lastActivity: Date): number {
-    const daysSince = (Date.now() - new Date(lastActivity).getTime()) / (24 * 60 * 60 * 1000);
-    return Math.max(0, 100 - daysSince * 3); // Lose 3 points per day
+    return calculateRecencyScore(lastActivity);
   }
 
   private calculateLoyaltyScore(user: any): number {
-    const accountAgeDays =
-      (Date.now() - new Date(user.created_at).getTime()) / (24 * 60 * 60 * 1000);
-    return Math.min((accountAgeDays / 365) * 100, 100); // 100 points at 1 year
+    return calculateLoyaltyScore(user);
   }
 
   private calculateAccountAge(user: any): number {
-    return (Date.now() - new Date(user.created_at).getTime()) / (24 * 60 * 60 * 1000);
+    return calculateAccountAge(user);
   }
 
   private async getRecentActivitySummary(): Promise<RecentActivitySummary[]> {
@@ -2011,24 +1932,11 @@ export class UserAnalyticsService implements IUserAnalyticsService {
   }
 
   private formatAsCSV(data: any[]): string {
-    // Simple CSV formatting
-    const rows: string[] = [];
-
-    // Add headers
-    if (data.length > 0) {
-      rows.push(Object.keys(data[0]).join(','));
-    }
-
-    // Add data rows
-    data.forEach((item) => {
-      rows.push(Object.values(item).join(','));
-    });
-
-    return rows.join('\n');
+    return formatAsCSV(data);
   }
 
   private generateExportId(): string {
-    return `export-${Date.now()}-${crypto.randomUUID().replace(/-/g, '').substring(0, 12)}`;
+    return generateExportId();
   }
 
   private async aggregateUserActivity(startDate: Date, endDate: Date): Promise<void> {

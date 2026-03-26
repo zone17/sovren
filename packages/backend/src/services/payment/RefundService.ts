@@ -1,4 +1,14 @@
 // @ts-nocheck
+// TODO(SOV-REFACTOR-003): This file is 1804 lines. Decompose into:
+// - RefundAuthorizationService (requestAuthorization, authorizeRefund, denyRefund, requiresAuthorization — ~150 lines)
+// - RefundProcessingService (processRefund, processLightningRefund, processOnchainRefund, retryRefund,
+//   processAutomaticRefund, scheduleAutomaticRefund — ~250 lines)
+// - RefundFraudService (detectFraud, hasSuspiciousRefundPattern, checkRateLimit — ~100 lines)
+// - RefundBatchService (createBatchRefund, processBatchRefund, getBatchRefund — ~100 lines)
+// - RefundAnalyticsService (getRefundStatistics, getRefundAnalytics, calculateRefundRate, getTopRefundReasons — ~150 lines)
+// - RefundIdempotencyService (checkIdempotency, storeIdempotency, clearExpiredIdempotency — ~60 lines)
+// Keep RefundService as a thin façade orchestrating the above; the in-memory InMemoryRefundRepository (~200 lines at top)
+// should move to a dedicated repository file under repositories/refund/.
 /**
  * RefundService Implementation
  * User Story: US-E5-027

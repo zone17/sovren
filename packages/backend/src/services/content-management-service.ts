@@ -24,6 +24,7 @@ import type {
 } from '../types/content';
 import { ValidationError, NotFoundError, ConflictError, ServiceError } from '../utils/errors';
 import { escapePostgrestFilter } from '../utils/escapePostgrestFilter';
+import { applyCursorFilter, buildCursorPageInfo } from '../utils/cursor-pagination';
 
 interface ContentManagementServiceConfig {
   supabaseUrl: string;
@@ -147,21 +148,49 @@ export class ContentManagementService {
   }
 
   /**
-   * Get content items with filtering and pagination
+   * Get content items with filtering and pagination.
+   *
+   * Supports two pagination modes:
+   *
+   * 1. **Cursor-based** (preferred for live feeds) — pass `cursor` (and optionally
+   *    `direction`) to get a stable, consistent page even as new rows are inserted.
+   *    Returns `{ items, pagination: { nextCursor, prevCursor, hasNextPage } }`.
+   *
+   * 2. **Offset-based** (kept for admin / analytics endpoints that need absolute
+   *    positioning) — pass `page` + `limit` (no `cursor`).
+   *    Returns `{ items, total, page, limit }`.
+   *
+   * When `cursor` is present, cursor mode takes precedence and `page` is ignored.
    */
   async getContentItems(
     params: {
-      page?: number;
+      // Shared
       limit?: number;
       content_type?: string;
       status?: string;
       author_id?: string;
       tags?: string[];
       search?: string;
+      // Offset pagination
+      page?: number;
       sort_by?: 'created_at' | 'updated_at' | 'title' | 'view_count';
       sort_order?: 'asc' | 'desc';
+      // Cursor pagination
+      cursor?: string;
+      direction?: 'next' | 'prev';
     } = {}
-  ): Promise<{ items: ContentItem[]; total: number; page: number; limit: number }> {
+  ): Promise<
+    | { items: ContentItem[]; total: number; page: number; limit: number }
+    | {
+        items: ContentItem[];
+        pagination: {
+          nextCursor: string | null;
+          prevCursor: string | null;
+          hasNextPage: boolean;
+        };
+        limit: number;
+      }
+  > {
     const {
       page = 1,
       limit = 20,
@@ -172,11 +201,13 @@ export class ContentManagementService {
       search,
       sort_by = 'created_at',
       sort_order = 'desc',
+      cursor,
+      direction = 'next',
     } = params;
 
     let query = this.supabase.from('content_items').select('*', { count: 'exact' });
 
-    // Apply filters
+    // Apply shared filters
     if (content_type) query = query.eq('content_type', content_type);
     if (status) query = query.eq('status', status);
     if (author_id) query = query.eq('author_id', author_id);
@@ -186,10 +217,39 @@ export class ContentManagementService {
       query = query.or(`title.ilike.%${escaped}%,excerpt.ilike.%${escaped}%`);
     }
 
-    // Apply sorting
-    query = query.order(sort_by, { ascending: sort_order === 'asc' });
+    // ---- Cursor pagination (live feeds) ----
+    // Activate when `cursor` key is explicitly passed (even as undefined for first page)
+    // or when `direction` is provided without a page number.
+    if ('cursor' in params) {
+      query = applyCursorFilter(query, cursor, direction);
+      query = query.limit(limit);
 
-    // Apply pagination
+      const { data, error } = await query;
+      if (error) throw new ServiceError(`Failed to fetch content: ${error.message}`);
+
+      const items: ContentItem[] = data || [];
+      const pageInfo = buildCursorPageInfo(
+        items as Array<{ created_at: string; id: string }>,
+        limit,
+        direction
+      );
+
+      // When paginating backward the rows come back oldest-first; reverse to newest-first
+      const orderedItems = direction === 'prev' ? [...items].reverse() : items;
+
+      return {
+        items: orderedItems,
+        pagination: {
+          nextCursor: pageInfo.nextCursor,
+          prevCursor: pageInfo.prevCursor,
+          hasNextPage: pageInfo.hasNextPage,
+        },
+        limit,
+      };
+    }
+
+    // ---- Offset pagination (admin / analytics — absolute positioning) ----
+    query = query.order(sort_by, { ascending: sort_order === 'asc' });
     const offset = (page - 1) * limit;
     query = query.range(offset, offset + limit - 1);
 

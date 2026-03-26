@@ -15,11 +15,23 @@ import { z } from 'zod';
  */
 
 // 🔧 Database Configuration Schema
+/**
+ * POOLING NOTE: Supabase uses PgBouncer for automatic connection pooling.
+ *
+ * - PostgREST (HTTP API) handles pooling transparently via server-side PgBouncer.
+ * - The Supabase JS client does NOT accept connection pool parameters.
+ * - maxConnections and connectionTimeout below are PARSED but NOT USED.
+ *
+ * These parameters exist for historical reasons and should be removed in a future
+ * refactor unless the backend switches to raw `pg` client connections (not planned).
+ *
+ * For details, see docs/infrastructure/SUPABASE_POOLING.md
+ */
 const DatabaseConfigSchema = z.object({
   supabaseUrl: z.string().url('Invalid Supabase URL'),
   supabaseKey: z.string().min(1, 'Supabase anon key is required'),
-  maxConnections: z.number().min(1).max(100).default(20),
-  connectionTimeout: z.number().min(1000).max(30000).default(10000),
+  maxConnections: z.number().min(1).max(100).default(20), // ⚠️ UNUSED: Supabase handles pooling
+  connectionTimeout: z.number().min(1000).max(30000).default(10000), // ⚠️ UNUSED: HTTP requests are stateless
 });
 
 export type DatabaseConfig = z.infer<typeof DatabaseConfigSchema>;
