@@ -16,14 +16,14 @@ runs:
       run: echo "version=$(cat .nvmrc)" >> $GITHUB_OUTPUT
 
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
       with:
         node-version: ${{ steps.nvmrc.outputs.version }}
 
     - name: Cache node_modules
       if: inputs.install-deps == 'true'
       id: cache
-      uses: actions/cache@v4
+      uses: actions/cache@d4323d4df104b026a6aa633fce6c52ec4527e2af # v4.2.2
       with:
         path: |
           node_modules

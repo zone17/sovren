@@ -29,6 +29,11 @@ interface ICacheProvider {
   delete(key: string): Promise<boolean>;
   exists(key: string): Promise<boolean>;
   keys(pattern: string): Promise<string[]>;
+  /**
+   * Non-blocking key scan that yields keys in batches via an async generator.
+   * Implementations backed by Redis use SCAN so the server is never blocked.
+   */
+  scanKeys(pattern: string): AsyncGenerator<string>;
   ttl(key: string): Promise<number>;
   expire(key: string, ttl: number): Promise<boolean>;
   flush(): Promise<void>;
@@ -79,6 +84,18 @@ class RedisCacheProvider implements ICacheProvider {
       keys.push(...batch);
     } while (cursor !== '0');
     return keys;
+  }
+
+  async *scanKeys(pattern: string): AsyncGenerator<string> {
+    // Use ioredis scanStream for non-blocking, streaming key iteration.
+    // Keys are yielded in batches of ~100 so callers can process/delete as
+    // they go rather than buffering the entire result set in memory.
+    const stream = this.client.scanStream({ match: pattern, count: 100 });
+    for await (const batch of stream) {
+      for (const key of batch as string[]) {
+        yield key;
+      }
+    }
   }
 
   async ttl(key: string): Promise<number> {
@@ -157,6 +174,13 @@ class InMemoryCacheProvider implements ICacheProvider {
   async keys(pattern: string): Promise<string[]> {
     const regex = new RegExp(pattern.replace('*', '.*'));
     return Array.from(this.store.keys()).filter((key) => regex.test(key));
+  }
+
+  async *scanKeys(pattern: string): AsyncGenerator<string> {
+    const regex = new RegExp(pattern.replace('*', '.*'));
+    for (const key of this.store.keys()) {
+      if (regex.test(key)) yield key;
+    }
   }
 
   async ttl(key: string): Promise<number> {
@@ -345,10 +369,10 @@ export class CacheService implements ICacheService {
   async invalidate(pattern: string): Promise<number> {
     try {
       const prefixedPattern = this.getPrefixedKey(pattern);
-      const keys = await this.provider.keys(prefixedPattern);
 
+      // Use SCAN-based streaming iteration instead of KEYS to avoid blocking Redis
       let count = 0;
-      for (const key of keys) {
+      for await (const key of this.provider.scanKeys(prefixedPattern)) {
         if (await this.provider.delete(key)) {
           count++;
         }
@@ -659,9 +683,9 @@ export class CacheService implements ICacheService {
   private async removeTags(key: string): Promise<void> {
     // In production, would maintain reverse index for efficiency
     const tagPattern = `${this.config.prefix}:tags:*`;
-    const tagKeys = await this.provider.keys(tagPattern);
 
-    for (const tagKey of tagKeys) {
+    // Use SCAN-based streaming iteration instead of KEYS to avoid blocking Redis
+    for await (const tagKey of this.provider.scanKeys(tagPattern)) {
       const existing = await this.provider.get(tagKey);
       if (!existing) continue;
 

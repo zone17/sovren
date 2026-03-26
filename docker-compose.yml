@@ -297,7 +297,7 @@ services:
       - NODE_ENV=development
       - PORT=3000
       - JWT_SECRET_FILE=/run/secrets/mcp_jwt_secret
-      - ADMIN_PASSWORD=${MCP_ADMIN_PASSWORD:-admin123}
+      - ADMIN_PASSWORD=${MCP_ADMIN_PASSWORD:?MCP_ADMIN_PASSWORD required}
       - ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3001
     volumes:
       # Configuration
@@ -389,7 +389,7 @@ services:
     ports:
       - '3000:3000'
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:?GRAFANA_PASSWORD required}
       - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
     volumes:
       # Data persistence

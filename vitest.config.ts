@@ -161,6 +161,10 @@ export default defineConfig({
         // Baseline — ratchet up after Phase 4 test recovery
         lines: 10,
         branches: 5,
+        // Per-file thresholds for critical payment services
+        'packages/backend/src/services/payment/**': {
+          lines: 80,
+        },
       },
     },
     // Reporter

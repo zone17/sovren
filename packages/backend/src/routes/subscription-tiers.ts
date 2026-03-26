@@ -11,6 +11,7 @@
 import express from 'express';
 import { z } from 'zod';
 import { authenticate } from '../middleware/auth';
+import { asyncHandler } from '../middleware/error-handler-middleware';
 import { validateRequest } from '../middleware/validation-middleware';
 import { SubscriptionManagementService } from '../services/subscription-management-service';
 import { LightningPaymentService } from '../services/lightning-payment-service';
@@ -49,7 +50,7 @@ const UpdateTierSchema = CreateTierSchema.partial().extend({
  * Create a new subscription tier for the authenticated creator
  * US-003: Subscription tier management
  */
-router.post('/tiers', authenticate, validateRequest(CreateTierSchema), async (req, res) => {
+router.post('/tiers', authenticate, validateRequest(CreateTierSchema), asyncHandler(async (req, res) => {
   try {
     // Verify user is a creator
     if (req.user?.role !== 'creator') {
@@ -86,13 +87,13 @@ router.post('/tiers', authenticate, validateRequest(CreateTierSchema), async (re
       code: 'INTERNAL_ERROR',
     });
   }
-});
+}));
 
 /**
  * GET /api/subscriptions/tiers
  * Get all subscription tiers for the authenticated creator
  */
-router.get('/tiers', authenticate, async (req, res) => {
+router.get('/tiers', authenticate, asyncHandler(async (req, res) => {
   try {
     const creatorId = (req.query.creator_id as string) || req.user?.id || req.user?.nostr_pubkey;
 
@@ -121,13 +122,13 @@ router.get('/tiers', authenticate, async (req, res) => {
       code: 'INTERNAL_ERROR',
     });
   }
-});
+}));
 
 /**
  * GET /api/subscriptions/tiers/:id
  * Get a specific subscription tier by ID
  */
-router.get('/tiers/:id', async (req, res) => {
+router.get('/tiers/:id', asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -153,13 +154,13 @@ router.get('/tiers/:id', async (req, res) => {
       code: 'INTERNAL_ERROR',
     });
   }
-});
+}));
 
 /**
  * PUT /api/subscriptions/tiers/:id
  * Update a subscription tier
  */
-router.put('/tiers/:id', authenticate, validateRequest(UpdateTierSchema), async (req, res) => {
+router.put('/tiers/:id', authenticate, validateRequest(UpdateTierSchema), asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -197,13 +198,13 @@ router.put('/tiers/:id', authenticate, validateRequest(UpdateTierSchema), async 
       code: 'INTERNAL_ERROR',
     });
   }
-});
+}));
 
 /**
  * DELETE /api/subscriptions/tiers/:id
  * Delete a subscription tier (soft delete - marks as inactive)
  */
-router.delete('/tiers/:id', authenticate, async (req, res) => {
+router.delete('/tiers/:id', authenticate, asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -255,13 +256,13 @@ router.delete('/tiers/:id', authenticate, async (req, res) => {
       code: 'INTERNAL_ERROR',
     });
   }
-});
+}));
 
 /**
  * GET /api/subscriptions/tiers/:id/subscribers
  * Get subscribers for a specific tier
  */
-router.get('/tiers/:id/subscribers', authenticate, async (req, res) => {
+router.get('/tiers/:id/subscribers', authenticate, asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
     const { page = 1, limit = 50 } = req.query;
@@ -312,13 +313,13 @@ router.get('/tiers/:id/subscribers', authenticate, async (req, res) => {
       code: 'INTERNAL_ERROR',
     });
   }
-});
+}));
 
 /**
  * POST /api/subscriptions/subscribe
  * Subscribe to a tier as a supporter
  */
-router.post('/subscribe', authenticate, async (req, res) => {
+router.post('/subscribe', authenticate, asyncHandler(async (req, res) => {
   try {
     const { tier_id } = req.body;
 
@@ -359,13 +360,13 @@ router.post('/subscribe', authenticate, async (req, res) => {
       code: 'INTERNAL_ERROR',
     });
   }
-});
+}));
 
 /**
  * GET /api/subscriptions/my-subscriptions
  * Get current user's active subscriptions
  */
-router.get('/my-subscriptions', authenticate, async (req, res) => {
+router.get('/my-subscriptions', authenticate, asyncHandler(async (req, res) => {
   try {
     const userId = req.user?.id || req.user?.nostr_pubkey;
 
@@ -386,6 +387,6 @@ router.get('/my-subscriptions', authenticate, async (req, res) => {
       code: 'INTERNAL_ERROR',
     });
   }
-});
+}));
 
 export default router;

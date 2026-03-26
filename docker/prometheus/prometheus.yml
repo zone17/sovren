@@ -63,7 +63,7 @@ scrape_configs:
       - targets: ['backend:3001']
     metrics_path: '/metrics'
     # Production: uncomment and set token matching METRICS_AUTH_TOKEN
-    # bearer_token_file: /etc/prometheus/secrets/metrics-token
+    bearer_token_file: /run/secrets/metrics_token
 
   # System metrics
   - job_name: 'prometheus'

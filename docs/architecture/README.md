@@ -50,7 +50,7 @@ Complete system architecture showing all 29 services organized by domain:
 
 **View Diagram:**
 
-- **GitHub Render:** ![System Architecture](https://github.com/YOUR_USERNAME/Sovren/blob/main/docs/architecture/diagrams/system-architecture-overview.mmd)
+- **GitHub Render:** ![System Architecture](https://github.com/zone17/Sovren/blob/main/docs/architecture/diagrams/system-architecture-overview.mmd)
 - **Edit Online:** [Mermaid Live Editor](https://mermaid.live/edit#pako:eNpVjk...) _(Copy diagram content to editor)_
 
 **Key Characteristics:**

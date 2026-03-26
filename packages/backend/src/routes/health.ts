@@ -6,6 +6,7 @@ import { container } from '../container';
 import { TYPES } from '../container/types';
 import { authenticate, authorize } from '../middleware/auth';
 import { supabase } from '../config/supabase';
+import { isShuttingDown } from '../server';
 
 const router = Router();
 
@@ -74,6 +75,15 @@ router.get('/health', (req: Request, res: Response) => {
 // Returns 200 ready/degraded when DB is healthy. Only returns 503 when DB is down.
 // Redis is non-critical: app degrades gracefully without it (in-memory fallback).
 router.get('/ready', async (req: Request, res: Response) => {
+  // During graceful shutdown, signal to load balancers that this instance should
+  // stop receiving new traffic immediately.
+  if (isShuttingDown) {
+    return res.status(503).json({
+      status: 'shutting-down',
+      timestamp: new Date().toISOString(),
+    });
+  }
+
   try {
     const dbHealth = await checkDatabase();
     const redisHealth = await checkRedis();
@@ -180,6 +190,13 @@ router.get(
 // Readiness probe for Kubernetes
 // Same degradation logic: Redis down = degraded (200), DB down = not-ready (503)
 router.get('/health/ready', async (req: Request, res: Response) => {
+  if (isShuttingDown) {
+    return res.status(503).json({
+      status: 'shutting-down',
+      timestamp: new Date().toISOString(),
+    });
+  }
+
   try {
     const dbHealth = await checkDatabase();
     const redisHealth = await checkRedis();

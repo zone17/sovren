@@ -727,21 +727,4 @@ router.get('/config', authenticate, async (req, res) => {
   }
 });
 
-// =====================================================
-// ERROR HANDLING MIDDLEWARE
-// =====================================================
-
-router.use((error: any, req: any, res: any, next: any) => {
-  console.error('AI Enhanced Features API Error:', error);
-
-  res.status(500).json({
-    success: false,
-    error: {
-      code: 'AI_SERVICE_ERROR',
-      message: 'An error occurred in AI enhanced features service',
-      timestamp: new Date().toISOString(),
-    },
-  });
-});
-
 export default router;

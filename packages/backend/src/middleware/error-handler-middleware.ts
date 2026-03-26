@@ -5,6 +5,7 @@
  * Provides consistent error response format and logging
  */
 
+import crypto from 'crypto';
 import { NextFunction, Request, Response } from 'express';
 import { ZodError } from 'zod';
 import { getCorrelationId } from './correlation-id';
@@ -224,7 +225,7 @@ function logError(error: Error | AppError, req: Request, requestId: string): voi
   // Capture to Sentry with correlation context
   Sentry.withScope((scope) => {
     scope.setTag('correlationId', requestId);
-    scope.setExtra('url', req.url);
+    scope.setExtra('url', req.path); // Use path, not full URL — query params may contain PII
     scope.setExtra('method', req.method);
     Sentry.captureException(error);
   });
@@ -241,10 +242,10 @@ function logError(error: Error | AppError, req: Request, requestId: string): voi
         isOperational: error.isOperational,
       }),
     },
-    url: req.url,
+    url: req.path, // path only — query params may contain PII
     method: req.method,
     ip: req.ip,
-    user: req.user?.nostr_pubkey,
+    user: crypto.createHash('sha256').update(req.user?.nostr_pubkey || '').digest('hex').slice(0, 8),
   };
 
   if (error instanceof AppError && error.isOperational) {

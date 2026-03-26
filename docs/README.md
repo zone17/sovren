@@ -13,17 +13,17 @@ This directory contains comprehensive documentation for the Sovren platform, fol
 
 ### **🏗️ Unified CMS Architecture**
 
-- **[📊 View on GitHub](https://github.com/your-org/sovren/blob/main/docs/architecture/diagrams/us-216-unified-cms-architecture.mmd)** - Auto-rendered visual
+- **[📊 View on GitHub](https://github.com/zone17/sovren/blob/main/docs/architecture/diagrams/us-216-unified-cms-architecture.mmd)** - Auto-rendered visual
 - **[📁 Source File](architecture/diagrams/us-216-unified-cms-architecture.mmd)** - Raw Mermaid code
 
 ### **🔄 Consolidation Process**
 
-- **[📊 View on GitHub](https://github.com/your-org/sovren/blob/main/docs/architecture/diagrams/us-216-consolidation-process.mmd)** - Auto-rendered visual
+- **[📊 View on GitHub](https://github.com/zone17/sovren/blob/main/docs/architecture/diagrams/us-216-consolidation-process.mmd)** - Auto-rendered visual
 - **[📁 Source File](architecture/diagrams/us-216-consolidation-process.mmd)** - Raw Mermaid code
 
 ### **🧪 Test Coverage Strategy**
 
-- **[📊 View on GitHub](https://github.com/your-org/sovren/blob/main/docs/architecture/diagrams/us-216-test-coverage.mmd)** - Auto-rendered visual
+- **[📊 View on GitHub](https://github.com/zone17/sovren/blob/main/docs/architecture/diagrams/us-216-test-coverage.mmd)** - Auto-rendered visual
 - **[📁 Source File](architecture/diagrams/us-216-test-coverage.mmd)** - Raw Mermaid code
 
 ## 📊 **Validation Reports**
@@ -44,9 +44,9 @@ This directory contains comprehensive documentation for the Sovren platform, fol
 
 ### **Troubleshooting Decision Trees**
 
-- **[📊 Payment Issue Decision Tree](https://github.com/your-org/sovren/blob/main/docs/architecture/diagrams/troubleshooting/payment-issue-decision-tree.mmd)** - Visual diagnostic flow for payment issues
-- **[📊 Payment Stuck Pending Flow](https://github.com/your-org/sovren/blob/main/docs/architecture/diagrams/troubleshooting/payment-stuck-pending-flow.mmd)** - Detailed resolution for stuck payments
-- **[📊 Webhook Troubleshooting Flow](https://github.com/your-org/sovren/blob/main/docs/architecture/diagrams/troubleshooting/webhook-troubleshooting-flow.mmd)** - Complete webhook debugging guide
+- **[📊 Payment Issue Decision Tree](https://github.com/zone17/sovren/blob/main/docs/architecture/diagrams/troubleshooting/payment-issue-decision-tree.mmd)** - Visual diagnostic flow for payment issues
+- **[📊 Payment Stuck Pending Flow](https://github.com/zone17/sovren/blob/main/docs/architecture/diagrams/troubleshooting/payment-stuck-pending-flow.mmd)** - Detailed resolution for stuck payments
+- **[📊 Webhook Troubleshooting Flow](https://github.com/zone17/sovren/blob/main/docs/architecture/diagrams/troubleshooting/webhook-troubleshooting-flow.mmd)** - Complete webhook debugging guide
 
 ## 🔧 **Development Guidelines**
 

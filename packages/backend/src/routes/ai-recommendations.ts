@@ -556,17 +556,4 @@ router.get('/health', async (req: Request, res: Response) => {
   }
 });
 
-// ===== Error Handling Middleware =====
-
-router.use((error: any, req: Request, res: Response, next: NextFunction) => {
-  console.error('AI Recommendations API Error:', error);
-
-  res.status(error.status || 500).json({
-    success: false,
-    error: error.message || 'Internal server error',
-    code: error.code || 'INTERNAL_ERROR',
-    ...(process.env.NODE_ENV === 'development' && { stack: error.stack }),
-  });
-});
-
 export default router;

@@ -22,6 +22,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
 import { getClientIP } from '../utils/client-ip';
+import { createRateLimiter } from '../middleware/rate-limit-middleware';
 import { PaymentStateMachine } from '../services/payment/PaymentStateMachine';
 import { createClient } from '@supabase/supabase-js';
 import {
@@ -54,52 +55,10 @@ if (
 const WEBHOOK_SECRET_ROTATION = process.env.WEBHOOK_SECRET_ROTATION || '';
 const WEBHOOK_TIMESTAMP_TOLERANCE = 300; // 5 minutes in seconds
 
-// Rate limiting configuration
-const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
-const RATE_LIMIT_WINDOW_MS = 60000; // 1 minute
-const RATE_LIMIT_MAX_REQUESTS = 100;
-
-// getClientIP imported from '../utils/client-ip'
-
-/**
- * Rate Limiting Middleware for Webhooks
- * Limits webhooks to 100 requests per minute per IP address
- */
-function rateLimitWebhook(req: Request, res: Response, next: NextFunction) {
-  const clientIp = getClientIP(req);
-  const now = Date.now();
-
-  // Get or create rate limit entry for this IP
-  let limitEntry = rateLimitStore.get(clientIp);
-
-  // Reset counter if window has expired
-  if (!limitEntry || now > limitEntry.resetTime) {
-    limitEntry = {
-      count: 0,
-      resetTime: now + RATE_LIMIT_WINDOW_MS,
-    };
-    rateLimitStore.set(clientIp, limitEntry);
-  }
-
-  // Increment request count
-  limitEntry.count++;
-
-  // Check if limit exceeded
-  if (limitEntry.count > RATE_LIMIT_MAX_REQUESTS) {
-    console.error(
-      `[WEBHOOK SECURITY] Rate limit exceeded for IP: ${clientIp}, ` +
-        `Requests: ${limitEntry.count}/${RATE_LIMIT_MAX_REQUESTS}`
-    );
-
-    return res.status(429).json({
-      success: false,
-      error: 'Rate limit exceeded',
-      retryAfter: Math.ceil((limitEntry.resetTime - now) / 1000),
-    });
-  }
-
-  next();
-}
+// Rate limiting: 100 requests per minute per IP using the shared rate-limit-middleware.
+// Replaces the former in-memory rateLimitStore Map to ensure distributed correctness
+// across multiple instances (Redis-backed when available, in-memory fallback otherwise).
+const rateLimitWebhook = createRateLimiter({ windowMs: 60000, max: 100 });
 
 /**
  * Timing-safe HMAC comparison to prevent timing attacks.

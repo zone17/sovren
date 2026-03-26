@@ -192,13 +192,44 @@ export class SessionService {
       }
 
       // Enrich sessions with additional metadata
-      const enrichedSessions = await Promise.all(
-        data.map(async (session) => ({
+      // is_current: determined in-memory — most recent session (already sorted desc) is current
+      const currentSessionId = data.length > 0 ? data[0].id : null;
+
+      // Batch-load activity summaries in a single query instead of N individual calls
+      const sessionIds = data.map((s) => s.id);
+      const { data: activityRows } = await this.database.client
+        .from('session_activity')
+        .select('session_id, activity_type, timestamp')
+        .in('session_id', sessionIds)
+        .order('timestamp', { ascending: false });
+
+      // Group activity rows by session_id for in-memory join
+      const activityBySession = new Map<string, typeof activityRows>();
+      for (const row of activityRows ?? []) {
+        const existing = activityBySession.get(row.session_id) ?? [];
+        existing.push(row);
+        activityBySession.set(row.session_id, existing);
+      }
+
+      const enrichedSessions = data.map((session) => {
+        const rows = activityBySession.get(session.id) ?? [];
+        const lastRow = rows[0]; // already ordered desc by timestamp
+        const activityCounts: Record<string, number> = {};
+        for (const r of rows) {
+          activityCounts[r.activity_type] = (activityCounts[r.activity_type] ?? 0) + 1;
+        }
+        const mostCommon = Object.entries(activityCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'api_call';
+
+        return {
           ...session,
-          is_current: await this.isCurrentSession(session.id, userId),
-          activity_summary: await this.getSessionActivitySummary(session.id),
-        }))
-      );
+          is_current: session.id === currentSessionId,
+          activity_summary: {
+            total_activities: rows.length,
+            last_api_call: lastRow?.timestamp ?? new Date().toISOString(),
+            most_common_activity: mostCommon,
+          },
+        };
+      });
 
       return { success: true, sessions: enrichedSessions };
     } catch (error) {

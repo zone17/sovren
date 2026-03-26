@@ -33,7 +33,7 @@ jobs:
       frontend: ${{ steps.filter.outputs.frontend }}
       shared: ${{ steps.filter.outputs.shared }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - uses: dorny/paths-filter@v3
         id: filter
         with:
@@ -55,7 +55,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
 
@@ -101,7 +101,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
 
@@ -181,7 +181,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - uses: ./.github/actions/setup-node
 
       - name: npm audit (production dependencies)
@@ -225,7 +225,7 @@ jobs:
           - 5432:5432
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Validate migration filenames (timestamp ordering)
         run: |
@@ -324,7 +324,7 @@ jobs:
           - 5432:5432
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - uses: ./.github/actions/setup-node
 
       - name: Backend unit tests
@@ -334,7 +334,7 @@ jobs:
 
       - name: Upload coverage
         if: always()
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@1e68e06f1dbfde0e4cefc87efeba9e4643565303 # v5.1.2
         with:
           files: ./coverage/lcov.info
           flags: backend
@@ -351,7 +351,7 @@ jobs:
     if: needs.changes.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch'
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - uses: ./.github/actions/setup-node
 
       - name: Frontend unit tests
@@ -361,7 +361,7 @@ jobs:
 
       - name: Upload coverage
         if: always()
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@1e68e06f1dbfde0e4cefc87efeba9e4643565303 # v5.1.2
         with:
           files: ./coverage/lcov.info
           flags: frontend
@@ -376,10 +376,12 @@ jobs:
     timeout-minutes: 30
     needs: [changes, lint, typecheck, security]
     if: needs.changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
-    # Graduated from advisory to blocking — integration suite is stable.
+    # Graduation criteria (continue-on-error removal): 10 consecutive green runs on main
+    # with no flaky test retries. Track via CI run history before permanently removing
+    # continue-on-error if it is re-added. Current status: blocking (stable).
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - uses: ./.github/actions/setup-node
 
       - name: Pre-pull test container images
@@ -439,7 +441,7 @@ jobs:
     needs: [test-gate]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - uses: ./.github/actions/setup-node
 
       - name: Build frontend
@@ -467,7 +469,7 @@ jobs:
           fi
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
         with:
           name: frontend-dist
           path: packages/frontend/dist
@@ -481,14 +483,16 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: [build]
-    # Graduated from advisory to blocking — E2E fixtures are seeded in CI.
+    # Graduation criteria (continue-on-error removal): 10 consecutive green runs on main
+    # with no auth/fixture-related flakes. Track via CI run history before permanently
+    # removing continue-on-error if it is re-added. Current status: blocking (stable).
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - uses: ./.github/actions/setup-node
 
       - name: Download build artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@fa0a91b85d4f404e444fe0e9d68ff330a2a83b7a # v4.1.8
         with:
           name: frontend-dist
           path: packages/frontend/dist
@@ -521,7 +525,7 @@ jobs:
           E2E_SIGNUP_PASSWORD: ${{ secrets.E2E_SIGNUP_PASSWORD }}
 
       - name: Upload test results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
         if: failure()
         with:
           name: playwright-report
@@ -548,7 +552,7 @@ jobs:
       image_digest: ${{ steps.build.outputs.digest }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -585,6 +589,12 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Sign container image
+        run: cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
+
       - name: Trivy image scan (SARIF)
         uses: aquasecurity/trivy-action@0.31.0
         with:
@@ -615,7 +625,7 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - uses: supabase/setup-cli@v1
         with:
           version: latest
@@ -639,10 +649,10 @@ jobs:
       url: https://staging.sovren.dev
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Download build artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@fa0a91b85d4f404e444fe0e9d68ff330a2a83b7a # v4.1.8
         with:
           name: frontend-dist
           path: packages/frontend/dist
@@ -724,7 +734,7 @@ jobs:
       url: https://api-staging.sovren.dev
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Check SSH secrets
         id: ssh-check
@@ -812,10 +822,10 @@ jobs:
       url: https://sovren.dev
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Download build artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@fa0a91b85d4f404e444fe0e9d68ff330a2a83b7a # v4.1.8
         with:
           name: frontend-dist
           path: packages/frontend/dist
@@ -897,7 +907,7 @@ jobs:
       url: https://api.sovren.dev
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Check SSH secrets (production)
         id: ssh-check-prod
@@ -1024,7 +1034,7 @@ jobs:
       security-events: write
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - uses: ./.github/actions/setup-node
       - uses: github/codeql-action/init@v4
         with:
