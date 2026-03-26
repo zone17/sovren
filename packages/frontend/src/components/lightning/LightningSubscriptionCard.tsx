@@ -126,6 +126,7 @@ export const LightningSubscriptionCard: React.FC<LightningSubscriptionCardProps>
           </Button>
         ) : (
           <LightningPaymentButton
+            creatorId={creatorId}
             amount={tier.price}
             description={`${tier.interval.charAt(0).toUpperCase() + tier.interval.slice(1)} subscription to ${tier.name}`}
             buttonText={isProcessing ? 'Processing...' : `Subscribe with Lightning`}

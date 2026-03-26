@@ -111,7 +111,8 @@ export default defineConfig({
             '**/performance/payment-performance.test.ts',
             '**/production-docker.test.ts',
             '**/smoke-tests.test.ts',
-            '**/rls-security.test.ts',
+            // NOTE: rls-security.test.ts requires a real Supabase connection.
+            // Run it via the `test:integration` job (testcontainers) — not the unit suite.
           ],
           globalSetup: ['./test-utils/backend-global-setup.ts'],
           setupFiles: [
