@@ -1,4 +1,4 @@
-BEGIN;
+-- BEGIN removed: Supabase runs each migration in an implicit transaction
 
 -- creators table has follower_count but not following_count — add it
 ALTER TABLE creators ADD COLUMN IF NOT EXISTS following_count INTEGER DEFAULT 0;
@@ -46,4 +46,4 @@ UPDATE creators c SET
     follower_count = (SELECT COUNT(*) FROM followers f WHERE f.following_id = c.user_id),
     following_count = (SELECT COUNT(*) FROM followers f WHERE f.follower_id = c.user_id);
 
-COMMIT;
+-- COMMIT removed: Supabase runs each migration in an implicit transaction

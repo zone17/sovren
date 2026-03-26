@@ -1,4 +1,4 @@
-BEGIN;
+-- BEGIN removed: Supabase runs each migration in an implicit transaction
 
 CREATE TABLE IF NOT EXISTS notifications (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -54,4 +54,4 @@ BEGIN
     END IF;
 END $$;
 
-COMMIT;
+-- COMMIT removed: Supabase runs each migration in an implicit transaction

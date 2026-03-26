@@ -19,7 +19,7 @@
 -- how to audit them before enforcing NOT NULL in a follow-up migration.
 -- =============================================================================
 
-BEGIN;
+-- BEGIN removed: Supabase runs each migration in an implicit transaction
 
 -- ---------------------------------------------------------------------------
 -- 1. platform_connections
@@ -239,4 +239,4 @@ CREATE INDEX IF NOT EXISTS idx_platform_metrics_recorded
 -- Delete or reassign orphaned rows before applying this migration to production.
 -- ---------------------------------------------------------------------------
 
-COMMIT;
+-- COMMIT removed: Supabase runs each migration in an implicit transaction
