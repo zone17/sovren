@@ -455,10 +455,17 @@ export class CreatorRecommendationService {
 
       if (error) throw error;
 
+      // Batch-load all creator profiles in a single query (avoid N+1)
+      const recommendedIds = recommendations.map((r: any) => r.recommended_creator_id);
+      const { data: profiles } = await this.supabase
+        .from('creator_profiles')
+        .select('*')
+        .in('creator_id', recommendedIds);
+      const profileMap = new Map((profiles || []).map((p: any) => [p.creator_id, p]));
+
       // Format recommendations with detailed information
-      const formattedRecommendations = await Promise.all(
-        recommendations.map(async (rec: any) => {
-          const creatorProfile = await this.getCreatorProfile(rec.recommended_creator_id);
+      const formattedRecommendations = recommendations.map((rec: any) => {
+          const creatorProfile = profileMap.get(rec.recommended_creator_id) || null;
 
           return {
             recommendation: {

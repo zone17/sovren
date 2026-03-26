@@ -315,7 +315,7 @@ export const AppConfig = {
 
   // API limits
   rateLimitWindow: 15 * 60 * 1000, // 15 minutes
-  rateLimitMax: 1000,
+  rateLimitMax: 300,
   maxRequestSize: '1mb',
 
   // Performance
