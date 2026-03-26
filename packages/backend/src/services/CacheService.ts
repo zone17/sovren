@@ -19,6 +19,7 @@ import type {
 
 import * as Redis from 'ioredis';
 import { performance } from 'perf_hooks';
+import { cacheOperations } from '../middleware/deployment-monitoring';
 
 /**
  * Cache provider interface
@@ -278,10 +279,14 @@ export class CacheService implements ICacheService {
 
       if (!value) {
         this.logger.debug(`Cache miss: ${key}`);
+        cacheOperations.inc({ operation: 'get', result: 'miss' });
         return null;
       }
 
       this.logger.debug(`Cache hit: ${key}`);
+      cacheOperations.inc({ operation: 'get', result: 'hit' });
+      // NOTE: Supabase query instrumentation (dbQueryDuration, dbConnectionsActive) requires
+      // a wrapper around the Supabase client. Deferred to a dedicated instrumentation task.
 
       // Parse JSON value
       try {

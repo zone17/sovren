@@ -277,12 +277,12 @@ const SimpleContentEditor: React.FC<SimpleContentEditorProps> = ({
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     setTitle(e.target.value);
-    // TODO: Persist title changes via React Query mutation
+    // TODO(backlog): Persist title changes via React Query mutation
   };
 
   const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>): void => {
     setDescription(e.target.value);
-    // TODO: Persist description changes via React Query mutation
+    // TODO(backlog): Persist description changes via React Query mutation
   };
 
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>): void => {
@@ -302,7 +302,7 @@ const SimpleContentEditor: React.FC<SimpleContentEditorProps> = ({
     );
 
     setLocalBlocks([...textBlocks, ...nonTextBlocks]);
-    // TODO: Persist content block changes via React Query mutation
+    // TODO(backlog): Persist content block changes via React Query mutation
   };
 
   const addLightningBlock = useCallback((): void => {
@@ -316,7 +316,7 @@ const SimpleContentEditor: React.FC<SimpleContentEditorProps> = ({
       },
     };
     setLocalBlocks((prev) => [...prev, newBlock]);
-    // TODO: Persist new block via React Query mutation
+    // TODO(backlog): Persist new block via React Query mutation
   }, []);
 
   const addMediaBlock = useCallback((): void => {
@@ -330,7 +330,7 @@ const SimpleContentEditor: React.FC<SimpleContentEditorProps> = ({
       },
     };
     setLocalBlocks((prev) => [...prev, newBlock]);
-    // TODO: Persist new block via React Query mutation
+    // TODO(backlog): Persist new block via React Query mutation
   }, []);
 
   const updateBlock = useCallback((index: number, blockContent: ContentBlockMetadata): void => {
@@ -339,12 +339,12 @@ const SimpleContentEditor: React.FC<SimpleContentEditorProps> = ({
       updated[index] = { ...updated[index], content: blockContent };
       return updated;
     });
-    // TODO: Persist block update via React Query mutation
+    // TODO(backlog): Persist block update via React Query mutation
   }, []);
 
   const deleteBlock = useCallback((index: number): void => {
     setLocalBlocks((prev) => prev.filter((_, i) => i !== index));
-    // TODO: Persist block deletion via React Query mutation
+    // TODO(backlog): Persist block deletion via React Query mutation
   }, []);
 
   const formatText = (type: 'bold' | 'italic' | 'heading'): void => {

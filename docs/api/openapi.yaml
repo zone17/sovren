@@ -85,6 +85,12 @@ tags:
     description: User profiles, preferences, relationships, and activity tracking
   - name: Payments
     description: Lightning Network payments, invoices, subscriptions, and refunds
+  - name: Discovery
+    description: Public creator search and profile discovery (v2)
+  - name: Wellness
+    description: Creator wellness system — work patterns, burnout scoring, scheduling, boundaries (v2)
+  - name: Comments
+    description: Threaded comments and moderation on published content (v2)
 
 paths:
   # ============================================================================
@@ -1328,6 +1334,702 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+  # ============================================================================
+  # DISCOVERY API ENDPOINTS (v2) — /api/v2/discovery/*
+  # ============================================================================
+
+  /v2/discovery/creators:
+    get:
+      tags: [Discovery]
+      summary: Search creators
+      description: |
+        Public search for creator profiles with optional text query, category filter,
+        and sort order. Rate-limited (expensive operation limiter).
+      operationId: searchCreators
+      security: []
+      parameters:
+        - name: q
+          in: query
+          description: Search query (min 2, max 100 characters)
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 100
+        - name: category
+          in: query
+          description: Filter by creator category
+          schema:
+            type: string
+        - name: sortBy
+          in: query
+          description: Sort order for results
+          schema:
+            type: string
+            enum: [relevance, followers, newest]
+            default: relevance
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+      responses:
+        '200':
+          description: Creator search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      creators:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/UserProfileResponse'
+                      total:
+                        type: integer
+                      page:
+                        type: integer
+                      totalPages:
+                        type: integer
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+  /v2/discovery/creators/{id}:
+    get:
+      tags: [Discovery]
+      summary: Get creator profile
+      description: |
+        Retrieve an individual creator's public profile by UUID.
+        Returns 404 if not found or not a creator account.
+      operationId: getCreatorProfile
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Creator user UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Creator profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/UserProfileResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+  # ============================================================================
+  # WELLNESS API ENDPOINTS (v2) — /api/v2/wellness/*
+  # ============================================================================
+
+  /v2/wellness/patterns:
+    post:
+      tags: [Wellness]
+      summary: Record work pattern
+      description: Record a new work session pattern for the authenticated creator.
+      operationId: recordWorkPattern
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Work pattern data (validated by WellnessValidators.recordWorkPattern)
+      responses:
+        '201':
+          description: Work pattern recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+    get:
+      tags: [Wellness]
+      summary: Get work patterns
+      description: Retrieve work pattern history for the authenticated creator.
+      operationId: getWorkPatterns
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          description: Time window for patterns
+          schema:
+            type: string
+            enum: ['7d', '30d', '90d']
+            default: '30d'
+      responses:
+        '200':
+          description: Work patterns
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /v2/wellness/patterns/heatmap:
+    get:
+      tags: [Wellness]
+      summary: Get work pattern heatmap
+      description: Returns aggregated heatmap data showing activity distribution across hours/days.
+      operationId: getWorkPatternHeatmap
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: ['7d', '30d']
+            default: '30d'
+      responses:
+        '200':
+          description: Heatmap data
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v2/wellness/risk-score:
+    get:
+      tags: [Wellness]
+      summary: Get burnout risk score
+      description: Calculates and returns the creator's current burnout risk score.
+      operationId: getBurnoutRiskScore
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Burnout risk score
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      score:
+                        type: number
+                        minimum: 0
+                        maximum: 100
+                      level:
+                        type: string
+                        enum: [low, moderate, high, critical]
+                      factors:
+                        type: array
+                        items:
+                          type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /v2/wellness/risk-score/sensitivity:
+    put:
+      tags: [Wellness]
+      summary: Set burnout score sensitivity
+      description: Adjust the sensitivity level for burnout risk calculations.
+      operationId: setBurnoutSensitivity
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sensitivity]
+              properties:
+                sensitivity:
+                  type: string
+                  enum: [low, medium, high]
+      responses:
+        '200':
+          description: Sensitivity updated
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v2/wellness/schedule/recommendations:
+    get:
+      tags: [Wellness]
+      summary: Get scheduling recommendations
+      description: Returns AI-informed sustainable scheduling recommendations for the creator.
+      operationId: getScheduleRecommendations
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Scheduling recommendations
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v2/wellness/buffer-depth:
+    get:
+      tags: [Wellness]
+      summary: Get content buffer depth
+      description: Returns the creator's current scheduled content buffer depth.
+      operationId: getBufferDepth
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Buffer depth data
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v2/wellness/boundaries:
+    get:
+      tags: [Wellness]
+      summary: Get creator boundaries
+      description: Retrieve the creator's configured work/audience boundary settings.
+      operationId: getBoundaries
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Boundary settings
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    put:
+      tags: [Wellness]
+      summary: Update creator boundaries
+      description: Update the creator's work/audience boundary preferences.
+      operationId: updateBoundaries
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Boundary settings (validated by WellnessValidators.updateBoundaries)
+      responses:
+        '200':
+          description: Boundaries updated
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v2/wellness/pulse:
+    post:
+      tags: [Wellness]
+      summary: Record wellness pulse check-in
+      description: |
+        Record a daily wellness pulse check-in for the creator.
+        Enforced one-per-day via UNIQUE constraint — returns 409 on duplicate.
+      operationId: recordPulse
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Pulse check-in data (validated by WellnessValidators.recordPulse)
+      responses:
+        '201':
+          description: Pulse recorded
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: Conflict — pulse already recorded for today
+    delete:
+      tags: [Wellness]
+      summary: Delete pulse history
+      description: Delete all wellness pulse history for the authenticated creator (GDPR right-to-erasure).
+      operationId: deletePulseHistory
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Pulse history deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted_count:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v2/wellness/pulse/history:
+    get:
+      tags: [Wellness]
+      summary: Get pulse check-in history
+      description: Retrieve historical wellness pulse check-ins.
+      operationId: getPulseHistory
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: ['30d', '90d', 'all']
+            default: '30d'
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Pulse history
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v2/wellness/benchmark:
+    get:
+      tags: [Wellness]
+      summary: Get wellness benchmark
+      description: |
+        Returns anonymised community wellness benchmark data.
+        Requires minimum 10 participants to protect anonymity — returns null benchmark if threshold not met.
+        Accessible to all authenticated users (not creator-only).
+      operationId: getWellnessBenchmark
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Benchmark data (may be null if insufficient participants)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  benchmark:
+                    nullable: true
+                    type: object
+                  message:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v2/wellness/data:
+    delete:
+      tags: [Wellness]
+      summary: Delete all wellness data
+      description: Permanently delete all wellness data for the authenticated creator (GDPR right-to-erasure).
+      operationId: deleteAllWellnessData
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: All wellness data deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted:
+                    type: boolean
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ============================================================================
+  # COMMENTS API ENDPOINTS (v2) — /api/v2/comments/*
+  # ============================================================================
+
+  /v2/comments/{contentId}:
+    get:
+      tags: [Comments]
+      summary: List top-level comments
+      description: |
+        List top-level comments for a published content item.
+        Public endpoint — anonymous access allowed. Returns 404 for missing or non-published content.
+      operationId: listComments
+      security: []
+      parameters:
+        - name: contentId
+          in: path
+          required: true
+          description: UUID of the content item
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Paginated list of top-level comments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      comments:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                            author_pubkey:
+                              type: string
+                            body:
+                              type: string
+                            created_at:
+                              type: string
+                              format: date-time
+                            reply_count:
+                              type: integer
+                            status:
+                              type: string
+                              enum: [active, deleted, moderated]
+                      total:
+                        type: integer
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+    post:
+      tags: [Comments]
+      summary: Create comment
+      description: |
+        Create a top-level comment or reply on a published content item.
+        Requires authentication. Rate limited to 10 comments/minute per user.
+      operationId: createComment
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: contentId
+          in: path
+          required: true
+          description: UUID of the content item
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [body]
+              properties:
+                body:
+                  type: string
+                  minLength: 1
+                  maxLength: 5000
+                parent_comment_id:
+                  type: string
+                  format: uuid
+                  description: Set to create a reply; omit for top-level comment
+            examples:
+              top_level:
+                summary: Top-level comment
+                value:
+                  body: 'Great content, thanks for sharing!'
+              reply:
+                summary: Reply to a comment
+                value:
+                  body: 'Totally agree with this point.'
+                  parent_comment_id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+      responses:
+        '201':
+          description: Comment created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      body:
+                        type: string
+                      created_at:
+                        type: string
+                        format: date-time
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+  /v2/comments/{commentId}/replies:
+    get:
+      tags: [Comments]
+      summary: List replies to a comment
+      description: |
+        List replies to a specific top-level comment. Public endpoint — anonymous access allowed.
+        IMPORTANT: This route must be matched before /{contentId} in the router to avoid
+        the literal segment "replies" being captured as a contentId value.
+      operationId: listReplies
+      security: []
+      parameters:
+        - name: commentId
+          in: path
+          required: true
+          description: UUID of the parent comment
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Paginated list of replies
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+  /v2/comments/{commentId}:
+    delete:
+      tags: [Comments]
+      summary: Delete or moderate comment
+      description: |
+        Soft-delete a comment. Behavior depends on caller:
+        - Comment author: marks status as 'deleted'
+        - Content creator (owner of the post): marks status as 'moderated'
+        Requires authentication. Rate limited to 10 actions/minute per user.
+      operationId: deleteComment
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: commentId
+          in: path
+          required: true
+          description: UUID of the comment to delete or moderate
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Comment deleted (no content)
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/RateLimitExceeded'
 

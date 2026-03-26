@@ -508,8 +508,7 @@ export class CreatorRecommendationService {
             mutualConnections: [],
             recentContent: [],
           };
-        })
-      );
+        });
 
       return {
         userId: request.userId,

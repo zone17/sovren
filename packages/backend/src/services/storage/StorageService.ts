@@ -20,6 +20,7 @@ let supabaseClient: SupabaseClient | null = null;
 function getStorageClient(): SupabaseClient | null {
   if (supabaseClient) return supabaseClient;
   const url = process.env.SUPABASE_URL;
+  // Uses service role key — bypasses RLS. Only use for admin/background operations.
   const key = process.env.SUPABASE_SERVICE_KEY;
   if (url && key) {
     supabaseClient = createClient(url, key);

@@ -15,6 +15,7 @@ import { asyncHandler } from '../middleware/error-handler-middleware';
 import { validateRequest } from '../middleware/validation-middleware';
 import { SubscriptionManagementService } from '../services/subscription-management-service';
 import { LightningPaymentService } from '../services/lightning-payment-service';
+import logger from '../lib/logger';
 
 const router = express.Router();
 
@@ -24,7 +25,7 @@ function getSubscriptionService(): SubscriptionManagementService {
   if (!_subscriptionService) {
     const lightningService = new LightningPaymentService();
     lightningService.initialize().catch((err) => {
-      console.error('Failed to initialize LightningPaymentService:', err);
+      logger.error('Failed to initialize LightningPaymentService', { error: err });
     });
     _subscriptionService = new SubscriptionManagementService(lightningService);
   }
@@ -71,7 +72,7 @@ router.post('/tiers', authenticate, validateRequest(CreateTierSchema), asyncHand
       data: tier,
     });
   } catch (error: any) {
-    console.error('Failed to create subscription tier:', error);
+    logger.error('Failed to create subscription tier', { error });
 
     if (error.message?.includes('Maximum number of subscription tiers')) {
       return res.status(400).json({
@@ -115,7 +116,7 @@ router.get('/tiers', authenticate, asyncHandler(async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Failed to get subscription tiers:', error);
+    logger.error('Failed to get subscription tiers', { error });
     res.status(500).json({
       success: false,
       error: 'Failed to retrieve subscription tiers',
@@ -147,7 +148,7 @@ router.get('/tiers/:id', asyncHandler(async (req, res) => {
       data: tier,
     });
   } catch (error) {
-    console.error('Failed to get subscription tier:', error);
+    logger.error('Failed to get subscription tier', { error });
     res.status(500).json({
       success: false,
       error: 'Failed to retrieve subscription tier',
@@ -191,7 +192,7 @@ router.put('/tiers/:id', authenticate, validateRequest(UpdateTierSchema), asyncH
       data: updatedTier,
     });
   } catch (error) {
-    console.error('Failed to update subscription tier:', error);
+    logger.error('Failed to update subscription tier', { error });
     res.status(500).json({
       success: false,
       error: 'Failed to update subscription tier',
@@ -249,7 +250,7 @@ router.delete('/tiers/:id', authenticate, asyncHandler(async (req, res) => {
       message: 'Subscription tier deleted successfully',
     });
   } catch (error) {
-    console.error('Failed to delete subscription tier:', error);
+    logger.error('Failed to delete subscription tier', { error });
     res.status(500).json({
       success: false,
       error: 'Failed to delete subscription tier',
@@ -306,7 +307,7 @@ router.get('/tiers/:id/subscribers', authenticate, asyncHandler(async (req, res)
       },
     });
   } catch (error) {
-    console.error('Failed to get tier subscribers:', error);
+    logger.error('Failed to get tier subscribers', { error });
     res.status(500).json({
       success: false,
       error: 'Failed to retrieve tier subscribers',
@@ -344,7 +345,7 @@ router.post('/subscribe', authenticate, asyncHandler(async (req, res) => {
       data: subscription,
     });
   } catch (error: any) {
-    console.error('Failed to create subscription:', error);
+    logger.error('Failed to create subscription', { error });
 
     if (error.message?.includes('already subscribed')) {
       return res.status(400).json({
@@ -380,7 +381,7 @@ router.get('/my-subscriptions', authenticate, asyncHandler(async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Failed to get user subscriptions:', error);
+    logger.error('Failed to get user subscriptions', { error });
     res.status(500).json({
       success: false,
       error: 'Failed to retrieve subscriptions',

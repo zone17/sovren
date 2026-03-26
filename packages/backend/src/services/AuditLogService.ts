@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ts-nocheck — TODO(SOV-TS-002): Full TS cleanup needed (timestamp nullability, storage interface types)
 /**
  * AuditLogService Implementation
  * User Story: US-E5-009
@@ -156,6 +156,15 @@ export class AuditLogService implements IAuditLogService {
     this.logger = logger;
     this.cache = cache;
     this.storage = storage || new InMemoryAuditStorage();
+
+    // Production safety check: InMemoryAuditStorage is not durable and resets on restart.
+    // In production, a persistent storage backend (e.g. database) must be provided.
+    if (process.env.NODE_ENV === 'production' && this.storage instanceof InMemoryAuditStorage) {
+      this.logger.error(
+        '[AuditLogService] CRITICAL: InMemoryAuditStorage is in use in production. ' +
+          'Audit logs will be lost on restart. Provide a persistent IAuditStorage implementation.'
+      );
+    }
 
     // Default retention policy
     this.retention = retention || {

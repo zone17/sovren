@@ -90,6 +90,27 @@ export const cacheOperations = new Counter({
   registers: [register],
 });
 
+// --- Business Metrics ---
+
+export const businessMetrics = {
+  paymentsTotal: new client.Counter({
+    name: 'sovren_payments_total',
+    help: 'Total payments',
+    labelNames: ['status'] as const,
+    registers: [register],
+  }),
+  subscriptionsCreated: new client.Counter({
+    name: 'sovren_subscriptions_created_total',
+    help: 'Total subscriptions created',
+    registers: [register],
+  }),
+  revenueTotal: new client.Counter({
+    name: 'sovren_revenue_sats_total',
+    help: 'Total revenue in satoshis',
+    registers: [register],
+  }),
+};
+
 // --- Queue Metrics (BullMQ) ---
 
 export const queueJobsTotal = new Counter({
