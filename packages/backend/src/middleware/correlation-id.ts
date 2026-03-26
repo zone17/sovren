@@ -50,6 +50,7 @@ export function getCorrelationId(): string {
 // Only accept alphanumeric, hyphens; max 128 chars (covers UUIDs, ULIDs, etc.)
 const VALID_CORRELATION_ID = /^[a-zA-Z0-9-]{1,128}$/;
 
+// TODO(SOV-OBS-001): Link correlationId to Sentry traceId for distributed tracing. Set Sentry.getCurrentHub().getScope().setTag('correlationId', id) here.
 export function correlationIdMiddleware(req: Request, res: Response, next: NextFunction): void {
   const rawId = req.get('x-correlation-id') || req.get('x-request-id');
   const correlationId = rawId && VALID_CORRELATION_ID.test(rawId) ? rawId : randomUUID();

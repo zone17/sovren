@@ -107,6 +107,7 @@
     "docs:open": "open docs/README.md || xdg-open docs/README.md || start docs/README.md",
     "guide": "cat DEVELOPER_GUIDE.md",
     "audit:current": "echo '🎉 Current Achievement Status:\\n✅ 91.58% test coverage (199 tests)\\n✅ Zero ESLint violations\\n✅ Zero security vulnerabilities\\n✅ TDD methodology established\\n✅ Pre-commit quality gates active\\n✅ Performance optimized (14-chunk splitting, <250kB budgets)\\n✅ Service Worker caching implemented\\n✅ Web Vitals monitoring configured\\n✅ Production build working (526ms)\\n\\n🔄 Next Priorities:\\n1. Add monitoring/observability\\n2. CI/CD pipeline enhancements\\n3. Real User Monitoring (RUM)\\n\\nSee docs/performance-optimization.md for details'",
+    "test:edge-functions": "cd supabase && deno test functions/_tests/",
     "migrate:keys": "ts-node scripts/nostr-migration/migrate-keys.ts",
     "migrate:keys:dry-run": "ts-node scripts/nostr-migration/migrate-keys.ts --dry-run",
     "migrate:events": "ts-node scripts/nostr-migration/migrate-events.ts",

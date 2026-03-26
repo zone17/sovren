@@ -293,7 +293,12 @@ export const bypassRateLimitInTest = (req: Request): boolean => {
     return true;
   }
 
-  // Allow bypass with special header in development (timing-safe comparison)
+  // API-009: Staging must NOT inherit the dev bypass — rate limits are exercised in staging CI.
+  if (process.env.NODE_ENV === 'staging') {
+    return false;
+  }
+
+  // Allow bypass with special header in development only (timing-safe comparison)
   if (process.env.NODE_ENV === 'development') {
     const header = req.headers['x-bypass-rate-limit'];
     const secret = process.env.RATE_LIMIT_BYPASS_SECRET;

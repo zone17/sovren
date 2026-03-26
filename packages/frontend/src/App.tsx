@@ -134,6 +134,7 @@ function App(): React.ReactElement {
   return (
     <ErrorBoundary level="page" name="Application">
       <AuthProvider>
+        {/* TODO(SOV-UX-001): Add per-route Suspense boundaries so Layout shell stays visible during navigation */}
         <Suspense fallback={<LoadingSpinner />}>
           <Routes>
             {/* Pages with their own layout (no duplicates) */}

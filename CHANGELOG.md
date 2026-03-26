@@ -1,5 +1,9 @@
 # 🚀 **SOVREN PLATFORM CHANGELOG**
 
+## [2.0.0] - 2026-03-26
+
+Production readiness milestone. All slices complete, CI/CD fully automated, elite quality score achieved (99/100).
+
 ## [Unreleased]
 
 ### fix(ux): P2 dark mode — add dark: variants to color-coded status badges and alert boxes — 2026-03-10

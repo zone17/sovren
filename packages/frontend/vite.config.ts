@@ -277,7 +277,7 @@ export default defineConfig(async ({ mode, command }) => {
       },
 
       // Elite chunk size management
-      chunkSizeWarningLimit: 600,
+      chunkSizeWarningLimit: 400,
 
       // CSS optimization
       cssCodeSplit: true,

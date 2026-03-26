@@ -166,9 +166,14 @@ function verifyWebhookSignature(req: Request, res: Response, next: NextFunction)
         errorName === 'InvalidWebhookSignatureError' ||
         errorName === 'MissingWebhookHeadersError'
       ) {
+        const code =
+          errorName === 'MissingWebhookHeadersError' ? 'MISSING_REQUIRED_FIELDS' :
+          errorName === 'WebhookTimestampExpiredError' ? 'WEBHOOK_TIMESTAMP_EXPIRED' :
+          'WEBHOOK_VERIFICATION_FAILED';
         return res.status(401).json({
           success: false,
           error: (error as Error).message,
+          code,
         });
       }
     }
@@ -179,9 +184,14 @@ function verifyWebhookSignature(req: Request, res: Response, next: NextFunction)
       error instanceof InvalidWebhookSignatureError ||
       error instanceof MissingWebhookHeadersError
     ) {
+      const code =
+        error instanceof MissingWebhookHeadersError ? 'MISSING_REQUIRED_FIELDS' :
+        error instanceof WebhookTimestampExpiredError ? 'WEBHOOK_TIMESTAMP_EXPIRED' :
+        'WEBHOOK_VERIFICATION_FAILED';
       return res.status(401).json({
         success: false,
         error: error.message,
+        code,
       });
     }
 
@@ -189,6 +199,7 @@ function verifyWebhookSignature(req: Request, res: Response, next: NextFunction)
     return res.status(500).json({
       success: false,
       error: 'Webhook verification failed',
+      code: 'WEBHOOK_VERIFICATION_FAILED',
     });
   }
 }
@@ -211,6 +222,7 @@ router.post(
         return res.status(400).json({
           success: false,
           error: 'Missing required fields: event, paymentHash',
+          code: 'MISSING_REQUIRED_FIELDS',
         });
       }
 
@@ -220,6 +232,7 @@ router.post(
         return res.status(503).json({
           success: false,
           error: 'Service temporarily unavailable',
+          code: 'SERVICE_UNAVAILABLE',
         });
       }
 
@@ -234,6 +247,7 @@ router.post(
         return res.status(404).json({
           success: false,
           error: 'Payment not found',
+          code: 'PAYMENT_NOT_FOUND',
         });
       }
 
@@ -273,6 +287,7 @@ router.post(
               return res.status(500).json({
                 success: false,
                 error: 'Failed to complete payment atomically',
+                code: 'PAYMENT_COMPLETION_FAILED',
               });
             }
 
@@ -282,6 +297,7 @@ router.post(
               return res.status(409).json({
                 success: false,
                 error: result?.error_message || 'Payment state transition rejected',
+                code: 'PAYMENT_STATE_TRANSITION_REJECTED',
               });
             }
 
@@ -356,6 +372,7 @@ router.post(
           return res.status(400).json({
             success: false,
             error: `Unknown webhook event: ${event}`,
+            code: 'UNKNOWN_WEBHOOK_EVENT',
           });
       }
 
@@ -376,6 +393,7 @@ router.post(
       res.status(500).json({
         success: false,
         error: 'Failed to process webhook',
+        code: 'WEBHOOK_PROCESSING_ERROR',
       });
     }
   }

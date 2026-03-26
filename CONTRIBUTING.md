@@ -1,5 +1,7 @@
 # Contributing to Sovren
 
+For comprehensive contributing guidelines, see [docs/development/contributing.md](docs/development/contributing.md).
+
 We love your input! We want to make contributing to Sovren as easy and transparent as possible, whether it's:
 
 - Reporting a bug

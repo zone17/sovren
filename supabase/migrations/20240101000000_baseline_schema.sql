@@ -98,6 +98,7 @@ CREATE TABLE IF NOT EXISTS content (
 );
 
 -- Payments
+-- NOTE: Consider adding jurisdiction, sequential_invoice_number, and kyc_status_at_transaction columns for regulatory compliance.
 CREATE TABLE IF NOT EXISTS payments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     payer_id UUID REFERENCES users(id) ON DELETE SET NULL,

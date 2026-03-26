@@ -63,6 +63,8 @@ export default defineConfig({
         baseURL: process.env.E2E_API_URL || 'http://localhost:3001',
       },
     },
+    { name: 'firefox', use: { ...devices['Desktop Firefox'] }, testMatch: '**/*.public.spec.ts' },
+    { name: 'webkit', use: { ...devices['Desktop Safari'] }, testMatch: '**/*.public.spec.ts' },
   ],
 
   // In CI, the preview server is started externally (vite preview on port 4173).

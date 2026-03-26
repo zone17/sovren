@@ -379,6 +379,7 @@ jobs:
     # Graduation criteria (continue-on-error removal): 10 consecutive green runs on main
     # with no flaky test retries. Track via CI run history before permanently removing
     # continue-on-error if it is re-added. Current status: blocking (stable).
+    # Graduation: Remove continue-on-error after 10 consecutive green runs on main. Track at: https://github.com/zone17/sovren/actions/workflows/ci.yml?query=branch%3Amain
 
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2

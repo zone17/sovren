@@ -1,3 +1,5 @@
+// NOTE: This test uses Deno stdlib. Run with: deno test supabase/functions/_tests/
+
 /**
  * 🧪 **NOSTR AUTHENTICATION EDGE FUNCTION TESTS**
  *

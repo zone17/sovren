@@ -427,6 +427,12 @@ export class EventBusService implements IEventBus {
           } catch (retryError) {
             this.log('error', `Retry failed for handler ${subscriptionId}`, retryError);
           }
+        } else {
+          this.log('error', 'Event handler exhausted retries — event dropped', {
+            eventId: event.id,
+            handlerName: subscriptionId,
+            retryCount: entry.errorCount,
+          } as any);
         }
       }
     }
