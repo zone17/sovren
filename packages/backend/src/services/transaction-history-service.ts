@@ -408,7 +408,7 @@ export class TransactionHistoryService extends EventEmitter {
         user_id: validated.user_id,
         start_date: validated.options.date_range.start_date,
         end_date: validated.options.date_range.end_date,
-        limit: 10000, // Large limit for export
+        limit: 500, // Bounded limit for export
       });
 
       // Generate file based on format
@@ -521,7 +521,7 @@ export class TransactionHistoryService extends EventEmitter {
         .gte('completed_at', startDate.toISOString())
         .lte('completed_at', endDate.toISOString())
         .order('completed_at', { ascending: true })
-        .limit(10000);
+        .limit(500);
 
       if (error) throw error;
 
