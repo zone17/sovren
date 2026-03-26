@@ -541,7 +541,7 @@ export class PayoutManagementService extends EventEmitter {
       .select('net_amount_msats')
       .eq('creator_id', creator_id)
       .eq('status', 'completed')
-      .limit(10000);
+      .limit(500);
 
     if (error) throw error;
 
@@ -554,7 +554,7 @@ export class PayoutManagementService extends EventEmitter {
       .select('net_amount_msats')
       .eq('creator_id', creator_id)
       .eq('status', 'pending')
-      .limit(10000);
+      .limit(500);
 
     if (error) throw error;
 

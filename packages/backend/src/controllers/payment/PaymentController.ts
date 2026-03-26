@@ -59,11 +59,14 @@ export class PaymentController {
   public payInvoice = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const startTime = Date.now();
     const invoiceId = req.params.id;
-    const paymentResult = await this.paymentService.processPayment(invoiceId, req.body);
-
-    businessMetrics.paymentsTotal.inc({ status: 'success' });
-
-    res.status(200).json(createApiResponse(req, paymentResult, startTime));
+    try {
+      const paymentResult = await this.paymentService.processPayment(invoiceId, req.body);
+      businessMetrics.paymentsTotal.inc({ status: 'success' });
+      res.status(200).json(createApiResponse(req, paymentResult, startTime));
+    } catch (err) {
+      businessMetrics.paymentsTotal.inc({ status: 'failure' });
+      throw err;
+    }
   });
 
   public convertCurrency = asyncHandler(async (req: Request, res: Response): Promise<void> => {
@@ -90,7 +93,17 @@ export class PaymentController {
   public updateSubscription = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const startTime = Date.now();
     const subscriptionId = req.params.id;
+    const userId = (req as any).user?.nostr_pubkey;
     const updates = req.body.updates;
+
+    // Ownership check: only the subscription owner can update it
+    const existing = await this.subscriptionService.getSubscription(subscriptionId);
+    if (existing && existing.userId !== userId) {
+      res
+        .status(403)
+        .json({ success: false, error: 'Forbidden: you can only update your own subscriptions' });
+      return;
+    }
 
     const subscription = await this.subscriptionService.updateSubscription(subscriptionId, updates);
     res.status(200).json(createApiResponse(req, subscription, startTime));
@@ -99,7 +112,17 @@ export class PaymentController {
   public cancelSubscription = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const startTime = Date.now();
     const subscriptionId = req.params.id;
+    const userId = (req as any).user?.nostr_pubkey;
     const { reason, cancelAt } = req.body;
+
+    // Ownership check: only the subscription owner can cancel it
+    const existing = await this.subscriptionService.getSubscription(subscriptionId);
+    if (existing && existing.userId !== userId) {
+      res
+        .status(403)
+        .json({ success: false, error: 'Forbidden: you can only cancel your own subscriptions' });
+      return;
+    }
 
     const result = await this.subscriptionService.cancelSubscription(subscriptionId, {
       reason,
@@ -205,18 +228,37 @@ export class PaymentController {
   public updateWebhook = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const startTime = Date.now();
     const webhookId = req.params.id;
+    const userId = (req as any).user?.nostr_pubkey;
     const updates = req.body;
-    const webhook = await this.webhookService.updateEndpoint(webhookId, updates);
 
+    // Ownership check: only the webhook owner can update it
+    const existing = await this.webhookService.getEndpoint(webhookId);
+    if (existing && existing.userId !== userId) {
+      res
+        .status(403)
+        .json({ success: false, error: 'Forbidden: you can only update your own webhooks' });
+      return;
+    }
+
+    const webhook = await this.webhookService.updateEndpoint(webhookId, updates);
     res.status(200).json(createApiResponse(req, webhook, startTime));
   });
 
   public deleteWebhook = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const startTime = Date.now();
     const webhookId = req.params.id;
-    await this.webhookService.deleteEndpoint(webhookId);
+    const userId = (req as any).user?.nostr_pubkey;
 
-    res.status(200).json(createApiResponse(req, { deleted: true }, startTime));
+    // Ownership check: only the webhook owner can delete it
+    const existing = await this.webhookService.getEndpoint(webhookId);
+    if (existing && existing.userId !== userId) {
+      res
+        .status(403)
+        .json({ success: false, error: 'Forbidden: you can only delete your own webhooks' });
+      return;
+    }
+
+    await this.webhookService.deleteEndpoint(webhookId);
+    res.status(204).send();
   });
 
   public listInvoices = asyncHandler(async (req: Request, res: Response): Promise<void> => {

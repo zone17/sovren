@@ -69,7 +69,6 @@ export default defineConfig({
             '**/NIP26Service.test.ts',
             '**/CreatorCard.test.tsx',
             '**/input.stories.test.tsx',
-            '**/NOSTRKeyManagementService.test.ts',
             '**/CollaborativeFeatures.test.tsx',
             '**/InstantMessagingFeatures.test.tsx',
             '**/LiveContentUpdates.test.tsx',
@@ -159,9 +158,9 @@ export default defineConfig({
         '**/test-utils/**',
       ],
       thresholds: {
-        // Baseline — ratchet up after Phase 4 test recovery
-        lines: 10,
-        branches: 5,
+        // Baseline — ratcheted up (meaningful gate; target 85/95 after Phase 4 test recovery)
+        lines: 40,
+        branches: 25,
         // Per-file thresholds for critical payment services
         'packages/backend/src/services/payment/**': {
           lines: 80,

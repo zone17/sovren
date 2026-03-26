@@ -197,7 +197,7 @@ export class AIEnhancedFeaturesService {
         .eq('topic_id', topicId)
         .eq('timeframe', timeframe)
         .order('timestamp', { ascending: true })
-        .limit(10000);
+        .limit(500);
 
       if (error) throw error;
 
@@ -342,7 +342,7 @@ export class AIEnhancedFeaturesService {
         .eq('content_id', contentId)
         .eq('timeframe', timeframe)
         .order('timestamp', { ascending: true })
-        .limit(10000);
+        .limit(500);
 
       if (error) throw error;
 
@@ -867,7 +867,7 @@ export class AIEnhancedFeaturesService {
         .eq('cluster_id', clusterId)
         .eq('timeframe', timeframe)
         .order('timestamp', { ascending: true })
-        .limit(10000);
+        .limit(500);
 
       if (error) throw error;
 
