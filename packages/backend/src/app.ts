@@ -3,6 +3,8 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express, { Express, NextFunction, Request, Response } from 'express';
 import helmet from 'helmet';
+import swaggerUi from 'swagger-ui-express';
+import swaggerJsdoc from 'swagger-jsdoc';
 import { z } from 'zod';
 
 // Import our services and middleware
@@ -228,6 +230,58 @@ export function createApp(): Express {
   app.use('/api/discovery', contentDiscoveryRoutes);
   app.use('/api/subscription-tiers', subscriptionTiersRoutes);
 
+  // OpenAPI / Swagger UI — available at /api/docs
+  // Helmet's strict CSP blocks Swagger UI inline styles/scripts, so we disable
+  // contentSecurityPolicy only for this path by applying a permissive override
+  // before the swagger middleware and restoring the default after.
+  const swaggerSpec = swaggerJsdoc({
+    definition: {
+      openapi: '3.0.0',
+      info: {
+        title: 'Sovren API',
+        version: '2.0.0',
+        description:
+          'Decentralized creator monetization platform built on NOSTR and Bitcoin Lightning Network.',
+        contact: { name: 'Sovren Engineering', url: 'https://docs.sovren.app' },
+        license: { name: 'MIT' },
+      },
+      servers: [
+        { url: '/api/v2', description: 'V2 (current) — Creator Safety Net, wellness & content shield' },
+        { url: '/api/v1', description: 'V1 (deprecated) — content, users, payments' },
+      ],
+      components: {
+        securitySchemes: {
+          bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+        },
+      },
+      security: [{ bearerAuth: [] }],
+    },
+    apis: ['./packages/backend/src/routes/**/*.ts', './packages/backend/src/routes/*.ts'],
+  });
+
+  app.use(
+    '/api/docs',
+    (_req: Request, res: Response, next: NextFunction) => {
+      // Relax CSP for Swagger UI — it requires inline scripts and styles
+      res.setHeader(
+        'Content-Security-Policy',
+        "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data: https:;"
+      );
+      next();
+    },
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerSpec, {
+      customSiteTitle: 'Sovren API Docs',
+      swaggerOptions: { persistAuthorization: true },
+    })
+  );
+
+  // Expose raw OpenAPI JSON spec for tooling integrations
+  app.get('/api/docs.json', (_req: Request, res: Response) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(swaggerSpec);
+  });
+
   // 🎯 API Root Endpoint
   // WHY: Provide API information and available endpoints
   app.get('/api', (req: Request, res: Response) => {
@@ -249,6 +303,8 @@ export function createApp(): Express {
           healthDetailed: '/health/detailed',
           metrics: '/metrics',
           metricsJson: '/api/v1/metrics',
+          docs: '/api/docs',
+          openApiSpec: '/api/docs.json',
         },
         documentation: 'https://docs.sovren.app/api',
         timestamp: Date.now(),
