@@ -26,7 +26,7 @@ export const JWTPayloadSchema = z.object({
   iat: z.number(),
   exp: z.number(),
   signature_verified: z.boolean(),
-  role: z.enum(['creator', 'supporter']).optional(),
+  role: z.enum(['creator', 'supporter', 'admin']).optional(),
 });
 
 export type NostrChallenge = z.infer<typeof NostrChallengeSchema>;
@@ -102,8 +102,8 @@ export class NostrAuthService {
       // Validate the challenge data
       const validatedChallenge = NostrChallengeSchema.parse(challengeData);
 
-      // Store challenge for verification
-      this.challenges.set(challenge, validatedChallenge);
+      // Store challenge in Redis (primary) or in-memory (fallback) with 5-minute TTL
+      await this.storeChallenge(challenge, validatedChallenge);
 
       return validatedChallenge;
     } catch (error) {
@@ -111,6 +111,75 @@ export class NostrAuthService {
         `Failed to generate challenge: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
     }
+  }
+
+  /**
+   * Store a challenge in Redis (primary) or in-memory Map (fallback).
+   */
+  private async storeChallenge(key: string, challenge: NostrChallenge): Promise<void> {
+    const ttlSeconds = Math.max(1, Math.ceil(this.CHALLENGE_TTL / 1000));
+
+    if (isRedisAvailable()) {
+      try {
+        const redis = getRedisClient();
+        await redis.set(
+          `challenge:${key}`,
+          JSON.stringify(challenge),
+          'EX',
+          ttlSeconds
+        );
+        return;
+      } catch (err) {
+        logger.warn('[NostrAuth] Redis challenge store failed — falling back to in-memory', {
+          error: (err as Error).message,
+        });
+      }
+    }
+
+    // Fallback: in-memory
+    this.challenges.set(key, challenge);
+  }
+
+  /**
+   * Retrieve a challenge from Redis (primary) or in-memory Map (fallback).
+   */
+  private async getChallenge(key: string): Promise<NostrChallenge | undefined> {
+    if (isRedisAvailable()) {
+      try {
+        const redis = getRedisClient();
+        const raw = await redis.get(`challenge:${key}`);
+        if (raw) {
+          return JSON.parse(raw) as NostrChallenge;
+        }
+        return undefined;
+      } catch (err) {
+        logger.warn('[NostrAuth] Redis challenge get failed — falling back to in-memory', {
+          error: (err as Error).message,
+        });
+      }
+    }
+
+    // Fallback: in-memory
+    return this.challenges.get(key);
+  }
+
+  /**
+   * Delete a challenge from Redis (primary) or in-memory Map (fallback).
+   */
+  private async deleteChallenge(key: string): Promise<void> {
+    if (isRedisAvailable()) {
+      try {
+        const redis = getRedisClient();
+        await redis.del(`challenge:${key}`);
+      } catch (err) {
+        logger.warn('[NostrAuth] Redis challenge delete failed', {
+          error: (err as Error).message,
+        });
+      }
+    }
+
+    // Always clean in-memory as well (may have fallback entries)
+    this.challenges.delete(key);
   }
 
   /**
@@ -126,8 +195,8 @@ export class NostrAuthService {
       const validatedVerification = NostrVerificationSchema.parse(verification);
       const { pubkey, signature, challenge, timestamp } = validatedVerification;
 
-      // Check if challenge exists and is valid
-      const storedChallenge = this.challenges.get(challenge);
+      // Check if challenge exists and is valid (Redis primary, in-memory fallback)
+      const storedChallenge = await this.getChallenge(challenge);
       if (!storedChallenge) {
         return {
           valid: false,
@@ -138,7 +207,7 @@ export class NostrAuthService {
 
       // Check if challenge has expired
       if (Date.now() > storedChallenge.expires_at) {
-        this.challenges.delete(challenge);
+        await this.deleteChallenge(challenge);
         return {
           valid: false,
           pubkey,
@@ -196,7 +265,7 @@ export class NostrAuthService {
       if (isValidSignature) {
         // Track used signature and remove used challenge to prevent replay
         this.usedSignatures.set(sigHash, Date.now());
-        this.challenges.delete(challenge);
+        await this.deleteChallenge(challenge);
 
         return {
           valid: true,
@@ -382,7 +451,7 @@ export class NostrAuthService {
             error: 'User not found',
           };
         }
-        currentRole = freshRole as 'creator' | 'supporter';
+        currentRole = freshRole as 'creator' | 'supporter' | 'admin';
       }
 
       // Generate new token with fresh role
@@ -398,6 +467,9 @@ export class NostrAuthService {
       JWTPayloadSchema.parse(payload);
 
       const newToken = jwt.sign(payload, this.JWT_SECRET);
+
+      // Revoke the old token so it cannot be reused (TTL matches JWT expiry)
+      await this.revokeToken(token);
 
       return {
         success: true,
@@ -557,7 +629,7 @@ export const nostrAuth = new NostrAuthService(
         .select('role')
         .eq('nostr_pubkey', pubkey)
         .single();
-      const VALID_JWT_ROLES = new Set(['creator', 'supporter']);
+      const VALID_JWT_ROLES = new Set(['creator', 'supporter', 'admin']);
       return data && VALID_JWT_ROLES.has(data.role) ? data.role : 'supporter';
     } catch (err) {
       logger.error('Failed to fetch user role from DB, defaulting to supporter', { pubkey, err });

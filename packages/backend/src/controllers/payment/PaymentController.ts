@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Payment API Controller
  *
@@ -19,6 +18,9 @@ import {
 import { asyncHandler } from '../../middleware/error-handler-middleware';
 import { createApiResponse } from '../../utils/api-response';
 import { businessMetrics } from '../../middleware/deployment-monitoring';
+import { Currency } from '../../types/currency';
+import { AnalyticsPeriod } from '../../types/payment-analytics';
+import { SubscriptionTier } from '../../types/subscription';
 
 export class PaymentController {
   constructor(
@@ -34,7 +36,7 @@ export class PaymentController {
   public createInvoice = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const startTime = Date.now();
     const invoiceData = req.body;
-    const invoice = await this.invoiceService.createInvoice(invoiceData);
+    const invoice = await this.invoiceService.create(invoiceData);
 
     res.status(201).json(createApiResponse(req, invoice, startTime));
   });
@@ -42,11 +44,11 @@ export class PaymentController {
   public getInvoice = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const startTime = Date.now();
     const invoiceId = req.params.id;
-    const userId = (req as any).user?.nostr_pubkey;
+    const userId = req.user?.nostr_pubkey;
     const invoice = await this.invoiceService.getInvoice(invoiceId);
 
-    // Ownership check: only the invoice creator or recipient can view it
-    if (invoice && invoice.creator_id !== userId && invoice.recipient_id !== userId) {
+    // Ownership check: only the invoice owner can view it
+    if (invoice && invoice.userId !== userId) {
       res
         .status(403)
         .json({ success: false, error: 'Forbidden: you can only access your own invoices' });
@@ -60,7 +62,10 @@ export class PaymentController {
     const startTime = Date.now();
     const invoiceId = req.params.id;
     try {
-      const paymentResult = await this.paymentService.processPayment(invoiceId, req.body);
+      const paymentResult = await this.paymentService.processPayment({
+        invoiceId,
+        ...req.body,
+      });
       businessMetrics.paymentsTotal.inc({ status: 'success' });
       res.status(200).json(createApiResponse(req, paymentResult, startTime));
     } catch (err) {
@@ -73,11 +78,11 @@ export class PaymentController {
     const startTime = Date.now();
     const { amount, fromCurrency, toCurrency } = req.query;
 
-    const result = await this.currencyService.convert(
-      parseFloat(amount as string),
-      fromCurrency as string,
-      toCurrency as string
-    );
+    const result = await this.currencyService.convert({
+      amount: parseFloat(amount as string),
+      from: fromCurrency as Currency,
+      to: toCurrency as Currency,
+    });
 
     res.status(200).json(createApiResponse(req, result, startTime));
   });
@@ -93,7 +98,7 @@ export class PaymentController {
   public updateSubscription = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const startTime = Date.now();
     const subscriptionId = req.params.id;
-    const userId = (req as any).user?.nostr_pubkey;
+    const userId = req.user?.nostr_pubkey;
     const updates = req.body.updates;
 
     // Ownership check: only the subscription owner can update it
@@ -112,7 +117,7 @@ export class PaymentController {
   public cancelSubscription = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const startTime = Date.now();
     const subscriptionId = req.params.id;
-    const userId = (req as any).user?.nostr_pubkey;
+    const userId = req.user?.nostr_pubkey;
     const { reason, cancelAt } = req.body;
 
     // Ownership check: only the subscription owner can cancel it
@@ -125,8 +130,8 @@ export class PaymentController {
     }
 
     const result = await this.subscriptionService.cancelSubscription(subscriptionId, {
+      immediate: cancelAt === 'now',
       reason,
-      cancelAt,
     });
     res.status(200).json(createApiResponse(req, result, startTime));
   });
@@ -142,12 +147,14 @@ export class PaymentController {
   public getPaymentAnalytics = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const startTime = Date.now();
     // Always use authenticated user's pubkey — never accept userId from query params
-    const userId = (req as any).user?.nostr_pubkey;
+    const userId = req.user?.nostr_pubkey;
     if (!userId) {
       res.status(401).json({ success: false, error: 'Authentication required' });
       return;
     }
-    const analytics = await this.analyticsService.getAnalytics(userId, {
+    const analytics = await this.analyticsService.getAnalyticsSummary({
+      period: (req.query.period as AnalyticsPeriod) || AnalyticsPeriod.MONTHLY,
+      userId,
       startDate: req.query.start ? new Date(req.query.start as string) : undefined,
       endDate: req.query.end ? new Date(req.query.end as string) : undefined,
     });
@@ -158,7 +165,7 @@ export class PaymentController {
   public registerWebhook = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const startTime = Date.now();
     const webhookData = req.body;
-    const webhook = await this.webhookService.registerWebhook(webhookData);
+    const webhook = await this.webhookService.registerEndpoint(webhookData);
 
     res.status(201).json(createApiResponse(req, webhook, startTime));
   });
@@ -166,7 +173,7 @@ export class PaymentController {
   public getSubscriptionTiers = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const startTime = Date.now();
     const tier = req.query.tier as string | undefined;
-    const plans = await this.subscriptionService.listPlans(tier as any);
+    const plans = await this.subscriptionService.listPlans(tier as SubscriptionTier | undefined);
 
     res.status(200).json(createApiResponse(req, plans, startTime));
   });
@@ -174,15 +181,11 @@ export class PaymentController {
   public getSubscription = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const startTime = Date.now();
     const subscriptionId = req.params.id;
-    const userId = (req as any).user?.nostr_pubkey;
+    const userId = req.user?.nostr_pubkey;
     const subscription = await this.subscriptionService.getSubscription(subscriptionId);
 
-    // Ownership check: only the subscriber can view their subscription
-    if (
-      subscription &&
-      subscription.subscriber_id !== userId &&
-      subscription.creator_id !== userId
-    ) {
+    // Ownership check: only the subscription owner can view their subscription
+    if (subscription && subscription.userId !== userId) {
       res
         .status(403)
         .json({ success: false, error: 'Forbidden: you can only access your own subscriptions' });
@@ -198,12 +201,14 @@ export class PaymentController {
     async (req: Request, res: Response): Promise<void> => {
       const startTime = Date.now();
       // Always use authenticated user's pubkey — never accept userId from query params
-      const userId = (req as any).user?.nostr_pubkey;
+      const userId = req.user?.nostr_pubkey;
       if (!userId) {
         res.status(401).json({ success: false, error: 'Authentication required' });
         return;
       }
-      const result = await this.analyticsService.getAnalytics(userId, {
+      const result = await this.analyticsService.getAnalyticsSummary({
+        period: (req.query.period as AnalyticsPeriod) || AnalyticsPeriod.MONTHLY,
+        userId,
         startDate: req.query.start ? new Date(req.query.start as string) : undefined,
         endDate: req.query.end ? new Date(req.query.end as string) : undefined,
       });
@@ -215,12 +220,15 @@ export class PaymentController {
   public getBalance = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const startTime = Date.now();
     // Always use authenticated user's pubkey — never accept userId from query params
-    const userId = (req as any).user?.nostr_pubkey;
+    const userId = req.user?.nostr_pubkey;
     if (!userId) {
       res.status(401).json({ success: false, error: 'Authentication required' });
       return;
     }
-    const analytics = await this.analyticsService.getAnalytics(userId, {});
+    const analytics = await this.analyticsService.getAnalyticsSummary({
+      period: AnalyticsPeriod.ALL_TIME,
+      userId,
+    });
 
     res.status(200).json(createApiResponse(req, { userId, balance: analytics }, startTime));
   });
@@ -228,7 +236,7 @@ export class PaymentController {
   public updateWebhook = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const startTime = Date.now();
     const webhookId = req.params.id;
-    const userId = (req as any).user?.nostr_pubkey;
+    const userId = req.user?.nostr_pubkey;
     const updates = req.body;
 
     // Ownership check: only the webhook owner can update it
@@ -246,7 +254,7 @@ export class PaymentController {
 
   public deleteWebhook = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const webhookId = req.params.id;
-    const userId = (req as any).user?.nostr_pubkey;
+    const userId = req.user?.nostr_pubkey;
 
     // Ownership check: only the webhook owner can delete it
     const existing = await this.webhookService.getEndpoint(webhookId);
@@ -272,18 +280,18 @@ export class PaymentController {
   public retryInvoice = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const startTime = Date.now();
     const invoiceId = req.params.id;
-    const userId = (req as any).user?.nostr_pubkey;
+    const userId = req.user?.nostr_pubkey;
 
     // Verify the invoice belongs to the authenticated user before retrying
     const invoice = await this.invoiceService.getInvoice(invoiceId);
-    if (invoice && invoice.creator_id !== userId && invoice.recipient_id !== userId) {
+    if (invoice && invoice.userId !== userId) {
       res
         .status(403)
         .json({ success: false, error: 'Forbidden: you can only retry your own invoices' });
       return;
     }
 
-    const result = await this.paymentService.processPayment(invoiceId, { retry: true });
+    const result = await this.paymentService.processPayment({ invoiceId });
 
     res.status(200).json(createApiResponse(req, result, startTime));
   });

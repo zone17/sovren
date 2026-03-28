@@ -13,6 +13,7 @@ import { Request, Response, Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 import { lightningReceiptService, PaymentReceipt } from '../services/lightning/receipt-service';
+import { authenticate, authorize } from '../middleware/auth';
 
 // ===============================
 // 📋 Request Validation Schemas
@@ -110,7 +111,7 @@ const router = Router();
  * POST /api/lightning/receipt
  * Generate a comprehensive payment receipt
  */
-router.post('/', receiptGenerationLimit, async (req: Request, res: Response) => {
+router.post('/', authenticate, receiptGenerationLimit, async (req: Request, res: Response) => {
   try {
     // Validate request body
     const validatedData = GenerateReceiptSchema.parse(req.body);
@@ -166,7 +167,7 @@ router.post('/', receiptGenerationLimit, async (req: Request, res: Response) => 
  * GET /api/lightning/receipt/:identifier
  * Get receipt by payment hash, receipt number, or receipt ID
  */
-router.get('/:identifier', receiptAccessLimit, async (req: Request, res: Response) => {
+router.get('/:identifier', authenticate, receiptAccessLimit, async (req: Request, res: Response) => {
   try {
     const { identifier } = req.params;
 
@@ -191,6 +192,19 @@ router.get('/:identifier', receiptAccessLimit, async (req: Request, res: Respons
         success: false,
         error: 'Receipt not found',
         message: 'No receipt found with the provided identifier',
+      });
+    }
+
+    // IDOR protection: verify caller is either the creator or supporter on this receipt
+    const callerPubkey = req.user?.nostr_pubkey;
+    const isCreator = receipt.creator.id === callerPubkey;
+    const isSupporter = receipt.supporter.id === callerPubkey;
+    const isAdmin = req.user?.role === 'admin';
+    if (!isCreator && !isSupporter && !isAdmin) {
+      return res.status(403).json({
+        success: false,
+        error: 'Access denied',
+        message: 'You can only view receipts for your own payments',
       });
     }
 
@@ -241,7 +255,7 @@ router.get('/:identifier', receiptAccessLimit, async (req: Request, res: Respons
  * GET /api/lightning/receipt/:receiptNumber/pdf
  * Download PDF receipt
  */
-router.get('/:receiptNumber/pdf', receiptAccessLimit, async (req: Request, res: Response) => {
+router.get('/:receiptNumber/pdf', authenticate, receiptAccessLimit, async (req: Request, res: Response) => {
   try {
     const { receiptNumber } = req.params;
 
@@ -251,6 +265,19 @@ router.get('/:receiptNumber/pdf', receiptAccessLimit, async (req: Request, res: 
       return res.status(404).json({
         success: false,
         error: 'Receipt not found',
+      });
+    }
+
+    // IDOR protection: verify caller owns this receipt
+    const callerPubkey = req.user?.nostr_pubkey;
+    const isCreator = receipt.creator.id === callerPubkey;
+    const isSupporter = receipt.supporter.id === callerPubkey;
+    const isAdmin = req.user?.role === 'admin';
+    if (!isCreator && !isSupporter && !isAdmin) {
+      return res.status(403).json({
+        success: false,
+        error: 'Access denied',
+        message: 'You can only download receipts for your own payments',
       });
     }
 
@@ -288,7 +315,7 @@ router.get('/:receiptNumber/pdf', receiptAccessLimit, async (req: Request, res: 
  * POST /api/lightning/receipt/:receiptId/email
  * Email receipt to specified address
  */
-router.post('/:receiptId/email', receiptEmailLimit, async (req: Request, res: Response) => {
+router.post('/:receiptId/email', authenticate, receiptEmailLimit, async (req: Request, res: Response) => {
   try {
     const { receiptId } = req.params;
 
@@ -333,7 +360,7 @@ router.post('/:receiptId/email', receiptEmailLimit, async (req: Request, res: Re
  * POST /api/lightning/receipt/:receiptId/verify
  * Verify receipt authenticity and integrity
  */
-router.post('/:receiptId/verify', receiptAccessLimit, async (req: Request, res: Response) => {
+router.post('/:receiptId/verify', authenticate, receiptAccessLimit, async (req: Request, res: Response) => {
   try {
     const { receiptId } = req.params;
 
@@ -400,7 +427,7 @@ router.post('/:receiptId/verify', receiptAccessLimit, async (req: Request, res: 
  * GET /api/lightning/receipt/analytics/summary
  * Get receipt generation analytics (admin only)
  */
-router.get('/analytics/summary', receiptAccessLimit, async (req: Request, res: Response) => {
+router.get('/analytics/summary', authenticate, authorize(['admin']), receiptAccessLimit, async (req: Request, res: Response) => {
   try {
     // TODO(backlog): Implement analytics aggregation
     // This would typically require database queries to aggregate receipt data

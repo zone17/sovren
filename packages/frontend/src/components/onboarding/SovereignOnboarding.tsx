@@ -69,7 +69,7 @@ const SovrenIcon: React.FC<{ className?: string }> = ({ className }) => (
 );
 
 const SovereignOnboarding: React.FC = () => {
-  const { generateNostrChallenge, authenticateNostr } = useAuth();
+  const auth = useAuth();
   const navigate = useNavigate();
 
   // Onboarding state
@@ -272,7 +272,7 @@ const SovereignOnboarding: React.FC = () => {
 
     try {
       // Generate challenge
-      const challengeResult = await generateNostrChallenge();
+      const challengeResult = await auth.generateNostrChallenge();
       if (challengeResult.error || !challengeResult.challenge) {
         throw new Error(challengeResult.error || 'Failed to get challenge');
       }
@@ -321,7 +321,7 @@ const SovereignOnboarding: React.FC = () => {
       localStorage.setItem('sovren_user_profile', JSON.stringify(userProfile));
 
       // Authenticate with Sovren
-      const authResult = await authenticateNostr({
+      const authResult = await auth.authenticateNostr({
         signature: signedEvent.sig,
         pubkey: nostrKeys.publicKey,
         challenge: challengeResult.challenge,

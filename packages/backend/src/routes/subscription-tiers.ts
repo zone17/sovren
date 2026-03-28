@@ -1,6 +1,5 @@
-// @ts-nocheck
 /**
- * 💎 SUBSCRIPTION TIERS MANAGEMENT ROUTES
+ * SUBSCRIPTION TIERS MANAGEMENT ROUTES
  *
  * Elite implementation of US-003: Subscription tier management
  * Allows creators to create and manage multiple subscription tiers
@@ -13,11 +12,16 @@ import { z } from 'zod';
 import { authenticate } from '../middleware/auth';
 import { asyncHandler } from '../middleware/error-handler-middleware';
 import { validateRequest } from '../middleware/validation-middleware';
+import { createRateLimiter } from '../middleware/rate-limit-middleware';
 import { SubscriptionManagementService } from '../services/subscription-management-service';
 import { LightningPaymentService } from '../services/lightning-payment-service';
 import logger from '../lib/logger';
 
 const router = express.Router();
+
+// Rate limiting: 60 requests per minute per IP for subscription tier operations
+const subscriptionRateLimiter = createRateLimiter({ windowMs: 60 * 1000, max: 60 });
+router.use(subscriptionRateLimiter);
 
 // Lazy singleton — deferred to first request to avoid side effects at module load
 let _subscriptionService: SubscriptionManagementService | null = null;

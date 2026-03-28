@@ -1,4 +1,3 @@
-// @ts-nocheck
 // TODO(SOV-REFACTOR-003): This file is 1804 lines. Decompose into:
 // - RefundAuthorizationService (requestAuthorization, authorizeRefund, denyRefund, requiresAuthorization — ~150 lines)
 // - RefundProcessingService (processRefund, processLightningRefund, processOnchainRefund, retryRefund,
