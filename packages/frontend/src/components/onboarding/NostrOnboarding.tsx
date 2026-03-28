@@ -22,6 +22,7 @@ import { Card, CardContent } from '../ui/card';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { bytesToHex, hexToBytes } from '../../shared/utils/hex';
+import { createSignatureMessage } from '@shared/types/nostr/auth';
 
 interface NostrKeys {
   publicKey: string;
@@ -192,13 +193,14 @@ const NostrOnboarding: React.FC = () => {
       // Sign challenge
       const { finalizeEvent } = await import('nostr-tools/pure');
       const timestamp = Math.floor(Date.now() / 1000);
+      const message = createSignatureMessage(challengeResult.challenge, timestamp);
 
       const event = {
         kind: 22242,
         pubkey: nostrKeys.publicKey,
         created_at: timestamp,
         tags: [['challenge', challengeResult.challenge]],
-        content: challengeResult.challenge,
+        content: message,
       };
 
       const privateKeyBytes = hexToBytes(nostrKeys.privateKey);

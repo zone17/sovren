@@ -40,20 +40,26 @@ const getCurrentUser = (): User | null => {
   }
 
   // User identity is now managed via httpOnly cookies (credentials: 'include').
-  // Return a minimal user so callers can still attach userId query params.
-  // The backend will resolve the full identity from the session cookie.
+  // The nostr pubkey is still stored in localStorage for non-sensitive metadata.
+  // Use it as the user ID for query params; the backend resolves full identity
+  // from the session cookie.
+  const pubkey = localStorage.getItem('nostr_pubkey');
+  if (!pubkey) {
+    return null;
+  }
+
   return {
-    id: 'session-user',
+    id: pubkey,
     email: '',
-    name: 'Session User',
-    nostr_pubkey: undefined,
+    name: pubkey.slice(0, 8),
+    nostr_pubkey: pubkey,
     role: 'supporter',
     avatar_url: undefined,
     bio: undefined,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     email_verified: false,
-    nostr_verified: false,
+    nostr_verified: true,
     permissions: [],
   };
 };
@@ -72,6 +78,11 @@ class AnalyticsWebSocketManager {
     }
 
     try {
+      // WebSocket connections rely on the auth cookie sent during the HTTP upgrade
+      // handshake (credentials are included automatically by the browser for same-origin
+      // or CORS-allowed origins). The WS server must read req.cookies on upgrade to
+      // authenticate the user. The userId query param is used for routing/subscription
+      // purposes only — it is NOT a security credential.
       const wsUrl = `${WEBSOCKET_URL}?userId=${userId}`;
       this.ws = new WebSocket(wsUrl);
 

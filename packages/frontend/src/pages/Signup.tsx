@@ -7,6 +7,7 @@ import { Label } from '../components/ui/label';
 import { Spinner } from '../components/ui/spinner';
 import { useAuth } from '../features/auth';
 import { bytesToHex, hexToBytes } from '../shared/utils/hex';
+import { createSignatureMessage } from '@shared/types/nostr/auth';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 interface NostrKeys {
@@ -68,13 +69,14 @@ const Signup: React.FC = () => {
       // Step 2: Sign challenge with private key
       const { finalizeEvent } = await import('nostr-tools/pure');
       const timestamp = Math.floor(Date.now() / 1000);
+      const message = createSignatureMessage(challengeResult.challenge, timestamp);
 
       const event = {
         kind: 22242,
         pubkey: nostrKeys.publicKey,
         created_at: timestamp,
         tags: [['challenge', challengeResult.challenge]],
-        content: challengeResult.challenge,
+        content: message,
       };
 
       const privateKeyBytes = hexToBytes(nostrKeys.privateKey);
@@ -149,20 +151,26 @@ const Signup: React.FC = () => {
               {/* NOSTR Registration */}
               <div className="space-y-6">
                   <div className="bg-purple-500/10 border border-purple-500/20 rounded-md p-4">
-                    <h3 className="text-sm font-medium text-purple-300 mb-2">Sovereign Identity</h3>
+                    <h3 className="text-sm font-medium text-purple-300 mb-2">Independent Identity</h3>
+                    <p className="text-sm text-purple-200/80 mb-2">
+                      NOSTR is a new way to publish online where no company can delete your content
+                      or ban your account.
+                    </p>
                     <p className="text-sm text-purple-200/80">
-                      Create a decentralized identity that you fully control. Your NOSTR keys work
-                      across all compatible platforms.
+                      Create your identity with a pair of cryptographic keys that you fully control.
+                      Your keys work across all NOSTR-compatible platforms.
                     </p>
                   </div>
 
                   {/* Role Selection */}
                   <div>
-                    <Label className="text-sm font-medium text-foreground mb-3 block">
+                    <Label id="role-label" className="text-sm font-medium text-foreground mb-3 block">
                       I want to join as a:
                     </Label>
-                    <div className="flex space-x-1 bg-card/50 p-1 rounded-lg border border-border/50">
+                    <div role="tablist" aria-labelledby="role-label" className="flex space-x-1 bg-card/50 p-1 rounded-lg border border-border/50">
                       <button
+                        role="tab"
+                        aria-selected={userRole === 'supporter'}
                         onClick={() => setUserRole('supporter')}
                         className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all duration-150 ${
                           userRole === 'supporter'
@@ -173,6 +181,8 @@ const Signup: React.FC = () => {
                         Supporter
                       </button>
                       <button
+                        role="tab"
+                        aria-selected={userRole === 'creator'}
                         onClick={() => setUserRole('creator')}
                         className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all duration-150 ${
                           userRole === 'creator'
@@ -195,6 +205,7 @@ const Signup: React.FC = () => {
                     <textarea
                       id="publicKey"
                       rows={3}
+                      aria-required="true"
                       value={nostrKeys.publicKey}
                       onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                         setNostrKeys({ ...nostrKeys, publicKey: e.target.value })
@@ -214,6 +225,7 @@ const Signup: React.FC = () => {
                     <textarea
                       id="privateKey"
                       rows={3}
+                      aria-required="true"
                       value={nostrKeys.privateKey}
                       onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                         setNostrKeys({ ...nostrKeys, privateKey: e.target.value })

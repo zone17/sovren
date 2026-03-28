@@ -83,7 +83,7 @@ router.post(
     // Set JWT in HttpOnly cookie for browser clients
     res.cookie('sovren_token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging',
       sameSite: 'strict',
       path: '/api',
       maxAge: 24 * 60 * 60 * 1000, // 24h
@@ -150,7 +150,7 @@ router.post(
     // Set new JWT in HttpOnly cookie
     res.cookie('sovren_token', refreshResult.newToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging',
       sameSite: 'strict',
       path: '/api',
       maxAge: 24 * 60 * 60 * 1000, // 24h

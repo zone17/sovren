@@ -174,13 +174,13 @@ export const NostrAuthProvider: React.FC<NostrAuthProviderProps> = ({
         const challenge: AuthChallenge = await challengeResponse.json();
 
         // Step 3: Sign the challenge
-        const timestamp = Date.now();
+        const timestamp = Math.floor(Date.now() / 1000);
         const message = createSignatureMessage(challenge.challenge, timestamp);
 
         const event = {
           kind: 22242, // AUTH kind
           pubkey: keyPair.publicKey,
-          created_at: Math.floor(timestamp / 1000),
+          created_at: timestamp,
           tags: [['challenge', challenge.challenge]],
           content: message,
         };
@@ -270,13 +270,13 @@ export const NostrAuthProvider: React.FC<NostrAuthProviderProps> = ({
       const challenge: AuthChallenge = await challengeResponse.json();
 
       // Step 3: Sign with extension
-      const timestamp = Date.now();
+      const timestamp = Math.floor(Date.now() / 1000);
       const message = createSignatureMessage(challenge.challenge, timestamp);
 
       const event = {
         kind: 22242,
         pubkey: extension.publicKey,
-        created_at: Math.floor(timestamp / 1000),
+        created_at: timestamp,
         tags: [['challenge', challenge.challenge]],
         content: message,
       };
