@@ -156,10 +156,11 @@ describe('📊 Analytics Service Comprehensive Tests', () => {
     analyticsService.clearCache();
     (analyticsService as any).retryDelay = () => 0;
 
-    // Mock successful auth
+    // Mock successful auth — demo_user provides identity for getCurrentUser()
+    // auth_token no longer used (cookie-based auth); nostr_pubkey is fallback identity
     localStorageMock.getItem.mockImplementation((key: string) => {
       if (key === 'demo_user') return JSON.stringify(createMockUser());
-      if (key === 'auth_token') return 'mock-jwt-token';
+      if (key === 'nostr_pubkey') return 'npub1testuser123';
       return null;
     });
   });
@@ -180,13 +181,17 @@ describe('📊 Analytics Service Comprehensive Tests', () => {
       );
     });
 
-    test('should handle invalid token gracefully', async () => {
+    test('should handle user with only nostr_pubkey (no demo_user)', async () => {
       localStorageMock.getItem.mockImplementation((key: string) => {
-        if (key === 'auth_token') return 'invalid-token';
+        if (key === 'nostr_pubkey') return 'npub1testuser123';
         return null;
       });
 
-      await expect(analyticsService.getCreatorEarnings('7d')).rejects.toThrow(AnalyticsError);
+      const mockEarnings = createMockEarnings();
+      server.use(http.get(`${API_BASE}/earnings`, () => HttpResponse.json(mockEarnings)));
+
+      const result = await analyticsService.getCreatorEarnings('7d');
+      expect(result).toEqual(mockEarnings);
     });
 
     test('should use demo user when available', async () => {
@@ -352,9 +357,11 @@ describe('📊 Analytics Service Comprehensive Tests', () => {
     test('should connect to WebSocket successfully', async () => {
       await analyticsService.connectRealTime();
 
+      // Token no longer in WS URL — auth is via cookies on the HTTP upgrade handshake.
+      // URL now only contains userId for routing/subscription purposes.
       expect(MockWebSocket).toHaveBeenCalledWith(
         expect.stringContaining(
-          'ws://localhost:3001/analytics?token=mock-jwt-token&userId=test-user-123'
+          'ws://localhost:3001/analytics?userId=test-user-123'
         )
       );
     });

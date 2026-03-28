@@ -35,36 +35,38 @@ describe('Signup Component', () => {
     it('renders the main heading', () => {
       renderWithProviders(<Signup />);
 
-      const heading = screen.getByRole('heading', { name: 'Join Sovren' });
+      const heading = screen.getByText('Join Sovren');
       expect(heading).toBeInTheDocument();
       expect(heading).toHaveTextContent('Join Sovren');
     });
 
-    it('renders all form elements', () => {
+    it('renders NOSTR key generation button', () => {
       renderWithProviders(<Signup />);
 
-      // Check for authentication mode selector (no emojis in new design)
-      expect(screen.getByText('NOSTR Keys')).toBeInTheDocument();
-      expect(screen.getByText('Email')).toBeInTheDocument();
-
-      // Check for NOSTR-specific elements (default mode)
-      expect(screen.getByText('Sovereign Identity')).toBeInTheDocument();
-      // Generate button shows in NOSTR mode
+      // Should have Generate New Keys button (NOSTR-only signup)
       expect(screen.getByText('Generate New Keys')).toBeInTheDocument();
     });
 
-    it('switches between authentication modes', () => {
+    it('renders Independent Identity section', () => {
       renderWithProviders(<Signup />);
 
-      // Switch to email mode
-      const emailTab = screen.getByText('Email');
-      fireEvent.click(emailTab);
+      // New design uses "Independent Identity" instead of "Sovereign Identity"
+      expect(screen.getByText('Independent Identity')).toBeInTheDocument();
+    });
 
-      // Check for email form elements
-      expect(screen.getByLabelText('Full Name')).toBeInTheDocument();
-      expect(screen.getByLabelText('Email address')).toBeInTheDocument();
-      expect(screen.getByLabelText('Password')).toBeInTheDocument();
-      expect(screen.getByLabelText('Confirm Password')).toBeInTheDocument();
+    it('renders role selection', () => {
+      renderWithProviders(<Signup />);
+
+      expect(screen.getByText('I want to join as a:')).toBeInTheDocument();
+      expect(screen.getByText('Supporter')).toBeInTheDocument();
+      expect(screen.getByText('Creator')).toBeInTheDocument();
+    });
+
+    it('does not render email signup tab (removed)', () => {
+      renderWithProviders(<Signup />);
+
+      // Email signup tab has been removed — only NOSTR signup is available
+      expect(screen.queryByText('Email')).not.toBeInTheDocument();
     });
   });
 

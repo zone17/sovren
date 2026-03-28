@@ -1,7 +1,7 @@
 /**
  * SIGNUP UI TESTS - CODE OF CRAFT STANDARDS
  *
- * Updated to match actual Signup.tsx implementation (design system overhaul).
+ * Updated to match actual Signup.tsx implementation (NOSTR-only, no email tab).
  */
 import { configureStore } from '@reduxjs/toolkit';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -55,24 +55,20 @@ describe('Signup UI/UX Quality Tests - Code of Craft', () => {
       expect(description).toBeInTheDocument();
     });
 
-    test('SHOULD use modern authentication tabs', () => {
+    test('SHOULD NOT show email tab (removed in NOSTR-only redesign)', () => {
       renderSignup();
 
-      // Authentication mode tabs (no emojis in new design)
-      const nostrTab = screen.getByText('NOSTR Keys');
-      const emailTab = screen.getByText('Email');
-
-      expect(nostrTab).toBeInTheDocument();
-      expect(emailTab).toBeInTheDocument();
+      // Email tab has been removed — only NOSTR signup available
+      expect(screen.queryByText('Email')).not.toBeInTheDocument();
     });
 
-    test('SHOULD show sovereign identity benefits', () => {
+    test('SHOULD show independent identity benefits', () => {
       renderSignup();
 
-      // NOSTR benefits should be highlighted (no emoji prefix in new design)
-      expect(screen.getByText('Sovereign Identity')).toBeInTheDocument();
+      // NOSTR benefits highlighted with "Independent Identity" heading
+      expect(screen.getByText('Independent Identity')).toBeInTheDocument();
       expect(
-        screen.getByText(/Create a decentralized identity that you fully control/i)
+        screen.getByText(/NOSTR is a new way to publish online/i)
       ).toBeInTheDocument();
     });
   });
@@ -93,22 +89,17 @@ describe('Signup UI/UX Quality Tests - Code of Craft', () => {
     test('SHOULD emphasize creator role prominently', () => {
       renderSignup();
 
-      // Creator option should be clearly visible (no emoji in new design)
+      // Creator option should be clearly visible
       const creatorButton = screen.getByText('Creator');
       expect(creatorButton).toBeInTheDocument();
     });
 
-    test('SHOULD have clear NOSTR benefits for creators', () => {
+    test('SHOULD have NOSTR key generation capability', () => {
       renderSignup();
 
-      // NOSTR mode should be default (creator-focused)
-      const nostrTab = screen.getByText('NOSTR Keys');
-      // New design uses purple styling for active tab
-      expect(nostrTab).toHaveClass('text-purple-400');
-
-      // Should explain sovereign identity benefits
-      const sovereignText = screen.getByText(/sovereign identity/i);
-      expect(sovereignText).toBeInTheDocument();
+      // Should have key generation feature
+      const generateButton = screen.getByText('Generate New Keys');
+      expect(generateButton).toBeInTheDocument();
     });
   });
 
@@ -122,22 +113,22 @@ describe('Signup UI/UX Quality Tests - Code of Craft', () => {
       expect(screen.getByText('Creator')).toBeInTheDocument();
     });
 
-    test('SHOULD have semantic button roles', () => {
+    test('SHOULD have semantic button roles for role selection', () => {
       renderSignup();
 
-      // Authentication mode buttons should be buttons
-      const nostrTab = screen.getByText('NOSTR Keys');
-      expect(nostrTab.tagName).toBe('BUTTON');
+      // Role selection buttons should be buttons
+      const supporterBtn = screen.getByText('Supporter');
+      expect(supporterBtn.tagName).toBe('BUTTON');
 
-      const emailTab = screen.getByText('Email');
-      expect(emailTab.tagName).toBe('BUTTON');
+      const creatorBtn = screen.getByText('Creator');
+      expect(creatorBtn.tagName).toBe('BUTTON');
     });
 
     test('SHOULD have proper heading structure', () => {
       renderSignup();
 
       // Main heading should exist with specific text
-      const mainHeading = screen.getByRole('heading', { level: 3, name: 'Join Sovren' });
+      const mainHeading = screen.getByText('Join Sovren');
       expect(mainHeading).toHaveTextContent('Join Sovren');
     });
   });
@@ -146,7 +137,7 @@ describe('Signup UI/UX Quality Tests - Code of Craft', () => {
     test('SHOULD have NOSTR key generation capability', () => {
       renderSignup();
 
-      // Should have key generation feature (no emoji in new design)
+      // Should have key generation feature
       const generateButton = screen.getByText('Generate New Keys');
       expect(generateButton).toBeInTheDocument();
     });

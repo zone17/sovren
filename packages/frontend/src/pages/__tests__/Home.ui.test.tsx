@@ -44,9 +44,9 @@ describe('Home Page - Sovren Creator Platform', () => {
       expect(screen.getByText(/Monetize your audience with Bitcoin/i)).toBeInTheDocument();
     });
 
-    test('SHOULD have NOSTR Protocol in footer', () => {
+    test('SHOULD have NOSTR mention in hero', () => {
       renderHome();
-      expect(screen.getByText('NOSTR Protocol')).toBeInTheDocument();
+      expect(screen.getByText('NOSTR')).toBeInTheDocument();
     });
 
     test('SHOULD display no deplatforming message', () => {
@@ -63,8 +63,8 @@ describe('Home Page - Sovren Creator Platform', () => {
   describe('Call to Action Buttons', () => {
     test('SHOULD have Start Creating primary button', () => {
       renderHome();
-      const button = screen.getByRole('button', { name: /Start Creating/i });
-      expect(button).toBeInTheDocument();
+      const buttons = screen.getAllByRole('button', { name: /Start Creating/i });
+      expect(buttons.length).toBeGreaterThanOrEqual(1);
     });
 
     test('SHOULD have See How It Works secondary button', () => {
