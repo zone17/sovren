@@ -22,7 +22,7 @@ export const Spinner: React.FC<SpinnerProps> = ({ size = 'md', className = '' })
   };
 
   return (
-    <div role="status" className="inline-flex">
+    <div role='status' className='inline-flex'>
       <div
         className={cn(
           'animate-spin rounded-full border-t-transparent border-primary',
@@ -30,7 +30,7 @@ export const Spinner: React.FC<SpinnerProps> = ({ size = 'md', className = '' })
           className
         )}
       />
-      <span className="sr-only">Loading...</span>
+      <span className='sr-only'>Loading...</span>
     </div>
   );
 };

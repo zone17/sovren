@@ -38,7 +38,7 @@
  */
 
 import { getPublicKey, finalizeEvent } from 'nostr-tools/pure';
-import * as secp256k1 from '@noble/secp256k1';
+import { schnorr } from '@noble/curves/secp256k1';
 import type {
   NostrEvent,
   UnsignedNostrEvent,
@@ -345,7 +345,8 @@ export class NIP26Service {
    */
   private async signDelegationToken(delegationToken: string, privateKey: string): Promise<string> {
     const hash = await this.sha256(delegationToken);
-    const signature = await secp256k1.schnorr.sign(hash, privateKey);
+    const privKeyBytes = this.hexToBytes(privateKey);
+    const signature = schnorr.sign(hash, privKeyBytes);
     return Array.from(new Uint8Array(signature), b => b.toString(16).padStart(2, '0')).join('');
   }
 
@@ -362,7 +363,7 @@ export class NIP26Service {
       const signatureBytes = new Uint8Array(signature.match(/.{1,2}/g)!.map(b => parseInt(b, 16)));
       const publicKeyBytes = new Uint8Array(publicKey.match(/.{1,2}/g)!.map(b => parseInt(b, 16)));
 
-      return await secp256k1.schnorr.verify(signatureBytes, hash, publicKeyBytes);
+      return schnorr.verify(signatureBytes, hash, publicKeyBytes);
     } catch (error) {
       return false;
     }

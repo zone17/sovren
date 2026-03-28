@@ -93,10 +93,10 @@ class AnalyticsWebSocketManager {
         this.reconnectDelay = 1000;
       };
 
-      this.ws.onmessage = (event) => {
+      this.ws.onmessage = event => {
         try {
           const analyticsEvent: AnalyticsEvent = JSON.parse(event.data);
-          this.eventListeners.forEach((listener) => listener(analyticsEvent));
+          this.eventListeners.forEach(listener => listener(analyticsEvent));
         } catch (error) {
           // eslint-disable-next-line no-console
           console.error('Failed to parse analytics event:', error);
@@ -109,7 +109,7 @@ class AnalyticsWebSocketManager {
         this.attemptReconnect(userId);
       };
 
-      this.ws.onerror = (error) => {
+      this.ws.onerror = error => {
         // eslint-disable-next-line no-console
         console.error('📡 Analytics WebSocket error:', error);
       };
@@ -164,7 +164,7 @@ class AnalyticsWebSocketManager {
 class AnalyticsServiceImpl {
   private wsManager = new AnalyticsWebSocketManager();
   private cache = new Map<string, { data: unknown; timestamp: number; ttl: number }>();
-  private retryDelay: (attempt: number) => number = (attempt) => Math.pow(2, attempt) * 1000;
+  private retryDelay: (attempt: number) => number = attempt => Math.pow(2, attempt) * 1000;
   private readonly CACHE_TTL = {
     earnings: 5 * 60 * 1000, // 5 minutes
     payments: 2 * 60 * 1000, // 2 minutes
@@ -236,7 +236,7 @@ class AnalyticsServiceImpl {
         }
 
         // Wait before retry (exponential backoff)
-        await new Promise((resolve) => setTimeout(resolve, this.retryDelay(attempt)));
+        await new Promise(resolve => setTimeout(resolve, this.retryDelay(attempt)));
       }
     }
 
@@ -323,7 +323,7 @@ class AnalyticsServiceImpl {
         `/payments?${queryParams.toString()}`
       );
 
-      const payments = data.map((payment) => validateLightningPayment(payment));
+      const payments = data.map(payment => validateLightningPayment(payment));
       this.setCachedData(cacheKey, payments, this.CACHE_TTL.payments);
 
       return payments;
@@ -590,7 +590,7 @@ export const useRealTimeAnalytics = () => {
     await analyticsService.connectRealTime();
 
     // Subscribe to events and invalidate relevant queries
-    return analyticsService.subscribeToEvents((event) => {
+    return analyticsService.subscribeToEvents(event => {
       switch (event.type) {
         case 'payment_received':
           queryClient.invalidateQueries({ queryKey: analyticsKeys.all });

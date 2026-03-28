@@ -1,7 +1,14 @@
 // Stub types for analytics integration
 export type AnalyticsEvent = Record<string, any>;
 export type AnalyticsDashboardConfig = Record<string, any>;
+export type AutomatedReport = Record<string, any>;
 export type ConversionFunnel = Record<string, any>;
+export type DataVisualization = Record<string, any>;
+export type DataWarehouseConnection = Record<string, any>;
+export type ErrorAnalytics = Record<string, any>;
+export type ErrorEvent = Record<string, any>;
+export type PerformanceAlertRule = Record<string, any>;
+export type PerformanceBaseline = Record<string, any>;
 export type PerformanceMetric = Record<string, any>;
 export type PredictiveAnalyticsModel = Record<string, any>;
 export type UserBehavior = Record<string, any>;

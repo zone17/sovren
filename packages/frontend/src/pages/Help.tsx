@@ -81,35 +81,35 @@ const FAQAccordion: React.FC<{ item: FAQItem; index: number }> = ({ item, index 
   const panelId = `faq-panel-${index}`;
 
   return (
-    <div className="border-b border-white/5 last:border-b-0">
+    <div className='border-b border-white/5 last:border-b-0'>
       <h3>
         <button
           id={headingId}
           aria-expanded={isOpen}
           aria-controls={panelId}
           onClick={() => setIsOpen(!isOpen)}
-          className="flex w-full items-center justify-between py-5 px-1 text-left text-foreground hover:text-purple-300 transition-colors duration-150"
+          className='flex w-full items-center justify-between py-5 px-1 text-left text-foreground hover:text-purple-300 transition-colors duration-150'
         >
-          <span className="text-base font-medium pr-4">{item.question}</span>
+          <span className='text-base font-medium pr-4'>{item.question}</span>
           <svg
             className={`w-5 h-5 shrink-0 text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
+            fill='none'
+            viewBox='0 0 24 24'
+            stroke='currentColor'
             strokeWidth={1.5}
-            aria-hidden="true"
+            aria-hidden='true'
           >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+            <path strokeLinecap='round' strokeLinejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5' />
           </svg>
         </button>
       </h3>
       <div
         id={panelId}
-        role="region"
+        role='region'
         aria-labelledby={headingId}
         className={`overflow-hidden transition-all duration-200 ${isOpen ? 'max-h-96 pb-5' : 'max-h-0'}`}
       >
-        <p className="text-sm text-white/70 leading-relaxed px-1">{item.answer}</p>
+        <p className='text-sm text-white/70 leading-relaxed px-1'>{item.answer}</p>
       </div>
     </div>
   );
@@ -119,40 +119,35 @@ const Help: React.FC = () => {
   useDocumentTitle('Help & FAQ');
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <nav className="mb-8">
-          <Link to="/" className="text-sm text-purple-400 hover:text-purple-300 transition-colors">
+    <div className='min-h-screen bg-background'>
+      <div className='max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16'>
+        <nav className='mb-8'>
+          <Link to='/' className='text-sm text-purple-400 hover:text-purple-300 transition-colors'>
             &larr; Back to Home
           </Link>
         </nav>
 
-        <h1 className="text-3xl font-bold text-foreground font-display mb-2">Help & FAQ</h1>
-        <p className="text-muted-foreground mb-10">
-          Find answers to common questions about Sovren, NOSTR, Bitcoin Lightning, and getting started.
+        <h1 className='text-3xl font-bold text-foreground font-display mb-2'>Help & FAQ</h1>
+        <p className='text-muted-foreground mb-10'>
+          Find answers to common questions about Sovren, NOSTR, Bitcoin Lightning, and getting
+          started.
         </p>
 
-        <div className="glass-dark rounded-2xl border border-white/5 p-6 sm:p-8">
+        <div className='glass-dark rounded-2xl border border-white/5 p-6 sm:p-8'>
           {faqItems.map((item, index) => (
             <FAQAccordion key={index} item={item} index={index} />
           ))}
         </div>
 
-        <div className="mt-10 text-center">
-          <p className="text-sm text-muted-foreground mb-4">
+        <div className='mt-10 text-center'>
+          <p className='text-sm text-muted-foreground mb-4'>
             Still have questions? Reach out to us on NOSTR.
           </p>
-          <div className="flex justify-center gap-4 text-sm">
-            <Link
-              to="/terms"
-              className="text-purple-400 hover:text-purple-300 transition-colors"
-            >
+          <div className='flex justify-center gap-4 text-sm'>
+            <Link to='/terms' className='text-purple-400 hover:text-purple-300 transition-colors'>
               Terms of Service
             </Link>
-            <Link
-              to="/privacy"
-              className="text-purple-400 hover:text-purple-300 transition-colors"
-            >
+            <Link to='/privacy' className='text-purple-400 hover:text-purple-300 transition-colors'>
               Privacy Policy
             </Link>
           </div>

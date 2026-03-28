@@ -109,7 +109,7 @@ export function csrfProtection(
   return (req: Request, res: Response, next: NextFunction): void => {
     // Skip excluded paths
     const requestPath = req.path || req.url;
-    if (opts.excludePaths.some((p) => requestPath === p || requestPath.startsWith(p + '/'))) {
+    if (opts.excludePaths.some(p => requestPath === p || requestPath.startsWith(p + '/'))) {
       next();
       return;
     }

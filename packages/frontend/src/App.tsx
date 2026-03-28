@@ -15,147 +15,141 @@ import { BusinessErrorBoundary } from './features/business/ErrorBoundary';
 import { CreatorNetworkErrorBoundary } from './features/creator-network/ErrorBoundary';
 
 // 🎯 **LAZY LOADING**
-const Home = React.lazy(() =>
-  import('./pages/Home').then((module) => ({ default: module.default }))
-);
+const Home = React.lazy(() => import('./pages/Home').then(module => ({ default: module.default })));
 const Login = React.lazy(() =>
-  import('./pages/Login').then((module) => ({ default: module.default }))
+  import('./pages/Login').then(module => ({ default: module.default }))
 );
 const Signup = React.lazy(() =>
-  import('./pages/Signup').then((module) => ({ default: module.default }))
+  import('./pages/Signup').then(module => ({ default: module.default }))
 );
 const Profile = React.lazy(() =>
-  import('./pages/Profile').then((module) => ({ default: module.default }))
+  import('./pages/Profile').then(module => ({ default: module.default }))
 );
-const Post = React.lazy(() =>
-  import('./pages/Post').then((module) => ({ default: module.default }))
-);
+const Post = React.lazy(() => import('./pages/Post').then(module => ({ default: module.default })));
 const CreatorDashboard = React.lazy(() =>
-  import('./pages/CreatorDashboard').then((module) => ({ default: module.default }))
+  import('./pages/CreatorDashboard').then(module => ({ default: module.default }))
 );
 const AnalyticsDashboard = React.lazy(() =>
-  import('./features/analytics/components/CreatorDashboard').then((module) => ({
+  import('./features/analytics/components/CreatorDashboard').then(module => ({
     default: module.CreatorDashboard,
   }))
 );
 const SubscriptionManager = React.lazy(() =>
-  import('./features/subscriptions/components/SubscriptionManager').then((module) => ({
+  import('./features/subscriptions/components/SubscriptionManager').then(module => ({
     default: module.SubscriptionManager,
   }))
 );
 const MonitoringDashboard = React.lazy(() =>
-  import('./features/dashboard/components/MonitoringDashboard').then((module) => ({
+  import('./features/dashboard/components/MonitoringDashboard').then(module => ({
     default: module.default,
   }))
 );
 const NotFound = React.lazy(() =>
-  import('./pages/NotFound').then((module) => ({ default: module.default }))
+  import('./pages/NotFound').then(module => ({ default: module.default }))
 );
 
 // 🚀 **ONBOARDING COMPONENTS**
 const SovereignOnboarding = React.lazy(() =>
-  import('./components/onboarding/SovereignOnboarding').then((module) => ({
+  import('./components/onboarding/SovereignOnboarding').then(module => ({
     default: module.default,
   }))
 );
 const NostrOnboarding = React.lazy(() =>
-  import('./components/onboarding/NostrOnboarding').then((module) => ({
+  import('./components/onboarding/NostrOnboarding').then(module => ({
     default: module.default,
   }))
 );
 const LightningOnboarding = React.lazy(() =>
-  import('./components/onboarding/LightningOnboarding').then((module) => ({
+  import('./components/onboarding/LightningOnboarding').then(module => ({
     default: module.default,
   }))
 );
 const ProfileDashboard = React.lazy(() =>
-  import('./components/ProfileDashboard').then((module) => ({
+  import('./components/ProfileDashboard').then(module => ({
     default: module.default,
   }))
 );
 
 // Settings, Legal, Help pages
 const Settings = React.lazy(() =>
-  import('./pages/Settings').then((module) => ({ default: module.default }))
+  import('./pages/Settings').then(module => ({ default: module.default }))
 );
 const Terms = React.lazy(() =>
-  import('./pages/Terms').then((module) => ({ default: module.default }))
+  import('./pages/Terms').then(module => ({ default: module.default }))
 );
 const Privacy = React.lazy(() =>
-  import('./pages/Privacy').then((module) => ({ default: module.default }))
+  import('./pages/Privacy').then(module => ({ default: module.default }))
 );
-const Help = React.lazy(() =>
-  import('./pages/Help').then((module) => ({ default: module.default }))
-);
+const Help = React.lazy(() => import('./pages/Help').then(module => ({ default: module.default })));
 
 // Discovery & Creator Profile
 const DiscoveryPage = React.lazy(() =>
-  import('./features/discovery/components/DiscoveryPage').then((module) => ({
+  import('./features/discovery/components/DiscoveryPage').then(module => ({
     default: module.DiscoveryPage,
   }))
 );
 const CreatorProfilePage = React.lazy(() =>
-  import('./pages/CreatorProfile').then((module) => ({
+  import('./pages/CreatorProfile').then(module => ({
     default: module.default,
   }))
 );
 
 // Revenue Analytics
 const RevenueAnalytics = React.lazy(() =>
-  import('./features/analytics/components/RevenueAnalytics').then((module) => ({
+  import('./features/analytics/components/RevenueAnalytics').then(module => ({
     default: module.RevenueAnalytics,
   }))
 );
 
 // Content Detail (public — comments section)
 const ContentDetail = React.lazy(() =>
-  import('./pages/ContentDetail').then((module) => ({ default: module.default }))
+  import('./pages/ContentDetail').then(module => ({ default: module.default }))
 );
 
 // Business Manager
 const BusinessManagerDashboard = React.lazy(() =>
-  import('./features/business/components/BusinessManagerDashboard').then((module) => ({
+  import('./features/business/components/BusinessManagerDashboard').then(module => ({
     default: module.BusinessManagerDashboard,
   }))
 );
 
 // Creator Network (Community Hub)
 const CreatorNetworkDashboard = React.lazy(() =>
-  import('./features/creator-network/components/CreatorNetworkDashboard').then((module) => ({
+  import('./features/creator-network/components/CreatorNetworkDashboard').then(module => ({
     default: module.default,
   }))
 );
 
 // Phase 7: Creator Safety Net
 const WellnessDashboard = React.lazy(() =>
-  import('./features/wellness/components/WellnessDashboard').then((module) => ({
+  import('./features/wellness/components/WellnessDashboard').then(module => ({
     default: module.WellnessDashboard,
   }))
 );
 const ShieldDashboard = React.lazy(() =>
-  import('./features/content-shield/components/ShieldDashboard').then((module) => ({
+  import('./features/content-shield/components/ShieldDashboard').then(module => ({
     default: module.ShieldDashboard,
   }))
 );
 
 function App(): React.ReactElement {
   const LoadingSpinner = () => (
-    <div role="status" className="flex justify-center items-center h-64">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
-      <span className="sr-only">Loading...</span>
+    <div role='status' className='flex justify-center items-center h-64'>
+      <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500'></div>
+      <span className='sr-only'>Loading...</span>
     </div>
   );
 
   return (
-    <ErrorBoundary level="page" name="Application">
+    <ErrorBoundary level='page' name='Application'>
       <AuthProvider>
         {/* TODO(SOV-UX-001): Add per-route Suspense boundaries so Layout shell stays visible during navigation */}
         <Suspense fallback={<LoadingSpinner />}>
           <Routes>
             {/* Pages with their own layout (no duplicates) */}
-            <Route path="/" element={<Home />} />
+            <Route path='/' element={<Home />} />
             <Route
-              path="/login"
+              path='/login'
               element={
                 <AuthErrorBoundary>
                   <Login />
@@ -163,7 +157,7 @@ function App(): React.ReactElement {
               }
             />
             <Route
-              path="/signup"
+              path='/signup'
               element={
                 <AuthErrorBoundary>
                   <Signup />
@@ -173,7 +167,7 @@ function App(): React.ReactElement {
 
             {/* 🚀 ONBOARDING ROUTES */}
             <Route
-              path="/onboarding"
+              path='/onboarding'
               element={
                 <AuthErrorBoundary>
                   <SovereignOnboarding />
@@ -181,7 +175,7 @@ function App(): React.ReactElement {
               }
             />
             <Route
-              path="/onboarding/nostr"
+              path='/onboarding/nostr'
               element={
                 <NostrErrorBoundary>
                   <NostrOnboarding />
@@ -189,7 +183,7 @@ function App(): React.ReactElement {
               }
             />
             <Route
-              path="/onboarding/lightning"
+              path='/onboarding/lightning'
               element={
                 <NostrErrorBoundary>
                   <LightningOnboarding />
@@ -199,7 +193,7 @@ function App(): React.ReactElement {
 
             {/* 👤 PROFILE DASHBOARD (Shows post-onboarding profile) */}
             <Route
-              path="/profile-dashboard"
+              path='/profile-dashboard'
               element={
                 <AuthErrorBoundary>
                   <ProfileDashboard />
@@ -209,7 +203,7 @@ function App(): React.ReactElement {
 
             {/* Protected Routes that need Layout */}
             <Route
-              path="/profile"
+              path='/profile'
               element={
                 <Layout>
                   <ProtectedRoute>
@@ -222,7 +216,7 @@ function App(): React.ReactElement {
             />
 
             <Route
-              path="/post/:id"
+              path='/post/:id'
               element={
                 <Layout>
                   <ProtectedRoute>
@@ -236,7 +230,7 @@ function App(): React.ReactElement {
 
             {/* Creator Routes */}
             <Route
-              path="/create"
+              path='/create'
               element={
                 <Layout>
                   <ProtectedRoute>
@@ -249,7 +243,7 @@ function App(): React.ReactElement {
             />
 
             <Route
-              path="/dashboard"
+              path='/dashboard'
               element={
                 <Layout>
                   <ProtectedRoute>
@@ -263,7 +257,7 @@ function App(): React.ReactElement {
 
             {/* Analytics Dashboard */}
             <Route
-              path="/dashboard/analytics"
+              path='/dashboard/analytics'
               element={
                 <Layout>
                   <ProtectedRoute>
@@ -277,7 +271,7 @@ function App(): React.ReactElement {
 
             {/* Subscription Manager */}
             <Route
-              path="/dashboard/subscriptions"
+              path='/dashboard/subscriptions'
               element={
                 <Layout>
                   <ProtectedRoute>
@@ -291,7 +285,7 @@ function App(): React.ReactElement {
 
             {/* Discovery (Public) */}
             <Route
-              path="/discover"
+              path='/discover'
               element={
                 <Layout>
                   <DiscoveryPage />
@@ -301,7 +295,7 @@ function App(): React.ReactElement {
 
             {/* Creator Profile (Public) */}
             <Route
-              path="/creator/:id"
+              path='/creator/:id'
               element={
                 <Layout>
                   <CreatorProfilePage />
@@ -311,7 +305,7 @@ function App(): React.ReactElement {
 
             {/* Content Detail (Public — comments section) */}
             <Route
-              path="/content/:id"
+              path='/content/:id'
               element={
                 <Layout>
                   <ContentErrorBoundary>
@@ -323,7 +317,7 @@ function App(): React.ReactElement {
 
             {/* Revenue Analytics */}
             <Route
-              path="/dashboard/revenue"
+              path='/dashboard/revenue'
               element={
                 <Layout>
                   <ProtectedRoute>
@@ -337,10 +331,10 @@ function App(): React.ReactElement {
 
             {/* Wellness Dashboard — creators only, show access denied for supporters */}
             <Route
-              path="/wellness"
+              path='/wellness'
               element={
                 <Layout>
-                  <ProtectedRoute requireRole="creator" showAccessDenied={true}>
+                  <ProtectedRoute requireRole='creator' showAccessDenied={true}>
                     <WellnessErrorBoundary>
                       <WellnessDashboard />
                     </WellnessErrorBoundary>
@@ -351,7 +345,7 @@ function App(): React.ReactElement {
 
             {/* Content Shield Dashboard */}
             <Route
-              path="/shield"
+              path='/shield'
               element={
                 <Layout>
                   <ProtectedRoute>
@@ -365,10 +359,10 @@ function App(): React.ReactElement {
 
             {/* Community Hub (Creator Network) */}
             <Route
-              path="/community"
+              path='/community'
               element={
                 <Layout>
-                  <ProtectedRoute requireRole="creator" showAccessDenied={true}>
+                  <ProtectedRoute requireRole='creator' showAccessDenied={true}>
                     <CreatorNetworkErrorBoundary>
                       <CreatorNetworkDashboard />
                     </CreatorNetworkErrorBoundary>
@@ -379,10 +373,10 @@ function App(): React.ReactElement {
 
             {/* Business Manager — creators only */}
             <Route
-              path="/business"
+              path='/business'
               element={
                 <Layout>
-                  <ProtectedRoute requireRole="creator" showAccessDenied={true}>
+                  <ProtectedRoute requireRole='creator' showAccessDenied={true}>
                     <BusinessErrorBoundary>
                       <BusinessManagerDashboard />
                     </BusinessErrorBoundary>
@@ -393,10 +387,10 @@ function App(): React.ReactElement {
 
             {/* Admin Routes */}
             <Route
-              path="/monitoring"
+              path='/monitoring'
               element={
                 <Layout>
-                  <ProtectedRoute requireRole="admin">
+                  <ProtectedRoute requireRole='admin'>
                     <DashboardErrorBoundary>
                       <MonitoringDashboard />
                     </DashboardErrorBoundary>
@@ -407,11 +401,11 @@ function App(): React.ReactElement {
 
             {/* Settings (Protected) */}
             <Route
-              path="/settings"
+              path='/settings'
               element={
                 <Layout>
                   <ProtectedRoute>
-                    <ErrorBoundary level="page" name="Settings">
+                    <ErrorBoundary level='page' name='Settings'>
                       <Settings />
                     </ErrorBoundary>
                   </ProtectedRoute>
@@ -421,32 +415,32 @@ function App(): React.ReactElement {
 
             {/* Legal & Help (Public) */}
             <Route
-              path="/terms"
+              path='/terms'
               element={
-                <ErrorBoundary level="page" name="Terms">
+                <ErrorBoundary level='page' name='Terms'>
                   <Terms />
                 </ErrorBoundary>
               }
             />
             <Route
-              path="/privacy"
+              path='/privacy'
               element={
-                <ErrorBoundary level="page" name="Privacy">
+                <ErrorBoundary level='page' name='Privacy'>
                   <Privacy />
                 </ErrorBoundary>
               }
             />
             <Route
-              path="/help"
+              path='/help'
               element={
-                <ErrorBoundary level="page" name="Help">
+                <ErrorBoundary level='page' name='Help'>
                   <Help />
                 </ErrorBoundary>
               }
             />
 
             {/* 404 catch-all */}
-            <Route path="*" element={<NotFound />} />
+            <Route path='*' element={<NotFound />} />
           </Routes>
         </Suspense>
       </AuthProvider>

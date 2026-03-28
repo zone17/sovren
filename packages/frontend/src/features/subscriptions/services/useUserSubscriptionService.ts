@@ -273,26 +273,26 @@ class MockUserSubscriptionService {
 
   async getSubscriptions(): Promise<UserSubscription[]> {
     // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 500));
     return [...this.subscriptions];
   }
 
   async getPaymentMethods(): Promise<PaymentMethod[]> {
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    await new Promise(resolve => setTimeout(resolve, 300));
     return [...this.paymentMethods];
   }
 
   async getSubscriptionHistory(): Promise<SubscriptionHistory[]> {
-    await new Promise((resolve) => setTimeout(resolve, 400));
+    await new Promise(resolve => setTimeout(resolve, 400));
     return [...this.subscriptionHistory].sort(
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
     );
   }
 
   async toggleAutoRenew(subscriptionId: string, autoRenew: boolean): Promise<void> {
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await new Promise(resolve => setTimeout(resolve, 200));
 
-    const subscription = this.subscriptions.find((s) => s.id === subscriptionId);
+    const subscription = this.subscriptions.find(s => s.id === subscriptionId);
     if (subscription) {
       subscription.auto_renew = autoRenew;
 
@@ -311,9 +311,9 @@ class MockUserSubscriptionService {
   }
 
   async cancelSubscription(subscriptionId: string): Promise<void> {
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    await new Promise(resolve => setTimeout(resolve, 300));
 
-    const subscription = this.subscriptions.find((s) => s.id === subscriptionId);
+    const subscription = this.subscriptions.find(s => s.id === subscriptionId);
     if (subscription) {
       subscription.status = 'cancelled';
       subscription.auto_renew = false;
@@ -332,9 +332,9 @@ class MockUserSubscriptionService {
   }
 
   async pauseSubscription(subscriptionId: string): Promise<void> {
-    await new Promise((resolve) => setTimeout(resolve, 250));
+    await new Promise(resolve => setTimeout(resolve, 250));
 
-    const subscription = this.subscriptions.find((s) => s.id === subscriptionId);
+    const subscription = this.subscriptions.find(s => s.id === subscriptionId);
     if (subscription) {
       subscription.status = 'paused';
 
@@ -352,9 +352,9 @@ class MockUserSubscriptionService {
   }
 
   async resumeSubscription(subscriptionId: string): Promise<void> {
-    await new Promise((resolve) => setTimeout(resolve, 250));
+    await new Promise(resolve => setTimeout(resolve, 250));
 
-    const subscription = this.subscriptions.find((s) => s.id === subscriptionId);
+    const subscription = this.subscriptions.find(s => s.id === subscriptionId);
     if (subscription) {
       subscription.status = 'active';
 
@@ -374,7 +374,7 @@ class MockUserSubscriptionService {
   async addPaymentMethod(
     method: Omit<PaymentMethod, 'id' | 'created_at' | 'failure_count'>
   ): Promise<PaymentMethod> {
-    await new Promise((resolve) => setTimeout(resolve, 400));
+    await new Promise(resolve => setTimeout(resolve, 400));
 
     const newMethod: PaymentMethod = {
       ...method,
@@ -393,18 +393,18 @@ class MockUserSubscriptionService {
   }
 
   async updatePaymentMethod(methodId: string, updates: Partial<PaymentMethod>): Promise<void> {
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await new Promise(resolve => setTimeout(resolve, 200));
 
-    const method = this.paymentMethods.find((m) => m.id === methodId);
+    const method = this.paymentMethods.find(m => m.id === methodId);
     if (method) {
       Object.assign(method, updates);
     }
   }
 
   async deletePaymentMethod(methodId: string): Promise<void> {
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await new Promise(resolve => setTimeout(resolve, 200));
 
-    const index = this.paymentMethods.findIndex((m) => m.id === methodId);
+    const index = this.paymentMethods.findIndex(m => m.id === methodId);
     if (index !== -1) {
       const wasDefault = this.paymentMethods[index].is_default;
       this.paymentMethods.splice(index, 1);
@@ -417,13 +417,13 @@ class MockUserSubscriptionService {
   }
 
   async setDefaultPaymentMethod(methodId: string): Promise<void> {
-    await new Promise((resolve) => setTimeout(resolve, 150));
+    await new Promise(resolve => setTimeout(resolve, 150));
 
     // Remove default from all methods
-    this.paymentMethods.forEach((m) => (m.is_default = false));
+    this.paymentMethods.forEach(m => (m.is_default = false));
 
     // Set new default
-    const method = this.paymentMethods.find((m) => m.id === methodId);
+    const method = this.paymentMethods.find(m => m.id === methodId);
     if (method) {
       method.is_default = true;
     }
@@ -433,20 +433,20 @@ class MockUserSubscriptionService {
     subscriptionId: string,
     settings: Partial<RenewalSettings>
   ): Promise<void> {
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await new Promise(resolve => setTimeout(resolve, 200));
 
-    const subscription = this.subscriptions.find((s) => s.id === subscriptionId);
+    const subscription = this.subscriptions.find(s => s.id === subscriptionId);
     if (subscription && settings.auto_renew !== undefined) {
       subscription.auto_renew = settings.auto_renew;
     }
   }
 
   async exportSubscriptionHistory(): Promise<string> {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
     // Generate CSV content
     const headers = ['Date', 'Creator', 'Tier', 'Action', 'Amount (sats)', 'Payment Hash', 'Notes'];
-    const rows = this.subscriptionHistory.map((item) => [
+    const rows = this.subscriptionHistory.map(item => [
       new Date(item.date).toLocaleDateString(),
       item.creator_name,
       item.tier_name,
@@ -457,7 +457,7 @@ class MockUserSubscriptionService {
     ]);
 
     const csvContent = [headers, ...rows]
-      .map((row) => row.map((field) => `"${field}"`).join(','))
+      .map(row => row.map(field => `"${field}"`).join(','))
       .join('\n');
 
     // Create and download file

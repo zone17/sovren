@@ -203,8 +203,11 @@ router.post(
   asyncHandler(async (req: Request, res: Response) => {
     // Revoke the JWT token server-side so it cannot be reused
     // Check cookie first, then Authorization header
-    const token = req.cookies?.sovren_token ||
-      (req.headers.authorization?.startsWith('Bearer ') ? req.headers.authorization.substring(7) : undefined);
+    const token =
+      req.cookies?.sovren_token ||
+      (req.headers.authorization?.startsWith('Bearer ')
+        ? req.headers.authorization.substring(7)
+        : undefined);
 
     if (token) {
       await nostrAuth.revokeToken(token);

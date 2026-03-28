@@ -345,7 +345,7 @@ export async function generateNostrKeys(): Promise<{ publicKey: string; privateK
   return {
     publicKey,
     privateKey: Array.from(privateKey)
-      .map((b) => b.toString(16).padStart(2, '0'))
+      .map(b => b.toString(16).padStart(2, '0'))
       .join(''),
   };
 }
@@ -355,7 +355,7 @@ export async function signNostrChallenge(privateKey: string, challenge: string):
 
   // Convert hex string back to Uint8Array
   const privateKeyBytes = new Uint8Array(
-    privateKey.match(/.{1,2}/g)?.map((byte) => parseInt(byte, 16)) || []
+    privateKey.match(/.{1,2}/g)?.map(byte => parseInt(byte, 16)) || []
   );
 
   const event = {

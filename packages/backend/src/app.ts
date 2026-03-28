@@ -246,7 +246,10 @@ export function createApp(): Express {
         license: { name: 'MIT' },
       },
       servers: [
-        { url: '/api/v2', description: 'V2 (current) — Creator Safety Net, wellness & content shield' },
+        {
+          url: '/api/v2',
+          description: 'V2 (current) — Creator Safety Net, wellness & content shield',
+        },
         { url: '/api/v1', description: 'V1 (deprecated) — content, users, payments' },
       ],
       components: {
@@ -359,7 +362,8 @@ export const AppConfig = {
   // Security
   jwtSecret: (() => {
     const secret = process.env.JWT_SECRET;
-    const isProduction = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging';
+    const isProduction =
+      process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging';
 
     if (!secret) {
       if (isProduction) {
@@ -379,7 +383,9 @@ export const AppConfig = {
     }
     if (UUID_PATTERN.test(secret)) {
       if (isProduction) {
-        throw new Error('JWT_SECRET must not be a UUID — use a high-entropy random string (>=32 chars)');
+        throw new Error(
+          'JWT_SECRET must not be a UUID — use a high-entropy random string (>=32 chars)'
+        );
       }
       logger.warn('JWT_SECRET appears to be a UUID — use a stronger secret');
     }

@@ -231,79 +231,79 @@ const NostrOnboarding: React.FC = () => {
     switch (currentStep) {
       case 0: // Welcome
         return (
-          <div className="text-center space-y-6">
-            <div className="flex justify-center mb-6">
-              <div className="p-6 bg-primary/20 rounded-2xl">
-                <Crown className="h-12 w-12 text-primary" />
+          <div className='text-center space-y-6'>
+            <div className='flex justify-center mb-6'>
+              <div className='p-6 bg-primary/20 rounded-2xl'>
+                <Crown className='h-12 w-12 text-primary' />
               </div>
             </div>
 
-            <div className="space-y-4">
-              <h2 className="text-3xl font-bold text-white font-display">
+            <div className='space-y-4'>
+              <h2 className='text-3xl font-bold text-white font-display'>
                 Welcome to True Digital Sovereignty
               </h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+              <p className='text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed'>
                 NOSTR gives you complete control over your digital identity. No big tech, no
                 censorship, no deplatforming - just pure, sovereign communication.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-              <Card className="glass-dark">
-                <CardContent className="p-6 text-center">
-                  <Globe className="h-8 w-8 text-primary mx-auto mb-3" />
-                  <h3 className="font-semibold text-white mb-2">Decentralized</h3>
-                  <p className="text-sm text-muted-foreground">No single point of failure</p>
+            <div className='grid grid-cols-1 md:grid-cols-3 gap-4 mt-8'>
+              <Card className='glass-dark'>
+                <CardContent className='p-6 text-center'>
+                  <Globe className='h-8 w-8 text-primary mx-auto mb-3' />
+                  <h3 className='font-semibold text-white mb-2'>Decentralized</h3>
+                  <p className='text-sm text-muted-foreground'>No single point of failure</p>
                 </CardContent>
               </Card>
 
-              <Card className="glass-dark">
-                <CardContent className="p-6 text-center">
-                  <Lock className="h-8 w-8 text-purple-400 mx-auto mb-3" />
-                  <h3 className="font-semibold text-white mb-2">Censorship Resistant</h3>
-                  <p className="text-sm text-muted-foreground">Your voice, your rules</p>
+              <Card className='glass-dark'>
+                <CardContent className='p-6 text-center'>
+                  <Lock className='h-8 w-8 text-purple-400 mx-auto mb-3' />
+                  <h3 className='font-semibold text-white mb-2'>Censorship Resistant</h3>
+                  <p className='text-sm text-muted-foreground'>Your voice, your rules</p>
                 </CardContent>
               </Card>
 
-              <Card className="glass-dark">
-                <CardContent className="p-6 text-center">
-                  <Shield className="h-8 w-8 text-primary mx-auto mb-3" />
-                  <h3 className="font-semibold text-white mb-2">Self-Sovereign</h3>
-                  <p className="text-sm text-muted-foreground">You own your identity</p>
+              <Card className='glass-dark'>
+                <CardContent className='p-6 text-center'>
+                  <Shield className='h-8 w-8 text-primary mx-auto mb-3' />
+                  <h3 className='font-semibold text-white mb-2'>Self-Sovereign</h3>
+                  <p className='text-sm text-muted-foreground'>You own your identity</p>
                 </CardContent>
               </Card>
             </div>
 
             <Button
               onClick={() => setCurrentStep(1)}
-              className="mt-8 px-8 py-4 text-lg bg-primary hover:bg-primary/90"
+              className='mt-8 px-8 py-4 text-lg bg-primary hover:bg-primary/90'
             >
               Begin Your Journey
-              <ArrowRight className="ml-2 h-5 w-5" />
+              <ArrowRight className='ml-2 h-5 w-5' />
             </Button>
           </div>
         );
 
       case 1: // Generate Keys
         return (
-          <div className="space-y-6">
-            <div className="text-center mb-8">
-              <div className="flex justify-center mb-4">
-                <div className="p-4 bg-purple-500/20 rounded-xl">
-                  <Key className="h-8 w-8 text-purple-400" />
+          <div className='space-y-6'>
+            <div className='text-center mb-8'>
+              <div className='flex justify-center mb-4'>
+                <div className='p-4 bg-purple-500/20 rounded-xl'>
+                  <Key className='h-8 w-8 text-purple-400' />
                 </div>
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2 font-display">
+              <h2 className='text-2xl font-bold text-white mb-2 font-display'>
                 Generate Your NOSTR Keys
               </h2>
-              <p className="text-muted-foreground">
+              <p className='text-muted-foreground'>
                 Your keys are your identity. They're generated locally and never leave your device.
               </p>
             </div>
 
-            <Alert className="border-primary/20 bg-primary/10">
-              <HelpCircle className="h-4 w-4" />
-              <AlertDescription className="text-foreground">
+            <Alert className='border-primary/20 bg-primary/10'>
+              <HelpCircle className='h-4 w-4' />
+              <AlertDescription className='text-foreground'>
                 <strong>What are NOSTR keys?</strong>
                 <br />
                 Your public key is like your username - share it freely. Your private key is like
@@ -311,20 +311,20 @@ const NostrOnboarding: React.FC = () => {
               </AlertDescription>
             </Alert>
 
-            <div className="text-center">
+            <div className='text-center'>
               <Button
                 onClick={generateKeys}
                 disabled={isGenerating}
-                className="px-8 py-4 text-lg bg-purple-600 hover:bg-purple-700"
+                className='px-8 py-4 text-lg bg-purple-600 hover:bg-purple-700'
               >
                 {isGenerating ? (
                   <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
+                    <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2' />
                     Generating Keys...
                   </>
                 ) : (
                   <>
-                    <Sparkles className="mr-2 h-5 w-5" />
+                    <Sparkles className='mr-2 h-5 w-5' />
                     Generate My Keys
                   </>
                 )}
@@ -332,8 +332,8 @@ const NostrOnboarding: React.FC = () => {
             </div>
 
             {error && (
-              <Alert className="border-red-500/20 bg-red-500/10">
-                <AlertDescription className="text-red-400">{error}</AlertDescription>
+              <Alert className='border-red-500/20 bg-red-500/10'>
+                <AlertDescription className='text-red-400'>{error}</AlertDescription>
               </Alert>
             )}
           </div>
@@ -341,38 +341,38 @@ const NostrOnboarding: React.FC = () => {
 
       case 2: // Backup Keys
         return (
-          <div className="space-y-6">
-            <div className="text-center mb-6">
-              <div className="flex justify-center mb-4">
-                <div className="p-4 bg-primary/20 rounded-xl">
-                  <Shield className="h-8 w-8 text-primary" />
+          <div className='space-y-6'>
+            <div className='text-center mb-6'>
+              <div className='flex justify-center mb-4'>
+                <div className='p-4 bg-primary/20 rounded-xl'>
+                  <Shield className='h-8 w-8 text-primary' />
                 </div>
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2 font-display">Secure Your Keys</h2>
-              <p className="text-muted-foreground">
+              <h2 className='text-2xl font-bold text-white mb-2 font-display'>Secure Your Keys</h2>
+              <p className='text-muted-foreground'>
                 Save your keys safely. Without them, you'll lose access to your identity.
               </p>
             </div>
 
             {nostrKeys && (
-              <div className="space-y-4">
+              <div className='space-y-4'>
                 {/* Public Key */}
                 <div>
-                  <Label className="text-white font-medium">
+                  <Label className='text-white font-medium'>
                     Public Key (npub) - Safe to Share
                   </Label>
-                  <div className="flex mt-2">
-                    <Input value={nostrKeys.npub} readOnly className="font-mono text-sm" />
+                  <div className='flex mt-2'>
+                    <Input value={nostrKeys.npub} readOnly className='font-mono text-sm' />
                     <Button
-                      variant="outline"
-                      size="sm"
+                      variant='outline'
+                      size='sm'
                       onClick={() => copyToClipboard(nostrKeys.npub, 'npub')}
-                      className="ml-2"
+                      className='ml-2'
                     >
                       {copiedField === 'npub' ? (
-                        <CheckCircle className="h-4 w-4 text-green-500" />
+                        <CheckCircle className='h-4 w-4 text-green-500' />
                       ) : (
-                        <Copy className="h-4 w-4" />
+                        <Copy className='h-4 w-4' />
                       )}
                     </Button>
                   </div>
@@ -380,75 +380,75 @@ const NostrOnboarding: React.FC = () => {
 
                 {/* Private Key */}
                 <div>
-                  <Label className="text-white font-medium">
+                  <Label className='text-white font-medium'>
                     Private Key (nsec) - Keep Secret!
                   </Label>
-                  <div className="flex mt-2">
+                  <div className='flex mt-2'>
                     <Input
                       type={showPrivateKey ? 'text' : 'password'}
                       value={nostrKeys.nsec}
                       readOnly
-                      className="font-mono text-sm"
+                      className='font-mono text-sm'
                     />
                     <Button
-                      variant="outline"
-                      size="sm"
+                      variant='outline'
+                      size='sm'
                       onClick={() => setShowPrivateKey(!showPrivateKey)}
-                      className="ml-2"
+                      className='ml-2'
                     >
                       {showPrivateKey ? (
-                        <EyeOff className="h-4 w-4" />
+                        <EyeOff className='h-4 w-4' />
                       ) : (
-                        <Eye className="h-4 w-4" />
+                        <Eye className='h-4 w-4' />
                       )}
                     </Button>
                     <Button
-                      variant="outline"
-                      size="sm"
+                      variant='outline'
+                      size='sm'
                       onClick={() => copyToClipboard(nostrKeys.nsec, 'nsec')}
-                      className="ml-2"
+                      className='ml-2'
                     >
                       {copiedField === 'nsec' ? (
-                        <CheckCircle className="h-4 w-4 text-green-500" />
+                        <CheckCircle className='h-4 w-4 text-green-500' />
                       ) : (
-                        <Copy className="h-4 w-4" />
+                        <Copy className='h-4 w-4' />
                       )}
                     </Button>
                   </div>
                 </div>
 
                 {/* Download Button */}
-                <div className="text-center pt-4">
-                  <Button onClick={downloadKeys} variant="outline" className="mr-4">
-                    <Download className="mr-2 h-4 w-4" />
+                <div className='text-center pt-4'>
+                  <Button onClick={downloadKeys} variant='outline' className='mr-4'>
+                    <Download className='mr-2 h-4 w-4' />
                     Download Keys
                   </Button>
                 </div>
 
                 {/* Security Confirmations */}
-                <div className="space-y-3 pt-4">
-                  <div className="flex items-center space-x-2">
+                <div className='space-y-3 pt-4'>
+                  <div className='flex items-center space-x-2'>
                     <input
-                      type="checkbox"
-                      id="backup"
+                      type='checkbox'
+                      id='backup'
                       checked={backupConfirmed}
-                      onChange={(e) => setBackupConfirmed(e.target.checked)}
-                      className="rounded border-border"
+                      onChange={e => setBackupConfirmed(e.target.checked)}
+                      className='rounded border-border'
                     />
-                    <Label htmlFor="backup" className="text-sm text-muted-foreground">
+                    <Label htmlFor='backup' className='text-sm text-muted-foreground'>
                       I have safely backed up my private key (nsec)
                     </Label>
                   </div>
 
-                  <div className="flex items-center space-x-2">
+                  <div className='flex items-center space-x-2'>
                     <input
-                      type="checkbox"
-                      id="security"
+                      type='checkbox'
+                      id='security'
                       checked={understandsSecurity}
-                      onChange={(e) => setUnderstandsSecurity(e.target.checked)}
-                      className="rounded border-border"
+                      onChange={e => setUnderstandsSecurity(e.target.checked)}
+                      className='rounded border-border'
                     />
-                    <Label htmlFor="security" className="text-sm text-muted-foreground">
+                    <Label htmlFor='security' className='text-sm text-muted-foreground'>
                       I understand that losing my private key means losing my identity
                     </Label>
                   </div>
@@ -457,10 +457,10 @@ const NostrOnboarding: React.FC = () => {
                 <Button
                   onClick={() => setCurrentStep(3)}
                   disabled={!backupConfirmed || !understandsSecurity}
-                  className="w-full mt-6 bg-primary hover:bg-primary/90"
+                  className='w-full mt-6 bg-primary hover:bg-primary/90'
                 >
                   Continue to Verification
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  <ArrowRight className='ml-2 h-4 w-4' />
                 </Button>
               </div>
             )}
@@ -469,24 +469,24 @@ const NostrOnboarding: React.FC = () => {
 
       case 3: // Verify Identity
         return (
-          <div className="space-y-6">
-            <div className="text-center mb-6">
-              <div className="flex justify-center mb-4">
-                <div className="p-4 bg-primary/20 rounded-xl">
-                  <CheckCircle className="h-8 w-8 text-primary" />
+          <div className='space-y-6'>
+            <div className='text-center mb-6'>
+              <div className='flex justify-center mb-4'>
+                <div className='p-4 bg-primary/20 rounded-xl'>
+                  <CheckCircle className='h-8 w-8 text-primary' />
                 </div>
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2 font-display">
+              <h2 className='text-2xl font-bold text-white mb-2 font-display'>
                 Verify Your Identity
               </h2>
-              <p className="text-muted-foreground">
+              <p className='text-muted-foreground'>
                 Sign your first NOSTR event to prove you control your keys.
               </p>
             </div>
 
-            <Alert className="border-purple-500/20 bg-purple-500/10">
-              <Zap className="h-4 w-4" />
-              <AlertDescription className="text-foreground">
+            <Alert className='border-purple-500/20 bg-purple-500/10'>
+              <Zap className='h-4 w-4' />
+              <AlertDescription className='text-foreground'>
                 <strong>What's happening?</strong>
                 <br />
                 We'll create a cryptographic signature that proves you own your private key, without
@@ -494,20 +494,20 @@ const NostrOnboarding: React.FC = () => {
               </AlertDescription>
             </Alert>
 
-            <div className="text-center">
+            <div className='text-center'>
               <Button
                 onClick={completeAuthentication}
                 disabled={isAuthenticating}
-                className="px-8 py-4 text-lg bg-primary hover:bg-primary/90"
+                className='px-8 py-4 text-lg bg-primary hover:bg-primary/90'
               >
                 {isAuthenticating ? (
                   <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
+                    <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2' />
                     Signing Event...
                   </>
                 ) : (
                   <>
-                    <CheckCircle className="mr-2 h-5 w-5" />
+                    <CheckCircle className='mr-2 h-5 w-5' />
                     Sign & Verify
                   </>
                 )}
@@ -515,8 +515,8 @@ const NostrOnboarding: React.FC = () => {
             </div>
 
             {error && (
-              <Alert className="border-red-500/20 bg-red-500/10">
-                <AlertDescription className="text-red-400">{error}</AlertDescription>
+              <Alert className='border-red-500/20 bg-red-500/10'>
+                <AlertDescription className='text-red-400'>{error}</AlertDescription>
               </Alert>
             )}
           </div>
@@ -524,39 +524,39 @@ const NostrOnboarding: React.FC = () => {
 
       case 4: // Complete
         return (
-          <div className="text-center space-y-6">
-            <div className="flex justify-center mb-6">
-              <div className="p-6 bg-gradient-to-br from-purple-500 to-primary rounded-2xl">
-                <Sparkles className="h-12 w-12 text-white" />
+          <div className='text-center space-y-6'>
+            <div className='flex justify-center mb-6'>
+              <div className='p-6 bg-gradient-to-br from-purple-500 to-primary rounded-2xl'>
+                <Sparkles className='h-12 w-12 text-white' />
               </div>
             </div>
 
-            <div className="space-y-4">
-              <h2 className="text-3xl font-bold text-white font-display">Welcome to Sovren!</h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            <div className='space-y-4'>
+              <h2 className='text-3xl font-bold text-white font-display'>Welcome to Sovren!</h2>
+              <p className='text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed'>
                 Congratulations! You now have a sovereign digital identity. You're ready to
                 experience true digital freedom.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
-              <Card className="glass-dark">
-                <CardContent className="p-6 text-center">
-                  <Zap className="h-8 w-8 text-purple-400 mx-auto mb-3" />
-                  <h3 className="font-semibold text-white mb-2">Lightning Wallet</h3>
-                  <p className="text-sm text-muted-foreground">Set up instant Bitcoin payments</p>
-                  <Button variant="outline" size="sm" className="mt-3">
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mt-8'>
+              <Card className='glass-dark'>
+                <CardContent className='p-6 text-center'>
+                  <Zap className='h-8 w-8 text-purple-400 mx-auto mb-3' />
+                  <h3 className='font-semibold text-white mb-2'>Lightning Wallet</h3>
+                  <p className='text-sm text-muted-foreground'>Set up instant Bitcoin payments</p>
+                  <Button variant='outline' size='sm' className='mt-3'>
                     Coming Soon
                   </Button>
                 </CardContent>
               </Card>
 
-              <Card className="glass-dark">
-                <CardContent className="p-6 text-center">
-                  <Globe className="h-8 w-8 text-primary mx-auto mb-3" />
-                  <h3 className="font-semibold text-white mb-2">Creator Dashboard</h3>
-                  <p className="text-sm text-muted-foreground">Start monetizing your content</p>
-                  <Button variant="outline" size="sm" className="mt-3">
+              <Card className='glass-dark'>
+                <CardContent className='p-6 text-center'>
+                  <Globe className='h-8 w-8 text-primary mx-auto mb-3' />
+                  <h3 className='font-semibold text-white mb-2'>Creator Dashboard</h3>
+                  <p className='text-sm text-muted-foreground'>Start monetizing your content</p>
+                  <Button variant='outline' size='sm' className='mt-3'>
                     Explore
                   </Button>
                 </CardContent>
@@ -565,10 +565,10 @@ const NostrOnboarding: React.FC = () => {
 
             <Button
               onClick={() => (window.location.href = '/dashboard')}
-              className="mt-8 px-8 py-4 text-lg bg-gradient-to-r from-purple-500 to-primary"
+              className='mt-8 px-8 py-4 text-lg bg-gradient-to-r from-purple-500 to-primary'
             >
               Enter Sovren
-              <Crown className="ml-2 h-5 w-5" />
+              <Crown className='ml-2 h-5 w-5' />
             </Button>
           </div>
         );
@@ -579,11 +579,11 @@ const NostrOnboarding: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
+    <div className='min-h-screen bg-background'>
+      <div className='container mx-auto px-4 py-8'>
         {/* Progress Bar */}
-        <div className="max-w-4xl mx-auto mb-8">
-          <div className="flex items-center justify-between mb-4">
+        <div className='max-w-4xl mx-auto mb-8'>
+          <div className='flex items-center justify-between mb-4'>
             {steps.map((step, index) => (
               <div
                 key={step.id}
@@ -597,9 +597,9 @@ const NostrOnboarding: React.FC = () => {
                   }`}
                 >
                   {index < currentStep ? (
-                    <CheckCircle className="h-5 w-5" />
+                    <CheckCircle className='h-5 w-5' />
                   ) : (
-                    <step.icon className="h-5 w-5" />
+                    <step.icon className='h-5 w-5' />
                   )}
                 </div>
                 {index < steps.length - 1 && (
@@ -613,72 +613,72 @@ const NostrOnboarding: React.FC = () => {
             ))}
           </div>
 
-          <div className="text-center">
-            <h3 className="text-lg font-semibold text-white">{steps[currentStep]?.title}</h3>
-            <p className="text-sm text-muted-foreground">{steps[currentStep]?.description}</p>
+          <div className='text-center'>
+            <h3 className='text-lg font-semibold text-white'>{steps[currentStep]?.title}</h3>
+            <p className='text-sm text-muted-foreground'>{steps[currentStep]?.description}</p>
           </div>
         </div>
 
         {/* Main Content */}
-        <Card className="max-w-4xl mx-auto glass-dark backdrop-blur-sm border-border/50">
-          <CardContent className="p-8">
+        <Card className='max-w-4xl mx-auto glass-dark backdrop-blur-sm border-border/50'>
+          <CardContent className='p-8'>
             {renderStep()}
             {currentStep === 1 && (
-              <div className="space-y-6 text-center">
-                <h2 className="text-2xl font-bold text-white mb-2 font-display">
+              <div className='space-y-6 text-center'>
+                <h2 className='text-2xl font-bold text-white mb-2 font-display'>
                   Choose Your Sovren Username
                 </h2>
-                <p className="text-base text-muted-foreground mb-4">
+                <p className='text-base text-muted-foreground mb-4'>
                   Pick a unique username for your Sovren/NOSTR identity. This helps others find and
                   connect with you. You can also add a display name, bio, and avatar.
                 </p>
-                <form onSubmit={handleProfileSubmit} className="space-y-4 max-w-md mx-auto">
+                <form onSubmit={handleProfileSubmit} className='space-y-4 max-w-md mx-auto'>
                   <div>
-                    <Label className="text-white font-medium">Username</Label>
+                    <Label className='text-white font-medium'>Username</Label>
                     <Input
                       value={username}
-                      onChange={(e) => setUsername(e.target.value)}
+                      onChange={e => setUsername(e.target.value)}
                       required
                       minLength={3}
                       maxLength={30}
-                      pattern="^[a-zA-Z0-9_]+$"
-                      className="mt-2 text-lg font-semibold"
-                      placeholder="your_username"
+                      pattern='^[a-zA-Z0-9_]+$'
+                      className='mt-2 text-lg font-semibold'
+                      placeholder='your_username'
                     />
                   </div>
                   <div>
-                    <Label className="text-white font-medium">Display Name (optional)</Label>
+                    <Label className='text-white font-medium'>Display Name (optional)</Label>
                     <Input
                       value={displayName}
-                      onChange={(e) => setDisplayName(e.target.value)}
+                      onChange={e => setDisplayName(e.target.value)}
                       maxLength={50}
-                      className="mt-2"
-                      placeholder="Your Name"
+                      className='mt-2'
+                      placeholder='Your Name'
                     />
                   </div>
                   <div>
-                    <Label className="text-white font-medium">Bio (optional)</Label>
+                    <Label className='text-white font-medium'>Bio (optional)</Label>
                     <Input
                       value={bio}
-                      onChange={(e) => setBio(e.target.value)}
+                      onChange={e => setBio(e.target.value)}
                       maxLength={160}
-                      className="mt-2"
-                      placeholder="Tell us about yourself..."
+                      className='mt-2'
+                      placeholder='Tell us about yourself...'
                     />
                   </div>
                   {/* Avatar upload can be added here if supported */}
-                  <div className="flex flex-col sm:flex-row gap-4 mt-6 justify-center">
+                  <div className='flex flex-col sm:flex-row gap-4 mt-6 justify-center'>
                     <Button
-                      type="submit"
-                      className="px-8 py-3 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl shadow-lg transition-all duration-300"
+                      type='submit'
+                      className='px-8 py-3 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl shadow-lg transition-all duration-300'
                     >
                       Save Profile
                     </Button>
                     <Button
-                      type="button"
-                      variant="outline"
+                      type='button'
+                      variant='outline'
                       onClick={skipProfileStep}
-                      className="px-8 py-3 border-2 border-border text-muted-foreground bg-secondary rounded-xl hover:border-primary hover:text-primary hover:bg-primary/10 transition-all duration-300"
+                      className='px-8 py-3 border-2 border-border text-muted-foreground bg-secondary rounded-xl hover:border-primary hover:text-primary hover:bg-primary/10 transition-all duration-300'
                     >
                       Skip for Now
                     </Button>
