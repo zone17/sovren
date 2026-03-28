@@ -1,3 +1,4 @@
+import DOMPurify from 'dompurify';
 import { Link, useParams } from 'react-router-dom';
 import { CommentList } from '../features/comments/components/CommentList';
 import { useAuth } from '../features/auth/services/AuthContext';
@@ -118,7 +119,7 @@ export default function ContentDetail() {
         {/* Body content */}
         <div
           className="prose prose-invert prose-purple max-w-none mb-8 text-white/80 leading-relaxed"
-          dangerouslySetInnerHTML={{ __html: content.content }}
+          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content.content) }}
         />
 
         {/* Tags */}

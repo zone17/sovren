@@ -44,15 +44,21 @@ export class PaymentController {
   public getInvoice = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const startTime = Date.now();
     const invoiceId = req.params.id;
-    const userId = req.user?.nostr_pubkey;
     const invoice = await this.invoiceService.getInvoice(invoiceId);
 
-    // Ownership check: only the invoice owner can view it
-    if (invoice && invoice.userId !== userId) {
-      res
-        .status(403)
-        .json({ success: false, error: 'Forbidden: you can only access your own invoices' });
-      return;
+    // Ownership check: only the invoice owner or admin can view it.
+    // invoice.userId may be a UUID or nostr pubkey depending on how it was created,
+    // so check against both req.user.id (UUID) and req.user.nostr_pubkey (hex).
+    if (invoice && req.user?.role !== 'admin') {
+      const ownsInvoice =
+        invoice.userId === req.user?.nostr_pubkey ||
+        (req.user?.id && invoice.userId === req.user.id);
+      if (!ownsInvoice) {
+        res
+          .status(403)
+          .json({ success: false, error: 'Forbidden: you can only access your own invoices' });
+        return;
+      }
     }
 
     res.status(200).json(createApiResponse(req, invoice, startTime));
@@ -98,16 +104,20 @@ export class PaymentController {
   public updateSubscription = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const startTime = Date.now();
     const subscriptionId = req.params.id;
-    const userId = req.user?.nostr_pubkey;
     const updates = req.body.updates;
 
-    // Ownership check: only the subscription owner can update it
+    // Ownership check: only the subscription owner or admin can update it
     const existing = await this.subscriptionService.getSubscription(subscriptionId);
-    if (existing && existing.userId !== userId) {
-      res
-        .status(403)
-        .json({ success: false, error: 'Forbidden: you can only update your own subscriptions' });
-      return;
+    if (existing && req.user?.role !== 'admin') {
+      const ownsSubscription =
+        existing.userId === req.user?.nostr_pubkey ||
+        (req.user?.id && existing.userId === req.user.id);
+      if (!ownsSubscription) {
+        res
+          .status(403)
+          .json({ success: false, error: 'Forbidden: you can only update your own subscriptions' });
+        return;
+      }
     }
 
     const subscription = await this.subscriptionService.updateSubscription(subscriptionId, updates);
@@ -117,16 +127,20 @@ export class PaymentController {
   public cancelSubscription = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const startTime = Date.now();
     const subscriptionId = req.params.id;
-    const userId = req.user?.nostr_pubkey;
     const { reason, cancelAt } = req.body;
 
-    // Ownership check: only the subscription owner can cancel it
+    // Ownership check: only the subscription owner or admin can cancel it
     const existing = await this.subscriptionService.getSubscription(subscriptionId);
-    if (existing && existing.userId !== userId) {
-      res
-        .status(403)
-        .json({ success: false, error: 'Forbidden: you can only cancel your own subscriptions' });
-      return;
+    if (existing && req.user?.role !== 'admin') {
+      const ownsSubscription =
+        existing.userId === req.user?.nostr_pubkey ||
+        (req.user?.id && existing.userId === req.user.id);
+      if (!ownsSubscription) {
+        res
+          .status(403)
+          .json({ success: false, error: 'Forbidden: you can only cancel your own subscriptions' });
+        return;
+      }
     }
 
     const result = await this.subscriptionService.cancelSubscription(subscriptionId, {
@@ -181,15 +195,19 @@ export class PaymentController {
   public getSubscription = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const startTime = Date.now();
     const subscriptionId = req.params.id;
-    const userId = req.user?.nostr_pubkey;
     const subscription = await this.subscriptionService.getSubscription(subscriptionId);
 
-    // Ownership check: only the subscription owner can view their subscription
-    if (subscription && subscription.userId !== userId) {
-      res
-        .status(403)
-        .json({ success: false, error: 'Forbidden: you can only access your own subscriptions' });
-      return;
+    // Ownership check: only the subscription owner or admin can view their subscription
+    if (subscription && req.user?.role !== 'admin') {
+      const ownsSubscription =
+        subscription.userId === req.user?.nostr_pubkey ||
+        (req.user?.id && subscription.userId === req.user.id);
+      if (!ownsSubscription) {
+        res
+          .status(403)
+          .json({ success: false, error: 'Forbidden: you can only access your own subscriptions' });
+        return;
+      }
     }
 
     res.status(200).json(createApiResponse(req, subscription, startTime));
@@ -236,16 +254,20 @@ export class PaymentController {
   public updateWebhook = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const startTime = Date.now();
     const webhookId = req.params.id;
-    const userId = req.user?.nostr_pubkey;
     const updates = req.body;
 
-    // Ownership check: only the webhook owner can update it
+    // Ownership check: only the webhook owner or admin can update it
     const existing = await this.webhookService.getEndpoint(webhookId);
-    if (existing && existing.userId !== userId) {
-      res
-        .status(403)
-        .json({ success: false, error: 'Forbidden: you can only update your own webhooks' });
-      return;
+    if (existing && req.user?.role !== 'admin') {
+      const ownsWebhook =
+        existing.userId === req.user?.nostr_pubkey ||
+        (req.user?.id && existing.userId === req.user.id);
+      if (!ownsWebhook) {
+        res
+          .status(403)
+          .json({ success: false, error: 'Forbidden: you can only update your own webhooks' });
+        return;
+      }
     }
 
     const webhook = await this.webhookService.updateEndpoint(webhookId, updates);
@@ -254,15 +276,19 @@ export class PaymentController {
 
   public deleteWebhook = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const webhookId = req.params.id;
-    const userId = req.user?.nostr_pubkey;
 
-    // Ownership check: only the webhook owner can delete it
+    // Ownership check: only the webhook owner or admin can delete it
     const existing = await this.webhookService.getEndpoint(webhookId);
-    if (existing && existing.userId !== userId) {
-      res
-        .status(403)
-        .json({ success: false, error: 'Forbidden: you can only delete your own webhooks' });
-      return;
+    if (existing && req.user?.role !== 'admin') {
+      const ownsWebhook =
+        existing.userId === req.user?.nostr_pubkey ||
+        (req.user?.id && existing.userId === req.user.id);
+      if (!ownsWebhook) {
+        res
+          .status(403)
+          .json({ success: false, error: 'Forbidden: you can only delete your own webhooks' });
+        return;
+      }
     }
 
     await this.webhookService.deleteEndpoint(webhookId);
@@ -280,15 +306,19 @@ export class PaymentController {
   public retryInvoice = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const startTime = Date.now();
     const invoiceId = req.params.id;
-    const userId = req.user?.nostr_pubkey;
 
     // Verify the invoice belongs to the authenticated user before retrying
     const invoice = await this.invoiceService.getInvoice(invoiceId);
-    if (invoice && invoice.userId !== userId) {
-      res
-        .status(403)
-        .json({ success: false, error: 'Forbidden: you can only retry your own invoices' });
-      return;
+    if (invoice && req.user?.role !== 'admin') {
+      const ownsInvoice =
+        invoice.userId === req.user?.nostr_pubkey ||
+        (req.user?.id && invoice.userId === req.user.id);
+      if (!ownsInvoice) {
+        res
+          .status(403)
+          .json({ success: false, error: 'Forbidden: you can only retry your own invoices' });
+        return;
+      }
     }
 
     const result = await this.paymentService.processPayment({ invoiceId });

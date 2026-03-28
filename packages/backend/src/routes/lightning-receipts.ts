@@ -116,8 +116,12 @@ router.post('/', authenticate, receiptGenerationLimit, async (req: Request, res:
     // Validate request body
     const validatedData = GenerateReceiptSchema.parse(req.body);
 
-    // Generate receipt
-    const receipt = await lightningReceiptService.generateReceipt(validatedData);
+    // Generate receipt — pin the calling user's pubkey so creator/supporter
+    // is derived from the JWT, not from untrusted request body data
+    const receipt = await lightningReceiptService.generateReceipt({
+      ...validatedData,
+      callerPubkey: req.user?.nostr_pubkey,
+    });
 
     // Return success response
     res.status(201).json({
@@ -322,6 +326,26 @@ router.post('/:receiptId/email', authenticate, receiptEmailLimit, async (req: Re
     // Validate request body
     const validatedData = EmailReceiptSchema.parse(req.body);
 
+    // IDOR protection: verify caller owns this receipt before emailing
+    const receipt = await lightningReceiptService.getReceiptByNumber(receiptId);
+    if (!receipt) {
+      return res.status(404).json({
+        success: false,
+        error: 'Receipt not found',
+      });
+    }
+    const callerPubkey = req.user?.nostr_pubkey;
+    const isCreator = receipt.creator.id === callerPubkey;
+    const isSupporter = receipt.supporter.id === callerPubkey;
+    const isAdmin = req.user?.role === 'admin';
+    if (!isCreator && !isSupporter && !isAdmin) {
+      return res.status(403).json({
+        success: false,
+        error: 'Access denied',
+        message: 'You can only email receipts for your own payments',
+      });
+    }
+
     // Email receipt
     await lightningReceiptService.emailReceipt(receiptId, validatedData.email);
 
@@ -367,6 +391,26 @@ router.post('/:receiptId/verify', authenticate, receiptAccessLimit, async (req: 
     // Validate request body
     const validatedData = VerifyReceiptSchema.parse(req.body);
 
+    // IDOR protection: verify caller owns this receipt
+    const existingReceipt = await lightningReceiptService.getReceiptByNumber(receiptId);
+    if (!existingReceipt) {
+      return res.status(404).json({
+        success: false,
+        error: 'Receipt not found',
+      });
+    }
+    const callerPubkey = req.user?.nostr_pubkey;
+    const isCreator = existingReceipt.creator.id === callerPubkey;
+    const isSupporter = existingReceipt.supporter.id === callerPubkey;
+    const isAdmin = req.user?.role === 'admin';
+    if (!isCreator && !isSupporter && !isAdmin) {
+      return res.status(403).json({
+        success: false,
+        error: 'Access denied',
+        message: 'You can only verify receipts for your own payments',
+      });
+    }
+
     // Verify receipt
     const verificationResult = await lightningReceiptService.verifyReceipt(
       receiptId,
@@ -374,6 +418,7 @@ router.post('/:receiptId/verify', authenticate, receiptAccessLimit, async (req: 
     );
 
     if (verificationResult.valid) {
+      // Return only verification status — no PII or financial details
       res.json({
         success: true,
         message: 'Receipt verification successful',
@@ -383,9 +428,6 @@ router.post('/:receiptId/verify', authenticate, receiptAccessLimit, async (req: 
           receipt: verificationResult.receipt
             ? {
                 receiptNumber: verificationResult.receipt.receiptNumber,
-                amount: verificationResult.receipt.amount,
-                timestamp: verificationResult.receipt.timestamp,
-                creator: verificationResult.receipt.creator.displayName,
               }
             : undefined,
         },
