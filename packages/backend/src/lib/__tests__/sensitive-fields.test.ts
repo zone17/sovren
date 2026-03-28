@@ -6,7 +6,7 @@ describe('sanitizeObject', () => {
     const result = sanitizeObject(data);
     expect(result.name).toBe('Alice');
     expect(result.password).toBe('[REDACTED]');
-    expect(result.email).toBe('a@b.com');
+    expect(result.email).toBe('[REDACTED]');
   });
 
   it('should handle shared (non-circular) object references without data loss', () => {
@@ -120,7 +120,7 @@ describe('isSensitiveKey', () => {
 
   it('should not flag non-sensitive keys', () => {
     expect(isSensitiveKey('name')).toBe(false);
-    expect(isSensitiveKey('email')).toBe(false);
+    expect(isSensitiveKey('email')).toBe(true);
     expect(isSensitiveKey('amount')).toBe(false);
   });
 });

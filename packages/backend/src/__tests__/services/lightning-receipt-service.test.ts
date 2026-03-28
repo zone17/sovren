@@ -60,6 +60,29 @@ vi.mock('fs', () => ({
   readFileSync: vi.fn().mockReturnValue('[]'),
   renameSync: vi.fn(),
   copyFileSync: vi.fn(),
+  promises: {
+    readFile: vi.fn().mockResolvedValue('mock-template-content'),
+    writeFile: vi.fn().mockResolvedValue(undefined),
+    mkdir: vi.fn().mockResolvedValue(undefined),
+    open: vi.fn().mockResolvedValue({
+      writeFile: vi.fn().mockResolvedValue(undefined),
+      datasync: vi.fn().mockResolvedValue(undefined),
+      close: vi.fn().mockResolvedValue(undefined),
+    }),
+  },
+}));
+
+vi.mock('../../services/storage/StorageService', () => ({
+  uploadReceipt: vi
+    .fn()
+    .mockResolvedValue({
+      url: '/receipts/receipt-SVR-TEST.pdf',
+      storagePath: 'receipts/receipt-SVR-TEST.pdf',
+    }),
+  uploadFile: vi
+    .fn()
+    .mockResolvedValue({ url: '/uploads/test.pdf', storagePath: 'uploads/test.pdf' }),
+  getPublicUrl: vi.fn().mockReturnValue('https://example.com/test.pdf'),
 }));
 
 // Test configuration
