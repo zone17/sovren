@@ -74,6 +74,20 @@ const ProfileDashboard = React.lazy(() =>
   }))
 );
 
+// Settings, Legal, Help pages
+const Settings = React.lazy(() =>
+  import('./pages/Settings').then((module) => ({ default: module.default }))
+);
+const Terms = React.lazy(() =>
+  import('./pages/Terms').then((module) => ({ default: module.default }))
+);
+const Privacy = React.lazy(() =>
+  import('./pages/Privacy').then((module) => ({ default: module.default }))
+);
+const Help = React.lazy(() =>
+  import('./pages/Help').then((module) => ({ default: module.default }))
+);
+
 // Discovery & Creator Profile
 const DiscoveryPage = React.lazy(() =>
   import('./features/discovery/components/DiscoveryPage').then((module) => ({
@@ -388,6 +402,46 @@ function App(): React.ReactElement {
                     </DashboardErrorBoundary>
                   </ProtectedRoute>
                 </Layout>
+              }
+            />
+
+            {/* Settings (Protected) */}
+            <Route
+              path="/settings"
+              element={
+                <Layout>
+                  <ProtectedRoute>
+                    <ErrorBoundary level="page" name="Settings">
+                      <Settings />
+                    </ErrorBoundary>
+                  </ProtectedRoute>
+                </Layout>
+              }
+            />
+
+            {/* Legal & Help (Public) */}
+            <Route
+              path="/terms"
+              element={
+                <ErrorBoundary level="page" name="Terms">
+                  <Terms />
+                </ErrorBoundary>
+              }
+            />
+            <Route
+              path="/privacy"
+              element={
+                <ErrorBoundary level="page" name="Privacy">
+                  <Privacy />
+                </ErrorBoundary>
+              }
+            />
+            <Route
+              path="/help"
+              element={
+                <ErrorBoundary level="page" name="Help">
+                  <Help />
+                </ErrorBoundary>
               }
             />
 

@@ -252,10 +252,13 @@ const Login: React.FC = () => {
         <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
           <div className="glass py-8 px-4 shadow-lg sm:rounded-lg sm:px-10">
             <div className="bg-purple-500/10 border border-purple-500/20 rounded-md p-4 mb-6">
-              <h3 className="text-sm font-medium text-purple-300 mb-2">Sovereign Authentication</h3>
+              <h3 className="text-sm font-medium text-purple-300 mb-2">Independent Authentication</h3>
+              <p className="text-sm text-purple-200/80 mb-2">
+                NOSTR is a new way to publish online where no company can delete your content
+                or ban your account.
+              </p>
               <p className="text-sm text-purple-200/80">
-                Use your NOSTR keys for true decentralized authentication. Your identity works
-                across all NOSTR-compatible platforms.
+                Sign in with your NOSTR keys. Your identity works across all compatible platforms.
               </p>
             </div>
 
@@ -309,6 +312,7 @@ const Login: React.FC = () => {
                   <textarea
                     id="publicKey"
                     rows={3}
+                    aria-required="true"
                     value={publicKeyInput}
                     onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                       setPublicKeyInput(e.target.value)
@@ -328,6 +332,7 @@ const Login: React.FC = () => {
                   <textarea
                     id="privateKey"
                     rows={3}
+                    aria-required="true"
                     value={privateKeyInput}
                     onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                       setPrivateKeyInput(e.target.value)

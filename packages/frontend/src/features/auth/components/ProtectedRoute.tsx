@@ -30,7 +30,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     if (showAccessDenied) {
       return (
         <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
+          <div role="alert" className="text-center">
             <h2 className="text-2xl font-bold text-foreground mb-4">Access Denied</h2>
             <p className="text-muted-foreground">You don't have permission to access this page.</p>
           </div>
@@ -50,7 +50,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       if (showAccessDenied) {
         return (
           <div className="flex items-center justify-center min-h-screen">
-            <div className="text-center">
+            <div role="alert" className="text-center">
               <h2 className="text-2xl font-bold text-foreground mb-4">Access Denied</h2>
               <p className="text-muted-foreground">
                 You don't have the required permissions to access this page.

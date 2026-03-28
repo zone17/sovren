@@ -11,7 +11,7 @@ import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 // ─── Extracted SVG Icons ───────────────────────────────
 const OwnershipIcon = () => (
-  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
     <path
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -21,7 +21,7 @@ const OwnershipIcon = () => (
 );
 
 const LightningIcon = () => (
-  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
     <path
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -31,7 +31,7 @@ const LightningIcon = () => (
 );
 
 const ShieldIcon = () => (
-  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
     <path
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -119,7 +119,7 @@ const Home: React.FC = () => {
       }}
     >
       {/* Floating nav */}
-      <nav className="fixed top-0 inset-x-0 z-50">
+      <nav aria-label="Main navigation" className="fixed top-0 inset-x-0 z-50">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="glass-dark rounded-2xl px-6 py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -201,8 +201,12 @@ const Home: React.FC = () => {
           </h1>
 
           <p className="text-lg sm:text-xl text-white/70 max-w-2xl mx-auto mb-10 leading-relaxed">
-            Monetize your audience with Bitcoin. Publish to a censorship-resistant network. No
-            middlemen. No deplatforming. Just you and your audience.
+            Monetize your audience with Bitcoin. Publish to a censorship-resistant network powered
+            by{' '}
+            <span className="text-purple-300 font-medium" title="NOSTR is a new way to publish online where no company can delete your content or ban your account.">
+              NOSTR
+            </span>
+            . No middlemen. No deplatforming. Just you and your audience.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
@@ -260,7 +264,14 @@ const Home: React.FC = () => {
                     >
                       <p className="text-xs text-white/60 mb-1">{stat.label}</p>
                       <p className="text-xl font-bold text-white">{stat.value}</p>
-                      {stat.unit && <p className="text-xs text-amber-400/60">{stat.unit}</p>}
+                      {stat.unit && (
+                      <p className="text-xs text-amber-400/60">
+                        {stat.unit}
+                        {stat.unit === 'sats' && (
+                          <span className="ml-1 text-white/40" title="Sats (satoshis) are the smallest unit of Bitcoin. 100,000 sats is roughly $1 USD.">(~$0.21 USD)</span>
+                        )}
+                      </p>
+                    )}
                     </div>
                   ))}
                 </div>
@@ -430,10 +441,10 @@ const Home: React.FC = () => {
             className={`grid grid-cols-2 md:grid-cols-4 gap-6 ${statsSection.inView ? 'reveal-stagger' : ''}`}
           >
             {[
-              { value: 12500, suffix: '+', label: 'Creators' },
-              { value: 2100000, suffix: '', label: 'Sats Earned' },
-              { value: 99, suffix: '%', label: 'Uptime' },
-              { value: 0, suffix: '', label: 'Platform Fees', display: '0%' },
+              { value: 0, suffix: '%', label: 'Platform Fees', display: '0%' },
+              { value: 100, suffix: '%', label: 'Content Ownership' },
+              { value: 0, suffix: '', label: 'Middlemen', display: 'Zero' },
+              { value: 1, suffix: '', label: 'Identity, Yours', display: 'Yours' },
             ].map((stat) => (
               <div key={stat.label} className="glass-dark rounded-2xl p-6 text-center">
                 <p
@@ -445,6 +456,74 @@ const Home: React.FC = () => {
                 <p className="text-sm text-white/60">{stat.label}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════ WHY SOVREN ═══════════════════ */}
+      <section className="py-24 sm:py-32 relative">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-16">
+            <h2
+              className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4"
+              style={{ fontFamily: "'Sora', sans-serif" }}
+            >
+              Why <span className="text-gradient-sovereign">Sovren</span>?
+            </h2>
+            <p className="text-lg text-white/60 max-w-2xl mx-auto">
+              See how Sovren compares to traditional creator platforms.
+            </p>
+          </div>
+
+          <div className="glass-dark rounded-2xl overflow-hidden border border-white/5">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-white/5">
+                  <th className="text-left py-4 px-6 text-white/60 font-medium" />
+                  <th className="text-center py-4 px-4 text-purple-300 font-semibold">Sovren</th>
+                  <th className="text-center py-4 px-4 text-white/40 font-medium">Patreon</th>
+                  <th className="text-center py-4 px-4 text-white/40 font-medium">YouTube</th>
+                  <th className="text-center py-4 px-4 text-white/40 font-medium hidden sm:table-cell">Substack</th>
+                </tr>
+              </thead>
+              <tbody className="text-white/70">
+                <tr className="border-b border-white/5">
+                  <td className="py-3 px-6 font-medium text-white/80">Platform fee</td>
+                  <td className="py-3 px-4 text-center text-green-400 font-semibold">0%</td>
+                  <td className="py-3 px-4 text-center">5-12%</td>
+                  <td className="py-3 px-4 text-center">30%</td>
+                  <td className="py-3 px-4 text-center hidden sm:table-cell">10%</td>
+                </tr>
+                <tr className="border-b border-white/5">
+                  <td className="py-3 px-6 font-medium text-white/80">Payout speed</td>
+                  <td className="py-3 px-4 text-center text-green-400 font-semibold">Instant</td>
+                  <td className="py-3 px-4 text-center">30 days</td>
+                  <td className="py-3 px-4 text-center">30 days</td>
+                  <td className="py-3 px-4 text-center hidden sm:table-cell">30 days</td>
+                </tr>
+                <tr className="border-b border-white/5">
+                  <td className="py-3 px-6 font-medium text-white/80">Content ownership</td>
+                  <td className="py-3 px-4 text-center text-green-400 font-semibold">You</td>
+                  <td className="py-3 px-4 text-center">Platform</td>
+                  <td className="py-3 px-4 text-center">Platform</td>
+                  <td className="py-3 px-4 text-center hidden sm:table-cell">Platform</td>
+                </tr>
+                <tr className="border-b border-white/5">
+                  <td className="py-3 px-6 font-medium text-white/80">Can be deplatformed</td>
+                  <td className="py-3 px-4 text-center text-green-400 font-semibold">No</td>
+                  <td className="py-3 px-4 text-center">Yes</td>
+                  <td className="py-3 px-4 text-center">Yes</td>
+                  <td className="py-3 px-4 text-center hidden sm:table-cell">Yes</td>
+                </tr>
+                <tr>
+                  <td className="py-3 px-6 font-medium text-white/80">Audience portability</td>
+                  <td className="py-3 px-4 text-center text-green-400 font-semibold">Full</td>
+                  <td className="py-3 px-4 text-center">None</td>
+                  <td className="py-3 px-4 text-center">None</td>
+                  <td className="py-3 px-4 text-center hidden sm:table-cell">Email only</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </section>
@@ -464,15 +543,24 @@ const Home: React.FC = () => {
             Ready to own your future?
           </h2>
           <p className="text-lg text-white/60 mb-10 max-w-xl mx-auto relative">
-            Join thousands of creators building on a platform that can never be taken away.
+            Join creators building on a platform that can never be taken away.
           </p>
-          <button
-            onClick={() => navigate('/onboarding')}
-            className="relative px-10 py-5 text-lg font-semibold text-white rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 transition-all duration-300 shadow-[0_8px_32px_rgba(139,92,246,0.35)] hover:shadow-[0_16px_48px_rgba(139,92,246,0.5)] hover:-translate-y-1"
-            style={{ fontFamily: "'Sora', sans-serif" }}
-          >
-            Start Your Sovren Journey
-          </button>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 relative">
+            <button
+              onClick={() => navigate('/onboarding')}
+              className="w-full sm:w-auto px-10 py-5 text-lg font-semibold text-white rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 transition-all duration-300 shadow-[0_8px_32px_rgba(139,92,246,0.35)] hover:shadow-[0_16px_48px_rgba(139,92,246,0.5)] hover:-translate-y-1"
+              style={{ fontFamily: "'Sora', sans-serif" }}
+            >
+              Start Creating
+            </button>
+            <button
+              onClick={() => navigate('/discover')}
+              className="w-full sm:w-auto px-10 py-5 text-lg font-medium rounded-2xl glass-dark text-white/80 hover:text-white hover:bg-white/[0.06] transition-all duration-300"
+              style={{ fontFamily: "'Sora', sans-serif" }}
+            >
+              Browse Creators
+            </button>
+          </div>
         </div>
       </section>
 
@@ -484,9 +572,9 @@ const Home: React.FC = () => {
             <span className="text-sm text-white/50">Sovren &copy; {new Date().getFullYear()}</span>
           </div>
           <div className="flex items-center gap-6 text-xs text-white/60">
-            <span>NOSTR Protocol</span>
-            <span>Lightning Network</span>
-            <span>Self-Sovereign</span>
+            <a href="/terms" className="hover:text-white/80 transition-colors no-underline">Terms</a>
+            <a href="/privacy" className="hover:text-white/80 transition-colors no-underline">Privacy</a>
+            <a href="/help" className="hover:text-white/80 transition-colors no-underline">Help</a>
           </div>
         </div>
       </footer>
