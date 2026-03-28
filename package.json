@@ -19,9 +19,11 @@
     "ws": ">=8.17.1",
     "tar-fs": ">=3.0.7",
     "serialize-javascript": ">=7.0.3",
+    "node-forge": ">=1.3.4",
     "express": {
-      "path-to-regexp": "0.1.12"
-    }
+      "path-to-regexp": "0.1.13"
+    },
+    "path-to-regexp": "0.1.13"
   },
   "scripts": {
     "postinstall": "node scripts/fix-express-path-to-regexp.js",

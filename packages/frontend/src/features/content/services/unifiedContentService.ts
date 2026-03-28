@@ -32,7 +32,8 @@ const getHeaders = () => ({
   'Content-Type': 'application/json',
 });
 
-// Request options with credentials
+// Request options with credentials (reserved for authenticated endpoints)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const getRequestOptions = (): RequestInit => ({
   credentials: 'include',
 });
@@ -76,7 +77,7 @@ class UnifiedContentService {
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         if (Array.isArray(value)) {
-          value.forEach((item) => params.append(key, String(item)));
+          value.forEach(item => params.append(key, String(item)));
         } else {
           params.append(key, String(value));
         }
@@ -370,7 +371,7 @@ class UnifiedContentService {
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         if (Array.isArray(value)) {
-          value.forEach((item) => params.append(key, String(item)));
+          value.forEach(item => params.append(key, String(item)));
         } else if (typeof value === 'object') {
           params.append(key, JSON.stringify(value));
         } else {
@@ -480,7 +481,7 @@ class UnifiedContentService {
 
   async subscribeToUpdates(
     contentId: string,
-    callback: (update: any) => void
+    _callback: (update: unknown) => void
   ): Promise<() => void> {
     // Mock implementation for real-time updates
     // In a real implementation, this would use WebSockets or Server-Sent Events

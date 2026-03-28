@@ -270,69 +270,41 @@ export const NIP05Manager: React.FC<NIP05ManagerProps> = ({
     switch (status) {
       case 'verified':
         return (
-          <Badge className="bg-green-100 text-green-800 border-green-200">
-            <CheckCircle className="h-3 w-3 mr-1" />
+          <Badge className='bg-green-100 text-green-800 border-green-200'>
+            <CheckCircle className='h-3 w-3 mr-1' />
             Verified
           </Badge>
         );
       case 'pending':
         return (
-          <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
-            <Clock className="h-3 w-3 mr-1" />
+          <Badge className='bg-yellow-100 text-yellow-800 border-yellow-200'>
+            <Clock className='h-3 w-3 mr-1' />
             Pending
           </Badge>
         );
       case 'failed':
         return (
-          <Badge className="bg-red-100 text-red-800 border-red-200">
-            <XCircle className="h-3 w-3 mr-1" />
+          <Badge className='bg-red-100 text-red-800 border-red-200'>
+            <XCircle className='h-3 w-3 mr-1' />
             Failed
           </Badge>
         );
       case 'expired':
         return (
-          <Badge className="bg-muted text-foreground border-border">
-            <Clock className="h-3 w-3 mr-1" />
+          <Badge className='bg-muted text-foreground border-border'>
+            <Clock className='h-3 w-3 mr-1' />
             Expired
           </Badge>
         );
       case 'revoked':
         return (
-          <Badge className="bg-red-100 text-red-800 border-red-200">
-            <X className="h-3 w-3 mr-1" />
+          <Badge className='bg-red-100 text-red-800 border-red-200'>
+            <X className='h-3 w-3 mr-1' />
             Revoked
           </Badge>
         );
       default:
-        return <Badge className="bg-muted text-foreground border-border">{status}</Badge>;
-    }
-  };
-
-  // 🎨 Method Badge Helper
-  const getMethodBadge = (method: string) => {
-    switch (method) {
-      case 'http':
-        return (
-          <Badge variant="outline" className="text-blue-600 border-blue-200">
-            <Globe className="h-3 w-3 mr-1" />
-            HTTP
-          </Badge>
-        );
-      case 'dns':
-        return (
-          <Badge variant="outline" className="text-purple-600 border-purple-200">
-            <Shield className="h-3 w-3 mr-1" />
-            DNS
-          </Badge>
-        );
-      case 'manual':
-        return (
-          <Badge variant="outline" className="text-orange-600 border-orange-200">
-            Manual
-          </Badge>
-        );
-      default:
-        return <Badge variant="outline">{method}</Badge>;
+        return <Badge className='bg-muted text-foreground border-border'>{status}</Badge>;
     }
   };
 
@@ -354,7 +326,7 @@ export const NIP05Manager: React.FC<NIP05ManagerProps> = ({
   if (isLoading) {
     return (
       <div className={`flex items-center justify-center p-8 ${className}`}>
-        <RefreshCw className="h-6 w-6 animate-spin mr-2" />
+        <RefreshCw className='h-6 w-6 animate-spin mr-2' />
         <span>Loading NIP-05 verifications...</span>
       </div>
     );
@@ -363,15 +335,15 @@ export const NIP05Manager: React.FC<NIP05ManagerProps> = ({
   return (
     <div className={`space-y-6 ${className}`}>
       {/* 📊 Overview Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <CheckCircle className="h-5 w-5 text-green-500" />
+          <CardContent className='p-4'>
+            <div className='flex items-center space-x-2'>
+              <CheckCircle className='h-5 w-5 text-green-500' />
               <div>
-                <p className="text-sm font-medium">Verified</p>
-                <p className="text-2xl font-bold">
-                  {verifications.filter((v) => v.verification_status === 'verified').length}
+                <p className='text-sm font-medium'>Verified</p>
+                <p className='text-2xl font-bold'>
+                  {verifications.filter(v => v.verification_status === 'verified').length}
                 </p>
               </div>
             </div>
@@ -379,13 +351,13 @@ export const NIP05Manager: React.FC<NIP05ManagerProps> = ({
         </Card>
 
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <Clock className="h-5 w-5 text-yellow-500" />
+          <CardContent className='p-4'>
+            <div className='flex items-center space-x-2'>
+              <Clock className='h-5 w-5 text-yellow-500' />
               <div>
-                <p className="text-sm font-medium">Pending</p>
-                <p className="text-2xl font-bold">
-                  {verifications.filter((v) => v.verification_status === 'pending').length}
+                <p className='text-sm font-medium'>Pending</p>
+                <p className='text-2xl font-bold'>
+                  {verifications.filter(v => v.verification_status === 'pending').length}
                 </p>
               </div>
             </div>
@@ -393,13 +365,13 @@ export const NIP05Manager: React.FC<NIP05ManagerProps> = ({
         </Card>
 
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <XCircle className="h-5 w-5 text-red-500" />
+          <CardContent className='p-4'>
+            <div className='flex items-center space-x-2'>
+              <XCircle className='h-5 w-5 text-red-500' />
               <div>
-                <p className="text-sm font-medium">Failed</p>
-                <p className="text-2xl font-bold">
-                  {verifications.filter((v) => v.verification_status === 'failed').length}
+                <p className='text-sm font-medium'>Failed</p>
+                <p className='text-2xl font-bold'>
+                  {verifications.filter(v => v.verification_status === 'failed').length}
                 </p>
               </div>
             </div>
@@ -407,12 +379,12 @@ export const NIP05Manager: React.FC<NIP05ManagerProps> = ({
         </Card>
 
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <Shield className="h-5 w-5 text-blue-500" />
+          <CardContent className='p-4'>
+            <div className='flex items-center space-x-2'>
+              <Shield className='h-5 w-5 text-blue-500' />
               <div>
-                <p className="text-sm font-medium">Total</p>
-                <p className="text-2xl font-bold">{verifications.length}</p>
+                <p className='text-sm font-medium'>Total</p>
+                <p className='text-2xl font-bold'>{verifications.length}</p>
               </div>
             </div>
           </CardContent>
@@ -422,14 +394,14 @@ export const NIP05Manager: React.FC<NIP05ManagerProps> = ({
       {/* 🔍 Main Content */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
+          <CardTitle className='flex items-center justify-between'>
             <span>NIP-05 Verifications</span>
-            <div className="flex items-center space-x-2">
-              <Button variant="outline" size="sm" onClick={loadVerifications} disabled={isLoading}>
+            <div className='flex items-center space-x-2'>
+              <Button variant='outline' size='sm' onClick={loadVerifications} disabled={isLoading}>
                 <RefreshCw className={`h-4 w-4 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
                 Refresh
               </Button>
-              <Button size="sm" onClick={() => setShowCreateDialog(true)}>
+              <Button size='sm' onClick={() => setShowCreateDialog(true)}>
                 Add Verification
               </Button>
             </div>
@@ -438,25 +410,25 @@ export const NIP05Manager: React.FC<NIP05ManagerProps> = ({
         <CardContent>
           {/* Error Display */}
           {error && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertTriangle className="h-4 w-4" />
+            <Alert variant='destructive' className='mb-4'>
+              <AlertTriangle className='h-4 w-4' />
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
 
           {/* Verifications List */}
-          <div className="space-y-4">
+          <div className='space-y-4'>
             {verifications.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <Shield className="h-12 w-12 mx-auto mb-4 text-muted-foreground/40" />
-                <h3 className="text-lg font-medium mb-2">No NIP-05 Verifications</h3>
-                <p className="mb-4">
+              <div className='text-center py-8 text-muted-foreground'>
+                <Shield className='h-12 w-12 mx-auto mb-4 text-muted-foreground/40' />
+                <h3 className='text-lg font-medium mb-2'>No NIP-05 Verifications</h3>
+                <p className='mb-4'>
                   Create your first NIP-05 verification to establish your NOSTR identity.
                 </p>
                 <Button onClick={() => setShowCreateDialog(true)}>Create Verification</Button>
               </div>
             ) : (
-              verifications.map((verification) => (
+              verifications.map(verification => (
                 <VerificationCard
                   key={verification.id}
                   verification={verification}
@@ -482,22 +454,22 @@ export const NIP05Manager: React.FC<NIP05ManagerProps> = ({
             <CardTitle>Domain Statistics: {domainStats.domain}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Verifications</p>
-                <p className="text-2xl font-bold">{domainStats.total_verifications}</p>
+                <p className='text-sm font-medium text-muted-foreground'>Total Verifications</p>
+                <p className='text-2xl font-bold'>{domainStats.total_verifications}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Verified</p>
-                <p className="text-2xl font-bold text-green-600">{domainStats.verified_count}</p>
+                <p className='text-sm font-medium text-muted-foreground'>Verified</p>
+                <p className='text-2xl font-bold text-green-600'>{domainStats.verified_count}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Pending</p>
-                <p className="text-2xl font-bold text-yellow-600">{domainStats.pending_count}</p>
+                <p className='text-sm font-medium text-muted-foreground'>Pending</p>
+                <p className='text-2xl font-bold text-yellow-600'>{domainStats.pending_count}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Failed</p>
-                <p className="text-2xl font-bold text-red-600">{domainStats.failed_count}</p>
+                <p className='text-sm font-medium text-muted-foreground'>Failed</p>
+                <p className='text-2xl font-bold text-red-600'>{domainStats.failed_count}</p>
               </div>
             </div>
           </CardContent>
@@ -506,45 +478,45 @@ export const NIP05Manager: React.FC<NIP05ManagerProps> = ({
 
       {/* 🆕 Create Verification Dialog */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className='max-w-md'>
           <DialogHeader>
             <DialogTitle>Create NIP-05 Verification</DialogTitle>
             <DialogDescription>
               Verify your NOSTR identity with a NIP-05 identifier.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className='space-y-4'>
             <div>
-              <Label htmlFor="identifier">NIP-05 Identifier</Label>
+              <Label htmlFor='identifier'>NIP-05 Identifier</Label>
               <Input
-                id="identifier"
-                placeholder="username@domain.com"
+                id='identifier'
+                placeholder='username@domain.com'
                 value={newIdentifier}
-                onChange={(e) => setNewIdentifier(e.target.value)}
+                onChange={e => setNewIdentifier(e.target.value)}
               />
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className='text-xs text-muted-foreground mt-1'>
                 Format: localpart@domain.com (e.g., alice@example.com)
               </p>
             </div>
             <div>
-              <Label htmlFor="method">Verification Method</Label>
+              <Label htmlFor='method'>Verification Method</Label>
               <Select
                 value={verificationMethod}
-                onValueChange={(value) => setVerificationMethod(value as any)}
+                onValueChange={value => setVerificationMethod(value as any)}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="http">HTTP (/.well-known/nostr.json)</SelectItem>
-                  <SelectItem value="dns">DNS (TXT record)</SelectItem>
-                  <SelectItem value="manual">Manual Verification</SelectItem>
+                  <SelectItem value='http'>HTTP (/.well-known/nostr.json)</SelectItem>
+                  <SelectItem value='dns'>DNS (TXT record)</SelectItem>
+                  <SelectItem value='manual'>Manual Verification</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+            <Button variant='outline' onClick={() => setShowCreateDialog(false)}>
               Cancel
             </Button>
             <Button
@@ -553,7 +525,7 @@ export const NIP05Manager: React.FC<NIP05ManagerProps> = ({
             >
               {isCreating ? (
                 <>
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  <RefreshCw className='h-4 w-4 mr-2 animate-spin' />
                   Creating...
                 </>
               ) : (
@@ -575,20 +547,20 @@ export const NIP05Manager: React.FC<NIP05ManagerProps> = ({
             </DialogDescription>
           </DialogHeader>
           {selectedVerification && (
-            <div className="space-y-2">
-              <div className="p-3 bg-muted rounded-md">
-                <p className="font-medium">{selectedVerification.nip05_identifier}</p>
-                <p className="text-sm text-muted-foreground">
+            <div className='space-y-2'>
+              <div className='p-3 bg-muted rounded-md'>
+                <p className='font-medium'>{selectedVerification.nip05_identifier}</p>
+                <p className='text-sm text-muted-foreground'>
                   Status: {getStatusBadge(selectedVerification.verification_status)}
                 </p>
               </div>
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowRevokeDialog(false)}>
+            <Button variant='outline' onClick={() => setShowRevokeDialog(false)}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleRevokeVerification}>
+            <Button variant='destructive' onClick={handleRevokeVerification}>
               Revoke Verification
             </Button>
           </DialogFooter>
@@ -624,26 +596,26 @@ const VerificationCard: React.FC<VerificationCardProps> = ({
 
   return (
     <Card className={`transition-all hover:shadow-md ${isVerified ? 'ring-1 ring-green-200' : ''}`}>
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center space-x-3">
+      <CardContent className='p-4'>
+        <div className='flex items-center justify-between mb-3'>
+          <div className='flex items-center space-x-3'>
             <div>
-              <div className="flex items-center space-x-2 mb-1">
-                <span className="font-medium text-lg">{verification.nip05_identifier}</span>
+              <div className='flex items-center space-x-2 mb-1'>
+                <span className='font-medium text-lg'>{verification.nip05_identifier}</span>
                 <Button
-                  variant="ghost"
-                  size="sm"
+                  variant='ghost'
+                  size='sm'
                   onClick={() => onCopyToClipboard(verification.nip05_identifier)}
                 >
-                  <Copy className="h-3 w-3" />
+                  <Copy className='h-3 w-3' />
                 </Button>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className='flex items-center space-x-2'>
                 {getStatusBadge(verification.verification_status)}
                 {getMethodBadge(verification.verification_method)}
                 {verification.domain_info?.is_trusted && (
-                  <Badge className="bg-blue-100 text-blue-800 border-blue-200">
-                    <Shield className="h-3 w-3 mr-1" />
+                  <Badge className='bg-blue-100 text-blue-800 border-blue-200'>
+                    <Shield className='h-3 w-3 mr-1' />
                     Trusted Domain
                   </Badge>
                 )}
@@ -651,73 +623,73 @@ const VerificationCard: React.FC<VerificationCardProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className='flex items-center space-x-2'>
             {needsRefresh && (
-              <Button variant="outline" size="sm" onClick={onRefresh} disabled={isRefreshing}>
+              <Button variant='outline' size='sm' onClick={onRefresh} disabled={isRefreshing}>
                 <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               </Button>
             )}
             <Button
-              variant="outline"
-              size="sm"
+              variant='outline'
+              size='sm'
               onClick={() => onLoadDomainStats(verification.domain)}
             >
-              <ExternalLink className="h-4 w-4" />
+              <ExternalLink className='h-4 w-4' />
             </Button>
             <Button
-              variant="destructive"
-              size="sm"
+              variant='destructive'
+              size='sm'
               onClick={onRevoke}
               disabled={verification.verification_status === 'revoked'}
             >
-              <X className="h-4 w-4" />
+              <X className='h-4 w-4' />
             </Button>
           </div>
         </div>
 
         {/* Verification Details */}
-        <div className="space-y-2 text-sm text-muted-foreground">
-          <div className="grid grid-cols-2 gap-4">
+        <div className='space-y-2 text-sm text-muted-foreground'>
+          <div className='grid grid-cols-2 gap-4'>
             <div>
-              <span className="font-medium">Domain:</span> {verification.domain}
+              <span className='font-medium'>Domain:</span> {verification.domain}
             </div>
             <div>
-              <span className="font-medium">Local Part:</span> {verification.local_part}
+              <span className='font-medium'>Local Part:</span> {verification.local_part}
             </div>
             <div>
-              <span className="font-medium">Created:</span>{' '}
+              <span className='font-medium'>Created:</span>{' '}
               {new Date(verification.created_at).toLocaleDateString()}
             </div>
             <div>
-              <span className="font-medium">Last Checked:</span>{' '}
+              <span className='font-medium'>Last Checked:</span>{' '}
               {new Date(verification.last_checked_at).toLocaleDateString()}
             </div>
           </div>
 
           {verification.verified_at && (
             <div>
-              <span className="font-medium">Verified:</span>{' '}
+              <span className='font-medium'>Verified:</span>{' '}
               {new Date(verification.verified_at).toLocaleString()}
             </div>
           )}
 
           {verification.expires_at && (
             <div>
-              <span className="font-medium">Expires:</span>{' '}
+              <span className='font-medium'>Expires:</span>{' '}
               {new Date(verification.expires_at).toLocaleString()}
-              {isExpired && <span className="text-red-600 ml-2">(Expired)</span>}
+              {isExpired && <span className='text-red-600 ml-2'>(Expired)</span>}
             </div>
           )}
 
           {verification.failure_reason && (
-            <div className="text-red-600">
-              <span className="font-medium">Error:</span> {verification.failure_reason}
+            <div className='text-red-600'>
+              <span className='font-medium'>Error:</span> {verification.failure_reason}
             </div>
           )}
 
           {verification.check_count > 0 && (
             <div>
-              <span className="font-medium">Checks:</span> {verification.check_count}
+              <span className='font-medium'>Checks:</span> {verification.check_count}
             </div>
           )}
         </div>
@@ -725,11 +697,11 @@ const VerificationCard: React.FC<VerificationCardProps> = ({
         {/* Verification Data */}
         {verification.verification_data &&
           Object.keys(verification.verification_data).length > 0 && (
-            <details className="mt-3">
-              <summary className="cursor-pointer text-sm font-medium text-foreground">
+            <details className='mt-3'>
+              <summary className='cursor-pointer text-sm font-medium text-foreground'>
                 Verification Details
               </summary>
-              <pre className="mt-2 p-2 bg-muted rounded text-xs overflow-auto">
+              <pre className='mt-2 p-2 bg-muted rounded text-xs overflow-auto'>
                 {JSON.stringify(verification.verification_data, null, 2)}
               </pre>
             </details>
@@ -744,41 +716,41 @@ function getStatusBadge(status: string): JSX.Element {
   switch (status) {
     case 'verified':
       return (
-        <Badge className="bg-green-100 text-green-800 border-green-200">
-          <CheckCircle className="h-3 w-3 mr-1" />
+        <Badge className='bg-green-100 text-green-800 border-green-200'>
+          <CheckCircle className='h-3 w-3 mr-1' />
           Verified
         </Badge>
       );
     case 'pending':
       return (
-        <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
-          <Clock className="h-3 w-3 mr-1" />
+        <Badge className='bg-yellow-100 text-yellow-800 border-yellow-200'>
+          <Clock className='h-3 w-3 mr-1' />
           Pending
         </Badge>
       );
     case 'failed':
       return (
-        <Badge className="bg-red-100 text-red-800 border-red-200">
-          <XCircle className="h-3 w-3 mr-1" />
+        <Badge className='bg-red-100 text-red-800 border-red-200'>
+          <XCircle className='h-3 w-3 mr-1' />
           Failed
         </Badge>
       );
     case 'expired':
       return (
-        <Badge className="bg-muted text-foreground border-border">
-          <Clock className="h-3 w-3 mr-1" />
+        <Badge className='bg-muted text-foreground border-border'>
+          <Clock className='h-3 w-3 mr-1' />
           Expired
         </Badge>
       );
     case 'revoked':
       return (
-        <Badge className="bg-red-100 text-red-800 border-red-200">
-          <X className="h-3 w-3 mr-1" />
+        <Badge className='bg-red-100 text-red-800 border-red-200'>
+          <X className='h-3 w-3 mr-1' />
           Revoked
         </Badge>
       );
     default:
-      return <Badge className="bg-muted text-foreground border-border">{status}</Badge>;
+      return <Badge className='bg-muted text-foreground border-border'>{status}</Badge>;
   }
 }
 
@@ -787,26 +759,26 @@ function getMethodBadge(method: string): JSX.Element {
   switch (method) {
     case 'http':
       return (
-        <Badge variant="outline" className="text-blue-600 border-blue-200">
-          <Globe className="h-3 w-3 mr-1" />
+        <Badge variant='outline' className='text-blue-600 border-blue-200'>
+          <Globe className='h-3 w-3 mr-1' />
           HTTP
         </Badge>
       );
     case 'dns':
       return (
-        <Badge variant="outline" className="text-purple-600 border-purple-200">
-          <Shield className="h-3 w-3 mr-1" />
+        <Badge variant='outline' className='text-purple-600 border-purple-200'>
+          <Shield className='h-3 w-3 mr-1' />
           DNS
         </Badge>
       );
     case 'manual':
       return (
-        <Badge variant="outline" className="text-orange-600 border-orange-200">
+        <Badge variant='outline' className='text-orange-600 border-orange-200'>
           Manual
         </Badge>
       );
     default:
-      return <Badge variant="outline">{method}</Badge>;
+      return <Badge variant='outline'>{method}</Badge>;
   }
 }
 

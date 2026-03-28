@@ -82,14 +82,14 @@ interface KeyManagerProps {
 // 🚀 NOSTR Key Manager Component
 export const NOSTRKeyManager: React.FC<KeyManagerProps> = ({
   onKeyGenerated,
-  onKeyImported,
+  onKeyImported: _onKeyImported,
   onBackupCreated,
   className = '',
 }) => {
   // State management
   const [keyPair, setKeyPair] = useState<NostrKeyPair | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [backupMethod, setBackupMethod] = useState<BackupMethod>('mnemonic');
+  // backupMethod state reserved for future UI (backup method selector)
   const [showPrivateKey, setShowPrivateKey] = useState(false);
   const [entropy, setEntropy] = useState<number>(0);
   const [hardwareWallet, setHardwareWallet] = useState<HardwareWallet>({
@@ -116,7 +116,8 @@ export const NOSTRKeyManager: React.FC<KeyManagerProps> = ({
   const entropySourceRef = useRef<string>('');
 
   // Hooks
-  const { user } = useAuth();
+  // user from auth context available if needed for future permission checks
+  useAuth();
 
   // Feature flags (simplified for demo - would normally use feature flag service)
   const isKeyManagementEnabled = true;
@@ -133,7 +134,7 @@ export const NOSTRKeyManager: React.FC<KeyManagerProps> = ({
     ];
 
     let totalEntropy = 0;
-    sources.forEach((source) => {
+    sources.forEach(source => {
       totalEntropy += source.reduce((sum, byte) => sum + byte, 0);
     });
 
@@ -167,7 +168,7 @@ export const NOSTRKeyManager: React.FC<KeyManagerProps> = ({
 
       // Derive public key
       const privateKeyHex = Array.from(privateKeyBytes)
-        .map((b) => b.toString(16).padStart(2, '0'))
+        .map(b => b.toString(16).padStart(2, '0'))
         .join('');
 
       const publicKeyHex = getPublicKey(privateKeyBytes);
@@ -323,15 +324,16 @@ export const NOSTRKeyManager: React.FC<KeyManagerProps> = ({
         setError(null);
 
         switch (method) {
-          case 'mnemonic':
+          case 'mnemonic': {
             // Generate BIP39 mnemonic (simplified implementation)
             const entropy = privateKeyRef.current;
             if (!entropy) throw new Error('Private key not available');
 
             setSuccess('Mnemonic backup created (display mnemonic to user)');
             break;
+          }
 
-          case 'file':
+          case 'file': {
             // Create encrypted file backup
             const backupData = {
               npub: keyPair.npub,
@@ -353,6 +355,7 @@ export const NOSTRKeyManager: React.FC<KeyManagerProps> = ({
             URL.revokeObjectURL(url);
             setSuccess('File backup downloaded');
             break;
+          }
 
           case 'qr':
             // Generate QR code for nsec
@@ -371,7 +374,7 @@ export const NOSTRKeyManager: React.FC<KeyManagerProps> = ({
         }
 
         // Update key pair backup status
-        setKeyPair((prev) => (prev ? { ...prev, backed_up: true } : null));
+        setKeyPair(prev => (prev ? { ...prev, backed_up: true } : null));
         onBackupCreated?.(method);
 
         logger.info('Key backup created', {
@@ -401,7 +404,7 @@ export const NOSTRKeyManager: React.FC<KeyManagerProps> = ({
       await generateKeys();
 
       // Update metrics
-      setKeyMetrics((prev) => ({
+      setKeyMetrics(prev => ({
         ...prev,
         rotated_count: prev.rotated_count + 1,
       }));
@@ -422,7 +425,7 @@ export const NOSTRKeyManager: React.FC<KeyManagerProps> = ({
   // 📊 Key Usage Monitoring
   const recordKeyUsage = useCallback(
     (success: boolean) => {
-      setKeyMetrics((prev) => ({
+      setKeyMetrics(prev => ({
         ...prev,
         sign_count: success ? prev.sign_count + 1 : prev.sign_count,
         failed_attempts: success ? prev.failed_attempts : prev.failed_attempts + 1,
@@ -431,7 +434,7 @@ export const NOSTRKeyManager: React.FC<KeyManagerProps> = ({
 
       // Check for potential compromise
       if (keyMetrics.failed_attempts > 5) {
-        setKeyMetrics((prev) => ({ ...prev, compromised: true }));
+        setKeyMetrics(prev => ({ ...prev, compromised: true }));
         setError('Key may be compromised - consider rotation');
       }
     },
@@ -464,19 +467,19 @@ export const NOSTRKeyManager: React.FC<KeyManagerProps> = ({
 
   if (!isKeyManagementEnabled) {
     return (
-      <div className="p-4 bg-muted rounded-lg">
-        <p className="text-muted-foreground">NOSTR key management is currently disabled.</p>
+      <div className='p-4 bg-muted rounded-lg'>
+        <p className='text-muted-foreground'>NOSTR key management is currently disabled.</p>
       </div>
     );
   }
 
   return (
     <div className={`nostr-key-manager ${className}`}>
-      <div className="bg-card rounded-xl shadow-lg p-6 space-y-6">
+      <div className='bg-card rounded-xl shadow-lg p-6 space-y-6'>
         {/* Header */}
-        <div className="border-b border-border pb-4">
-          <h2 className="text-2xl font-bold text-foreground">NOSTR Key Management</h2>
-          <p className="text-muted-foreground mt-1">
+        <div className='border-b border-border pb-4'>
+          <h2 className='text-2xl font-bold text-foreground'>NOSTR Key Management</h2>
+          <p className='text-muted-foreground mt-1'>
             Secure key generation, backup, and management for your sovereign identity
           </p>
         </div>
@@ -488,7 +491,7 @@ export const NOSTRKeyManager: React.FC<KeyManagerProps> = ({
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg"
+              className='bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg'
             >
               {error}
             </motion.div>
@@ -498,7 +501,7 @@ export const NOSTRKeyManager: React.FC<KeyManagerProps> = ({
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg"
+              className='bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg'
             >
               {success}
             </motion.div>
@@ -506,12 +509,12 @@ export const NOSTRKeyManager: React.FC<KeyManagerProps> = ({
         </AnimatePresence>
 
         {/* Key Generation Section */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-foreground">Key Generation</h3>
+        <div className='space-y-4'>
+          <h3 className='text-lg font-semibold text-foreground'>Key Generation</h3>
 
           {/* Entropy Indicator */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
+          <div className='space-y-2'>
+            <div className='flex justify-between text-sm'>
               <span>Entropy Level:</span>
               <span
                 className={
@@ -525,7 +528,7 @@ export const NOSTRKeyManager: React.FC<KeyManagerProps> = ({
                 {entropy}/256
               </span>
             </div>
-            <div className="w-full bg-muted rounded-full h-2">
+            <div className='w-full bg-muted rounded-full h-2'>
               <div
                 className={`h-2 rounded-full transition-all duration-300 ${
                   entropy > 200 ? 'bg-green-500' : entropy > 128 ? 'bg-yellow-500' : 'bg-red-500'
@@ -538,7 +541,7 @@ export const NOSTRKeyManager: React.FC<KeyManagerProps> = ({
           <button
             onClick={generateKeys}
             disabled={isGenerating}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-muted disabled:text-muted-foreground text-white font-medium py-3 px-4 rounded-lg transition-colors"
+            className='w-full bg-blue-600 hover:bg-blue-700 disabled:bg-muted disabled:text-muted-foreground text-white font-medium py-3 px-4 rounded-lg transition-colors'
           >
             {isGenerating ? 'Generating Keys...' : 'Generate New NOSTR Keys'}
           </button>
@@ -546,14 +549,14 @@ export const NOSTRKeyManager: React.FC<KeyManagerProps> = ({
 
         {/* Hardware Wallet Section */}
         {isHardwareWalletEnabled && (
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-foreground">Hardware Wallet</h3>
-            <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+          <div className='space-y-4'>
+            <h3 className='text-lg font-semibold text-foreground'>Hardware Wallet</h3>
+            <div className='flex items-center justify-between p-4 bg-muted rounded-lg'>
               <div>
-                <p className="font-medium">
+                <p className='font-medium'>
                   {hardwareWallet.connected ? hardwareWallet.device : 'Not Connected'}
                 </p>
-                <p className="text-sm text-muted-foreground">
+                <p className='text-sm text-muted-foreground'>
                   {hardwareWallet.connected && hardwareWallet.supports_nostr
                     ? 'NOSTR support: Available'
                     : 'NOSTR support: Unknown'}
@@ -562,7 +565,7 @@ export const NOSTRKeyManager: React.FC<KeyManagerProps> = ({
               <button
                 onClick={connectHardwareWallet}
                 disabled={hardwareWallet.connected}
-                className="bg-green-600 hover:bg-green-700 disabled:bg-muted disabled:text-muted-foreground text-white px-4 py-2 rounded-lg transition-colors"
+                className='bg-green-600 hover:bg-green-700 disabled:bg-muted disabled:text-muted-foreground text-white px-4 py-2 rounded-lg transition-colors'
               >
                 {hardwareWallet.connected ? 'Connected' : 'Connect'}
               </button>
@@ -572,15 +575,15 @@ export const NOSTRKeyManager: React.FC<KeyManagerProps> = ({
 
         {/* Browser Extension Section */}
         {isNIP07Enabled && (
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-foreground">Browser Extension (NIP-07)</h3>
-            <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+          <div className='space-y-4'>
+            <h3 className='text-lg font-semibold text-foreground'>Browser Extension (NIP-07)</h3>
+            <div className='flex items-center justify-between p-4 bg-muted rounded-lg'>
               <div>
-                <p className="font-medium">
+                <p className='font-medium'>
                   {browserExtension.available ? browserExtension.name : 'Not Detected'}
                 </p>
                 {browserExtension.pubkey && (
-                  <p className="text-sm text-muted-foreground font-mono">
+                  <p className='text-sm text-muted-foreground font-mono'>
                     {browserExtension.pubkey.slice(0, 16)}...
                   </p>
                 )}
@@ -588,7 +591,7 @@ export const NOSTRKeyManager: React.FC<KeyManagerProps> = ({
               <button
                 onClick={connectBrowserExtension}
                 disabled={browserExtension.enabled}
-                className="bg-purple-600 hover:bg-purple-700 disabled:bg-muted disabled:text-muted-foreground text-white px-4 py-2 rounded-lg transition-colors"
+                className='bg-purple-600 hover:bg-purple-700 disabled:bg-muted disabled:text-muted-foreground text-white px-4 py-2 rounded-lg transition-colors'
               >
                 {browserExtension.enabled ? 'Connected' : 'Connect'}
               </button>
@@ -598,34 +601,34 @@ export const NOSTRKeyManager: React.FC<KeyManagerProps> = ({
 
         {/* Current Keys Display */}
         {keyPair && (
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-foreground">Current Keys</h3>
-            <div className="space-y-3">
+          <div className='space-y-4'>
+            <h3 className='text-lg font-semibold text-foreground'>Current Keys</h3>
+            <div className='space-y-3'>
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1">
+                <label className='block text-sm font-medium text-foreground mb-1'>
                   Public Key (npub)
                 </label>
-                <div className="bg-muted p-3 rounded-lg font-mono text-sm break-all">
+                <div className='bg-muted p-3 rounded-lg font-mono text-sm break-all'>
                   {keyPair.npub}
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1">
+                <label className='block text-sm font-medium text-foreground mb-1'>
                   Private Key (nsec)
                 </label>
-                <div className="bg-muted p-3 rounded-lg">
+                <div className='bg-muted p-3 rounded-lg'>
                   {showPrivateKey ? (
-                    <div className="font-mono text-sm break-all text-red-600">{keyPair.nsec}</div>
+                    <div className='font-mono text-sm break-all text-red-600'>{keyPair.nsec}</div>
                   ) : (
-                    <div className="text-muted-foreground text-sm">
+                    <div className='text-muted-foreground text-sm'>
                       ••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
                     </div>
                   )}
                 </div>
                 <button
                   onClick={() => setShowPrivateKey(!showPrivateKey)}
-                  className="mt-2 text-sm text-blue-600 hover:text-blue-700"
+                  className='mt-2 text-sm text-blue-600 hover:text-blue-700'
                 >
                   {showPrivateKey ? 'Hide' : 'Show'} Private Key
                 </button>
@@ -633,26 +636,26 @@ export const NOSTRKeyManager: React.FC<KeyManagerProps> = ({
             </div>
 
             {/* Key Metrics */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-              <div className="bg-blue-50 p-3 rounded-lg text-center">
-                <div className="text-2xl font-bold text-blue-600">{keyMetrics.sign_count}</div>
-                <div className="text-sm text-blue-700">Signs</div>
+            <div className='grid grid-cols-2 md:grid-cols-4 gap-4 mt-4'>
+              <div className='bg-blue-50 p-3 rounded-lg text-center'>
+                <div className='text-2xl font-bold text-blue-600'>{keyMetrics.sign_count}</div>
+                <div className='text-sm text-blue-700'>Signs</div>
               </div>
-              <div className="bg-red-50 p-3 rounded-lg text-center">
-                <div className="text-2xl font-bold text-red-600">{keyMetrics.failed_attempts}</div>
-                <div className="text-sm text-red-700">Failed</div>
+              <div className='bg-red-50 p-3 rounded-lg text-center'>
+                <div className='text-2xl font-bold text-red-600'>{keyMetrics.failed_attempts}</div>
+                <div className='text-sm text-red-700'>Failed</div>
               </div>
-              <div className="bg-yellow-50 p-3 rounded-lg text-center">
-                <div className="text-2xl font-bold text-yellow-600">{keyMetrics.rotated_count}</div>
-                <div className="text-sm text-yellow-700">Rotations</div>
+              <div className='bg-yellow-50 p-3 rounded-lg text-center'>
+                <div className='text-2xl font-bold text-yellow-600'>{keyMetrics.rotated_count}</div>
+                <div className='text-sm text-yellow-700'>Rotations</div>
               </div>
-              <div className="bg-green-50 p-3 rounded-lg text-center">
+              <div className='bg-green-50 p-3 rounded-lg text-center'>
                 <div
                   className={`text-2xl font-bold ${keyPair.backed_up ? 'text-green-600' : 'text-muted-foreground/60'}`}
                 >
                   {keyPair.backed_up ? '✓' : '✗'}
                 </div>
-                <div className="text-sm text-green-700">Backed Up</div>
+                <div className='text-sm text-green-700'>Backed Up</div>
               </div>
             </div>
           </div>
@@ -660,31 +663,31 @@ export const NOSTRKeyManager: React.FC<KeyManagerProps> = ({
 
         {/* Backup Section */}
         {keyPair && (
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-foreground">Key Backup</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className='space-y-4'>
+            <h3 className='text-lg font-semibold text-foreground'>Key Backup</h3>
+            <div className='grid grid-cols-2 md:grid-cols-4 gap-3'>
               <button
                 onClick={() => createBackup('mnemonic')}
-                className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded-lg text-sm transition-colors"
+                className='bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded-lg text-sm transition-colors'
               >
                 Mnemonic
               </button>
               <button
                 onClick={() => createBackup('file')}
-                className="bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded-lg text-sm transition-colors"
+                className='bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded-lg text-sm transition-colors'
               >
                 File
               </button>
               <button
                 onClick={() => createBackup('qr')}
-                className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-3 rounded-lg text-sm transition-colors"
+                className='bg-purple-600 hover:bg-purple-700 text-white py-2 px-3 rounded-lg text-sm transition-colors'
               >
                 QR Code
               </button>
               <button
                 onClick={() => createBackup('hardware')}
                 disabled={!hardwareWallet.connected}
-                className="bg-yellow-600 hover:bg-yellow-700 disabled:bg-muted disabled:text-muted-foreground text-white py-2 px-3 rounded-lg text-sm transition-colors"
+                className='bg-yellow-600 hover:bg-yellow-700 disabled:bg-muted disabled:text-muted-foreground text-white py-2 px-3 rounded-lg text-sm transition-colors'
               >
                 Hardware
               </button>
@@ -694,18 +697,18 @@ export const NOSTRKeyManager: React.FC<KeyManagerProps> = ({
 
         {/* Key Management Actions */}
         {keyPair && (
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-foreground">Key Management</h3>
-            <div className="flex flex-wrap gap-3">
+          <div className='space-y-4'>
+            <h3 className='text-lg font-semibold text-foreground'>Key Management</h3>
+            <div className='flex flex-wrap gap-3'>
               <button
                 onClick={rotateKeys}
-                className="bg-orange-600 hover:bg-orange-700 text-white py-2 px-4 rounded-lg transition-colors"
+                className='bg-orange-600 hover:bg-orange-700 text-white py-2 px-4 rounded-lg transition-colors'
               >
                 Rotate Keys
               </button>
               <button
                 onClick={() => recordKeyUsage(true)}
-                className="bg-muted hover:bg-accent text-foreground py-2 px-4 rounded-lg transition-colors"
+                className='bg-muted hover:bg-accent text-foreground py-2 px-4 rounded-lg transition-colors'
               >
                 Test Sign
               </button>
