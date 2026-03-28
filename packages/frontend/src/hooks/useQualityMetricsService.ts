@@ -66,7 +66,6 @@ export const useQualityMetricsService = (
     realTimeUpdates = true,
     refreshInterval = 30000, // 30 seconds
     enableCaching = true,
-    aiInsights = true,
     autoOptimize = false,
   } = options;
 
@@ -515,7 +514,7 @@ export const useQualityMetricsService = (
         // No need to send token in a separate message
       };
 
-      ws.onmessage = (event) => {
+      ws.onmessage = event => {
         try {
           const message = JSON.parse(event.data);
 
@@ -564,7 +563,7 @@ export const useQualityMetricsService = (
         }, 5000);
       };
 
-      ws.onerror = (error) => {
+      ws.onerror = error => {
         console.error('Quality metrics WebSocket error:', error);
         setError('WebSocket connection error');
         setIsConnected(false);

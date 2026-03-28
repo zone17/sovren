@@ -27,12 +27,6 @@ const REALTIME_RECONNECT_DELAY = 5000; // 5 seconds
 const MAX_RETRY_ATTEMPTS = 3;
 
 // 📊 **REQUEST/RESPONSE SCHEMAS**
-const AnalyticsRequestSchema = z.object({
-  period: z.enum(['24h', '7d', '30d', '90d']),
-  metrics: z.array(z.string()).optional(),
-  filters: z.record(z.unknown()).optional(),
-});
-
 const ExportRequestSchema = z.object({
   format: z.enum(['json', 'csv', 'xlsx']),
   data_types: z.array(z.enum(['earnings', 'payments', 'content', 'audience'])),
@@ -43,7 +37,6 @@ const ExportRequestSchema = z.object({
   include_personal_data: z.boolean().default(false),
 });
 
-type AnalyticsRequest = z.infer<typeof AnalyticsRequestSchema>;
 type ExportRequest = z.infer<typeof ExportRequestSchema>;
 
 // 💾 **CACHE MANAGEMENT**
@@ -103,10 +96,10 @@ class RealTimeAnalyticsManager {
         this.isConnecting = false;
       };
 
-      this.ws.onmessage = (event) => {
+      this.ws.onmessage = event => {
         try {
           const analyticsEvent: AnalyticsEvent = JSON.parse(event.data);
-          this.subscribers.forEach((callback) => callback(analyticsEvent));
+          this.subscribers.forEach(callback => callback(analyticsEvent));
         } catch (error) {
           console.error('Failed to parse analytics event:', error);
         }
@@ -118,7 +111,7 @@ class RealTimeAnalyticsManager {
         this.scheduleReconnect();
       };
 
-      this.ws.onerror = (error) => {
+      this.ws.onerror = error => {
         console.error('Real-time analytics error:', error);
         this.isConnecting = false;
       };
@@ -201,7 +194,7 @@ export class EnhancedAnalyticsService {
       return response;
     } catch (error) {
       if (retryCount < MAX_RETRY_ATTEMPTS) {
-        await new Promise((resolve) => setTimeout(resolve, 1000 * (retryCount + 1)));
+        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
         return this.fetchWithRetry(url, options, retryCount + 1);
       }
       throw error;
@@ -462,7 +455,7 @@ export class EnhancedAnalyticsService {
 
   // 🧮 **PERFORMANCE OPTIMIZATION**
   async preloadData(periods: string[] = ['24h', '7d', '30d']): Promise<void> {
-    const promises = periods.map(async (period) => {
+    const promises = periods.map(async period => {
       try {
         await Promise.all([
           this.getDashboardKPIs(period),
