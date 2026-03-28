@@ -73,7 +73,7 @@ jobs:
           if [[ -z "$BASE" || "$BASE" == "0000000000000000000000000000000000000000" ]]; then
             BASE="origin/main"
           fi
-          FILES=$(git diff --name-only --diff-filter=ACMR "$BASE" HEAD -- '*.ts' '*.tsx' '*.js' '*.jsx' | tr '\n' ' ')
+          FILES=$(git diff --name-only --diff-filter=ACMR "$BASE" HEAD -- '*.ts' '*.tsx' '*.js' '*.jsx' | grep -v '\.test\.' | grep -v '__tests__' | tr '\n' ' ')
           echo "files=$FILES" >> "$GITHUB_OUTPUT"
           echo "count=$(echo "$FILES" | wc -w | tr -d ' ')" >> "$GITHUB_OUTPUT"
 
