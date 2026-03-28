@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Business Invoices Routes
  * EPIC-011: Business Manager — Invoicing with LNURL-pay payment links

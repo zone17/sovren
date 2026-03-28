@@ -1543,7 +1543,7 @@ export class RefundService implements IRefundService {
   async sendNotification(notification: RefundNotification): Promise<void> {
     // Emit webhook event
     const webhookEvent: RefundWebhookEvent = {
-      type: notification.type,
+      type: notification.type as RefundWebhookEvent['type'],
       refundId: notification.refundId,
       transactionId: notification.transactionId,
       userId: notification.userId,
@@ -1723,8 +1723,8 @@ export class RefundService implements IRefundService {
     try {
       const result = await this.currencyService.convert({
         amount,
-        fromCurrency: currency,
-        toCurrency: 'USD',
+        from: currency as unknown as import('../../types/currency').Currency,
+        to: 'USD' as unknown as import('../../types/currency').Currency,
       });
       return result.convertedAmount;
     } catch (error) {

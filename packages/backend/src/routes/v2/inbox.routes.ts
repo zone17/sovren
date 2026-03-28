@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Unified Inbox Routes (v2)
  * /api/v2/inbox/*
@@ -150,7 +149,7 @@ router.post(
       // Route NOSTR replies through the dedicated adapter (fixes EPIC-009B P1 bug)
       const result = await getNostrReplyAdapter().reply(
         creatorId,
-        message.platform_message_id,
+        message.platform_message_id as string,
         content
       );
       res.status(201).json(createApiResponse(req, { sent: true, eventId: result.eventId }));

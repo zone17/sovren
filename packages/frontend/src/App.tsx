@@ -15,434 +15,424 @@ import { BusinessErrorBoundary } from './features/business/ErrorBoundary';
 import { CreatorNetworkErrorBoundary } from './features/creator-network/ErrorBoundary';
 
 // 🎯 **LAZY LOADING**
-const Home = React.lazy(() => import('./pages/Home').then(module => ({ default: module.default })));
+const Home = React.lazy(() =>
+  import('./pages/Home').then((module) => ({ default: module.default }))
+);
 const Login = React.lazy(() =>
-  import('./pages/Login').then(module => ({ default: module.default }))
+  import('./pages/Login').then((module) => ({ default: module.default }))
 );
 const Signup = React.lazy(() =>
-  import('./pages/Signup').then(module => ({ default: module.default }))
+  import('./pages/Signup').then((module) => ({ default: module.default }))
 );
 const Profile = React.lazy(() =>
-  import('./pages/Profile').then(module => ({ default: module.default }))
+  import('./pages/Profile').then((module) => ({ default: module.default }))
 );
-const Post = React.lazy(() => import('./pages/Post').then(module => ({ default: module.default })));
+const Post = React.lazy(() =>
+  import('./pages/Post').then((module) => ({ default: module.default }))
+);
 const CreatorDashboard = React.lazy(() =>
-  import('./pages/CreatorDashboard').then(module => ({ default: module.default }))
+  import('./pages/CreatorDashboard').then((module) => ({ default: module.default }))
 );
 const AnalyticsDashboard = React.lazy(() =>
-  import('./features/analytics/components/CreatorDashboard').then(module => ({
+  import('./features/analytics/components/CreatorDashboard').then((module) => ({
     default: module.CreatorDashboard,
   }))
 );
 const SubscriptionManager = React.lazy(() =>
-  import('./features/subscriptions/components/SubscriptionManager').then(module => ({
+  import('./features/subscriptions/components/SubscriptionManager').then((module) => ({
     default: module.SubscriptionManager,
   }))
 );
 const MonitoringDashboard = React.lazy(() =>
-  import('./features/dashboard/components/MonitoringDashboard').then(module => ({
+  import('./features/dashboard/components/MonitoringDashboard').then((module) => ({
     default: module.default,
   }))
 );
 const NotFound = React.lazy(() =>
-  import('./pages/NotFound').then(module => ({ default: module.default }))
+  import('./pages/NotFound').then((module) => ({ default: module.default }))
 );
 
 // 🚀 **ONBOARDING COMPONENTS**
 const SovereignOnboarding = React.lazy(() =>
-  import('./components/onboarding/SovereignOnboarding').then(module => ({
+  import('./components/onboarding/SovereignOnboarding').then((module) => ({
     default: module.default,
   }))
 );
 const NostrOnboarding = React.lazy(() =>
-  import('./components/onboarding/NostrOnboarding').then(module => ({
+  import('./components/onboarding/NostrOnboarding').then((module) => ({
     default: module.default,
   }))
 );
 const LightningOnboarding = React.lazy(() =>
-  import('./components/onboarding/LightningOnboarding').then(module => ({
+  import('./components/onboarding/LightningOnboarding').then((module) => ({
     default: module.default,
   }))
 );
 const ProfileDashboard = React.lazy(() =>
-  import('./components/ProfileDashboard').then(module => ({
+  import('./components/ProfileDashboard').then((module) => ({
     default: module.default,
   }))
 );
 
-// Settings, Legal, Help pages
-const Settings = React.lazy(() =>
-  import('./pages/Settings').then(module => ({ default: module.default }))
-);
-const Terms = React.lazy(() =>
-  import('./pages/Terms').then(module => ({ default: module.default }))
-);
-const Privacy = React.lazy(() =>
-  import('./pages/Privacy').then(module => ({ default: module.default }))
-);
-const Help = React.lazy(() => import('./pages/Help').then(module => ({ default: module.default })));
-
 // Discovery & Creator Profile
 const DiscoveryPage = React.lazy(() =>
-  import('./features/discovery/components/DiscoveryPage').then(module => ({
+  import('./features/discovery/components/DiscoveryPage').then((module) => ({
     default: module.DiscoveryPage,
   }))
 );
 const CreatorProfilePage = React.lazy(() =>
-  import('./pages/CreatorProfile').then(module => ({
+  import('./pages/CreatorProfile').then((module) => ({
     default: module.default,
   }))
 );
 
 // Revenue Analytics
 const RevenueAnalytics = React.lazy(() =>
-  import('./features/analytics/components/RevenueAnalytics').then(module => ({
+  import('./features/analytics/components/RevenueAnalytics').then((module) => ({
     default: module.RevenueAnalytics,
   }))
 );
 
 // Content Detail (public — comments section)
 const ContentDetail = React.lazy(() =>
-  import('./pages/ContentDetail').then(module => ({ default: module.default }))
+  import('./pages/ContentDetail').then((module) => ({ default: module.default }))
 );
 
 // Business Manager
 const BusinessManagerDashboard = React.lazy(() =>
-  import('./features/business/components/BusinessManagerDashboard').then(module => ({
+  import('./features/business/components/BusinessManagerDashboard').then((module) => ({
     default: module.BusinessManagerDashboard,
   }))
 );
 
 // Creator Network (Community Hub)
 const CreatorNetworkDashboard = React.lazy(() =>
-  import('./features/creator-network/components/CreatorNetworkDashboard').then(module => ({
+  import('./features/creator-network/components/CreatorNetworkDashboard').then((module) => ({
     default: module.default,
   }))
 );
 
 // Phase 7: Creator Safety Net
 const WellnessDashboard = React.lazy(() =>
-  import('./features/wellness/components/WellnessDashboard').then(module => ({
+  import('./features/wellness/components/WellnessDashboard').then((module) => ({
     default: module.WellnessDashboard,
   }))
 );
 const ShieldDashboard = React.lazy(() =>
-  import('./features/content-shield/components/ShieldDashboard').then(module => ({
+  import('./features/content-shield/components/ShieldDashboard').then((module) => ({
     default: module.ShieldDashboard,
   }))
 );
 
 function App(): React.ReactElement {
   const LoadingSpinner = () => (
-    <div role='status' className='flex justify-center items-center h-64'>
-      <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500'></div>
-      <span className='sr-only'>Loading...</span>
+    <div className="flex justify-center items-center h-64">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
     </div>
   );
 
   return (
-    <ErrorBoundary level='page' name='Application'>
+    <ErrorBoundary level="page" name="Application">
       <AuthProvider>
-        {/* TODO(SOV-UX-001): Add per-route Suspense boundaries so Layout shell stays visible during navigation */}
-        <Suspense fallback={<LoadingSpinner />}>
-          <Routes>
-            {/* Pages with their own layout (no duplicates) */}
-            <Route path='/' element={<Home />} />
-            <Route
-              path='/login'
-              element={
+        <Routes>
+          {/* Pages with their own layout (no duplicates) */}
+          <Route path="/" element={<Suspense fallback={<LoadingSpinner />}><Home /></Suspense>} />
+          <Route
+            path="/login"
+            element={
+              <Suspense fallback={<LoadingSpinner />}>
                 <AuthErrorBoundary>
                   <Login />
                 </AuthErrorBoundary>
-              }
-            />
-            <Route
-              path='/signup'
-              element={
+              </Suspense>
+            }
+          />
+          <Route
+            path="/signup"
+            element={
+              <Suspense fallback={<LoadingSpinner />}>
                 <AuthErrorBoundary>
                   <Signup />
                 </AuthErrorBoundary>
-              }
-            />
+              </Suspense>
+            }
+          />
 
-            {/* 🚀 ONBOARDING ROUTES */}
-            <Route
-              path='/onboarding'
-              element={
+          {/* ONBOARDING ROUTES */}
+          <Route
+            path="/onboarding"
+            element={
+              <Suspense fallback={<LoadingSpinner />}>
                 <AuthErrorBoundary>
                   <SovereignOnboarding />
                 </AuthErrorBoundary>
-              }
-            />
-            <Route
-              path='/onboarding/nostr'
-              element={
+              </Suspense>
+            }
+          />
+          <Route
+            path="/onboarding/nostr"
+            element={
+              <Suspense fallback={<LoadingSpinner />}>
                 <NostrErrorBoundary>
                   <NostrOnboarding />
                 </NostrErrorBoundary>
-              }
-            />
-            <Route
-              path='/onboarding/lightning'
-              element={
+              </Suspense>
+            }
+          />
+          <Route
+            path="/onboarding/lightning"
+            element={
+              <Suspense fallback={<LoadingSpinner />}>
                 <NostrErrorBoundary>
                   <LightningOnboarding />
                 </NostrErrorBoundary>
-              }
-            />
+              </Suspense>
+            }
+          />
 
-            {/* 👤 PROFILE DASHBOARD (Shows post-onboarding profile) */}
-            <Route
-              path='/profile-dashboard'
-              element={
+          {/* PROFILE DASHBOARD (Shows post-onboarding profile) */}
+          <Route
+            path="/profile-dashboard"
+            element={
+              <Suspense fallback={<LoadingSpinner />}>
                 <AuthErrorBoundary>
                   <ProfileDashboard />
                 </AuthErrorBoundary>
-              }
-            />
+              </Suspense>
+            }
+          />
 
-            {/* Protected Routes that need Layout */}
-            <Route
-              path='/profile'
-              element={
-                <Layout>
-                  <ProtectedRoute>
+          {/* Protected Routes that need Layout */}
+          <Route
+            path="/profile"
+            element={
+              <Layout>
+                <ProtectedRoute>
+                  <Suspense fallback={<LoadingSpinner />}>
                     <AuthErrorBoundary>
                       <Profile />
                     </AuthErrorBoundary>
-                  </ProtectedRoute>
-                </Layout>
-              }
-            />
+                  </Suspense>
+                </ProtectedRoute>
+              </Layout>
+            }
+          />
 
-            <Route
-              path='/post/:id'
-              element={
-                <Layout>
-                  <ProtectedRoute>
+          <Route
+            path="/post/:id"
+            element={
+              <Layout>
+                <ProtectedRoute>
+                  <Suspense fallback={<LoadingSpinner />}>
                     <ContentErrorBoundary>
                       <Post />
                     </ContentErrorBoundary>
-                  </ProtectedRoute>
-                </Layout>
-              }
-            />
+                  </Suspense>
+                </ProtectedRoute>
+              </Layout>
+            }
+          />
 
-            {/* Creator Routes */}
-            <Route
-              path='/create'
-              element={
-                <Layout>
-                  <ProtectedRoute>
+          {/* Creator Routes */}
+          <Route
+            path="/create"
+            element={
+              <Layout>
+                <ProtectedRoute>
+                  <Suspense fallback={<LoadingSpinner />}>
                     <ContentErrorBoundary>
                       <CreatorDashboard />
                     </ContentErrorBoundary>
-                  </ProtectedRoute>
-                </Layout>
-              }
-            />
+                  </Suspense>
+                </ProtectedRoute>
+              </Layout>
+            }
+          />
 
-            <Route
-              path='/dashboard'
-              element={
-                <Layout>
-                  <ProtectedRoute>
+          <Route
+            path="/dashboard"
+            element={
+              <Layout>
+                <ProtectedRoute>
+                  <Suspense fallback={<LoadingSpinner />}>
                     <DashboardErrorBoundary>
                       <CreatorDashboard />
                     </DashboardErrorBoundary>
-                  </ProtectedRoute>
-                </Layout>
-              }
-            />
+                  </Suspense>
+                </ProtectedRoute>
+              </Layout>
+            }
+          />
 
-            {/* Analytics Dashboard */}
-            <Route
-              path='/dashboard/analytics'
-              element={
-                <Layout>
-                  <ProtectedRoute>
+          {/* Analytics Dashboard */}
+          <Route
+            path="/dashboard/analytics"
+            element={
+              <Layout>
+                <ProtectedRoute>
+                  <Suspense fallback={<LoadingSpinner />}>
                     <AnalyticsErrorBoundary>
                       <AnalyticsDashboard />
                     </AnalyticsErrorBoundary>
-                  </ProtectedRoute>
-                </Layout>
-              }
-            />
+                  </Suspense>
+                </ProtectedRoute>
+              </Layout>
+            }
+          />
 
-            {/* Subscription Manager */}
-            <Route
-              path='/dashboard/subscriptions'
-              element={
-                <Layout>
-                  <ProtectedRoute>
+          {/* Subscription Manager */}
+          <Route
+            path="/dashboard/subscriptions"
+            element={
+              <Layout>
+                <ProtectedRoute>
+                  <Suspense fallback={<LoadingSpinner />}>
                     <SubscriptionsErrorBoundary>
                       <SubscriptionManager />
                     </SubscriptionsErrorBoundary>
-                  </ProtectedRoute>
-                </Layout>
-              }
-            />
+                  </Suspense>
+                </ProtectedRoute>
+              </Layout>
+            }
+          />
 
-            {/* Discovery (Public) */}
-            <Route
-              path='/discover'
-              element={
-                <Layout>
+          {/* Discovery (Public) */}
+          <Route
+            path="/discover"
+            element={
+              <Layout>
+                <Suspense fallback={<LoadingSpinner />}>
                   <DiscoveryPage />
-                </Layout>
-              }
-            />
+                </Suspense>
+              </Layout>
+            }
+          />
 
-            {/* Creator Profile (Public) */}
-            <Route
-              path='/creator/:id'
-              element={
-                <Layout>
+          {/* Creator Profile (Public) */}
+          <Route
+            path="/creator/:id"
+            element={
+              <Layout>
+                <Suspense fallback={<LoadingSpinner />}>
                   <CreatorProfilePage />
-                </Layout>
-              }
-            />
+                </Suspense>
+              </Layout>
+            }
+          />
 
-            {/* Content Detail (Public — comments section) */}
-            <Route
-              path='/content/:id'
-              element={
-                <Layout>
+          {/* Content Detail (Public — comments section) */}
+          <Route
+            path="/content/:id"
+            element={
+              <Layout>
+                <Suspense fallback={<LoadingSpinner />}>
                   <ContentErrorBoundary>
                     <ContentDetail />
                   </ContentErrorBoundary>
-                </Layout>
-              }
-            />
+                </Suspense>
+              </Layout>
+            }
+          />
 
-            {/* Revenue Analytics */}
-            <Route
-              path='/dashboard/revenue'
-              element={
-                <Layout>
-                  <ProtectedRoute>
+          {/* Revenue Analytics */}
+          <Route
+            path="/dashboard/revenue"
+            element={
+              <Layout>
+                <ProtectedRoute>
+                  <Suspense fallback={<LoadingSpinner />}>
                     <AnalyticsErrorBoundary>
                       <RevenueAnalytics />
                     </AnalyticsErrorBoundary>
-                  </ProtectedRoute>
-                </Layout>
-              }
-            />
+                  </Suspense>
+                </ProtectedRoute>
+              </Layout>
+            }
+          />
 
-            {/* Wellness Dashboard — creators only, show access denied for supporters */}
-            <Route
-              path='/wellness'
-              element={
-                <Layout>
-                  <ProtectedRoute requireRole='creator' showAccessDenied={true}>
+          {/* Wellness Dashboard — creators only, show access denied for supporters */}
+          <Route
+            path="/wellness"
+            element={
+              <Layout>
+                <ProtectedRoute requireRole="creator" showAccessDenied={true}>
+                  <Suspense fallback={<LoadingSpinner />}>
                     <WellnessErrorBoundary>
                       <WellnessDashboard />
                     </WellnessErrorBoundary>
-                  </ProtectedRoute>
-                </Layout>
-              }
-            />
+                  </Suspense>
+                </ProtectedRoute>
+              </Layout>
+            }
+          />
 
-            {/* Content Shield Dashboard */}
-            <Route
-              path='/shield'
-              element={
-                <Layout>
-                  <ProtectedRoute>
+          {/* Content Shield Dashboard */}
+          <Route
+            path="/shield"
+            element={
+              <Layout>
+                <ProtectedRoute>
+                  <Suspense fallback={<LoadingSpinner />}>
                     <ContentShieldErrorBoundary>
                       <ShieldDashboard />
                     </ContentShieldErrorBoundary>
-                  </ProtectedRoute>
-                </Layout>
-              }
-            />
+                  </Suspense>
+                </ProtectedRoute>
+              </Layout>
+            }
+          />
 
-            {/* Community Hub (Creator Network) */}
-            <Route
-              path='/community'
-              element={
-                <Layout>
-                  <ProtectedRoute requireRole='creator' showAccessDenied={true}>
+          {/* Community Hub (Creator Network) */}
+          <Route
+            path="/community"
+            element={
+              <Layout>
+                <ProtectedRoute requireRole="creator" showAccessDenied={true}>
+                  <Suspense fallback={<LoadingSpinner />}>
                     <CreatorNetworkErrorBoundary>
                       <CreatorNetworkDashboard />
                     </CreatorNetworkErrorBoundary>
-                  </ProtectedRoute>
-                </Layout>
-              }
-            />
+                  </Suspense>
+                </ProtectedRoute>
+              </Layout>
+            }
+          />
 
-            {/* Business Manager — creators only */}
-            <Route
-              path='/business'
-              element={
-                <Layout>
-                  <ProtectedRoute requireRole='creator' showAccessDenied={true}>
+          {/* Business Manager — creators only */}
+          <Route
+            path="/business"
+            element={
+              <Layout>
+                <ProtectedRoute requireRole="creator" showAccessDenied={true}>
+                  <Suspense fallback={<LoadingSpinner />}>
                     <BusinessErrorBoundary>
                       <BusinessManagerDashboard />
                     </BusinessErrorBoundary>
-                  </ProtectedRoute>
-                </Layout>
-              }
-            />
+                  </Suspense>
+                </ProtectedRoute>
+              </Layout>
+            }
+          />
 
-            {/* Admin Routes */}
-            <Route
-              path='/monitoring'
-              element={
-                <Layout>
-                  <ProtectedRoute requireRole='admin'>
+          {/* Admin Routes */}
+          <Route
+            path="/monitoring"
+            element={
+              <Layout>
+                <ProtectedRoute requireRole="admin">
+                  <Suspense fallback={<LoadingSpinner />}>
                     <DashboardErrorBoundary>
                       <MonitoringDashboard />
                     </DashboardErrorBoundary>
-                  </ProtectedRoute>
-                </Layout>
-              }
-            />
+                  </Suspense>
+                </ProtectedRoute>
+              </Layout>
+            }
+          />
 
-            {/* Settings (Protected) */}
-            <Route
-              path='/settings'
-              element={
-                <Layout>
-                  <ProtectedRoute>
-                    <ErrorBoundary level='page' name='Settings'>
-                      <Settings />
-                    </ErrorBoundary>
-                  </ProtectedRoute>
-                </Layout>
-              }
-            />
-
-            {/* Legal & Help (Public) */}
-            <Route
-              path='/terms'
-              element={
-                <ErrorBoundary level='page' name='Terms'>
-                  <Terms />
-                </ErrorBoundary>
-              }
-            />
-            <Route
-              path='/privacy'
-              element={
-                <ErrorBoundary level='page' name='Privacy'>
-                  <Privacy />
-                </ErrorBoundary>
-              }
-            />
-            <Route
-              path='/help'
-              element={
-                <ErrorBoundary level='page' name='Help'>
-                  <Help />
-                </ErrorBoundary>
-              }
-            />
-
-            {/* 404 catch-all */}
-            <Route path='*' element={<NotFound />} />
-          </Routes>
-        </Suspense>
+          {/* 404 catch-all */}
+          <Route path="*" element={<Suspense fallback={<LoadingSpinner />}><NotFound /></Suspense>} />
+        </Routes>
       </AuthProvider>
     </ErrorBoundary>
   );

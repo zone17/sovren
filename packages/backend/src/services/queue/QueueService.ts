@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * QueueService Implementation
  * Wraps BullMQ Queue and Worker classes for centralized queue management
@@ -6,7 +5,7 @@
  * Part of E0-001: BullMQ Infrastructure
  */
 
-import { Queue, Worker, Job } from 'bullmq';
+import { Queue, Worker, Job, type ConnectionOptions } from 'bullmq';
 import Redis from 'ioredis';
 import type {
   IQueueService,
@@ -34,9 +33,10 @@ export function getQueueServiceInstance(): QueueService | null {
  * BullMQ workers use blocking commands (BRPOPLPUSH, BLMOVE) that require
  * maxRetriesPerRequest: null — the shared client's default won't work.
  */
-function createBullMQConnection(): Redis {
+function createBullMQConnection(): ConnectionOptions {
   const baseClient = getRedisClient();
   const opts = baseClient.options;
+  // BullMQ accepts Redis instances as ConnectionOptions at runtime
   return new Redis({
     host: opts.host,
     port: opts.port,
@@ -44,7 +44,7 @@ function createBullMQConnection(): Redis {
     db: opts.db,
     maxRetriesPerRequest: null, // Required for BullMQ blocking commands
     enableReadyCheck: false,
-  });
+  }) as unknown as ConnectionOptions;
 }
 
 export class QueueService implements IQueueService {

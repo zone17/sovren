@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ContentScannerProcessor
  * BullMQ job processor for scanning NOSTR relays for content copies
@@ -140,7 +139,7 @@ export class ContentScannerProcessor implements IJobProcessor<RelayScanJobData> 
       throw error;
     }
 
-    return data || [];
+    return (data || []) as { content_id: string; hash_type: string; hash_value: string }[];
   }
 
   /**

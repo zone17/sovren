@@ -108,12 +108,22 @@ class AnalyticsService {
       this.lastActivity = now;
     };
 
+    // Throttled version for high-frequency events (mousemove)
+    let lastMousemoveUpdate = 0;
+    const throttledUpdateActivity = () => {
+      const now = Date.now();
+      if (now - lastMousemoveUpdate >= 5000) {
+        lastMousemoveUpdate = now;
+        updateActivity();
+      }
+    };
+
     // Track user activity
     if (typeof window !== 'undefined') {
       window.addEventListener('click', updateActivity);
       window.addEventListener('scroll', updateActivity);
       window.addEventListener('keydown', updateActivity);
-      window.addEventListener('mousemove', updateActivity);
+      window.addEventListener('mousemove', throttledUpdateActivity);
     }
   }
 

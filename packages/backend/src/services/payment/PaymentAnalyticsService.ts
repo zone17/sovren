@@ -1,4 +1,3 @@
-// @ts-nocheck
 // TODO(SOV-REFACTOR-002): This file is 1907 lines. Decompose into:
 // - RevenueAnalyticsService (getRevenueAnalytics, getRevenueByPeriod, getRevenueTimeSeries, getRevenueTrend,
 //   getConsolidatedRevenue, getRevenueBreakdownInBaseCurrency — ~300 lines)
@@ -486,7 +485,7 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
           countByMethod,
           volumeByStatus,
           countByStatus,
-          trend: trendInfo.direction,
+          trend: trendInfo.direction as 'increasing' | 'decreasing' | 'stable',
           trendPercentage: trendInfo.strength,
         };
       },

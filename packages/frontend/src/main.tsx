@@ -62,7 +62,7 @@ if (rootElement) {
             >
               <App />
             </BrowserRouter>
-            {import.meta.env.NODE_ENV === 'development' && (
+            {import.meta.env.DEV && (
               <ReactQueryDevtools initialIsOpen={false} />
             )}
           </QueryClientProvider>

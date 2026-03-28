@@ -1,3 +1,4 @@
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../../../components/ui/button';
 import type { CreatorSearchResult } from '../types';
@@ -6,7 +7,7 @@ interface CreatorCardProps {
   creator: CreatorSearchResult;
 }
 
-export const CreatorCard = ({ creator }: CreatorCardProps) => {
+export const CreatorCard = React.memo(({ creator }: CreatorCardProps) => {
   return (
     <article
       className="glass-hover rounded-xl overflow-hidden transition-all duration-150"
@@ -96,4 +97,6 @@ export const CreatorCard = ({ creator }: CreatorCardProps) => {
       </div>
     </article>
   );
-};
+});
+
+CreatorCard.displayName = 'CreatorCard';

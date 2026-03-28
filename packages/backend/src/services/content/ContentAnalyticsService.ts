@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ContentAnalyticsService
  *
@@ -451,7 +450,7 @@ export class ContentAnalyticsService extends EventEmitter implements IContentAna
   /**
    * Calculate trends
    */
-  private calculateTrends(daily: AnalyticsResult, weekly: AnalyticsResult): Record<string, any> {
+  private calculateTrends(daily: AnalyticsResult, weekly: AnalyticsResult): { viewsTrend: number; engagementTrend: number } {
     return {
       viewsTrend: this.calculateGrowthRate(weekly.metrics.views || 0, daily.metrics.views || 0),
       engagementTrend: this.calculateGrowthRate(

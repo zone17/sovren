@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Contract Service
  * EPIC-011: Business Manager — Contract templates and red flag analysis
@@ -79,7 +78,7 @@ export class ContractService implements IContractService {
       this.logger.error('Failed to fetch contract templates', { error, category });
       throw new Error('Failed to fetch contract templates');
     }
-    return data ?? [];
+    return (data ?? []) as unknown as ContractTemplate[];
   }
 
   async getTemplate(templateId: string): Promise<ContractTemplate> {
@@ -96,7 +95,7 @@ export class ContractService implements IContractService {
       throw new Error('Failed to fetch contract template');
     }
     if (!data) throw new Error(`Template not found: ${templateId}`);
-    return data;
+    return data as unknown as ContractTemplate;
   }
 
   /** M-2: User-created template — sets created_by so RLS restricts visibility to the creator */
@@ -173,7 +172,7 @@ export class ContractService implements IContractService {
       this.logger.error('Failed to fetch contracts', { error, creatorId });
       throw new Error('Failed to fetch contracts');
     }
-    return data ?? [];
+    return (data ?? []) as unknown as Contract[];
   }
 
   async updateContract(

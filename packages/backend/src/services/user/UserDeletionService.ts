@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * UserDeletionService
  * GDPR COMP-001: Right to Erasure — soft deletion with 30-day grace period,
@@ -74,8 +73,8 @@ export class UserDeletionService {
   private queueInitPromise: Promise<void> | null = null;
 
   constructor(
-    @inject(TYPES.Database) private readonly db: IDatabase,
-    @inject(TYPES.QueueService) private readonly queueService: IQueueService
+    @inject(TYPES.Database as unknown as string) private readonly db: IDatabase,
+    @inject(TYPES.QueueService as unknown as string) private readonly queueService: IQueueService
   ) {
     this.logger = new Logger(UserDeletionService.name);
   }

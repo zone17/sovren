@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Cross-Platform Publish Job Processor
  * EPIC-009: BullMQ worker for publishing content to external platforms
@@ -66,8 +65,8 @@ export class CrossPublishProcessor implements IJobProcessor<CrossPublishJobData>
         .single();
 
       if (repurposed) {
-        contentText = repurposed.text;
-        backlink = repurposed.backlink_url;
+        contentText = repurposed.text as string;
+        backlink = repurposed.backlink_url as string;
       }
     }
 
@@ -82,9 +81,9 @@ export class CrossPublishProcessor implements IJobProcessor<CrossPublishJobData>
         throw new Error(`Content ${contentId} not found`);
       }
 
-      contentText = content.title
+      contentText = (content.title as string)
         ? `${content.title}\n\n${content.body || ''}`
-        : content.body || '';
+        : (content.body as string) || '';
     }
 
     // Format content per platform constraints

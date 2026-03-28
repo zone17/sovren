@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Lightning Payment Receipt Service
  *
@@ -509,7 +508,8 @@ export class LightningReceiptService extends EventEmitter {
         printBackground: true,
       });
 
-      const pdfPath = await this.storePdfReceipt(receipt, pdfBuffer);
+      const pdfBufferAsBuffer = Buffer.from(pdfBuffer);
+      const pdfPath = await this.storePdfReceipt(receipt, pdfBufferAsBuffer);
       receipt.receipt.pdfGenerated = true;
       receipt.receipt.pdfUrl = pdfPath;
 
@@ -519,7 +519,7 @@ export class LightningReceiptService extends EventEmitter {
       console.log(`PDF receipt generated: ${receipt.receiptNumber}`);
       this.emit('receipt:pdf:generated', { receiptId: receipt.id, pdfPath });
 
-      return pdfBuffer;
+      return pdfBufferAsBuffer;
     } catch (error) {
       console.error('Failed to generate PDF receipt:', error);
       throw new Error(

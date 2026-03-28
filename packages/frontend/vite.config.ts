@@ -163,7 +163,7 @@ export default defineConfig(async ({ mode, command }) => {
       assetsDir: 'assets',
 
       // Source maps for debugging
-      sourcemap: isProd ? 'hidden' : true,
+      sourcemap: isProd ? false : true,
 
       // Bundle size optimizations
       target: ['es2020', 'chrome80', 'firefox78', 'safari14', 'edge88'],
@@ -192,49 +192,41 @@ export default defineConfig(async ({ mode, command }) => {
       // Bundle splitting strategy
       rollupOptions: {
         output: {
-          // Elite manual chunk splitting for better caching
-          manualChunks: {
-            // Core React ecosystem
-            'react-vendor': ['react', 'react-dom'],
-
-            // Router and navigation
-            router: ['react-router-dom'],
-
-            // State management
-            redux: ['@reduxjs/toolkit', 'react-redux'],
-
-            // UI component libraries
-            'ui-components': [
-              '@radix-ui/react-avatar',
-              '@radix-ui/react-dialog',
-              '@radix-ui/react-dropdown-menu',
-              '@radix-ui/react-label',
-              '@radix-ui/react-select',
-              '@radix-ui/react-switch',
-              '@radix-ui/react-tabs',
-              '@radix-ui/react-tooltip',
-            ],
-
-            // Utilities and helpers
-            utils: ['tailwind-merge', 'clsx', 'class-variance-authority'],
-
-            // Cryptography and blockchain
-            crypto: ['@noble/secp256k1', '@scure/bip32', '@scure/bip39', 'nostr-tools'],
-
-            // Charts and analytics
-            charts: ['recharts'],
-
-            // API and data fetching
-            api: ['@tanstack/react-query', '@supabase/supabase-js'],
-
-            // Payment processing
-            payments: ['stripe'],
-
-            // Icons (consolidate all icon chunks)
-            icons: ['lucide-react'],
-
-            // Monitoring and analytics
-            monitoring: ['web-vitals'],
+          // Function-based manual chunk splitting for correct React isolation
+          manualChunks(id) {
+            if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
+              return 'react-vendor';
+            }
+            if (id.includes('node_modules/react-router')) {
+              return 'router';
+            }
+            if (id.includes('node_modules/@reduxjs/toolkit') || id.includes('node_modules/react-redux')) {
+              return 'redux';
+            }
+            if (id.includes('node_modules/@radix-ui/')) {
+              return 'ui-components';
+            }
+            if (id.includes('node_modules/tailwind-merge') || id.includes('node_modules/clsx') || id.includes('node_modules/class-variance-authority')) {
+              return 'utils';
+            }
+            if (id.includes('node_modules/@noble/secp256k1') || id.includes('node_modules/@scure/bip32') || id.includes('node_modules/@scure/bip39') || id.includes('node_modules/nostr-tools')) {
+              return 'crypto';
+            }
+            if (id.includes('node_modules/recharts')) {
+              return 'charts';
+            }
+            if (id.includes('node_modules/@tanstack/react-query') || id.includes('node_modules/@supabase/supabase-js')) {
+              return 'api';
+            }
+            if (id.includes('node_modules/stripe')) {
+              return 'payments';
+            }
+            if (id.includes('node_modules/lucide-react')) {
+              return 'icons';
+            }
+            if (id.includes('node_modules/web-vitals')) {
+              return 'monitoring';
+            }
           },
 
           // Optimized chunk file naming for caching

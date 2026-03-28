@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * UserAnalyticsHelpers
  * Extracted from UserAnalyticsService (SOV-REFACTOR-001).

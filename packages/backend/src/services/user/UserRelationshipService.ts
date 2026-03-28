@@ -1147,8 +1147,8 @@ export class UserRelationshipService implements IUserRelationshipService {
     // Sort
     if (options.sortBy) {
       results.sort((a, b) => {
-        const aVal = a[options.sortBy!];
-        const bVal = b[options.sortBy!];
+        const aVal = (a as Record<string, unknown>)[options.sortBy!];
+        const bVal = (b as Record<string, unknown>)[options.sortBy!];
         const order = options.sortOrder === 'desc' ? -1 : 1;
         return aVal < bVal ? -order : aVal > bVal ? order : 0;
       });

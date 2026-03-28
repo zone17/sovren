@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { randomBytes } from 'crypto';
 import { EventEmitter } from 'events';
 import { z } from 'zod';
@@ -231,7 +230,7 @@ export class PayoutManagementService extends EventEmitter {
       return earnings;
     } catch (error) {
       this.logger.error('Failed to calculate creator earnings', error);
-      throw new Error(`Earnings calculation failed: ${error.message}`);
+      throw new Error(`Earnings calculation failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -307,7 +306,7 @@ export class PayoutManagementService extends EventEmitter {
       return schedule;
     } catch (error) {
       this.logger.error('Failed to setup payout schedule', error);
-      throw new Error(`Payout schedule setup failed: ${error.message}`);
+      throw new Error(`Payout schedule setup failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -426,7 +425,7 @@ export class PayoutManagementService extends EventEmitter {
       return { verified: false, payout };
     } catch (error) {
       this.logger.error('Failed to verify payout', error);
-      throw new Error(`Payout verification failed: ${error.message}`);
+      throw new Error(`Payout verification failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -488,7 +487,7 @@ export class PayoutManagementService extends EventEmitter {
       };
     } catch (error) {
       this.logger.error('Failed to get earnings analytics', error);
-      throw new Error(`Earnings analytics failed: ${error.message}`);
+      throw new Error(`Earnings analytics failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -976,7 +975,7 @@ export class PayoutManagementService extends EventEmitter {
       this.logger.error('Health check failed', error);
       return {
         status: 'unhealthy',
-        metrics: { error: error.message },
+        metrics: { error: error instanceof Error ? error.message : String(error) },
       };
     }
   }

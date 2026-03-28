@@ -15,6 +15,7 @@ export interface IBusinessInvoiceService {
       lineItems: LineItem[];
       dueDate?: string;
       recurringInterval?: string;
+      recurrenceEndDate?: string;
     }
   ): Promise<{ id: string; lnurlPay?: string }>;
   getInvoices(creatorId: string, filters?: { status?: string }): Promise<BusinessInvoice[]>;

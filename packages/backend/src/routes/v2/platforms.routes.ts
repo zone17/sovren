@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Platform Connection Routes (v2)
  * /api/v2/platforms/*
@@ -191,7 +190,7 @@ router.post(
     // Encrypt with BYOK-specific key
     const { encrypted, iv, authTag } = encryptToken(req.body.api_key, encryptionKey);
 
-    const db = container.resolve(TYPES.Database) as ISupabaseClient;
+    const db = container.resolve(TYPES.Database) as unknown as ISupabaseClient;
     const { error } = await db
       .from('platform_connections')
       .update({
@@ -226,7 +225,7 @@ router.delete(
 
     const creatorId = getAuthUser(req).nostr_pubkey;
 
-    const db = container.resolve(TYPES.Database) as ISupabaseClient;
+    const db = container.resolve(TYPES.Database) as unknown as ISupabaseClient;
     const { error } = await db
       .from('platform_connections')
       .update({

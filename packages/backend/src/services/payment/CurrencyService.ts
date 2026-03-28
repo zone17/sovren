@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * CurrencyService Implementation
  * User Story: US-E5-030
@@ -742,7 +741,7 @@ export class CurrencyService implements ICurrencyService {
       averageConversionTime: this.metrics.totalConversionTime / this.metrics.totalConversions || 0,
       providerUsage: {
         [this.activeProvider]: this.metrics.totalConversions,
-      },
+      } as Record<ExchangeRateProvider, number>,
       cacheHitRate: cacheStats.hitRate,
       failedConversions: 0, // Would track in production
       lastRateUpdate: new Date(),
