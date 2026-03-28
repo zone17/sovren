@@ -3,10 +3,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui';
 import { Alert } from '../components/ui/alert';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Spinner } from '../components/ui/spinner';
 import { useAuth } from '../features/auth';
+import { bytesToHex, hexToBytes } from '../shared/utils/hex';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 interface NostrKeys {
   publicKey: string;
@@ -14,24 +15,14 @@ interface NostrKeys {
 }
 
 const Signup: React.FC = () => {
+  useDocumentTitle('Sign Up');
   const navigate = useNavigate();
-  const { generateNostrChallenge, authenticateNostr, signup } = useAuth();
-
-  // Authentication mode
-  const [authMode, setAuthMode] = useState<'nostr' | 'email'>('nostr');
+  const { generateNostrChallenge, authenticateNostr } = useAuth();
 
   // NOSTR registration
   const [nostrKeys, setNostrKeys] = useState<NostrKeys>({ publicKey: '', privateKey: '' });
   const [isGeneratingKeys, setIsGeneratingKeys] = useState(false);
   const [userRole, setUserRole] = useState<'creator' | 'supporter'>('supporter');
-
-  // Traditional email registration
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-  });
 
   // UI state
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +38,7 @@ const Signup: React.FC = () => {
       const privateKey = generateSecretKey();
       const publicKey = getPublicKey(privateKey);
 
-      setNostrKeys({ privateKey: Buffer.from(privateKey).toString('hex'), publicKey });
+      setNostrKeys({ privateKey: bytesToHex(privateKey), publicKey });
       setError(null);
     } catch (err) {
       setError('Failed to generate NOSTR keys. Please try again.');
@@ -79,14 +70,14 @@ const Signup: React.FC = () => {
       const timestamp = Math.floor(Date.now() / 1000);
 
       const event = {
-        kind: 1,
+        kind: 22242,
         pubkey: nostrKeys.publicKey,
         created_at: timestamp,
-        tags: [],
+        tags: [['challenge', challengeResult.challenge]],
         content: challengeResult.challenge,
       };
 
-      const privateKeyBytes = new Uint8Array(Buffer.from(nostrKeys.privateKey, 'hex'));
+      const privateKeyBytes = hexToBytes(nostrKeys.privateKey);
       const signedEvent = finalizeEvent(event, privateKeyBytes);
 
       // Step 3: Authenticate with signed challenge
@@ -94,7 +85,7 @@ const Signup: React.FC = () => {
         signature: signedEvent.sig,
         pubkey: nostrKeys.publicKey,
         challenge: challengeResult.challenge,
-        timestamp: Date.now(),
+        timestamp,
       });
 
       if (authResult.error || !authResult.user) {
@@ -108,50 +99,6 @@ const Signup: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Traditional Email Registration
-  const handleEmailSignup = async (): Promise<void> => {
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-
-    if (!formData.name || !formData.email || !formData.password) {
-      setError('Please fill in all required fields');
-      return;
-    }
-
-    setError(null);
-    setIsLoading(true);
-
-    try {
-      const result = await signup({
-        name: formData.name,
-        email: formData.email,
-        password: formData.password,
-        role: userRole,
-        terms_accepted: true,
-      });
-
-      if (result.error || !result.user) {
-        throw new Error(result.error || 'Registration failed');
-      }
-
-      navigate('/profile');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
   };
 
   return (
@@ -193,32 +140,6 @@ const Signup: React.FC = () => {
         <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
           <Card className="glass shadow-lg border-border/50">
             <CardContent className="py-8 px-6">
-              {/* Authentication Mode Selector */}
-              <div className="mb-6">
-                <div className="flex space-x-1 bg-card/50 p-1 rounded-lg border border-border/50">
-                  <button
-                    onClick={() => setAuthMode('nostr')}
-                    className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all duration-150 ${
-                      authMode === 'nostr'
-                        ? 'bg-purple-500/20 text-purple-400 shadow-sm border border-purple-500/30'
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    NOSTR Keys
-                  </button>
-                  <button
-                    onClick={() => setAuthMode('email')}
-                    className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all duration-150 ${
-                      authMode === 'email'
-                        ? 'bg-purple-500/20 text-purple-400 shadow-sm border border-purple-500/30'
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    Email
-                  </button>
-                </div>
-              </div>
-
               {error && (
                 <Alert className="mb-6 border-red-500/20 bg-red-500/10">
                   <div className="text-sm font-medium text-red-400">{error}</div>
@@ -226,8 +147,7 @@ const Signup: React.FC = () => {
               )}
 
               {/* NOSTR Registration */}
-              {authMode === 'nostr' && (
-                <div className="space-y-6">
+              <div className="space-y-6">
                   <div className="bg-purple-500/10 border border-purple-500/20 rounded-md p-4">
                     <h3 className="text-sm font-medium text-purple-300 mb-2">Sovereign Identity</h3>
                     <p className="text-sm text-purple-200/80">
@@ -342,112 +262,10 @@ const Signup: React.FC = () => {
                     )}
                   </Button>
                 </div>
-              )}
 
-              {/* Email Registration */}
-              {authMode === 'email' && (
-                <div className="space-y-6">
-                  {/* Role Selection */}
-                  <div>
-                    <Label className="text-sm font-medium text-foreground mb-3 block">
-                      I want to join as a:
-                    </Label>
-                    <div className="flex space-x-1 bg-card/50 p-1 rounded-lg border border-border/50">
-                      <button
-                        onClick={() => setUserRole('supporter')}
-                        className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all duration-150 ${
-                          userRole === 'supporter'
-                            ? 'bg-purple-500/20 text-purple-400 shadow-sm border border-purple-500/30'
-                            : 'text-muted-foreground hover:text-foreground'
-                        }`}
-                      >
-                        Supporter
-                      </button>
-                      <button
-                        onClick={() => setUserRole('creator')}
-                        className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all duration-150 ${
-                          userRole === 'creator'
-                            ? 'bg-purple-500/20 text-purple-400 shadow-sm border border-purple-500/30'
-                            : 'text-muted-foreground hover:text-foreground'
-                        }`}
-                      >
-                        Creator
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="name">Full Name</Label>
-                    <Input
-                      id="name"
-                      name="name"
-                      type="text"
-                      autoComplete="name"
-                      required
-                      value={formData.name}
-                      onChange={handleChange}
-                      placeholder="Enter your full name"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="email">Email address</Label>
-                    <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      autoComplete="email"
-                      required
-                      value={formData.email}
-                      onChange={handleChange}
-                      placeholder="Enter your email"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="password">Password</Label>
-                    <Input
-                      id="password"
-                      name="password"
-                      type="password"
-                      autoComplete="new-password"
-                      required
-                      value={formData.password}
-                      onChange={handleChange}
-                      placeholder="Create a password"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="confirmPassword">Confirm Password</Label>
-                    <Input
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      type="password"
-                      autoComplete="new-password"
-                      required
-                      value={formData.confirmPassword}
-                      onChange={handleChange}
-                      placeholder="Confirm your password"
-                    />
-                  </div>
-
-                  <Button
-                    onClick={handleEmailSignup}
-                    disabled={isLoading}
-                    className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white shadow-[0_4px_16px_rgba(139,92,246,0.3)] transition-all duration-150"
-                  >
-                    {isLoading ? (
-                      <span className="flex items-center justify-center">
-                        <Spinner size="sm" className="mr-2" />
-                        Creating Account...
-                      </span>
-                    ) : (
-                      'Create Account'
-                    )}
-                  </Button>
-                </div>
-              )}
+              <p className="mt-4 text-xs text-center text-muted-foreground">
+                Email signup coming soon
+              </p>
 
               <div className="mt-6 text-center">
                 <p className="text-sm text-muted-foreground">

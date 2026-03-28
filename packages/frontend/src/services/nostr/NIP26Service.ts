@@ -347,7 +347,7 @@ export class NIP26Service {
   private async signDelegationToken(delegationToken: string, privateKey: string): Promise<string> {
     const hash = await this.sha256(delegationToken);
     const signature = await secp256k1.schnorr.sign(hash, privateKey);
-    return Buffer.from(signature).toString('hex');
+    return Array.from(new Uint8Array(signature), (b) => b.toString(16).padStart(2, '0')).join('');
   }
 
   /**
@@ -360,8 +360,8 @@ export class NIP26Service {
   ): Promise<boolean> {
     try {
       const hash = await this.sha256(delegationToken);
-      const signatureBytes = new Uint8Array(Buffer.from(signature, 'hex'));
-      const publicKeyBytes = new Uint8Array(Buffer.from(publicKey, 'hex'));
+      const signatureBytes = new Uint8Array(signature.match(/.{1,2}/g)!.map((b) => parseInt(b, 16)));
+      const publicKeyBytes = new Uint8Array(publicKey.match(/.{1,2}/g)!.map((b) => parseInt(b, 16)));
 
       return await secp256k1.schnorr.verify(signatureBytes, hash, publicKeyBytes);
     } catch (error) {

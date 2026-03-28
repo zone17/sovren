@@ -80,6 +80,15 @@ router.post(
     // Generate JWT token with DB-fetched role
     const token = await nostrAuth.generateJWT(verification.pubkey, role);
 
+    // Set JWT in HttpOnly cookie for browser clients
+    res.cookie('sovren_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/api',
+      maxAge: 24 * 60 * 60 * 1000, // 24h
+    });
+
     return res.status(200).json({
       success: true,
       data: {
@@ -103,22 +112,29 @@ router.post(
     if (!req.user) {
       return res.status(401).json({
         success: false,
-        error: 'Authorization header required',
+        error: 'Authentication required',
         code: 'AUTHENTICATION_ERROR',
       });
     }
 
-    // Get the current token from the authorization header
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    // Get the current token from cookie or authorization header
+    let currentToken: string | undefined;
+    if (req.cookies?.sovren_token) {
+      currentToken = req.cookies.sovren_token;
+    } else {
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        currentToken = authHeader.substring(7);
+      }
+    }
+
+    if (!currentToken) {
       return res.status(401).json({
         success: false,
-        error: 'Authorization header required',
+        error: 'Authentication required',
         code: 'AUTHENTICATION_ERROR',
       });
     }
-
-    const currentToken = authHeader.substring(7);
 
     // Use the dedicated refresh method
     const refreshResult = await nostrAuth.refreshJWT(currentToken);
@@ -130,6 +146,15 @@ router.post(
         code: 'REFRESH_ERROR',
       });
     }
+
+    // Set new JWT in HttpOnly cookie
+    res.cookie('sovren_token', refreshResult.newToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/api',
+      maxAge: 24 * 60 * 60 * 1000, // 24h
+    });
 
     return res.status(200).json({
       success: true,
@@ -177,18 +202,20 @@ router.post(
   optionalAuth,
   asyncHandler(async (req: Request, res: Response) => {
     // Revoke the JWT token server-side so it cannot be reused
-    const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.substring(7);
+    // Check cookie first, then Authorization header
+    const token = req.cookies?.sovren_token ||
+      (req.headers.authorization?.startsWith('Bearer ') ? req.headers.authorization.substring(7) : undefined);
+
+    if (token) {
       await nostrAuth.revokeToken(token);
     }
+
+    // Clear the HttpOnly auth cookie
+    res.clearCookie('sovren_token', { path: '/api' });
 
     res.status(200).json({
       success: true,
       message: 'Successfully logged out',
-      data: {
-        instructions: 'Please delete the JWT token from your client storage',
-      },
     });
   })
 );

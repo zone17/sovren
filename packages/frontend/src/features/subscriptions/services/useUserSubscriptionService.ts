@@ -79,7 +79,7 @@ interface RenewalSettings {
 }
 
 // API Configuration
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 // Validation Schemas
 const UserSubscriptionSchema = z.object({
@@ -479,12 +479,12 @@ class MockUserSubscriptionService {
 class ProductionUserSubscriptionService {
   private async apiCall(endpoint: string, options: RequestInit = {}): Promise<any> {
     const response = await fetch(`${API_BASE}${endpoint}`, {
+      ...options,
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
         ...options.headers,
       },
-      ...options,
     });
 
     if (!response.ok) {
@@ -575,9 +575,7 @@ class ProductionUserSubscriptionService {
 
   async exportSubscriptionHistory(): Promise<string> {
     const response = await fetch(`${API_BASE}/api/user/subscription-history/export`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-      },
+      credentials: 'include',
     });
 
     if (!response.ok) {

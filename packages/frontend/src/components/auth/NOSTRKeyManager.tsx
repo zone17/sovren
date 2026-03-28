@@ -127,9 +127,9 @@ export const NOSTRKeyManager: React.FC<KeyManagerProps> = ({
   const collectEntropy = useCallback(() => {
     const sources = [
       crypto.getRandomValues(new Uint8Array(32)),
-      new Uint8Array(Buffer.from(Date.now().toString())),
-      new Uint8Array(Buffer.from(Math.random().toString())),
-      new Uint8Array(Buffer.from(performance.now().toString())),
+      new TextEncoder().encode(Date.now().toString()),
+      new TextEncoder().encode(Math.random().toString()),
+      new TextEncoder().encode(performance.now().toString()),
     ];
 
     let totalEntropy = 0;

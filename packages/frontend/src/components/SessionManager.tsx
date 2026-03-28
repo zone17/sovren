@@ -118,14 +118,14 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
 
       const [sessionsResponse, statsResponse] = await Promise.all([
         fetch('/api/sessions', {
+          credentials: 'include',
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
             'Content-Type': 'application/json',
           },
         }),
         fetch('/api/sessions/stats', {
+          credentials: 'include',
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
             'Content-Type': 'application/json',
           },
         }),
@@ -156,8 +156,8 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
     try {
       const response = await fetch(`/api/sessions/${sessionId}`, {
         method: 'DELETE',
+        credentials: 'include',
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
           'Content-Type': 'application/json',
         },
       });
@@ -187,8 +187,8 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
     try {
       const response = await fetch('/api/sessions/revoke-others', {
         method: 'POST',
+        credentials: 'include',
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
           'Content-Type': 'application/json',
         },
       });
@@ -217,8 +217,8 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
     try {
       await fetch(`/api/sessions/${sessionId}/activity`, {
         method: 'PUT',
+        credentials: 'include',
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ activity_type: 'page_view' }),

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SovrenIconPNG from '../assets/icons/Sovren-icon.png';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 /* ────────────────────────────────────────────────────────
    SOVREN LANDING PAGE
@@ -96,6 +97,7 @@ const AnimatedNumber = React.memo(function AnimatedNumber({
 });
 
 const Home: React.FC = () => {
+  useDocumentTitle('Home');
   const navigate = useNavigate();
   const heroSection = useInView(0.1);
   const featuresSection = useInView(0.1);
@@ -104,7 +106,8 @@ const Home: React.FC = () => {
   const ctaSection = useInView(0.1);
 
   return (
-    <div
+    <main
+      id="main-content"
       className="min-h-screen flex flex-col relative overflow-hidden"
       style={{
         background: `
@@ -480,14 +483,14 @@ const Home: React.FC = () => {
             <img src={SovrenIconPNG} alt="" className="w-5 h-5 rounded opacity-60" loading="lazy" />
             <span className="text-sm text-white/50">Sovren &copy; {new Date().getFullYear()}</span>
           </div>
-          <div className="flex items-center gap-6 text-xs text-white/40">
+          <div className="flex items-center gap-6 text-xs text-white/60">
             <span>NOSTR Protocol</span>
             <span>Lightning Network</span>
             <span>Self-Sovereign</span>
           </div>
         </div>
       </footer>
-    </div>
+    </main>
   );
 };
 

@@ -1,8 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 const NotFound: React.FC = () => {
+  useDocumentTitle('Page Not Found');
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="text-center space-y-6 px-4">

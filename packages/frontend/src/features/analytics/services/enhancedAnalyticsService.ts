@@ -21,7 +21,7 @@ import type {
 } from '../types';
 
 // 🏗️ **SERVICE CONFIGURATION**
-const ANALYTICS_API_BASE = process.env.NEXT_PUBLIC_ANALYTICS_API_URL || '/api/analytics';
+const ANALYTICS_API_BASE = import.meta.env.VITE_ANALYTICS_API_URL || '/api/analytics';
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 const REALTIME_RECONNECT_DELAY = 5000; // 5 seconds
 const MAX_RETRY_ATTEMPTS = 3;
@@ -94,7 +94,7 @@ class RealTimeAnalyticsManager {
     this.isConnecting = true;
 
     try {
-      const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'wss://api.sovren.app/analytics/realtime';
+      const wsUrl = import.meta.env.VITE_WS_URL || 'wss://api.sovren.app/analytics/realtime';
       this.ws = new WebSocket(wsUrl);
 
       this.ws.onopen = () => {
@@ -190,6 +190,7 @@ export class EnhancedAnalyticsService {
     try {
       const response = await fetch(url, {
         ...options,
+        credentials: 'include',
         headers: { ...this.getHeaders(), ...options.headers },
       });
 

@@ -33,49 +33,29 @@ const ANALYTICS_API_BASE =
 const WEBSOCKET_URL = import.meta.env.VITE_ANALYTICS_WS_URL || 'ws://localhost:3001/analytics';
 
 // 🔐 **AUTH HELPERS**
-const getAuthToken = (): string | null => {
-  return localStorage.getItem('auth_token');
-};
-
 const getCurrentUser = (): User | null => {
   const demoUser = localStorage.getItem('demo_user');
   if (demoUser) {
     return JSON.parse(demoUser);
   }
 
-  const token = getAuthToken();
-  if (!token) return null;
-
-  try {
-    // Decode JWT payload (basic implementation)
-    const payload = JSON.parse(atob(token.split('.')[1])) as {
-      sub?: string;
-      email?: string;
-      name?: string;
-      nostr_pubkey?: string;
-      role?: 'creator' | 'supporter' | 'admin';
-      iat?: number;
-    };
-
-    return {
-      id: payload.sub || payload.nostr_pubkey || 'unknown',
-      email: payload.email || '',
-      name: payload.name || payload.email || 'Unknown',
-      nostr_pubkey: payload.nostr_pubkey,
-      role: payload.role || 'supporter',
-      avatar_url: undefined,
-      bio: undefined,
-      created_at: new Date((payload.iat || 0) * 1000).toISOString(),
-      updated_at: new Date().toISOString(),
-      email_verified: false,
-      nostr_verified: false,
-      permissions: [],
-    };
-  } catch (error) {
-    // Invalid token
-    localStorage.removeItem('auth_token');
-    return null;
-  }
+  // User identity is now managed via httpOnly cookies (credentials: 'include').
+  // Return a minimal user so callers can still attach userId query params.
+  // The backend will resolve the full identity from the session cookie.
+  return {
+    id: 'session-user',
+    email: '',
+    name: 'Session User',
+    nostr_pubkey: undefined,
+    role: 'supporter',
+    avatar_url: undefined,
+    bio: undefined,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    email_verified: false,
+    nostr_verified: false,
+    permissions: [],
+  };
 };
 
 // 📡 **REAL-TIME ANALYTICS WEBSOCKET**
@@ -92,15 +72,7 @@ class AnalyticsWebSocketManager {
     }
 
     try {
-      const token = getAuthToken();
-      if (!token) {
-        throw new AnalyticsError(
-          'Authentication required for real-time analytics',
-          'AUTH_REQUIRED'
-        );
-      }
-
-      const wsUrl = `${WEBSOCKET_URL}?token=${token}&userId=${userId}`;
+      const wsUrl = `${WEBSOCKET_URL}?userId=${userId}`;
       this.ws = new WebSocket(wsUrl);
 
       this.ws.onopen = () => {
@@ -199,11 +171,6 @@ class AnalyticsServiceImpl {
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        const token = getAuthToken();
-        if (!token) {
-          throw new AnalyticsError('Authentication required', 'AUTH_REQUIRED');
-        }
-
         // Add timeout to prevent hanging requests
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
@@ -211,9 +178,9 @@ class AnalyticsServiceImpl {
         const response = await fetch(`${ANALYTICS_API_BASE}${endpoint}`, {
           ...options,
           signal: controller.signal,
+          credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
             ...options.headers,
           },
         });
@@ -428,12 +395,11 @@ class AnalyticsServiceImpl {
         throw new AnalyticsError('User authentication required', 'AUTH_REQUIRED');
       }
 
-      const token = getAuthToken();
       const response = await fetch(`${ANALYTICS_API_BASE}/export`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ ...exportConfig, userId: user.id }),
       });

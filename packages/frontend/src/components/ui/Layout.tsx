@@ -1,4 +1,4 @@
-import React, { ReactNode, useState } from 'react';
+import React, { ReactNode, useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth, useAuthStatus } from '../../features/auth';
 
@@ -165,6 +165,17 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     }
   });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const mobileCloseRef = useRef<HTMLButtonElement>(null);
+
+  // Focus the close button when mobile menu opens
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      // Delay to allow the menu to render
+      requestAnimationFrame(() => {
+        mobileCloseRef.current?.focus();
+      });
+    }
+  }, [mobileMenuOpen]);
 
   const handleLogout = async (): Promise<void> => {
     try {
@@ -184,6 +195,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-background bg-mesh flex">
+      {/* Skip navigation link */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-purple-600 focus:text-white focus:rounded"
+      >
+        Skip to main content
+      </a>
+
       {/* Sidebar — desktop */}
       {isAuthenticated && (
         <aside
@@ -205,7 +224,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </div>
 
           {/* Nav items */}
-          <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
+          <nav aria-label="Main navigation" className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
             {visibleNavItems.map((item) => (
               <Link
                 key={item.path}
@@ -213,7 +232,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 no-underline ${
                   isActive(item.path)
                     ? 'bg-purple-500/10 text-purple-400'
-                    : 'text-white/40 hover:text-white/80 hover:bg-white/[0.03]'
+                    : 'text-white/60 hover:text-white/80 hover:bg-white/[0.03]'
                 }`}
                 title={sidebarCollapsed ? item.label : undefined}
               >
@@ -237,7 +256,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   return next;
                 });
               }}
-              className="w-full flex items-center justify-center p-2 rounded-lg text-white/20 hover:text-white/40 hover:bg-white/[0.03] transition-colors"
+              aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              className="w-full flex items-center justify-center p-2 rounded-lg text-white/60 hover:text-white/80 hover:bg-white/[0.03] transition-colors"
             >
               <CollapseIcon collapsed={sidebarCollapsed} />
             </button>
@@ -261,7 +281,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             {!sidebarCollapsed && (
               <button
                 onClick={() => void handleLogout()}
-                className="mt-3 w-full text-xs text-white/30 hover:text-white/60 transition-colors text-left px-2 py-1"
+                className="mt-3 w-full text-xs text-white/60 hover:text-white/80 transition-colors text-left px-2 py-1"
               >
                 Log out
               </button>
@@ -283,8 +303,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <div className="flex items-center gap-3">
               {isAuthenticated && (
                 <button
+                  aria-label="Open menu"
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className="p-2 text-white/40 hover:text-white/80 -ml-2"
+                  className="p-2 text-white/60 hover:text-white/80 -ml-2"
                 >
                   <MenuIcon />
                 </button>
@@ -301,7 +322,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <div className="flex items-center gap-2">
                 <Link
                   to="/login"
-                  className="text-xs text-white/50 hover:text-white px-3 py-1.5 no-underline"
+                  className="text-xs text-white/60 hover:text-white px-3 py-1.5 no-underline"
                 >
                   Log in
                 </Link>
@@ -318,7 +339,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
         {/* Mobile menu overlay */}
         {mobileMenuOpen && (
-          <div className="lg:hidden fixed inset-0 z-50">
+          <div
+            className="lg:hidden fixed inset-0 z-50"
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') setMobileMenuOpen(false);
+            }}
+          >
             <div
               className="absolute inset-0 bg-black/60"
               onClick={() => setMobileMenuOpen(false)}
@@ -329,11 +355,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             >
               <div className="flex items-center justify-between h-14 px-4 border-b border-white/5">
                 <span className="text-sm font-semibold text-foreground font-display">Menu</span>
-                <button onClick={() => setMobileMenuOpen(false)} className="p-2 text-white/40">
+                <button
+                  ref={mobileCloseRef}
+                  aria-label="Close menu"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="p-2 text-white/60 hover:text-white/80"
+                >
                   <CloseIcon />
                 </button>
               </div>
-              <nav className="p-3 space-y-1">
+              <nav aria-label="Mobile navigation" className="p-3 space-y-1">
                 {visibleNavItems.map((item) => (
                   <Link
                     key={item.path}
@@ -342,7 +373,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium no-underline ${
                       isActive(item.path)
                         ? 'bg-purple-500/10 text-purple-400'
-                        : 'text-white/40 hover:text-white/80'
+                        : 'text-white/60 hover:text-white/80'
                     }`}
                   >
                     {item.icon}
@@ -351,7 +382,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 ))}
                 <button
                   onClick={() => void handleLogout()}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/30 hover:text-white/60 mt-4"
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/60 hover:text-white/80 mt-4"
                 >
                   <LogoutIcon />
                   Log out
@@ -362,7 +393,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         )}
 
         {/* Page content */}
-        <main className="flex-1">
+        <main id="main-content" className="flex-1">
           <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">{children}</div>
         </main>
       </div>

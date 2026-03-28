@@ -84,21 +84,9 @@ class LightningApiClient {
   }
 
   /**
-   * Get authentication token from localStorage
-   */
-  private getAuthToken(): string {
-    const token = localStorage.getItem('auth_token');
-    if (!token) {
-      throw new LightningApiError('Authentication required', 'AUTH_REQUIRED', 401);
-    }
-    return token;
-  }
-
-  /**
    * Make authenticated request to API with timeout and retry logic
    */
   private async makeRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const token = this.getAuthToken();
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
@@ -106,9 +94,9 @@ class LightningApiClient {
       const response = await fetch(`${this.apiBaseUrl}${endpoint}`, {
         ...options,
         signal: controller.signal,
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
           ...options.headers,
         },
       });

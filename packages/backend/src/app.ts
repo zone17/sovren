@@ -92,9 +92,9 @@ export function createApp(): Express {
     cors({
       origin: (origin, callback) => {
         // Allow requests with no Origin header (non-browser clients, agents, curl).
-        // SECURITY ASSUMPTION: All authenticated API calls use Bearer token auth (Authorization header).
-        // No session cookies are issued, so there is no CSRF risk from allowing originless requests.
-        // If cookie-based auth is ever introduced, this assumption must be re-evaluated.
+        // NOTE: JWT is now stored in HttpOnly cookies (sovren_token). The CSRF double-submit
+        // pattern in csrf.ts protects state-changing requests from cross-origin attacks.
+        // Originless requests are still allowed for API clients using Bearer token auth.
         if (!origin) return callback(null, true);
 
         const allowedOrigins =
@@ -359,13 +359,31 @@ export const AppConfig = {
   // Security
   jwtSecret: (() => {
     const secret = process.env.JWT_SECRET;
+    const isProduction = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging';
+
     if (!secret) {
-      if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging') {
+      if (isProduction) {
         throw new Error('JWT_SECRET environment variable is required in production/staging');
       }
       logger.warn('JWT_SECRET not set — using insecure default for local development only');
       return 'development-only-secret-key-not-for-production';
     }
+
+    // Strength validation: must be >= 32 chars and not a UUID (too weak / low entropy)
+    const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (secret.length < 32) {
+      if (isProduction) {
+        throw new Error('JWT_SECRET must be at least 32 characters in production/staging');
+      }
+      logger.warn('JWT_SECRET is shorter than 32 characters — weak secret for development only');
+    }
+    if (UUID_PATTERN.test(secret)) {
+      if (isProduction) {
+        throw new Error('JWT_SECRET must not be a UUID — use a high-entropy random string (>=32 chars)');
+      }
+      logger.warn('JWT_SECRET appears to be a UUID — use a stronger secret');
+    }
+
     return secret;
   })(),
 

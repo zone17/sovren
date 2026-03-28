@@ -37,16 +37,24 @@ export const authenticate = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    // Extract token from Authorization header
-    const authHeader = req.headers.authorization;
+    // Extract token: prefer HttpOnly cookie, fall back to Authorization header
+    // (Bearer header kept for backward compatibility during migration & non-browser clients)
+    let token: string | undefined;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new UnauthorizedError('Authorization header required', {
-        details: 'Expected Authorization: Bearer <token> header',
-      });
+    if (req.cookies?.sovren_token) {
+      token = req.cookies.sovren_token;
+    } else {
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7);
+      }
     }
 
-    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    if (!token) {
+      throw new UnauthorizedError('Authentication required', {
+        details: 'Expected sovren_token cookie or Authorization: Bearer <token> header',
+      });
+    }
 
     // Verify JWT token
     const verification = await nostrAuth.verifyJWT(token);
@@ -119,15 +127,24 @@ export const optionalAuth = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const authHeader = req.headers.authorization;
+    // Extract token: prefer HttpOnly cookie, fall back to Authorization header
+    let token: string | undefined;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (req.cookies?.sovren_token) {
+      token = req.cookies.sovren_token;
+    } else {
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7);
+      }
+    }
+
+    if (!token) {
       // No token provided, continue without user context
       next();
       return;
     }
 
-    const token = authHeader.substring(7);
     const verification = await nostrAuth.verifyJWT(token);
 
     if (verification.valid && verification.payload) {

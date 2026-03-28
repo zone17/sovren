@@ -89,8 +89,8 @@ export const useQualityMetricsService = (
   const abortControllerRef = useRef<AbortController | null>(null);
 
   // API Configuration
-  const apiBaseUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
-  const wsBaseUrl = process.env.REACT_APP_WS_URL || 'ws://localhost:3001';
+  const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+  const wsBaseUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:3001';
 
   /**
    * US-159: Coverage Tracking Functions
@@ -108,9 +108,9 @@ export const useQualityMetricsService = (
 
     const response = await fetch(`${apiBaseUrl}/api/quality-metrics/coverage/${projectId}`, {
       method: 'GET',
+      credentials: 'include' as RequestCredentials,
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('authToken')}`,
       },
       signal: abortControllerRef.current?.signal,
     });
@@ -144,9 +144,9 @@ export const useQualityMetricsService = (
 
     const response = await fetch(`${apiBaseUrl}/api/quality-metrics/quality/${projectId}`, {
       method: 'GET',
+      credentials: 'include' as RequestCredentials,
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('authToken')}`,
       },
       signal: abortControllerRef.current?.signal,
     });
@@ -180,9 +180,9 @@ export const useQualityMetricsService = (
 
     const response = await fetch(`${apiBaseUrl}/api/quality-metrics/bugs/${projectId}`, {
       method: 'GET',
+      credentials: 'include' as RequestCredentials,
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('authToken')}`,
       },
       signal: abortControllerRef.current?.signal,
     });
@@ -216,9 +216,9 @@ export const useQualityMetricsService = (
 
     const response = await fetch(`${apiBaseUrl}/api/quality-metrics/performance/${projectId}`, {
       method: 'GET',
+      credentials: 'include' as RequestCredentials,
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('authToken')}`,
       },
       signal: abortControllerRef.current?.signal,
     });
@@ -252,9 +252,9 @@ export const useQualityMetricsService = (
 
     const response = await fetch(`${apiBaseUrl}/api/quality-metrics/dashboard/${projectId}`, {
       method: 'GET',
+      credentials: 'include' as RequestCredentials,
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('authToken')}`,
       },
       signal: abortControllerRef.current?.signal,
     });
@@ -370,9 +370,9 @@ export const useQualityMetricsService = (
       try {
         const response = await fetch(`${apiBaseUrl}/api/quality-metrics/config/${projectId}`, {
           method: 'PUT',
+          credentials: 'include' as RequestCredentials,
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
           },
           body: JSON.stringify(config),
         });
@@ -401,9 +401,7 @@ export const useQualityMetricsService = (
           `${apiBaseUrl}/api/quality-metrics/export/${projectId}?format=${format}`,
           {
             method: 'GET',
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-            },
+            credentials: 'include' as RequestCredentials,
           }
         );
 
@@ -436,9 +434,9 @@ export const useQualityMetricsService = (
     try {
       const response = await fetch(`${apiBaseUrl}/api/quality-metrics/insights/${projectId}`, {
         method: 'POST',
+        credentials: 'include' as RequestCredentials,
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
         },
       });
 
@@ -459,9 +457,9 @@ export const useQualityMetricsService = (
         `${apiBaseUrl}/api/quality-metrics/optimize-thresholds/${projectId}`,
         {
           method: 'POST',
+          credentials: 'include' as RequestCredentials,
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
           },
         }
       );
@@ -484,9 +482,7 @@ export const useQualityMetricsService = (
         `${apiBaseUrl}/api/quality-metrics/ai-recommendations/${projectId}`,
         {
           method: 'GET',
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-          },
+          credentials: 'include' as RequestCredentials,
         }
       );
 
@@ -515,13 +511,8 @@ export const useQualityMetricsService = (
         console.log('Quality metrics WebSocket connected');
         setIsConnected(true);
 
-        // Send authentication token
-        ws.send(
-          JSON.stringify({
-            type: 'auth',
-            token: localStorage.getItem('authToken'),
-          })
-        );
+        // WebSocket auth: cookie is sent automatically with the WS upgrade request
+        // No need to send token in a separate message
       };
 
       ws.onmessage = (event) => {

@@ -4,6 +4,8 @@ import { Button } from '../components/ui';
 import { Spinner } from '../components/ui/spinner';
 import { useAuth } from '../features/auth';
 import { createSignatureMessage } from '@shared/types/nostr/auth';
+import { bytesToHex, hexToBytes } from '../shared/utils/hex';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 async function sha256Hex(input: string): Promise<string> {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input));
@@ -11,6 +13,7 @@ async function sha256Hex(input: string): Promise<string> {
 }
 
 const Login: React.FC = () => {
+  useDocumentTitle('Log In');
   const navigate = useNavigate();
   const { generateNostrChallenge, authenticateNostr } = useAuth();
 
@@ -31,7 +34,7 @@ const Login: React.FC = () => {
       const { generateSecretKey, getPublicKey } = await import('nostr-tools/pure');
       const privateKey = generateSecretKey();
       const publicKey = getPublicKey(privateKey);
-      setPrivateKeyInput(Buffer.from(privateKey).toString('hex'));
+      setPrivateKeyInput(bytesToHex(privateKey));
       privateKey.fill(0); // Zero key material after hex conversion
       setPublicKeyInput(publicKey);
       setError(null);
@@ -134,10 +137,10 @@ const Login: React.FC = () => {
         const decoded = nip19Decode(privateKeyInput);
         if (decoded.type !== 'nsec') throw new Error('Invalid nsec key');
         privateKeyBytes = decoded.data as Uint8Array;
-        hexPrivate = Buffer.from(privateKeyBytes).toString('hex');
+        hexPrivate = bytesToHex(privateKeyBytes);
       } else {
         hexPrivate = privateKeyInput;
-        privateKeyBytes = new Uint8Array(Buffer.from(hexPrivate, 'hex'));
+        privateKeyBytes = hexToBytes(hexPrivate);
       }
 
       // Decode public key — support npub and hex
@@ -257,7 +260,7 @@ const Login: React.FC = () => {
             </div>
 
             {error && (
-              <div className="mb-6 rounded-md bg-red-500/10 border border-red-500/20 p-4">
+              <div role="alert" className="mb-6 rounded-md bg-red-500/10 border border-red-500/20 p-4">
                 <div className="ml-3">
                   <h3 className="text-sm font-medium text-red-400">{error}</h3>
                 </div>

@@ -21,6 +21,7 @@ import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
+import { bytesToHex, hexToBytes } from '../../shared/utils/hex';
 
 interface NostrKeys {
   publicKey: string;
@@ -123,7 +124,7 @@ const NostrOnboarding: React.FC = () => {
 
       setNostrKeys({
         publicKey,
-        privateKey: Buffer.from(privateKey).toString('hex'),
+        privateKey: bytesToHex(privateKey),
         npub,
         nsec,
       });
@@ -193,14 +194,14 @@ const NostrOnboarding: React.FC = () => {
       const timestamp = Math.floor(Date.now() / 1000);
 
       const event = {
-        kind: 1,
+        kind: 22242,
         pubkey: nostrKeys.publicKey,
         created_at: timestamp,
-        tags: [],
-        content: `Welcome to Sovren! Authenticating at ${new Date().toISOString()}`,
+        tags: [['challenge', challengeResult.challenge]],
+        content: challengeResult.challenge,
       };
 
-      const privateKeyBytes = new Uint8Array(Buffer.from(nostrKeys.privateKey, 'hex'));
+      const privateKeyBytes = hexToBytes(nostrKeys.privateKey);
       const signedEvent = finalizeEvent(event, privateKeyBytes);
 
       // Authenticate
@@ -208,7 +209,7 @@ const NostrOnboarding: React.FC = () => {
         signature: signedEvent.sig,
         pubkey: nostrKeys.publicKey,
         challenge: challengeResult.challenge,
-        timestamp: Date.now(),
+        timestamp,
       });
 
       if (authResult.error) {

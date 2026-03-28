@@ -108,8 +108,8 @@ export const NIP05Manager: React.FC<NIP05ManagerProps> = ({
       setError(null);
 
       const response = await fetch('/api/nip05/verifications', {
+        credentials: 'include',
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
           'Content-Type': 'application/json',
         },
       });
@@ -144,8 +144,8 @@ export const NIP05Manager: React.FC<NIP05ManagerProps> = ({
 
       const response = await fetch('/api/nip05/verify', {
         method: 'POST',
+        credentials: 'include',
         headers: {
-          Authorization: `Bearer ${window.localStorage.getItem('auth_token')}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -189,8 +189,8 @@ export const NIP05Manager: React.FC<NIP05ManagerProps> = ({
 
       const response = await fetch('/api/nip05/refresh', {
         method: 'POST',
+        credentials: 'include',
         headers: {
-          Authorization: `Bearer ${window.localStorage.getItem('auth_token')}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ verification_id: verificationId }),
@@ -221,8 +221,8 @@ export const NIP05Manager: React.FC<NIP05ManagerProps> = ({
     try {
       const response = await fetch(`/api/nip05/verifications/${selectedVerification.id}`, {
         method: 'DELETE',
+        credentials: 'include',
         headers: {
-          Authorization: `Bearer ${window.localStorage.getItem('auth_token')}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
