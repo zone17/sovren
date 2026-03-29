@@ -230,7 +230,9 @@ export class PayoutManagementService extends EventEmitter {
       return earnings;
     } catch (error) {
       this.logger.error('Failed to calculate creator earnings', error);
-      throw new Error(`Earnings calculation failed: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Earnings calculation failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -306,7 +308,9 @@ export class PayoutManagementService extends EventEmitter {
       return schedule;
     } catch (error) {
       this.logger.error('Failed to setup payout schedule', error);
-      throw new Error(`Payout schedule setup failed: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Payout schedule setup failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -425,7 +429,9 @@ export class PayoutManagementService extends EventEmitter {
       return { verified: false, payout };
     } catch (error) {
       this.logger.error('Failed to verify payout', error);
-      throw new Error(`Payout verification failed: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Payout verification failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -487,7 +493,9 @@ export class PayoutManagementService extends EventEmitter {
       };
     } catch (error) {
       this.logger.error('Failed to get earnings analytics', error);
-      throw new Error(`Earnings analytics failed: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Earnings analytics failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -506,7 +514,7 @@ export class PayoutManagementService extends EventEmitter {
       bonuses: 0,
     };
 
-    transactions.forEach((txn) => {
+    transactions.forEach(txn => {
       switch (txn.type) {
         case 'subscription_payment':
           breakdown.subscriptions += txn.net_amount_msats || 0;
@@ -739,8 +747,8 @@ export class PayoutManagementService extends EventEmitter {
   }
 
   private async getEarningsTrends(
-    creator_id: string,
-    period?: any
+    _creator_id: string,
+    _period?: any
   ): Promise<{
     daily_earnings: Record<string, number>;
     weekly_earnings: Record<string, number>;
@@ -755,8 +763,8 @@ export class PayoutManagementService extends EventEmitter {
   }
 
   private async getRevenueSourcesBreakdown(
-    creator_id: string,
-    period?: any
+    _creator_id: string,
+    _period?: any
   ): Promise<{
     subscriptions: { count: number; amount: number; percentage: number };
     one_time_payments: { count: number; amount: number; percentage: number };
@@ -786,7 +794,7 @@ export class PayoutManagementService extends EventEmitter {
 
     if (error) throw error;
 
-    return (data || []).map((payout) => ({
+    return (data || []).map(payout => ({
       date: new Date(payout.completed_date || Date.now()),
       amount: payout.net_amount_msats || 0,
       status: payout.status,
@@ -841,6 +849,7 @@ export class PayoutManagementService extends EventEmitter {
     const creatorIds: string[] = [];
     let page = 0;
     while (true) {
+      // eslint-disable-line no-constant-condition
       const { data, error } = await supabase
         .from('payout_schedules')
         .select('creator_id')
@@ -866,6 +875,7 @@ export class PayoutManagementService extends EventEmitter {
     const txByCreator = new Map<string, Record<string, unknown>[]>();
     page = 0;
     while (true) {
+      // eslint-disable-line no-constant-condition
       const { data, error } = await supabase
         .from('transactions')
         .select('creator_id, net_amount_msats, fee_msats, type')
@@ -891,6 +901,7 @@ export class PayoutManagementService extends EventEmitter {
     const lifetimeByCreator = new Map<string, number>();
     page = 0;
     while (true) {
+      // eslint-disable-line no-constant-condition
       const { data, error } = await supabase
         .from('transactions')
         .select('creator_id, net_amount_msats')

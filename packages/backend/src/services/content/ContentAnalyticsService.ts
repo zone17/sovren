@@ -147,7 +147,7 @@ export class ContentAnalyticsService extends EventEmitter implements IContentAna
         timeSeries,
         performance,
         totalEvents: rawMetrics.length,
-        uniqueUsers: new Set(rawMetrics.map((m) => m.userId)).size,
+        uniqueUsers: new Set(rawMetrics.map(m => m.userId)).size,
         generatedAt: new Date(),
       };
 
@@ -268,12 +268,12 @@ export class ContentAnalyticsService extends EventEmitter implements IContentAna
     const aggregated: Record<string, any> = {};
 
     // Initialize counters
-    query.metrics?.forEach((metric) => {
+    query.metrics?.forEach(metric => {
       aggregated[`${metric}s`] = 0;
     });
 
     // Count metrics
-    metrics.forEach((metric) => {
+    metrics.forEach(metric => {
       const key = `${metric.eventType}s`;
       if (key in aggregated) {
         aggregated[key]++;
@@ -282,7 +282,7 @@ export class ContentAnalyticsService extends EventEmitter implements IContentAna
 
     // Group by dimensions if specified
     if (query.dimensions && query.dimensions.length > 0) {
-      query.dimensions.forEach((dimension) => {
+      query.dimensions.forEach(dimension => {
         aggregated[dimension] = this.groupByDimension(metrics, dimension);
       });
     }
@@ -290,8 +290,8 @@ export class ContentAnalyticsService extends EventEmitter implements IContentAna
     // Calculate derived metrics
     if (metrics.length > 0) {
       const viewDurations = metrics
-        .filter((m) => m.eventType === MetricType.VIEW && m.metadata?.duration)
-        .map((m) => m.metadata!.duration as number);
+        .filter(m => m.eventType === MetricType.VIEW && m.metadata?.duration)
+        .map(m => m.metadata!.duration as number);
 
       if (viewDurations.length > 0) {
         aggregated.averageViewDuration =
@@ -311,7 +311,7 @@ export class ContentAnalyticsService extends EventEmitter implements IContentAna
   ): Record<string, number> {
     const grouped: Record<string, number> = {};
 
-    metrics.forEach((metric) => {
+    metrics.forEach(metric => {
       let key: string;
 
       switch (dimension) {
@@ -327,11 +327,12 @@ export class ContentAnalyticsService extends EventEmitter implements IContentAna
         case AggregationDimension.DAY:
           key = new Date(metric.timestamp).toISOString().slice(0, 10);
           break;
-        case AggregationDimension.WEEK:
+        case AggregationDimension.WEEK: {
           const date = new Date(metric.timestamp);
           const week = this.getWeekNumber(date);
           key = `${date.getFullYear()}-W${week}`;
           break;
+        }
         case AggregationDimension.MONTH:
           key = new Date(metric.timestamp).toISOString().slice(0, 7);
           break;
@@ -369,7 +370,7 @@ export class ContentAnalyticsService extends EventEmitter implements IContentAna
     }
 
     // Aggregate metrics into time buckets
-    metrics.forEach((metric) => {
+    metrics.forEach(metric => {
       const bucketTime = Math.floor(metric.timestamp.getTime() / intervalMs) * intervalMs;
       const bucket = timeSeries.get(bucketTime);
 
@@ -441,7 +442,7 @@ export class ContentAnalyticsService extends EventEmitter implements IContentAna
   /**
    * Get top performing content
    */
-  private async getTopPerformingContent(limit: number): Promise<ContentPerformance[]> {
+  private async getTopPerformingContent(_limit: number): Promise<ContentPerformance[]> {
     // In production, query from database
     // For now, return mock data
     return [];
@@ -450,7 +451,10 @@ export class ContentAnalyticsService extends EventEmitter implements IContentAna
   /**
    * Calculate trends
    */
-  private calculateTrends(daily: AnalyticsResult, weekly: AnalyticsResult): { viewsTrend: number; engagementTrend: number } {
+  private calculateTrends(
+    daily: AnalyticsResult,
+    weekly: AnalyticsResult
+  ): { viewsTrend: number; engagementTrend: number } {
     return {
       viewsTrend: this.calculateGrowthRate(weekly.metrics.views || 0, daily.metrics.views || 0),
       engagementTrend: this.calculateGrowthRate(
@@ -514,12 +518,12 @@ export class ContentAnalyticsService extends EventEmitter implements IContentAna
     const metrics: EngagementMetrics[] = [];
 
     if (query.contentIds) {
-      query.contentIds.forEach((id) => {
+      query.contentIds.forEach(id => {
         const contentMetrics = this.metricsBuffer.get(id);
         if (contentMetrics) {
           metrics.push(
             ...contentMetrics.filter(
-              (m) =>
+              m =>
                 m.timestamp >= query.startDate &&
                 m.timestamp <= query.endDate &&
                 (!query.metrics || query.metrics.includes(m.eventType))

@@ -232,6 +232,7 @@ export class PaymentStateMachine {
     metadata?: Record<string, unknown>,
     userId?: string
   ): Promise<TransitionResult> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { data, error } = await this.supabase.rpc('transition_payment_state', {
       p_payment_id: payment.id,
       p_from_state: payment.state,
@@ -401,7 +402,7 @@ export class PaymentStateMachine {
     failed: Array<{ paymentId: string; error: Error }>;
   }> {
     const results = await Promise.allSettled(
-      transitions.map((t) => this.transition(t.paymentId, t.toState, t.metadata, t.userId))
+      transitions.map(t => this.transition(t.paymentId, t.toState, t.metadata, t.userId))
     );
 
     const successful: TransitionResult[] = [];

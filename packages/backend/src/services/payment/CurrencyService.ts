@@ -62,6 +62,7 @@ class CoinGeckoProvider implements IRateProvider {
       // Simplified API call - in production would use actual HTTP client
       // For BTC conversions
       if (from === Currency.BTC || from === Currency.SAT) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const url = `${this.baseUrl}/simple/price?ids=bitcoin&vs_currencies=${to.toLowerCase()}`;
         // Simulated rate (in production would fetch from API)
         return this.getSimulatedRate(from, to);
@@ -335,7 +336,7 @@ export class CurrencyService implements ICurrencyService {
   }
 
   async convertBatch(requests: ConversionRequest[]): Promise<ConversionResult[]> {
-    return Promise.all(requests.map((req) => this.convert(req)));
+    return Promise.all(requests.map(req => this.convert(req)));
   }
 
   async satoshisToFiat(satoshis: number, toCurrency: Currency): Promise<ConversionResult> {
@@ -426,7 +427,7 @@ export class CurrencyService implements ICurrencyService {
     const rates = new Map<string, ExchangeRate>();
 
     await Promise.all(
-      pairs.map(async (pair) => {
+      pairs.map(async pair => {
         try {
           const rate = await this.getRate(pair.from, pair.to);
           rates.set(getCurrencyPairKey(pair.from, pair.to), rate);
@@ -445,8 +446,8 @@ export class CurrencyService implements ICurrencyService {
 
     await Promise.all(
       supportedCurrencies
-        .filter((c) => c !== currency)
-        .map(async (to) => {
+        .filter(c => c !== currency)
+        .map(async to => {
           try {
             const rate = await this.getRate(currency, to);
             rates.set(to, rate);
@@ -518,7 +519,7 @@ export class CurrencyService implements ICurrencyService {
     timestamp: Date
   ): Promise<HistoricalRate | null> {
     const rates = this.historicalRates.filter(
-      (r) => r.from === from && r.to === to && r.timestamp <= timestamp
+      r => r.from === from && r.to === to && r.timestamp <= timestamp
     );
 
     if (rates.length === 0) return null;
@@ -535,19 +536,19 @@ export class CurrencyService implements ICurrencyService {
     let rates = [...this.historicalRates];
 
     if (query.from) {
-      rates = rates.filter((r) => r.from === query.from);
+      rates = rates.filter(r => r.from === query.from);
     }
     if (query.to) {
-      rates = rates.filter((r) => r.to === query.to);
+      rates = rates.filter(r => r.to === query.to);
     }
     if (query.provider) {
-      rates = rates.filter((r) => r.source === query.provider);
+      rates = rates.filter(r => r.source === query.provider);
     }
     if (query.startDate) {
-      rates = rates.filter((r) => r.timestamp >= query.startDate!);
+      rates = rates.filter(r => r.timestamp >= query.startDate!);
     }
     if (query.endDate) {
-      rates = rates.filter((r) => r.timestamp <= query.endDate!);
+      rates = rates.filter(r => r.timestamp <= query.endDate!);
     }
 
     // Apply pagination

@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 /**
  * IWellnessService Interface
@@ -33,7 +34,12 @@ export interface IWellnessService {
   getWorkPatterns(creatorId: string, period: '7d' | '30d' | '90d'): Promise<WorkPatternAggregation>;
   getHeatmap(creatorId: string, period: '7d' | '30d'): Promise<HeatmapData>;
   recordPulse(creatorId: string, input: PulseInput): Promise<PulseCheckIn>;
-  getPulseHistory(creatorId: string, period: '30d' | '90d' | 'all', limit?: number, offset?: number): Promise<PulseHistory>;
+  getPulseHistory(
+    creatorId: string,
+    period: '30d' | '90d' | 'all',
+    limit?: number,
+    offset?: number
+  ): Promise<PulseHistory>;
   deletePulseHistory(creatorId: string): Promise<number>;
   deleteAllWellnessData(creatorId: string): Promise<Record<string, number>>;
   getBenchmark(): Promise<WellnessBenchmark | null>;

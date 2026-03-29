@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 // TODO #744: Dual follow systems overlap — this service's follow/unfollow functionality
 // overlaps with FollowService (packages/backend/src/services/community/FollowService.ts).
@@ -141,7 +142,7 @@ class RelationshipGraph {
     const node = this.nodes.get(userId);
     if (!node) return [];
 
-    return Array.from(node.following).filter((targetId) => {
+    return Array.from(node.following).filter(targetId => {
       const targetNode = this.nodes.get(targetId);
       return targetNode && targetNode.following.has(userId);
     });
@@ -648,7 +649,7 @@ export class UserRelationshipService implements IUserRelationshipService {
     pagination?: PaginationOptions
   ): Promise<UserRelationship[]> {
     const requests = Array.from(this.relationships.values()).filter(
-      (r) =>
+      r =>
         r.targetUserId === userId &&
         r.type === RelationshipType.FRIEND_REQUEST &&
         r.status === RelationshipStatus.PENDING
@@ -677,7 +678,7 @@ export class UserRelationshipService implements IUserRelationshipService {
     const offset = pagination?.offset || 0;
 
     const paginatedIds = followerIds.slice(offset, offset + limit);
-    const followers: UserRelationshipInfo[] = paginatedIds.map((followerId) => ({
+    const followers: UserRelationshipInfo[] = paginatedIds.map(followerId => ({
       userId: followerId,
       relationship: this.findRelationship(followerId, userId, RelationshipType.FOLLOW)!,
       isMutual: this.graph.isFollowing(userId, followerId),
@@ -713,7 +714,7 @@ export class UserRelationshipService implements IUserRelationshipService {
     const offset = pagination?.offset || 0;
 
     const paginatedIds = followingIds.slice(offset, offset + limit);
-    const following: UserRelationshipInfo[] = paginatedIds.map((targetId) => ({
+    const following: UserRelationshipInfo[] = paginatedIds.map(targetId => ({
       userId: targetId,
       relationship: this.findRelationship(userId, targetId, RelationshipType.FOLLOW)!,
       isMutual: this.graph.isFollowing(targetId, userId),
@@ -739,8 +740,8 @@ export class UserRelationshipService implements IUserRelationshipService {
   ): Promise<UserRelationship[]> {
     const mutualIds = this.graph.getMutualFollows(userId);
     const relationships = mutualIds
-      .map((targetId) => this.findRelationship(userId, targetId, RelationshipType.FOLLOW))
-      .filter((r) => r !== null) as UserRelationship[];
+      .map(targetId => this.findRelationship(userId, targetId, RelationshipType.FOLLOW))
+      .filter(r => r !== null) as UserRelationship[];
 
     return this.paginateResults(relationships, pagination);
   }
@@ -750,7 +751,7 @@ export class UserRelationshipService implements IUserRelationshipService {
     pagination?: PaginationOptions
   ): Promise<UserRelationship[]> {
     const relationships = Array.from(this.relationships.values()).filter(
-      (r) =>
+      r =>
         r.sourceUserId === userId &&
         r.type === RelationshipType.BLOCK &&
         r.status === RelationshipStatus.ACTIVE
@@ -761,7 +762,7 @@ export class UserRelationshipService implements IUserRelationshipService {
 
   async getMutedUsers(userId: string, pagination?: PaginationOptions): Promise<UserRelationship[]> {
     const relationships = Array.from(this.relationships.values()).filter(
-      (r) =>
+      r =>
         r.sourceUserId === userId &&
         r.type === RelationshipType.MUTE &&
         r.status === RelationshipStatus.ACTIVE &&
@@ -787,19 +788,19 @@ export class UserRelationshipService implements IUserRelationshipService {
       followingCount: this.graph.getFollowing(userId).length,
       mutualFollowCount: this.graph.getMutualFollows(userId).length,
       blockedCount: Array.from(this.relationships.values()).filter(
-        (r) =>
+        r =>
           r.sourceUserId === userId &&
           r.type === RelationshipType.BLOCK &&
           r.status === RelationshipStatus.ACTIVE
       ).length,
       mutedCount: Array.from(this.relationships.values()).filter(
-        (r) =>
+        r =>
           r.sourceUserId === userId &&
           r.type === RelationshipType.MUTE &&
           r.status === RelationshipStatus.ACTIVE
       ).length,
       pendingRequestCount: Array.from(this.relationships.values()).filter(
-        (r) => r.targetUserId === userId && r.status === RelationshipStatus.PENDING
+        r => r.targetUserId === userId && r.status === RelationshipStatus.PENDING
       ).length,
     };
 
@@ -857,7 +858,7 @@ export class UserRelationshipService implements IUserRelationshipService {
 
     for (const followedUserId of following) {
       const secondDegree = this.graph.getFollowing(followedUserId);
-      secondDegree.forEach((uid) => {
+      secondDegree.forEach(uid => {
         if (uid !== userId && !following.has(uid) && !blocked.has(uid)) {
           potentialUsers.add(uid);
         }
@@ -866,7 +867,7 @@ export class UserRelationshipService implements IUserRelationshipService {
 
     // Calculate scores
     for (const targetUserId of potentialUsers) {
-      const mutualFollowers = Array.from(following).filter((followedId) =>
+      const mutualFollowers = Array.from(following).filter(followedId =>
         this.graph.isFollowing(followedId, targetUserId)
       ).length;
 
@@ -914,7 +915,7 @@ export class UserRelationshipService implements IUserRelationshipService {
       const batch = request.targetUserIds.slice(i, i + batchSize);
 
       const results = await Promise.allSettled(
-        batch.map((targetUserId) => this.follow({ userId: request.userId, targetUserId }))
+        batch.map(targetUserId => this.follow({ userId: request.userId, targetUserId }))
       );
 
       results.forEach((result, index) => {
@@ -957,7 +958,7 @@ export class UserRelationshipService implements IUserRelationshipService {
       const batch = request.targetUserIds.slice(i, i + batchSize);
 
       const results = await Promise.allSettled(
-        batch.map((targetUserId) => this.unfollow({ userId: request.userId, targetUserId }))
+        batch.map(targetUserId => this.unfollow({ userId: request.userId, targetUserId }))
       );
 
       results.forEach((result, index) => {
@@ -1105,12 +1106,12 @@ export class UserRelationshipService implements IUserRelationshipService {
     const following = this.graph.getFollowing(userId);
 
     const blocked = Array.from(this.relationships.values())
-      .filter((r) => r.sourceUserId === userId && r.type === RelationshipType.BLOCK)
-      .map((r) => r.targetUserId);
+      .filter(r => r.sourceUserId === userId && r.type === RelationshipType.BLOCK)
+      .map(r => r.targetUserId);
 
     const muted = Array.from(this.relationships.values())
-      .filter((r) => r.sourceUserId === userId && r.type === RelationshipType.MUTE)
-      .map((r) => r.targetUserId);
+      .filter(r => r.sourceUserId === userId && r.type === RelationshipType.MUTE)
+      .map(r => r.targetUserId);
 
     return {
       userId,
@@ -1128,20 +1129,20 @@ export class UserRelationshipService implements IUserRelationshipService {
 
   async queryRelationships(options: RelationshipQueryOptions): Promise<UserRelationship[]> {
     let results = Array.from(this.relationships.values()).filter(
-      (r) => r.sourceUserId === options.userId || r.targetUserId === options.userId
+      r => r.sourceUserId === options.userId || r.targetUserId === options.userId
     );
 
     // Apply filters
     if (options.type) {
-      results = results.filter((r) => r.type === options.type);
+      results = results.filter(r => r.type === options.type);
     }
 
     if (options.status) {
-      results = results.filter((r) => r.status === options.status);
+      results = results.filter(r => r.status === options.status);
     }
 
     if (!options.includeExpired) {
-      results = results.filter((r) => !r.expiresAt || r.expiresAt > new Date());
+      results = results.filter(r => !r.expiresAt || r.expiresAt > new Date());
     }
 
     // Sort
@@ -1350,6 +1351,6 @@ export class UserRelationshipService implements IUserRelationshipService {
   }
 
   private delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
