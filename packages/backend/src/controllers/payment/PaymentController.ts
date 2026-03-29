@@ -153,6 +153,24 @@ export class PaymentController {
   public createRefund = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const startTime = Date.now();
     const refundData = req.body;
+
+    // Ownership check: verify the transaction belongs to the authenticated user
+    if (refundData.transactionId && req.user?.role !== 'admin') {
+      const transaction = await this.paymentService.getTransaction(refundData.transactionId);
+      if (transaction) {
+        const ownsTransaction =
+          transaction.userId === req.user?.nostr_pubkey ||
+          (req.user?.id && transaction.userId === req.user.id);
+        if (!ownsTransaction) {
+          res.status(403).json({
+            success: false,
+            error: 'Forbidden: you can only refund your own transactions',
+          });
+          return;
+        }
+      }
+    }
+
     const refund = await this.refundService.createRefund(refundData);
 
     res.status(201).json(createApiResponse(req, refund, startTime));
@@ -321,7 +339,10 @@ export class PaymentController {
       }
     }
 
-    const result = await this.paymentService.processPayment({ invoiceId });
+    const result = await this.paymentService.processPayment({
+      invoiceId,
+      method: 'lightning' as any,
+    });
 
     res.status(200).json(createApiResponse(req, result, startTime));
   });

@@ -38,7 +38,27 @@ const ProfileDashboard: React.FC = () => {
     // Load profile from localStorage (in production would be from API)
     const savedProfile = localStorage.getItem('sovren_user_profile');
     if (savedProfile) {
-      setProfile(JSON.parse(savedProfile));
+      try {
+        const parsed = JSON.parse(savedProfile);
+        // Validate shape before using — corrupted data should not crash the app
+        if (
+          parsed &&
+          typeof parsed === 'object' &&
+          parsed.nostrKeys &&
+          typeof parsed.nostrKeys.npub === 'string' &&
+          typeof parsed.nostrKeys.pubkey === 'string' &&
+          typeof parsed.userType === 'string' &&
+          typeof parsed.onboardingCompletedAt === 'string'
+        ) {
+          setProfile(parsed as UserProfile);
+        } else {
+          // Invalid shape — clear corrupted data
+          localStorage.removeItem('sovren_user_profile');
+        }
+      } catch {
+        // Corrupted JSON — clear bad data and show empty state
+        localStorage.removeItem('sovren_user_profile');
+      }
     }
   }, []);
 
