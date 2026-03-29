@@ -848,8 +848,8 @@ export class PayoutManagementService extends EventEmitter {
     // 1. Fetch all active creator IDs
     const creatorIds: string[] = [];
     let page = 0;
+    // eslint-disable-next-line no-constant-condition
     while (true) {
-      // eslint-disable-line no-constant-condition
       const { data, error } = await supabase
         .from('payout_schedules')
         .select('creator_id')
@@ -874,8 +874,8 @@ export class PayoutManagementService extends EventEmitter {
     // 2. Batch-fetch current-month transactions for all active creators
     const txByCreator = new Map<string, Record<string, unknown>[]>();
     page = 0;
+    // eslint-disable-next-line no-constant-condition
     while (true) {
-      // eslint-disable-line no-constant-condition
       const { data, error } = await supabase
         .from('transactions')
         .select('creator_id, net_amount_msats, fee_msats, type')
@@ -900,8 +900,8 @@ export class PayoutManagementService extends EventEmitter {
     // 3. Batch-fetch lifetime transactions for all active creators
     const lifetimeByCreator = new Map<string, number>();
     page = 0;
+    // eslint-disable-next-line no-constant-condition
     while (true) {
-      // eslint-disable-line no-constant-condition
       const { data, error } = await supabase
         .from('transactions')
         .select('creator_id, net_amount_msats')

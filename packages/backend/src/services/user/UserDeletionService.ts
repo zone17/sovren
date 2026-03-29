@@ -23,8 +23,8 @@ interface IDatabase {
   query(sql: string, params?: unknown[]): Promise<{ rows: unknown[] }>;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface ISupabaseClient {
-  // eslint-disable-line @typescript-eslint/no-unused-vars
   from<T = Record<string, unknown>>(
     table: string
   ): {
