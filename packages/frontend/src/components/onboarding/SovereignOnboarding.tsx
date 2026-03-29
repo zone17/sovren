@@ -9,6 +9,7 @@ import {
   ExternalLink,
   Eye,
   EyeOff,
+  Globe,
   Heart,
   HelpCircle,
   Key,
@@ -69,7 +70,7 @@ const SovrenIcon: React.FC<{ className?: string }> = ({ className }) => (
 );
 
 const SovereignOnboarding: React.FC = () => {
-  const { generateNostrChallenge, authenticateNostr } = useAuth();
+  const auth = useAuth();
   const navigate = useNavigate();
 
   // Onboarding state
@@ -80,11 +81,18 @@ const SovereignOnboarding: React.FC = () => {
   const [showPrivateKey, setShowPrivateKey] = useState(false);
   const [backupConfirmed, setBackupConfirmed] = useState(false);
   const [understandsSecurity, setUnderstandsSecurity] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [walletSetupComplete, setWalletSetupComplete] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [, setIsAuthenticating] = useState(false);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [username, setUsername] = useState('');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [displayName, setDisplayName] = useState('');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [bio, setBio] = useState('');
 
   // Lightning wallet recommendations
   const walletOptions: LightningWallet[] = [
@@ -132,28 +140,36 @@ const SovereignOnboarding: React.FC = () => {
     },
   ];
 
-  // Onboarding steps — reduced from 7 to 5 (Welcome+Path combined, Secure+Verify combined)
+  // Onboarding steps
   const steps: OnboardingStep[] = [
     {
-      id: 'welcome-path',
-      title: 'Welcome & Choose Path',
-      description: '~1 min',
+      id: 'welcome',
+      title: 'Welcome to Digital Sovereignty',
+      description: 'Begin your journey to true freedom',
       icon: Crown,
+      completed: false,
+      category: 'intro',
+    },
+    {
+      id: 'choose-path',
+      title: 'Choose Your Path',
+      description: 'Creator or supporter experience',
+      icon: Star,
       completed: !!userType,
       category: 'intro',
     },
     {
       id: 'nostr-identity',
       title: 'Create Your Identity',
-      description: '~1 min',
+      description: 'Generate your sovereign NOSTR keys',
       icon: Key,
       completed: !!nostrKeys,
       category: 'nostr',
     },
     {
       id: 'secure-keys',
-      title: 'Secure & Verify Keys',
-      description: '~2 min',
+      title: 'Secure Your Keys',
+      description: 'Backup your digital identity safely',
       icon: Shield,
       completed: backupConfirmed && understandsSecurity,
       category: 'nostr',
@@ -161,15 +177,23 @@ const SovereignOnboarding: React.FC = () => {
     {
       id: 'lightning-wallet',
       title: 'Lightning Wallet',
-      description: '~2 min (optional)',
+      description: 'Set up instant Bitcoin payments',
       icon: Zap,
-      completed: !!selectedWallet || walletSetupComplete,
+      completed: !!selectedWallet,
       category: 'lightning',
+    },
+    {
+      id: 'verify-setup',
+      title: 'Verify Everything',
+      description: 'Test your sovereign setup',
+      icon: CheckCircle,
+      completed: false,
+      category: 'complete',
     },
     {
       id: 'complete',
       title: 'Welcome to Sovren!',
-      description: 'You are ready',
+      description: 'Your sovereign journey begins',
       icon: Sparkles,
       completed: false,
       category: 'complete',
@@ -213,7 +237,7 @@ const SovereignOnboarding: React.FC = () => {
       });
 
       // Auto-advance to next step
-      setTimeout(() => setCurrentStep(2), 500);
+      setTimeout(() => setCurrentStep(3), 500);
     } catch (err) {
       setError(
         `Failed to generate NOSTR keys: ${err instanceof Error ? err.message : 'Unknown error'}`
@@ -272,7 +296,7 @@ const SovereignOnboarding: React.FC = () => {
 
     try {
       // Generate challenge
-      const challengeResult = await generateNostrChallenge();
+      const challengeResult = await auth.generateNostrChallenge();
       if (challengeResult.error || !challengeResult.challenge) {
         throw new Error(challengeResult.error || 'Failed to get challenge');
       }
@@ -321,7 +345,7 @@ const SovereignOnboarding: React.FC = () => {
       localStorage.setItem('sovren_user_profile', JSON.stringify(userProfile));
 
       // Authenticate with Sovren
-      const authResult = await authenticateNostr({
+      const authResult = await auth.authenticateNostr({
         signature: signedEvent.sig,
         pubkey: nostrKeys.publicKey,
         challenge: challengeResult.challenge,
@@ -333,7 +357,7 @@ const SovereignOnboarding: React.FC = () => {
       }
 
       // Success! Move to final step
-      setCurrentStep(4);
+      setCurrentStep(6);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Setup verification failed');
     } finally {
@@ -349,30 +373,131 @@ const SovereignOnboarding: React.FC = () => {
     return walletOptions.find(w => w.name === 'Wallet of Satoshi') || walletOptions[0];
   };
 
+  // Add handler functions above the renderStep or main return
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleProfileSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Save username, displayName, bio to Sovren profile and publish as NOSTR profile event (future implementation)
+    setCurrentStep(currentStep + 1);
+  };
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const skipProfileStep = () => {
+    setCurrentStep(currentStep + 1);
+  };
+
   // Render current step
   const renderStep = () => {
     switch (currentStep) {
-      case 0: // Welcome + Choose Path (combined)
+      case 0: // Welcome
         return (
-          <div className='space-y-12'>
-            {/* Welcome + Path Selection Header */}
-            <div className='mb-16 text-center'>
+          <div className='flex flex-col items-center justify-center py-8 text-center'>
+            {/* Main Hero Content */}
+            <div className='relative flex flex-col items-center justify-center'>
+              {/* Brand Icon */}
               <div className='flex justify-center mb-6'>
                 <div className='relative group'>
                   <div className='p-1 transition-transform duration-500 transform shadow-xl bg-gradient-to-br from-amber-400 via-orange-500 to-amber-600 rounded-2xl shadow-amber-500/40 group-hover:scale-105'>
-                    <SovrenIcon className='block object-contain w-20 h-20 sm:w-24 sm:h-24 drop-shadow-lg' />
+                    <SovrenIcon className='block object-contain w-24 h-24 sm:w-32 sm:h-32 drop-shadow-lg' />
                   </div>
+                  <div className='absolute inset-0 transition-all duration-500 bg-gradient-to-br from-amber-400/30 to-orange-600/30 rounded-2xl blur-lg group-hover:blur-xl -z-10'></div>
                 </div>
               </div>
 
-              <h2 className='mb-4 text-3xl font-black leading-tight text-transparent md:text-5xl bg-gradient-to-r from-amber-200 via-orange-300 to-amber-400 bg-clip-text font-display'>
-                Welcome to Sovren
-              </h2>
+              {/* Typography Hierarchy */}
+              <div className='space-y-3'>
+                <h1 className='pb-1 text-3xl font-black tracking-tight text-transparent sm:text-4xl md:text-5xl bg-gradient-to-r from-amber-200 via-orange-300 to-amber-400 bg-clip-text leading-[1.1] font-display'>
+                  Welcome to True Digital Sovereignty
+                </h1>
+                <p className='max-w-xl mx-auto text-base font-light leading-relaxed text-center sm:text-lg text-muted-foreground'>
+                  Break free from Big Tech control. Own your identity, control your money, and
+                  experience the internet as it was meant to be — Sovren.
+                </p>
+              </div>
+            </div>
 
-              <p className='max-w-2xl mx-auto text-base font-light leading-relaxed sm:text-lg text-muted-foreground mb-8'>
-                Own your identity, your content, and your earnings. No company can delete your
-                account or take a cut of your income.
-              </p>
+            {/* Feature Grid */}
+            <div className='grid w-full max-w-5xl grid-cols-1 gap-6 mt-12 md:grid-cols-3'>
+              {/* Card 1 */}
+              <Card className='relative overflow-hidden transition-all duration-500 border shadow-lg group glass-dark border-border/50 hover:border-amber-500/50 rounded-xl'>
+                <CardContent className='relative z-10 p-6 text-center'>
+                  <div className='p-3 mx-auto mb-4 transition-transform duration-300 bg-gradient-to-br from-amber-500/20 to-orange-500/20 rounded-lg w-fit group-hover:scale-110'>
+                    <Globe className='w-8 h-8 mx-auto text-amber-300' />
+                  </div>
+                  <h3 className='mb-2 text-lg font-bold text-white transition-colors group-hover:text-amber-200'>
+                    Own Your Identity
+                  </h3>
+                  <p className='text-sm leading-relaxed text-muted-foreground'>
+                    NOSTR gives you complete control.
+                  </p>
+                </CardContent>
+              </Card>
+              {/* Card 2 */}
+              <Card className='relative overflow-hidden transition-all duration-500 border shadow-lg group glass-dark border-border/50 hover:border-violet-500/50 rounded-xl'>
+                <CardContent className='relative z-10 p-6 text-center'>
+                  <div className='p-3 mx-auto mb-4 transition-transform duration-300 bg-gradient-to-br from-violet-500/20 to-purple-500/20 rounded-lg w-fit group-hover:scale-110'>
+                    <Zap className='w-8 h-8 mx-auto text-violet-300' />
+                  </div>
+                  <h3 className='mb-2 text-lg font-bold text-white transition-colors group-hover:text-violet-200'>
+                    Control Your Money
+                  </h3>
+                  <p className='text-sm leading-relaxed text-muted-foreground'>
+                    Instant, low-cost Bitcoin payments.
+                  </p>
+                </CardContent>
+              </Card>
+              {/* Card 3 */}
+              <Card className='relative overflow-hidden transition-all duration-500 border shadow-lg group glass-dark border-border/50 hover:border-emerald-500/50 rounded-xl'>
+                <CardContent className='relative z-10 p-6 text-center'>
+                  <div className='p-3 mx-auto mb-4 transition-transform duration-300 bg-gradient-to-br from-emerald-500/20 to-green-500/20 rounded-lg w-fit group-hover:scale-110'>
+                    <Shield className='w-8 h-8 mx-auto text-emerald-300' />
+                  </div>
+                  <h3 className='mb-2 text-lg font-bold text-white transition-colors group-hover:text-emerald-200'>
+                    Censorship Resistant
+                  </h3>
+                  <p className='text-sm leading-relaxed text-muted-foreground'>
+                    No deplatforming, just pure freedom.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* CTA */}
+            <div className='mt-12'>
+              <Button
+                onClick={() => setCurrentStep(1)}
+                className='relative px-8 py-4 text-lg font-bold transition-all duration-500 transform shadow-xl group bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:via-orange-400 hover:to-amber-500 shadow-amber-500/30 hover:shadow-2xl hover:shadow-amber-500/40 rounded-xl hover:scale-105'
+              >
+                <span className='relative z-10 flex items-center'>
+                  Begin Your Sovren Journey
+                  <ArrowRight className='w-5 h-5 ml-3 transition-transform duration-300 group-hover:translate-x-1' />
+                </span>
+                <div className='absolute inset-0 transition-all duration-500 bg-gradient-to-r from-amber-400/20 to-orange-500/20 rounded-xl blur-md group-hover:blur-lg -z-10'></div>
+              </Button>
+            </div>
+          </div>
+        );
+
+      case 1: // Choose Path
+        return (
+          <div className='space-y-12'>
+            {/* Elite Header */}
+            <div className='mb-16 text-center'>
+              <div className='flex justify-center mb-10'>
+                <div className='relative group'>
+                  <div className='p-8 transition-transform duration-500 shadow-2xl bg-gradient-to-br from-violet-500 via-purple-500 to-violet-600 rounded-3xl shadow-violet-500/40 group-hover:scale-105'>
+                    <Star className='w-16 h-16 text-white drop-shadow-lg' />
+                  </div>
+                  <div className='absolute inset-0 transition-all duration-500 bg-gradient-to-br from-violet-500/30 to-purple-600/30 rounded-3xl blur-2xl group-hover:blur-3xl'></div>
+                </div>
+              </div>
+
+              <h2 className='mb-8 text-4xl font-black leading-tight text-transparent md:text-6xl bg-gradient-to-r from-violet-200 via-purple-300 to-violet-400 bg-clip-text font-display'>
+                Choose Your
+                <br />
+                <span className='text-transparent bg-gradient-to-r from-purple-300 via-violet-400 to-purple-500 bg-clip-text'>
+                  Sovren Path
+                </span>
+              </h2>
 
               <p className='max-w-3xl mx-auto text-xl font-light leading-relaxed md:text-2xl text-muted-foreground'>
                 Are you here to{' '}
@@ -486,11 +611,11 @@ const SovereignOnboarding: React.FC = () => {
               </Card>
             </div>
 
-            {/* Continue Button */}
+            {/* Elite Continue Button */}
             {userType && (
               <div className='mt-16 text-center'>
                 <Button
-                  onClick={() => setCurrentStep(1)}
+                  onClick={() => setCurrentStep(2)}
                   className={`
                     group relative px-12 py-6 text-xl font-bold rounded-2xl transition-all duration-500 transform hover:scale-105
                     ${
@@ -520,7 +645,7 @@ const SovereignOnboarding: React.FC = () => {
           </div>
         );
 
-      case 1: // NOSTR Identity
+      case 2: // NOSTR Identity
         return (
           <div className='space-y-8'>
             <div className='mb-8 text-center'>
@@ -530,11 +655,10 @@ const SovereignOnboarding: React.FC = () => {
                 </div>
               </div>
               <h2 className='mb-4 text-3xl font-bold text-white font-display'>
-                Create Your Independent Identity
+                Create Your Sovereign Identity
               </h2>
               <p className='max-w-2xl mx-auto text-lg text-muted-foreground'>
-                NOSTR is a new way to publish online where no company can delete your content or ban
-                your account. Your keys are generated locally and owned by you, forever.
+                Your NOSTR keys are your digital identity. Generated locally, owned by you, forever.
               </p>
             </div>
 
@@ -555,10 +679,11 @@ const SovereignOnboarding: React.FC = () => {
                     <div className='p-4 bg-amber-500/20 rounded-xl'>
                       <Sparkles className='w-8 h-8 mx-auto mb-3 text-amber-400' />
                       <h3 className='mb-2 text-xl font-semibold text-white'>
-                        Quick Key Generation
+                        Zero-Friction Key Generation
                       </h3>
                       <p className='text-muted-foreground'>
-                        One click to generate your identity. No forms, no verification, no waiting.
+                        One click to generate your sovereign identity. No forms, no verification, no
+                        waiting.
                       </p>
                     </div>
 
@@ -570,7 +695,7 @@ const SovereignOnboarding: React.FC = () => {
                       {isGenerating ? (
                         <>
                           <div className='w-6 h-6 mr-3 border-b-2 border-white rounded-full animate-spin' />
-                          Generating Your Identity...
+                          Generating Your Sovereign Identity...
                         </>
                       ) : nostrKeys ? (
                         <>
@@ -580,7 +705,7 @@ const SovereignOnboarding: React.FC = () => {
                       ) : (
                         <>
                           <Sparkles className='w-6 h-6 mr-3' />
-                          Generate My Identity
+                          Generate My Sovereign Identity
                         </>
                       )}
                     </Button>
@@ -588,7 +713,7 @@ const SovereignOnboarding: React.FC = () => {
                     {nostrKeys && (
                       <div className='text-center'>
                         <p className='font-medium text-green-400'>
-                          Your identity is ready! Let's secure it...
+                          Your sovereign identity is ready! Let's secure it...
                         </p>
                       </div>
                     )}
@@ -615,7 +740,7 @@ const SovereignOnboarding: React.FC = () => {
               </Button>
               {nostrKeys && (
                 <Button
-                  onClick={() => setCurrentStep(2)}
+                  onClick={() => setCurrentStep(3)}
                   className='flex items-center bg-primary hover:bg-primary/90'
                 >
                   Secure My Keys
@@ -626,7 +751,7 @@ const SovereignOnboarding: React.FC = () => {
           </div>
         );
 
-      case 2: // Secure & Verify Keys
+      case 3: // Secure Keys
         return (
           <div className='space-y-8'>
             <div className='mb-8 text-center'>
@@ -636,7 +761,7 @@ const SovereignOnboarding: React.FC = () => {
                 </div>
               </div>
               <h2 className='mb-4 text-3xl font-bold text-white font-display'>
-                Secure Your Identity
+                Secure Your Sovereign Identity
               </h2>
               <p className='max-w-2xl mx-auto text-lg text-muted-foreground'>
                 Your keys, your identity. Let's make sure they're safely backed up.
@@ -647,7 +772,9 @@ const SovereignOnboarding: React.FC = () => {
               <div className='max-w-3xl mx-auto space-y-6'>
                 <Card className='glass-dark bg-card/50 border-border/50'>
                   <CardContent className='p-8'>
-                    <h3 className='mb-6 text-xl font-semibold text-white'>Your Identity Keys</h3>
+                    <h3 className='mb-6 text-xl font-semibold text-white'>
+                      Your Sovereign Identity Keys
+                    </h3>
 
                     <div className='space-y-6'>
                       {/* Public Key */}
@@ -761,7 +888,8 @@ const SovereignOnboarding: React.FC = () => {
                           className='mt-1 border-border rounded'
                         />
                         <Label htmlFor='security' className='text-yellow-100 cursor-pointer'>
-                          I understand that losing my private key means losing my identity forever
+                          I understand that losing my private key means losing my sovereign identity
+                          forever
                         </Label>
                       </div>
                     </div>
@@ -771,7 +899,7 @@ const SovereignOnboarding: React.FC = () => {
                 {backupConfirmed && understandsSecurity && (
                   <div className='text-center'>
                     <Button
-                      onClick={() => setCurrentStep(3)}
+                      onClick={() => setCurrentStep(4)}
                       className='px-10 py-4 text-lg bg-primary hover:bg-primary/90'
                     >
                       Identity Secured - Setup Lightning
@@ -796,7 +924,7 @@ const SovereignOnboarding: React.FC = () => {
           </div>
         );
 
-      case 3: // Lightning Wallet (optional)
+      case 4: // Lightning Wallet
         return (
           <div className='space-y-8'>
             <div className='mb-8 text-center'>
@@ -909,7 +1037,7 @@ const SovereignOnboarding: React.FC = () => {
                     <Button
                       onClick={() => {
                         setWalletSetupComplete(true);
-                        completeSovereignSetup();
+                        setCurrentStep(5);
                       }}
                       variant='outline'
                     >
@@ -922,23 +1050,109 @@ const SovereignOnboarding: React.FC = () => {
                   </p>
                 </div>
               )}
-
-              {/* Skip Lightning wallet setup */}
-              <div className='mt-6 text-center'>
-                <button
-                  onClick={() => {
-                    completeSovereignSetup();
-                  }}
-                  className='text-sm text-white/50 hover:text-white/70 transition-colors underline'
-                >
-                  I'll do this later -- skip for now
-                </button>
-              </div>
             </div>
           </div>
         );
 
-      case 4: // Welcome to Sovren!
+      case 5: // Verify Setup
+        return (
+          <div className='space-y-8'>
+            <div className='mb-8 text-center'>
+              <div className='flex justify-center mb-6'>
+                <div className='p-6 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl'>
+                  <CheckCircle className='w-10 h-10 text-white' />
+                </div>
+              </div>
+              <h2 className='mb-4 text-3xl font-bold text-white font-display'>
+                Verify Your Sovereign Setup
+              </h2>
+              <p className='max-w-2xl mx-auto text-lg text-muted-foreground'>
+                Let's verify your NOSTR identity and celebrate your sovereignty!
+              </p>
+            </div>
+
+            <div className='max-w-2xl mx-auto'>
+              <Card className='glass-dark bg-card/50 border-border/50'>
+                <CardContent className='p-8'>
+                  <div className='space-y-6'>
+                    <div className='text-center'>
+                      <h3 className='mb-4 text-xl font-semibold text-white'>Setup Summary</h3>
+
+                      <div className='space-y-4'>
+                        <div className='flex items-center justify-between p-4 border rounded-lg bg-green-500/10 border-green-500/20'>
+                          <div className='flex items-center'>
+                            <CheckCircle className='w-5 h-5 mr-3 text-green-500' />
+                            <span className='text-white'>NOSTR Identity</span>
+                          </div>
+                          <Badge className='text-white bg-green-500'>Ready</Badge>
+                        </div>
+
+                        <div className='flex items-center justify-between p-4 border rounded-lg bg-green-500/10 border-green-500/20'>
+                          <div className='flex items-center'>
+                            <CheckCircle className='w-5 h-5 mr-3 text-green-500' />
+                            <span className='text-white'>Keys Secured</span>
+                          </div>
+                          <Badge className='text-white bg-green-500'>Backed Up</Badge>
+                        </div>
+
+                        <div className='flex items-center justify-between p-4 border rounded-lg bg-green-500/10 border-green-500/20'>
+                          <div className='flex items-center'>
+                            <CheckCircle className='w-5 h-5 mr-3 text-green-500' />
+                            <div>
+                              <span className='font-medium text-white'>Lightning Wallet</span>
+                              <p className='text-sm text-green-300'>
+                                {selectedWallet?.name} - Ready for payments
+                              </p>
+                            </div>
+                          </div>
+                          <Badge className='text-white bg-green-500'>{selectedWallet?.type}</Badge>
+                        </div>
+                      </div>
+                    </div>
+
+                    <Alert className='border-amber-500/20 bg-amber-500/10'>
+                      <Sparkles className='w-4 h-4' />
+                      <AlertDescription className='text-foreground'>
+                        <strong>Final Step:</strong>
+                        <br />
+                        We'll create your first NOSTR event to verify your identity and announce
+                        your sovereignty to the world!
+                      </AlertDescription>
+                    </Alert>
+
+                    <Button
+                      onClick={completeSovereignSetup}
+                      disabled={isAuthenticating}
+                      className='w-full py-4 text-lg bg-primary hover:bg-primary/90'
+                    >
+                      {isAuthenticating ? (
+                        <>
+                          <div className='w-5 h-5 mr-2 border-b-2 border-white rounded-full animate-spin' />
+                          Verifying Sovereignty...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className='w-5 h-5 mr-2' />
+                          Verify & Announce My Sovereignty
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {error && (
+              <Alert className='max-w-2xl mx-auto shadow-lg border-red-500/50 bg-red-500/20'>
+                <AlertDescription className='text-base font-medium text-red-100'>
+                  <strong className='text-red-200'>Verification Error:</strong> {error}
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
+        );
+
+      case 6: // Welcome Sovereign
         return (
           <div className='space-y-8 text-center'>
             <div className='flex justify-center mb-8'>
@@ -949,12 +1163,11 @@ const SovereignOnboarding: React.FC = () => {
 
             <div className='space-y-6'>
               <h1 className='text-4xl font-black text-transparent md:text-5xl bg-gradient-to-r from-amber-200 via-primary to-purple-200 bg-clip-text font-display'>
-                Welcome to Sovren!
+                Welcome to Sovereignty!
               </h1>
               <p className='max-w-3xl mx-auto text-xl leading-relaxed text-muted-foreground'>
-                Congratulations! You now have an independent digital identity
-                {selectedWallet ? ' and Lightning payments' : ''}. You own your account, your
-                content, and your audience.
+                Congratulations! You now have a sovereign digital identity and Lightning payments.
+                You're part of the revolution toward true digital freedom.
               </p>
             </div>
 
@@ -964,7 +1177,7 @@ const SovereignOnboarding: React.FC = () => {
                   <Key className='w-12 h-12 mx-auto mb-4 text-primary' />
                   <h3 className='mb-3 text-xl font-bold text-white'>Your Identity</h3>
                   <p className='text-muted-foreground'>
-                    Independent NOSTR identity that no one can take away
+                    Sovereign NOSTR identity that no one can take away
                   </p>
                 </CardContent>
               </Card>
@@ -981,7 +1194,7 @@ const SovereignOnboarding: React.FC = () => {
                 <CardContent className='p-8 text-center'>
                   <Crown className='w-12 h-12 mx-auto mb-4 text-primary' />
                   <h3 className='mb-3 text-xl font-bold text-white'>True Freedom</h3>
-                  <p className='text-muted-foreground'>Censorship-resistant independence</p>
+                  <p className='text-muted-foreground'>Censorship-resistant digital sovereignty</p>
                 </CardContent>
               </Card>
             </div>
@@ -991,12 +1204,12 @@ const SovereignOnboarding: React.FC = () => {
                 onClick={() => navigate('/profile-dashboard')}
                 className='px-12 py-6 mr-4 text-xl font-bold bg-primary hover:bg-primary/90 shadow-hero'
               >
-                View My Profile
+                View My Sovereign Profile
                 <Crown className='w-6 h-6 ml-3' />
               </Button>
 
               <div className='text-center'>
-                <p className='mb-4 text-muted-foreground'>Share your Sovren journey:</p>
+                <p className='mb-4 text-muted-foreground'>Share your sovereignty journey:</p>
                 <div className='flex justify-center space-x-4'>
                   <Button variant='outline' size='sm'>
                     Share on NOSTR

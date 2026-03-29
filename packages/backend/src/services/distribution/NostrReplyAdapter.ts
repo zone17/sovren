@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * NOSTR Reply Adapter
  * EPIC-009B: Fixes the silent void return in UnifiedInboxService.reply() for NOSTR platform
@@ -10,7 +9,14 @@
  * NIP-10 reference: https://github.com/nostr-protocol/nips/blob/master/10.md
  */
 
-import { finalizeEvent, type EventTemplate } from 'nostr-tools/pure';
+import { finalizeEvent } from 'nostr-tools/pure';
+
+type EventTemplate = {
+  kind: number;
+  tags: string[][];
+  content: string;
+  created_at: number;
+};
 import { SimplePool } from 'nostr-tools/pool';
 import { hexToBytes } from '@noble/hashes/utils';
 import type { INostrReplyAdapter } from '../../interfaces/distribution/INostrReplyAdapter';

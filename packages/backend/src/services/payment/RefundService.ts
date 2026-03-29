@@ -1,4 +1,3 @@
-// @ts-nocheck
 // TODO(SOV-REFACTOR-003): This file is 1804 lines. Decompose into:
 // - RefundAuthorizationService (requestAuthorization, authorizeRefund, denyRefund, requiresAuthorization — ~150 lines)
 // - RefundProcessingService (processRefund, processLightningRefund, processOnchainRefund, retryRefund,
@@ -122,7 +121,7 @@ class InMemoryRefundRepository implements IRefundRepository {
   }
 
   async listTransactionRefunds(transactionId: string): Promise<Refund[]> {
-    return Array.from(this.refunds.values()).filter((r) => r.transactionId === transactionId);
+    return Array.from(this.refunds.values()).filter(r => r.transactionId === transactionId);
   }
 
   async listUserRefunds(
@@ -131,9 +130,9 @@ class InMemoryRefundRepository implements IRefundRepository {
     limit = 100,
     offset = 0
   ): Promise<Refund[]> {
-    let refunds = Array.from(this.refunds.values()).filter((r) => r.userId === userId);
+    let refunds = Array.from(this.refunds.values()).filter(r => r.userId === userId);
     if (status) {
-      refunds = refunds.filter((r) => r.status === status);
+      refunds = refunds.filter(r => r.status === status);
     }
     return refunds.slice(offset, offset + limit);
   }
@@ -141,17 +140,16 @@ class InMemoryRefundRepository implements IRefundRepository {
   async queryRefunds(query: RefundQuery): Promise<Refund[]> {
     let refunds = Array.from(this.refunds.values());
 
-    if (query.userId) refunds = refunds.filter((r) => r.userId === query.userId);
-    if (query.transactionId)
-      refunds = refunds.filter((r) => r.transactionId === query.transactionId);
-    if (query.status) refunds = refunds.filter((r) => r.status === query.status);
-    if (query.type) refunds = refunds.filter((r) => r.type === query.type);
-    if (query.reason) refunds = refunds.filter((r) => r.reason === query.reason);
-    if (query.startDate) refunds = refunds.filter((r) => r.createdAt >= query.startDate!);
-    if (query.endDate) refunds = refunds.filter((r) => r.createdAt <= query.endDate!);
-    if (query.minAmount) refunds = refunds.filter((r) => r.amount >= query.minAmount!);
-    if (query.maxAmount) refunds = refunds.filter((r) => r.amount <= query.maxAmount!);
-    if (query.initiatedBy) refunds = refunds.filter((r) => r.initiatedBy === query.initiatedBy);
+    if (query.userId) refunds = refunds.filter(r => r.userId === query.userId);
+    if (query.transactionId) refunds = refunds.filter(r => r.transactionId === query.transactionId);
+    if (query.status) refunds = refunds.filter(r => r.status === query.status);
+    if (query.type) refunds = refunds.filter(r => r.type === query.type);
+    if (query.reason) refunds = refunds.filter(r => r.reason === query.reason);
+    if (query.startDate) refunds = refunds.filter(r => r.createdAt >= query.startDate!);
+    if (query.endDate) refunds = refunds.filter(r => r.createdAt <= query.endDate!);
+    if (query.minAmount) refunds = refunds.filter(r => r.amount >= query.minAmount!);
+    if (query.maxAmount) refunds = refunds.filter(r => r.amount <= query.maxAmount!);
+    if (query.initiatedBy) refunds = refunds.filter(r => r.initiatedBy === query.initiatedBy);
 
     const sortBy = query.sortBy || 'createdAt';
     const sortOrder = query.sortOrder || 'desc';
@@ -167,9 +165,9 @@ class InMemoryRefundRepository implements IRefundRepository {
   }
 
   async getUserRefundCount(userId: string, status?: RefundStatus): Promise<number> {
-    let refunds = Array.from(this.refunds.values()).filter((r) => r.userId === userId);
+    let refunds = Array.from(this.refunds.values()).filter(r => r.userId === userId);
     if (status) {
-      refunds = refunds.filter((r) => r.status === status);
+      refunds = refunds.filter(r => r.status === status);
     }
     return refunds.length;
   }
@@ -183,7 +181,7 @@ class InMemoryRefundRepository implements IRefundRepository {
   }
 
   async listRefundReversals(refundId: string): Promise<RefundReversal[]> {
-    return Array.from(this.reversals.values()).filter((r) => r.refundId === refundId);
+    return Array.from(this.reversals.values()).filter(r => r.refundId === refundId);
   }
 
   async saveBatchOperation(batch: BatchRefundOperation): Promise<void> {
@@ -471,7 +469,7 @@ export class RefundService implements IRefundService {
       // Auto-process if authorized
       if (authLevel === RefundAuthorizationLevel.AUTO_APPROVED) {
         // Process asynchronously
-        this.processRefund(refundId).catch((error) => {
+        this.processRefund(refundId).catch(error => {
           this.logger.error('Failed to auto-process refund', error);
         });
       }
@@ -529,7 +527,7 @@ export class RefundService implements IRefundService {
     // Calculate refundable amount
     const existingRefunds = await this.repository.listTransactionRefunds(transactionId);
     const totalRefunded = existingRefunds
-      .filter((r) => r.status === RefundStatus.COMPLETED)
+      .filter(r => r.status === RefundStatus.COMPLETED)
       .reduce((sum, r) => sum + r.amount, 0);
 
     validation.totalRefunded = totalRefunded;
@@ -587,7 +585,7 @@ export class RefundService implements IRefundService {
 
     const existingRefunds = await this.repository.listTransactionRefunds(transactionId);
     const totalRefunded = existingRefunds
-      .filter((r) => r.status === RefundStatus.COMPLETED)
+      .filter(r => r.status === RefundStatus.COMPLETED)
       .reduce((sum, r) => sum + r.amount, 0);
 
     return transaction.amount - totalRefunded;
@@ -660,7 +658,7 @@ export class RefundService implements IRefundService {
     });
 
     // Auto-process authorized refund
-    this.processRefund(refundId).catch((error) => {
+    this.processRefund(refundId).catch(error => {
       this.logger.error('Failed to auto-process authorized refund', error);
     });
 
@@ -1303,7 +1301,7 @@ export class RefundService implements IRefundService {
 
     if (refunds.length > 0) {
       stats.averageRefundAmount = stats.totalAmount / refunds.length;
-      const completedRefunds = refunds.filter((r) => r.status === RefundStatus.COMPLETED).length;
+      const completedRefunds = refunds.filter(r => r.status === RefundStatus.COMPLETED).length;
       stats.successRate = (completedRefunds / refunds.length) * 100;
     }
 
@@ -1356,6 +1354,7 @@ export class RefundService implements IRefundService {
   }
 
   async calculateRefundRate(startDate: Date, endDate: Date): Promise<number> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const refunds = await this.repository.queryRefunds({
       startDate,
       endDate,
@@ -1410,7 +1409,7 @@ export class RefundService implements IRefundService {
     // Check refund frequency
     const userRefunds = await this.repository.listUserRefunds(refund.userId);
     const recentRefunds = userRefunds.filter(
-      (r) => r.createdAt.getTime() > Date.now() - 86400000
+      r => r.createdAt.getTime() > Date.now() - 86400000
     ).length;
 
     if (recentRefunds > 5) {
@@ -1449,14 +1448,14 @@ export class RefundService implements IRefundService {
       flags,
       requiresReview: riskScore >= 50,
       blocked: riskScore >= 70,
-      reason: flags.length > 0 ? flags.map((f) => f.description).join(', ') : undefined,
+      reason: flags.length > 0 ? flags.map(f => f.description).join(', ') : undefined,
     };
   }
 
   async hasSuspiciousRefundPattern(userId: string): Promise<boolean> {
     const userRefunds = await this.repository.listUserRefunds(userId);
     const recentRefunds = userRefunds.filter(
-      (r) => r.createdAt.getTime() > Date.now() - 604800000 // Last 7 days
+      r => r.createdAt.getTime() > Date.now() - 604800000 // Last 7 days
     );
 
     return recentRefunds.length > 10; // More than 10 refunds in a week
@@ -1484,10 +1483,10 @@ export class RefundService implements IRefundService {
 
     const userRefunds = await this.repository.listUserRefunds(userId);
 
-    const refundsThisHour = userRefunds.filter((r) => r.createdAt.getTime() > hourAgo).length;
-    const refundsToday = userRefunds.filter((r) => r.createdAt.getTime() > dayAgo).length;
+    const refundsThisHour = userRefunds.filter(r => r.createdAt.getTime() > hourAgo).length;
+    const refundsToday = userRefunds.filter(r => r.createdAt.getTime() > dayAgo).length;
     const amountToday = userRefunds
-      .filter((r) => r.createdAt.getTime() > dayAgo)
+      .filter(r => r.createdAt.getTime() > dayAgo)
       .reduce((sum, r) => sum + r.amount, 0);
 
     const exceeded =
@@ -1544,7 +1543,7 @@ export class RefundService implements IRefundService {
   async sendNotification(notification: RefundNotification): Promise<void> {
     // Emit webhook event
     const webhookEvent: RefundWebhookEvent = {
-      type: notification.type,
+      type: notification.type as RefundWebhookEvent['type'],
       refundId: notification.refundId,
       transactionId: notification.transactionId,
       userId: notification.userId,
@@ -1594,7 +1593,7 @@ export class RefundService implements IRefundService {
   async scheduleAutomaticRefund(
     transactionId: string,
     reason: string,
-    scheduledFor: Date
+    _scheduledFor: Date
   ): Promise<Refund> {
     // In production, would schedule with a job queue
     // For now, create immediately
@@ -1724,8 +1723,8 @@ export class RefundService implements IRefundService {
     try {
       const result = await this.currencyService.convert({
         amount,
-        fromCurrency: currency,
-        toCurrency: 'USD',
+        from: currency as unknown as import('../../types/currency').Currency,
+        to: 'USD' as unknown as import('../../types/currency').Currency,
       });
       return result.convertedAmount;
     } catch (error) {
@@ -1740,7 +1739,7 @@ export class RefundService implements IRefundService {
 
   private async executeRefund(
     refund: Refund,
-    transaction: PaymentTransaction
+    _transaction: PaymentTransaction
   ): Promise<RefundResult> {
     // Simplified refund execution
     return {

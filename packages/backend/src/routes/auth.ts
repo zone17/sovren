@@ -1,4 +1,4 @@
-import { authenticate, optionalAuth } from '@/middleware/auth';
+import { authenticate, authorize, optionalAuth } from '@/middleware/auth';
 import { nostrAuth } from '@/services/nostr-auth';
 import { Request, Response, Router } from 'express';
 import rateLimit from 'express-rate-limit';
@@ -227,15 +227,8 @@ router.post(
 router.get(
   '/stats',
   authenticate,
+  authorize(['admin']),
   asyncHandler(async (req: Request, res: Response) => {
-    if (!req.user || req.user.role !== 'admin') {
-      return res.status(403).json({
-        success: false,
-        error: 'Admin access required',
-        code: 'UNAUTHORIZED',
-      });
-    }
-
     const stats = nostrAuth.getStats();
 
     return res.status(200).json({

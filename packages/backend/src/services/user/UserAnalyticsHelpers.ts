@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * UserAnalyticsHelpers
  * Extracted from UserAnalyticsService (SOV-REFACTOR-001).
@@ -30,7 +29,7 @@ import {
 export function calculateChurnRiskScore(factors: ChurnRiskFactor[]): number {
   let score = 0;
 
-  factors.forEach((factor) => {
+  factors.forEach(factor => {
     let factorScore = 0;
 
     // Normalize factor value to 0-100 scale
@@ -69,7 +68,7 @@ export function getRiskLevel(riskScore: number): 'low' | 'medium' | 'high' | 'cr
 export function generateRetentionActions(factors: ChurnRiskFactor[], riskLevel: string): string[] {
   const actions: string[] = [];
 
-  factors.forEach((factor) => {
+  factors.forEach(factor => {
     if (factor.impact === 'negative') {
       switch (factor.factor) {
         case 'days_since_activity':
@@ -111,8 +110,8 @@ export function determineGrowthType(
   if (trends.length < 3) return 'linear';
 
   const recentTrends = trends.slice(-10);
-  const upTrends = recentTrends.filter((t) => t.trend === 'up').length;
-  const downTrends = recentTrends.filter((t) => t.trend === 'down').length;
+  const upTrends = recentTrends.filter(t => t.trend === 'up').length;
+  const downTrends = recentTrends.filter(t => t.trend === 'down').length;
 
   if (upTrends > 7) return 'exponential';
   if (downTrends > 7) return 'declining';
@@ -138,8 +137,7 @@ export function projectGrowth(trends: TrendPoint[]): GrowthProjection {
   const recentTrends = trends.slice(-30); // Last 30 days
   const avgDailyGrowth =
     recentTrends.length > 1
-      ? (recentTrends[recentTrends.length - 1].value - recentTrends[0].value) /
-        recentTrends.length
+      ? (recentTrends[recentTrends.length - 1].value - recentTrends[0].value) / recentTrends.length
       : 0;
 
   const projectionDate = new Date();
@@ -164,7 +162,7 @@ export function projectGrowth(trends: TrendPoint[]): GrowthProjection {
  * Returns a simplified seasonality pattern from a trend series.
  * TODO(SOV-REFACTOR-001): Replace stub with real FFT/autocorrelation analysis.
  */
-export function identifySeasonality(trends: TrendPoint[]): SeasonalityPattern[] {
+export function identifySeasonality(_trends: TrendPoint[]): SeasonalityPattern[] {
   // Simplified seasonality detection
   return [
     {
@@ -191,8 +189,7 @@ export function calculateRecencyScore(lastActivity: Date): number {
  * Loyalty score: 0–100 linearly over the first year of account age.
  */
 export function calculateLoyaltyScore(user: { created_at: string | Date }): number {
-  const accountAgeDays =
-    (Date.now() - new Date(user.created_at).getTime()) / (24 * 60 * 60 * 1000);
+  const accountAgeDays = (Date.now() - new Date(user.created_at).getTime()) / (24 * 60 * 60 * 1000);
   return Math.min((accountAgeDays / 365) * 100, 100); // 100 points at 1 year
 }
 
@@ -221,7 +218,7 @@ export function formatAsCSV(data: any[]): string {
   }
 
   // Add data rows
-  data.forEach((item) => {
+  data.forEach(item => {
     rows.push(Object.values(item).join(','));
   });
 

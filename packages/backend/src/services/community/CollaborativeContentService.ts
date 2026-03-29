@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Collaborative Content Service
  * EPIC-010: Creator Network — Co-authoring with revenue splits (basis points)
@@ -16,6 +15,7 @@
  */
 
 import type { ICollaborativeContentService } from '../../interfaces/community/ICollaborativeContentService';
+import type { ContentCollaborator } from '@shared/types/community';
 import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 
@@ -268,7 +268,7 @@ export class CollaborativeContentService implements ICollaborativeContentService
     });
   }
 
-  async getCollaborators(contentId: string, requesterId: string): Promise<CollaboratorRow[]> {
+  async getCollaborators(contentId: string, requesterId: string): Promise<ContentCollaborator[]> {
     const { data, error } = await this.db
       .from<CollaboratorRow>('content_collaborators')
       .select('id, content_id, creator_id, revenue_split_bps, status, invited_at, accepted_at')
@@ -281,7 +281,7 @@ export class CollaborativeContentService implements ICollaborativeContentService
       throw new Error(`Failed to get collaborators: ${error.message}`);
     }
 
-    return data ?? [];
+    return (data ?? []) as unknown as ContentCollaborator[];
   }
 
   async allocateRevenue(

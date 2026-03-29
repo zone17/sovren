@@ -103,9 +103,11 @@ export const authorize = (allowedRoles: Array<'creator' | 'supporter' | 'admin'>
       return;
     }
 
-    const userRole = req.user.role || 'supporter'; // Default to supporter
+    const userRole = req.user.role;
 
-    if (!allowedRoles.includes(userRole)) {
+    // If role is undefined, deny access rather than defaulting to 'supporter'
+    // to prevent privilege escalation when JWT lacks a role claim
+    if (!userRole || !allowedRoles.includes(userRole)) {
       logger.warn('Authorization failed', {
         requiredRoles: allowedRoles,
         currentRole: userRole,

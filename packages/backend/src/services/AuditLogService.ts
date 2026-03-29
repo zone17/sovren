@@ -1,4 +1,6 @@
-// @ts-nocheck — TODO(SOV-TS-002): Full TS cleanup needed (timestamp nullability, storage interface types)
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
+// TODO(SOV-TS-002): Full TS cleanup needed (timestamp nullability, storage interface types)
 /**
  * AuditLogService Implementation
  * User Story: US-E5-009
@@ -50,31 +52,31 @@ class InMemoryAuditStorage implements IAuditStorage {
 
     // Apply filters
     if (query.actorId) {
-      results = results.filter((e) => e.actor.id === query.actorId);
+      results = results.filter(e => e.actor.id === query.actorId);
     }
 
     if (query.action) {
-      results = results.filter((e) => e.action === query.action);
+      results = results.filter(e => e.action === query.action);
     }
 
     if (query.resourceType) {
-      results = results.filter((e) => e.resource?.type === query.resourceType);
+      results = results.filter(e => e.resource?.type === query.resourceType);
     }
 
     if (query.resourceId) {
-      results = results.filter((e) => e.resource?.id === query.resourceId);
+      results = results.filter(e => e.resource?.id === query.resourceId);
     }
 
     if (query.startDate) {
-      results = results.filter((e) => e.timestamp >= query.startDate!);
+      results = results.filter(e => e.timestamp >= query.startDate!);
     }
 
     if (query.endDate) {
-      results = results.filter((e) => e.timestamp <= query.endDate!);
+      results = results.filter(e => e.timestamp <= query.endDate!);
     }
 
     if (query.outcome) {
-      results = results.filter((e) => e.outcome === query.outcome);
+      results = results.filter(e => e.outcome === query.outcome);
     }
 
     // Apply sorting
@@ -105,9 +107,9 @@ class InMemoryAuditStorage implements IAuditStorage {
   }
 
   async archive(before: Date): Promise<number> {
-    const toArchive = this.entries.filter((e) => e.timestamp < before);
+    const toArchive = this.entries.filter(e => e.timestamp < before);
     this.archived.push(...toArchive);
-    this.entries = this.entries.filter((e) => e.timestamp >= before);
+    this.entries = this.entries.filter(e => e.timestamp >= before);
     return toArchive.length;
   }
 
@@ -259,7 +261,7 @@ export class AuditLogService implements IAuditLogService {
     for (let i = 0; i < entries.length; i += batchSize) {
       const batch = entries.slice(i, i + batchSize);
 
-      const batchIds = await Promise.all(batch.map((entry) => this.log(entry)));
+      const batchIds = await Promise.all(batch.map(entry => this.log(entry)));
 
       ids.push(...batchIds);
     }
@@ -324,7 +326,7 @@ export class AuditLogService implements IAuditLogService {
       // Note: Would need to add ID filter to query interface
     });
 
-    return result.entries.find((e) => e.id === id) || null;
+    return result.entries.find(e => e.id === id) || null;
   }
 
   async verify(id: string): Promise<boolean> {
@@ -521,7 +523,7 @@ export class AuditLogService implements IAuditLogService {
     ];
 
     // Rows
-    const rows = entries.map((entry) => [
+    const rows = entries.map(entry => [
       entry.id,
       entry.timestamp.toISOString(),
       entry.actor.type,
@@ -538,7 +540,7 @@ export class AuditLogService implements IAuditLogService {
     // Combine
     const csv = [
       headers.join(','),
-      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(',')),
     ].join('\n');
 
     return csv;

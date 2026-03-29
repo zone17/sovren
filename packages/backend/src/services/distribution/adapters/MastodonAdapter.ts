@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Mastodon Platform Adapter
  * EPIC-009: ActivityPub / Mastodon API integration
@@ -101,7 +100,7 @@ export class MastodonAdapter extends BasePlatformAdapter {
       throw new Error(`Mastodon token exchange failed: ${response.status}`);
     }
 
-    const data = await response.json();
+    const data = await response.json() as { access_token: string; scope?: string };
     return {
       access_token: data.access_token,
       refresh_token: null, // Mastodon tokens don't expire by default

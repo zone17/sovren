@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Inbox Polling Service
  * EPIC-009B: BullMQ batch polling for unified inbox
@@ -310,7 +309,6 @@ export class InboxPollingService implements IInboxPollingService {
 
       const { error } = await this.db.from('inbox_messages').upsert(rows, {
         onConflict: 'creator_id,platform,platform_message_id',
-        ignoreDuplicates: true,
       });
 
       if (error) {

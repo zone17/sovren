@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Revenue Service
  * EPIC-011: Business Manager — Revenue tracking and diversification planning
@@ -176,7 +175,7 @@ export class RevenueService implements IRevenueService {
       this.logger.error('Failed to fetch diversification goals', { error, creatorId });
       throw new Error('Failed to fetch diversification goals');
     }
-    return data ?? null;
+    return (data as unknown as DiversificationGoal) ?? null;
   }
 
   async setDiversificationGoals(creatorId: string, targets: Record<string, number>): Promise<void> {

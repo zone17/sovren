@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Payment State Machine Service
  *
@@ -14,13 +13,14 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import {
   PaymentState,
   PaymentEvent,
-  Payment,
   ALLOWED_TRANSITIONS,
   isTransitionAllowed,
   InvalidTransitionError,
   StateTransitionError,
   PaymentNotFoundError,
 } from '@shared/types';
+// Import Payment from payment-state directly to get the state-machine variant (has `state` field)
+import type { Payment } from '@shared/types/payment-state';
 
 /**
  * Payment State Machine Configuration
@@ -74,7 +74,7 @@ export interface TransitionResult extends PaymentEvent {
 export class PaymentStateMachine {
   private supabase: SupabaseClient;
   private logger?: PaymentStateMachineConfig['logger'];
-  private allowedTransitions: Map<PaymentState, PaymentState[]>;
+  private allowedTransitions: Map<PaymentState, readonly PaymentState[]>;
 
   /**
    * Create a new Payment State Machine instance
@@ -99,7 +99,7 @@ export class PaymentStateMachine {
    * @private
    * @returns Map of allowed state transitions
    */
-  private initializeTransitions(): Map<PaymentState, PaymentState[]> {
+  private initializeTransitions(): Map<PaymentState, readonly PaymentState[]> {
     return new Map(ALLOWED_TRANSITIONS);
   }
 
@@ -232,6 +232,7 @@ export class PaymentStateMachine {
     metadata?: Record<string, unknown>,
     userId?: string
   ): Promise<TransitionResult> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { data, error } = await this.supabase.rpc('transition_payment_state', {
       p_payment_id: payment.id,
       p_from_state: payment.state,
@@ -376,9 +377,9 @@ export class PaymentStateMachine {
    * @param paymentId Payment UUID
    * @returns Promise resolving to array of allowed target states
    */
-  async getAllowedTransitions(paymentId: string): Promise<PaymentState[]> {
+  async getAllowedTransitions(paymentId: string): Promise<readonly PaymentState[]> {
     const payment = await this.getPayment(paymentId);
-    return Array.from(this.allowedTransitions.get(payment.state) || []);
+    return this.allowedTransitions.get(payment.state) || [];
   }
 
   /**
@@ -401,7 +402,7 @@ export class PaymentStateMachine {
     failed: Array<{ paymentId: string; error: Error }>;
   }> {
     const results = await Promise.allSettled(
-      transitions.map((t) => this.transition(t.paymentId, t.toState, t.metadata, t.userId))
+      transitions.map(t => this.transition(t.paymentId, t.toState, t.metadata, t.userId))
     );
 
     const successful: TransitionResult[] = [];

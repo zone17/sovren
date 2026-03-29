@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Wellness API Routes (v2)
  * /api/v2/wellness/*

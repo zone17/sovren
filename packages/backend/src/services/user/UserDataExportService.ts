@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * UserDataExportService
  * GDPR COMP-003: Right of Access / Data Portability
@@ -52,7 +51,7 @@ export class UserDataExportService {
   private readonly logger: Logger;
 
   constructor(
-    @inject(TYPES.Database) private readonly db: IDatabase
+    @inject(TYPES.Database as unknown as string) private readonly db: IDatabase
   ) {
     this.logger = new Logger(UserDataExportService.name);
   }

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Lightning Network API Routes
  * /api/lightning/*

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { randomBytes } from 'crypto';
 import { EventEmitter } from 'events';
 import { z } from 'zod';
@@ -231,7 +230,9 @@ export class PayoutManagementService extends EventEmitter {
       return earnings;
     } catch (error) {
       this.logger.error('Failed to calculate creator earnings', error);
-      throw new Error(`Earnings calculation failed: ${error.message}`);
+      throw new Error(
+        `Earnings calculation failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -307,7 +308,9 @@ export class PayoutManagementService extends EventEmitter {
       return schedule;
     } catch (error) {
       this.logger.error('Failed to setup payout schedule', error);
-      throw new Error(`Payout schedule setup failed: ${error.message}`);
+      throw new Error(
+        `Payout schedule setup failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -426,7 +429,9 @@ export class PayoutManagementService extends EventEmitter {
       return { verified: false, payout };
     } catch (error) {
       this.logger.error('Failed to verify payout', error);
-      throw new Error(`Payout verification failed: ${error.message}`);
+      throw new Error(
+        `Payout verification failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -488,7 +493,9 @@ export class PayoutManagementService extends EventEmitter {
       };
     } catch (error) {
       this.logger.error('Failed to get earnings analytics', error);
-      throw new Error(`Earnings analytics failed: ${error.message}`);
+      throw new Error(
+        `Earnings analytics failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -507,7 +514,7 @@ export class PayoutManagementService extends EventEmitter {
       bonuses: 0,
     };
 
-    transactions.forEach((txn) => {
+    transactions.forEach(txn => {
       switch (txn.type) {
         case 'subscription_payment':
           breakdown.subscriptions += txn.net_amount_msats || 0;
@@ -740,8 +747,8 @@ export class PayoutManagementService extends EventEmitter {
   }
 
   private async getEarningsTrends(
-    creator_id: string,
-    period?: any
+    _creator_id: string,
+    _period?: any
   ): Promise<{
     daily_earnings: Record<string, number>;
     weekly_earnings: Record<string, number>;
@@ -756,8 +763,8 @@ export class PayoutManagementService extends EventEmitter {
   }
 
   private async getRevenueSourcesBreakdown(
-    creator_id: string,
-    period?: any
+    _creator_id: string,
+    _period?: any
   ): Promise<{
     subscriptions: { count: number; amount: number; percentage: number };
     one_time_payments: { count: number; amount: number; percentage: number };
@@ -787,7 +794,7 @@ export class PayoutManagementService extends EventEmitter {
 
     if (error) throw error;
 
-    return (data || []).map((payout) => ({
+    return (data || []).map(payout => ({
       date: new Date(payout.completed_date || Date.now()),
       amount: payout.net_amount_msats || 0,
       status: payout.status,
@@ -841,6 +848,7 @@ export class PayoutManagementService extends EventEmitter {
     // 1. Fetch all active creator IDs
     const creatorIds: string[] = [];
     let page = 0;
+    // eslint-disable-next-line no-constant-condition
     while (true) {
       const { data, error } = await supabase
         .from('payout_schedules')
@@ -866,6 +874,7 @@ export class PayoutManagementService extends EventEmitter {
     // 2. Batch-fetch current-month transactions for all active creators
     const txByCreator = new Map<string, Record<string, unknown>[]>();
     page = 0;
+    // eslint-disable-next-line no-constant-condition
     while (true) {
       const { data, error } = await supabase
         .from('transactions')
@@ -891,6 +900,7 @@ export class PayoutManagementService extends EventEmitter {
     // 3. Batch-fetch lifetime transactions for all active creators
     const lifetimeByCreator = new Map<string, number>();
     page = 0;
+    // eslint-disable-next-line no-constant-condition
     while (true) {
       const { data, error } = await supabase
         .from('transactions')
@@ -976,7 +986,7 @@ export class PayoutManagementService extends EventEmitter {
       this.logger.error('Health check failed', error);
       return {
         status: 'unhealthy',
-        metrics: { error: error.message },
+        metrics: { error: error instanceof Error ? error.message : String(error) },
       };
     }
   }

@@ -1,4 +1,3 @@
-// @ts-nocheck
 // TODO(SOV-REFACTOR-002): This file is 1907 lines. Decompose into:
 // - RevenueAnalyticsService (getRevenueAnalytics, getRevenueByPeriod, getRevenueTimeSeries, getRevenueTrend,
 //   getConsolidatedRevenue, getRevenueBreakdownInBaseCurrency — ~300 lines)
@@ -109,15 +108,15 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
    * Subscribe to payment events for real-time analytics
    */
   private subscribeToPaymentEvents(): void {
-    this.eventBus.subscribe(DomainEventType.PAYMENT_RECEIVED, async (event) => {
+    this.eventBus.subscribe(DomainEventType.PAYMENT_RECEIVED, async _event => {
       await this.invalidateRelevantCache();
     });
 
-    this.eventBus.subscribe(DomainEventType.PAYMENT_FAILED, async (event) => {
+    this.eventBus.subscribe(DomainEventType.PAYMENT_FAILED, async _event => {
       await this.invalidateRelevantCache();
     });
 
-    this.eventBus.subscribe(DomainEventType.PAYMENT_REFUNDED, async (event) => {
+    this.eventBus.subscribe(DomainEventType.PAYMENT_REFUNDED, async _event => {
       await this.invalidateRelevantCache();
     });
   }
@@ -187,6 +186,7 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
 
       return result;
     } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const elapsed = performance.now() - start;
       this.logger.error(`Query failed: ${cacheKey}`, error);
       throw error;
@@ -215,7 +215,7 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
    */
   private async calculateRevenueMetrics(
     transactions: PaymentTransaction[],
-    query: AnalyticsQuery
+    _query: AnalyticsQuery
   ): Promise<{
     totalRevenue: number;
     netRevenue: number;
@@ -255,7 +255,7 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
 
         // Calculate currency breakdown
         const revenueByCurrency = new Map<Currency, number>();
-        for (const tx of transactions.filter((t) => t.status === 'completed')) {
+        for (const tx of transactions.filter(t => t.status === 'completed')) {
           const current = revenueByCurrency.get(tx.currency as Currency) || 0;
           revenueByCurrency.set(tx.currency as Currency, current + (tx.amountFiat || tx.amount));
         }
@@ -276,12 +276,12 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
         }
 
         // Calculate metrics
-        const uniqueUsers = new Set(transactions.map((t) => t.userId)).size;
+        const uniqueUsers = new Set(transactions.map(t => t.userId)).size;
         const averageTransactionValue =
           transactions.length > 0 ? totalRevenue / transactions.length : 0;
 
         // Calculate median
-        const amounts = transactions.map((t) => t.amount).sort((a, b) => a - b);
+        const amounts = transactions.map(t => t.amount).sort((a, b) => a - b);
         const medianTransactionValue =
           amounts.length > 0 ? amounts[Math.floor(amounts.length / 2)] : 0;
 
@@ -304,7 +304,7 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
         });
 
         const previousPeriodRevenue = previousPeriodTxs
-          .filter((t) => t.status === 'completed')
+          .filter(t => t.status === 'completed')
           .reduce((sum, t) => sum + t.amount, 0);
 
         const growthRate =
@@ -354,7 +354,7 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
         // Group by time period
         const dataPoints = new Map<string, number>();
 
-        for (const tx of transactions.filter((t) => t.status === 'completed')) {
+        for (const tx of transactions.filter(t => t.status === 'completed')) {
           const timestamp = new Date(tx.createdAt);
           const key = this.formatTimeKey(timestamp, query.period);
           const current = dataPoints.get(key) || 0;
@@ -385,7 +385,7 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
         const timeSeries = await this.getRevenueTimeSeries(query);
 
         // Calculate trend
-        const values = timeSeries.map((dp) => dp.value);
+        const values = timeSeries.map(dp => dp.value);
         const trend = this.calculateTrend(values);
         const volatility = this.calculateVolatility(values);
 
@@ -444,7 +444,7 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
       async () => {
         const transactions = await this.getTransactionsForQuery(query);
 
-        const amounts = transactions.map((t) => t.amount).sort((a, b) => a - b);
+        const amounts = transactions.map(t => t.amount).sort((a, b) => a - b);
         const totalVolume = amounts.reduce((sum, a) => sum + a, 0);
         const averageValue = amounts.length > 0 ? totalVolume / amounts.length : 0;
         const medianValue = amounts.length > 0 ? amounts[Math.floor(amounts.length / 2)] : 0;
@@ -469,7 +469,7 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
 
         // Calculate trend
         const timeSeries = await this.getRevenueTimeSeries(query);
-        const values = timeSeries.map((dp) => dp.value);
+        const values = timeSeries.map(dp => dp.value);
         const trendInfo = this.calculateTrend(values);
 
         return {
@@ -486,7 +486,7 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
           countByMethod,
           volumeByStatus,
           countByStatus,
-          trend: trendInfo.direction,
+          trend: trendInfo.direction as 'increasing' | 'decreasing' | 'stable',
           trendPercentage: trendInfo.strength,
         };
       },
@@ -503,26 +503,26 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
         const transactions = await this.getTransactionsForQuery(query);
 
         const totalAttempts = transactions.length;
-        const successful = transactions.filter((t) => t.status === 'completed').length;
-        const failed = transactions.filter((t) => t.status === 'failed').length;
+        const successful = transactions.filter(t => t.status === 'completed').length;
+        const failed = transactions.filter(t => t.status === 'failed').length;
 
         const successRate = totalAttempts > 0 ? (successful / totalAttempts) * 100 : 0;
         const failureRate = totalAttempts > 0 ? (failed / totalAttempts) * 100 : 0;
 
         // Success rate by method
         const successRateByMethod = new Map<PaymentMethod, number>();
-        const methods = new Set(transactions.map((t) => t.method));
+        const methods = new Set(transactions.map(t => t.method));
 
         for (const method of methods) {
-          const methodTxs = transactions.filter((t) => t.method === method);
-          const methodSuccess = methodTxs.filter((t) => t.status === 'completed').length;
+          const methodTxs = transactions.filter(t => t.method === method);
+          const methodSuccess = methodTxs.filter(t => t.status === 'completed').length;
           const rate = methodTxs.length > 0 ? (methodSuccess / methodTxs.length) * 100 : 0;
           successRateByMethod.set(method, rate);
         }
 
         // Failure reasons
         const failureReasonBreakdown = new Map<string, number>();
-        const failedTxs = transactions.filter((t) => t.failureReason);
+        const failedTxs = transactions.filter(t => t.failureReason);
 
         for (const tx of failedTxs) {
           const reason = tx.failureReason || 'unknown';
@@ -539,9 +539,9 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
           .slice(0, 5);
 
         // Retry metrics
-        const retriedPayments = transactions.filter((t) => t.retryCount > 0).length;
+        const retriedPayments = transactions.filter(t => t.retryCount > 0).length;
         const successAfterRetry = transactions.filter(
-          (t) => t.retryCount > 0 && t.status === 'completed'
+          t => t.retryCount > 0 && t.status === 'completed'
         ).length;
         const averageRetries =
           transactions.reduce((sum, t) => sum + t.retryCount, 0) / totalAttempts;
@@ -618,7 +618,7 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
         const volumeByCurrency = new Map<Currency, number>();
         const volumeInBaseCurrency = new Map<Currency, number>();
 
-        for (const tx of transactions.filter((t) => t.status === 'completed')) {
+        for (const tx of transactions.filter(t => t.status === 'completed')) {
           const currency = tx.currency as Currency;
 
           transactionCountByCurrency.set(
@@ -649,7 +649,7 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
           }
         }
 
-        const totalTransactions = transactions.filter((t) => t.status === 'completed').length;
+        const totalTransactions = transactions.filter(t => t.status === 'completed').length;
         const totalVolume = Array.from(volumeInBaseCurrency.values()).reduce(
           (sum, v) => sum + v,
           0
@@ -716,11 +716,11 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
           }
         >();
 
-        const methods = new Set(transactions.map((t) => t.method));
+        const methods = new Set(transactions.map(t => t.method));
 
         for (const method of methods) {
-          const methodTxs = transactions.filter((t) => t.method === method);
-          const successfulTxs = methodTxs.filter((t) => t.status === 'completed');
+          const methodTxs = transactions.filter(t => t.method === method);
+          const successfulTxs = methodTxs.filter(t => t.status === 'completed');
 
           const volume = successfulTxs.reduce((sum, t) => sum + t.amount, 0);
           const successRate =
@@ -731,8 +731,8 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
               : 0;
 
           const processingTimes = methodTxs
-            .filter((t) => t.completedAt && t.createdAt)
-            .map((t) => t.completedAt!.getTime() - new Date(t.createdAt).getTime());
+            .filter(t => t.completedAt && t.createdAt)
+            .map(t => t.completedAt!.getTime() - new Date(t.createdAt).getTime());
           const averageProcessingTime =
             processingTimes.length > 0
               ? processingTimes.reduce((sum, t) => sum + t, 0) / processingTimes.length
@@ -748,8 +748,8 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
         }
 
         // Lightning metrics
-        const lightningTxs = transactions.filter((t) => t.method === 'lightning');
-        const lightningSuccessful = lightningTxs.filter((t) => t.status === 'completed');
+        const lightningTxs = transactions.filter(t => t.method === 'lightning');
+        const lightningSuccessful = lightningTxs.filter(t => t.status === 'completed');
 
         const lightningTransactions = lightningTxs.length;
         const lightningVolume = lightningSuccessful.reduce((sum, t) => sum + t.amount, 0);
@@ -762,8 +762,8 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
             : 0;
 
         // On-chain metrics
-        const onchainTxs = transactions.filter((t) => t.method === 'onchain');
-        const onchainSuccessful = onchainTxs.filter((t) => t.status === 'completed');
+        const onchainTxs = transactions.filter(t => t.method === 'onchain');
+        const onchainSuccessful = onchainTxs.filter(t => t.status === 'completed');
 
         const onchainTransactions = onchainTxs.length;
         const onchainVolume = onchainSuccessful.reduce((sum, t) => sum + t.amount, 0);
@@ -810,14 +810,14 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
       currency: currency as any,
     });
     return transactions
-      .filter((t) => t.status === 'completed' && t.currency === currency)
+      .filter(t => t.status === 'completed' && t.currency === currency)
       .reduce((sum, t) => sum + (t.amountFiat || t.amount), 0);
   }
 
   async getRevenueByMethod(method: PaymentMethod, query: AnalyticsQuery): Promise<number> {
     const transactions = await this.getTransactionsForQuery({ ...query, method });
     return transactions
-      .filter((t) => t.status === 'completed' && t.method === method)
+      .filter(t => t.status === 'completed' && t.method === method)
       .reduce((sum, t) => sum + t.amount, 0);
   }
 
@@ -833,15 +833,15 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
       async () => {
         const transactions = await this.getTransactionsForQuery(query);
         const refundedTxs = transactions.filter(
-          (t) => t.status === 'refunded' || t.status === 'partially_refunded'
+          t => t.status === 'refunded' || t.status === 'partially_refunded'
         );
 
         const totalRefunds = refundedTxs.length;
         const totalRefundAmount = refundedTxs.reduce((sum, t) => sum + t.amount, 0);
-        const fullRefunds = refundedTxs.filter((t) => t.status === 'refunded').length;
-        const partialRefunds = refundedTxs.filter((t) => t.status === 'partially_refunded').length;
+        const fullRefunds = refundedTxs.filter(t => t.status === 'refunded').length;
+        const partialRefunds = refundedTxs.filter(t => t.status === 'partially_refunded').length;
 
-        const completedTxs = transactions.filter((t) => t.status === 'completed');
+        const completedTxs = transactions.filter(t => t.status === 'completed');
         const totalRevenue = completedTxs.reduce((sum, t) => sum + t.amount, 0);
 
         const refundRate = transactions.length > 0 ? (totalRefunds / transactions.length) * 100 : 0;
@@ -932,7 +932,7 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
     );
   }
 
-  async getRevenueByCountry(countryCode: string, query: AnalyticsQuery): Promise<number> {
+  async getRevenueByCountry(_countryCode: string, _query: AnalyticsQuery): Promise<number> {
     // Stub implementation
     return 0;
   }
@@ -958,7 +958,7 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
           }
         >();
 
-        for (const tx of transactions.filter((t) => t.status === 'completed')) {
+        for (const tx of transactions.filter(t => t.status === 'completed')) {
           const existing = userMetrics.get(tx.userId) || {
             totalRevenue: 0,
             transactionCount: 0,
@@ -994,7 +994,7 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
           .map((customer, index) => ({ ...customer, rank: index + 1 }));
 
         const totalRevenue = transactions
-          .filter((t) => t.status === 'completed')
+          .filter(t => t.status === 'completed')
           .reduce((sum, t) => sum + t.amount, 0);
 
         const top10Revenue = topCustomers.slice(0, 10).reduce((sum, c) => sum + c.totalRevenue, 0);
@@ -1025,20 +1025,20 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
       cacheKey,
       async () => {
         const transactions = await this.getTransactionsForQuery(query);
-        const completedTxs = transactions.filter((t) => t.status === 'completed');
+        const completedTxs = transactions.filter(t => t.status === 'completed');
 
         const totalRevenue = completedTxs.reduce((sum, t) => sum + t.amount, 0);
-        const activeUsers = new Set(completedTxs.map((t) => t.userId)).size;
+        const activeUsers = new Set(completedTxs.map(t => t.userId)).size;
         const arpu = activeUsers > 0 ? totalRevenue / activeUsers : 0;
 
         // ARPU by method
         const arpuByMethod = new Map<PaymentMethod, number>();
-        const methods = new Set(completedTxs.map((t) => t.method));
+        const methods = new Set(completedTxs.map(t => t.method));
 
         for (const method of methods) {
-          const methodTxs = completedTxs.filter((t) => t.method === method);
+          const methodTxs = completedTxs.filter(t => t.method === method);
           const methodRevenue = methodTxs.reduce((sum, t) => sum + t.amount, 0);
-          const methodUsers = new Set(methodTxs.map((t) => t.userId)).size;
+          const methodUsers = new Set(methodTxs.map(t => t.userId)).size;
           arpuByMethod.set(method, methodUsers > 0 ? methodRevenue / methodUsers : 0);
         }
 
@@ -1057,7 +1057,7 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
         });
 
         const previousRevenue = previousTxs.reduce((sum, t) => sum + t.amount, 0);
-        const previousUsers = new Set(previousTxs.map((t) => t.userId)).size;
+        const previousUsers = new Set(previousTxs.map(t => t.userId)).size;
         const previousPeriodArpu = previousUsers > 0 ? previousRevenue / previousUsers : 0;
 
         const arpuGrowthRate =
@@ -1108,7 +1108,7 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
       cacheKey,
       async () => {
         const transactions = await this.getTransactionsForQuery(query);
-        const completedTxs = transactions.filter((t) => t.status === 'completed');
+        const completedTxs = transactions.filter(t => t.status === 'completed');
 
         // Calculate LTV per customer
         const customerLTVs = new Map<string, number>();
@@ -1174,12 +1174,12 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
       async () => {
         // Simplified churn analysis - would require subscription data
         const transactions = await this.getTransactionsForQuery(query);
-        const activeCustomers = new Set(transactions.map((t) => t.userId)).size;
+        const activeCustomers = new Set(transactions.map(t => t.userId)).size;
 
         // Simulated churn metrics
         const churnedCustomers = Math.floor(activeCustomers * 0.05); // 5% churn
         const churnRate = 5;
-        const averageRevenuePerCustomer = await this.getARPU(query).then((arpu) => arpu.arpu);
+        const averageRevenuePerCustomer = await this.getARPU(query).then(arpu => arpu.arpu);
         const lostRevenue = churnedCustomers * averageRevenuePerCustomer;
         const lostMRR = lostRevenue / 12; // Approximate MRR
         const recoveredCustomers = Math.floor(churnedCustomers * 0.2); // 20% recovery
@@ -1224,7 +1224,7 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
       async () => {
         const transactions = await this.getTransactionsForQuery(query);
         const monthlyRevenue = transactions
-          .filter((t) => t.status === 'completed')
+          .filter(t => t.status === 'completed')
           .reduce((sum, t) => sum + t.amount, 0);
 
         // Simplified MRR calculation
@@ -1309,17 +1309,17 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
 
     const recentTransactions = recentTxs.length;
     const recentRevenue = recentTxs
-      .filter((t) => t.status === 'completed')
+      .filter(t => t.status === 'completed')
       .reduce((sum, t) => sum + t.amount, 0);
     const recentSuccessRate =
       recentTxs.length > 0
-        ? (recentTxs.filter((t) => t.status === 'completed').length / recentTxs.length) * 100
+        ? (recentTxs.filter(t => t.status === 'completed').length / recentTxs.length) * 100
         : 0;
 
     // Current state
-    const activePayments = recentTxs.filter((t) => t.status === 'processing').length;
-    const pendingPayments = recentTxs.filter((t) => t.status === 'pending').length;
-    const failedPaymentsLast5Min = recentTxs.filter((t) => t.status === 'failed').length;
+    const activePayments = recentTxs.filter(t => t.status === 'processing').length;
+    const pendingPayments = recentTxs.filter(t => t.status === 'pending').length;
+    const failedPaymentsLast5Min = recentTxs.filter(t => t.status === 'failed').length;
 
     // Today's metrics
     const todayTxs = await this.paymentService.getPaymentHistory({
@@ -1328,14 +1328,14 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
     });
 
     const todayRevenue = todayTxs
-      .filter((t) => t.status === 'completed')
+      .filter(t => t.status === 'completed')
       .reduce((sum, t) => sum + t.amount, 0);
     const todayTransactions = todayTxs.length;
     const todaySuccessRate =
       todayTxs.length > 0
-        ? (todayTxs.filter((t) => t.status === 'completed').length / todayTxs.length) * 100
+        ? (todayTxs.filter(t => t.status === 'completed').length / todayTxs.length) * 100
         : 0;
-    const todayActiveUsers = new Set(todayTxs.map((t) => t.userId)).size;
+    const todayActiveUsers = new Set(todayTxs.map(t => t.userId)).size;
 
     // Comparison metrics
     const yesterdayTxs = await this.paymentService.getPaymentHistory({
@@ -1343,7 +1343,7 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
       endDate: todayStart,
     });
     const yesterdayRevenue = yesterdayTxs
-      .filter((t) => t.status === 'completed')
+      .filter(t => t.status === 'completed')
       .reduce((sum, t) => sum + t.amount, 0);
 
     const weekAgoTxs = await this.paymentService.getPaymentHistory({
@@ -1351,7 +1351,7 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
       endDate: new Date(weekAgoStart.getTime() + 24 * 60 * 60 * 1000),
     });
     const weekAgoRevenue = weekAgoTxs
-      .filter((t) => t.status === 'completed')
+      .filter(t => t.status === 'completed')
       .reduce((sum, t) => sum + t.amount, 0);
 
     const monthAgoTxs = await this.paymentService.getPaymentHistory({
@@ -1359,7 +1359,7 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
       endDate: new Date(monthAgoStart.getTime() + 24 * 60 * 60 * 1000),
     });
     const monthAgoRevenue = monthAgoTxs
-      .filter((t) => t.status === 'completed')
+      .filter(t => t.status === 'completed')
       .reduce((sum, t) => sum + t.amount, 0);
 
     // Alerts
@@ -1413,7 +1413,7 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
     // Trigger initial update
     this.getRealtimeMetrics()
       .then(callback)
-      .catch((err) => {
+      .catch(err => {
         this.logger.error('Failed to send initial realtime metrics', err);
       });
 
@@ -1494,7 +1494,7 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
     return this.exports.get(exportId) || null;
   }
 
-  async listExports(userId?: string): Promise<AnalyticsExportResult[]> {
+  async listExports(_userId?: string): Promise<AnalyticsExportResult[]> {
     // In production, filter by userId
     return Array.from(this.exports.values());
   }
@@ -1511,7 +1511,7 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
       if (data.length === 0) return '';
 
       const headers = Object.keys(data[0]).join(',');
-      const rows = data.map((item) => Object.values(item).join(','));
+      const rows = data.map(item => Object.values(item).join(','));
       return [headers, ...rows].join('\n');
     } else if (typeof data === 'object') {
       const headers = Object.keys(data).join(',');
@@ -1550,9 +1550,9 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
    */
 
   async triggerAggregation(
-    period: AnalyticsPeriod,
-    startDate?: Date,
-    endDate?: Date
+    _period: AnalyticsPeriod,
+    _startDate?: Date,
+    _endDate?: Date
   ): Promise<string> {
     const jobId = `agg_${Date.now()}_${crypto.randomUUID().replace(/-/g, '').substring(0, 12)}`;
 
@@ -1677,9 +1677,9 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
       cacheHitRate: cacheStats.hitRate,
       averageQueryTime: 0, // Would calculate from queryMetrics
       averageAggregationTime: 0,
-      activeJobs: Array.from(this.aggregationJobs.values()).filter((j) => j.status === 'running')
+      activeJobs: Array.from(this.aggregationJobs.values()).filter(j => j.status === 'running')
         .length,
-      queuedJobs: Array.from(this.aggregationJobs.values()).filter((j) => j.status === 'pending')
+      queuedJobs: Array.from(this.aggregationJobs.values()).filter(j => j.status === 'pending')
         .length,
       lastAggregation: new Date(),
     };
@@ -1775,9 +1775,10 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
         return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}-${date.getHours()}`;
       case 'daily' as AnalyticsPeriod:
         return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
-      case 'weekly' as AnalyticsPeriod:
+      case 'weekly' as AnalyticsPeriod: {
         const weekNum = Math.floor(date.getDate() / 7);
         return `${date.getFullYear()}-${date.getMonth() + 1}-W${weekNum}`;
+      }
       case 'monthly' as AnalyticsPeriod:
         return `${date.getFullYear()}-${date.getMonth() + 1}`;
       case 'yearly' as AnalyticsPeriod:
@@ -1871,7 +1872,7 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
   private forecastRevenue(timeSeries: TimeSeriesDataPoint[], days: number): TimeSeriesDataPoint[] {
     if (timeSeries.length < 2) return [];
 
-    const values = timeSeries.map((dp) => dp.value);
+    const values = timeSeries.map(dp => dp.value);
     const trend = this.calculateTrend(values);
     const lastValue = values[values.length - 1];
     const lastDate = timeSeries[timeSeries.length - 1].timestamp;

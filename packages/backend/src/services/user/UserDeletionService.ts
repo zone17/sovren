@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * UserDeletionService
  * GDPR COMP-001: Right to Erasure — soft deletion with 30-day grace period,
@@ -24,6 +23,7 @@ interface IDatabase {
   query(sql: string, params?: unknown[]): Promise<{ rows: unknown[] }>;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface ISupabaseClient {
   from<T = Record<string, unknown>>(
     table: string
@@ -74,8 +74,8 @@ export class UserDeletionService {
   private queueInitPromise: Promise<void> | null = null;
 
   constructor(
-    @inject(TYPES.Database) private readonly db: IDatabase,
-    @inject(TYPES.QueueService) private readonly queueService: IQueueService
+    @inject(TYPES.Database as unknown as string) private readonly db: IDatabase,
+    @inject(TYPES.QueueService as unknown as string) private readonly queueService: IQueueService
   ) {
     this.logger = new Logger(UserDeletionService.name);
   }
@@ -95,7 +95,7 @@ export class UserDeletionService {
       })
     )
       .then(() => {})
-      .catch((err) => {
+      .catch(err => {
         this.queueInitPromise = null;
         throw err;
       });
@@ -176,7 +176,7 @@ export class UserDeletionService {
         'user_relationships',
         'user_preferences',
         'user_sessions',
-        'payments',     // anonymised rows can now be removed
+        'payments', // anonymised rows can now be removed
         'users',
       ];
 
@@ -189,7 +189,10 @@ export class UserDeletionService {
       return { userId, tablesCleared };
     } catch (error) {
       this.logger.error('Hard deletion failed', error, { userId });
-      throw new ServiceError('Failed to hard-delete account', { cause: error, context: { userId } });
+      throw new ServiceError('Failed to hard-delete account', {
+        cause: error,
+        context: { userId },
+      });
     }
   }
 
@@ -260,10 +263,7 @@ export class UserDeletionService {
    * Publishes a NIP-09 (kind:5) deletion event to the user's known NOSTR relays.
    * Failure is non-fatal — we log the error and continue.
    */
-  private async broadcastNip09Deletion(
-    userId: string,
-    nostrPubkey: string
-  ): Promise<boolean> {
+  private async broadcastNip09Deletion(userId: string, nostrPubkey: string): Promise<boolean> {
     if (!nostrPubkey) return false;
 
     try {
@@ -282,7 +282,7 @@ export class UserDeletionService {
       // Fire-and-forget — do not await; relay confirmation is best-effort
       pool.publish(DEFAULT_NOSTR_RELAYS, event as never);
       // Allow up to 3 seconds for relays to acknowledge before moving on
-      await new Promise((resolve) => setTimeout(resolve, 3000));
+      await new Promise(resolve => setTimeout(resolve, 3000));
       pool.close(DEFAULT_NOSTR_RELAYS);
 
       this.logger.info('NIP-09 deletion broadcast sent', { userId, nostrPubkey });

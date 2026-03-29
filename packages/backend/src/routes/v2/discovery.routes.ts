@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Discovery API Routes (v2)
  * /api/v2/discovery/*
@@ -43,7 +42,7 @@ router.get(
   optionalAuth,
   validate({ query: searchCreatorsSchema }),
   asyncHandler(async (req, res) => {
-    const params = req.query as z.infer<typeof searchCreatorsSchema>;
+    const params = req.query as unknown as z.infer<typeof searchCreatorsSchema>;
     const responseData = await getDiscoveryService().searchCreators(params);
     res.json(createApiResponse(req, responseData, { raw: true }));
   })

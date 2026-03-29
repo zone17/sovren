@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * QueueService Implementation
  * Wraps BullMQ Queue and Worker classes for centralized queue management
@@ -6,7 +5,7 @@
  * Part of E0-001: BullMQ Infrastructure
  */
 
-import { Queue, Worker, Job } from 'bullmq';
+import { Queue, Worker, Job, type ConnectionOptions } from 'bullmq';
 import Redis from 'ioredis';
 import type {
   IQueueService,
@@ -34,9 +33,10 @@ export function getQueueServiceInstance(): QueueService | null {
  * BullMQ workers use blocking commands (BRPOPLPUSH, BLMOVE) that require
  * maxRetriesPerRequest: null — the shared client's default won't work.
  */
-function createBullMQConnection(): Redis {
+function createBullMQConnection(): ConnectionOptions {
   const baseClient = getRedisClient();
   const opts = baseClient.options;
+  // BullMQ accepts Redis instances as ConnectionOptions at runtime
   return new Redis({
     host: opts.host,
     port: opts.port,
@@ -44,7 +44,7 @@ function createBullMQConnection(): Redis {
     db: opts.db,
     maxRetriesPerRequest: null, // Required for BullMQ blocking commands
     enableReadyCheck: false,
-  });
+  }) as unknown as ConnectionOptions;
 }
 
 export class QueueService implements IQueueService {
@@ -54,7 +54,7 @@ export class QueueService implements IQueueService {
 
   constructor(logger: ILogger) {
     this.logger = logger;
-    singletonInstance = this;
+    singletonInstance = this; // eslint-disable-line @typescript-eslint/no-this-alias
   }
 
   createQueue(name: string, options?: QueueCreateOptions): void {
@@ -154,7 +154,7 @@ export class QueueService implements IQueueService {
 
     if (processor.onCompleted) {
       worker.on('completed', (job: Job<T>) => {
-        processor.onCompleted!(toJobContext(job)).catch((err) => {
+        processor.onCompleted!(toJobContext(job)).catch(err => {
           this.logger.error(`[QueueService] onCompleted handler error for "${processor.name}"`, {
             error: err.message,
           });
@@ -165,7 +165,7 @@ export class QueueService implements IQueueService {
     if (processor.onFailed) {
       worker.on('failed', (job: Job<T> | undefined, err: Error) => {
         if (job) {
-          processor.onFailed!(toJobContext(job), err).catch((handlerErr) => {
+          processor.onFailed!(toJobContext(job), err).catch(handlerErr => {
             this.logger.error(`[QueueService] onFailed handler error for "${processor.name}"`, {
               error: handlerErr.message,
             });
@@ -174,7 +174,7 @@ export class QueueService implements IQueueService {
       });
     }
 
-    worker.on('error', (err) => {
+    worker.on('error', err => {
       this.logger.error(`[QueueService] Worker error for "${processor.name}"`, {
         error: err.message,
       });

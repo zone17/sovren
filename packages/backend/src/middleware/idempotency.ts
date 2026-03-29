@@ -19,6 +19,10 @@ import { getRedisClient, isRedisAvailable } from '../lib/redis';
 const REDIS_TTL_SECONDS = 24 * 60 * 60; // 24 hours
 const REDIS_KEY_PREFIX = 'idempotency:';
 const MEMORY_MAX_ENTRIES = 1000;
+const IDEMPOTENCY_KEY_MAX_LENGTH = 64;
+
+/** UUID v4 format: 8-4-4-4-12 hex characters */
+const UUID_V4_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 interface CachedResponse {
   statusCode: number;
@@ -93,6 +97,25 @@ export function idempotency(req: Request, res: Response, next: NextFunction): vo
   }
 
   const key = idempotencyKey.trim();
+
+  // Validate key length and format
+  if (key.length > IDEMPOTENCY_KEY_MAX_LENGTH) {
+    res.status(400).json({
+      success: false,
+      error: 'Invalid Idempotency-Key',
+      message: `Idempotency key must not exceed ${IDEMPOTENCY_KEY_MAX_LENGTH} characters`,
+    });
+    return;
+  }
+
+  if (!UUID_V4_REGEX.test(key)) {
+    res.status(400).json({
+      success: false,
+      error: 'Invalid Idempotency-Key',
+      message: 'Idempotency key must be a valid UUID v4',
+    });
+    return;
+  }
 
   // Async wrapper so we can await the cache lookup before calling next()
   (async () => {
