@@ -162,9 +162,10 @@ export class PaymentController {
           transaction.userId === req.user?.nostr_pubkey ||
           (req.user?.id && transaction.userId === req.user.id);
         if (!ownsTransaction) {
-          res
-            .status(403)
-            .json({ success: false, error: 'Forbidden: you can only refund your own transactions' });
+          res.status(403).json({
+            success: false,
+            error: 'Forbidden: you can only refund your own transactions',
+          });
           return;
         }
       }
@@ -338,7 +339,10 @@ export class PaymentController {
       }
     }
 
-    const result = await this.paymentService.processPayment({ invoiceId });
+    const result = await this.paymentService.processPayment({
+      invoiceId,
+      method: 'lightning' as any,
+    });
 
     res.status(200).json(createApiResponse(req, result, startTime));
   });
