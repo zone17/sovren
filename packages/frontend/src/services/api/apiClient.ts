@@ -51,27 +51,19 @@ class ApiClient {
   }
 
   /**
-   * Lazy token accessor — checks localStorage on every call so tokens
-   * set after module initialization (e.g. by auth setup) are picked up.
+   * Token accessor — JWT is now stored in HttpOnly cookie (set by backend).
+   * This in-memory token is only used for demo/testing mode fallback.
    */
   private getEffectiveToken(): string | null {
-    if (this._token) return this._token;
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('auth_token');
-    }
-    return null;
+    // In cookie-based auth, token is sent automatically via credentials: 'include'.
+    // In-memory token only used for demo/fallback mode.
+    return this._token;
   }
 
   setToken(token: string | null): void {
     this._token = token;
     this._sessionExpiredDispatched = false;
-    if (typeof window !== 'undefined') {
-      if (token) {
-        localStorage.setItem('auth_token', token);
-      } else {
-        localStorage.removeItem('auth_token');
-      }
-    }
+    // Token is stored in HttpOnly cookie by the backend, not in localStorage.
   }
 
   getToken(): string | null {
@@ -102,6 +94,8 @@ class ApiClient {
       'Content-Type': 'application/json',
     };
 
+    // Only add Authorization header for demo/fallback mode (in-memory token).
+    // In normal operation, the HttpOnly cookie is sent automatically.
     const token = this.getEffectiveToken();
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
@@ -110,6 +104,7 @@ class ApiClient {
     const response = await fetch(url.toString(), {
       method,
       headers,
+      credentials: 'include',
       body: body ? JSON.stringify(body) : undefined,
     });
 

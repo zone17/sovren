@@ -16,6 +16,7 @@ function createMockChain(defaultResult: any = { data: null, error: null }) {
     delete: vi.fn().mockImplementation(() => chain),
     eq: vi.fn().mockImplementation(() => chain),
     neq: vi.fn().mockImplementation(() => chain),
+    in: vi.fn().mockImplementation(() => chain),
     gt: vi.fn().mockImplementation(() => chain),
     gte: vi.fn().mockImplementation(() => chain),
     lt: vi.fn().mockImplementation(() => chain),
@@ -172,9 +173,14 @@ describe('SessionService', () => {
         },
       ];
 
-      mockChain.then.mockImplementation((resolve: any) =>
-        resolve({ data: mockSessions, error: null })
-      );
+      // First then() call: user_sessions query returns sessions
+      // Second then() call: session_activity query returns empty activity
+      let callCount = 0;
+      mockChain.then.mockImplementation((resolve: any) => {
+        callCount++;
+        if (callCount === 1) return resolve({ data: mockSessions, error: null });
+        return resolve({ data: [], error: null }); // activity rows
+      });
 
       const result = await sessionService.listUserSessions(userId);
 
@@ -186,6 +192,7 @@ describe('SessionService', () => {
     it('should handle empty session list', async () => {
       const userId = '123e4567-e89b-12d3-a456-426614174000';
 
+      // Both calls (user_sessions + session_activity) return empty
       mockChain.then.mockImplementation((resolve: any) => resolve({ data: [], error: null }));
 
       const result = await sessionService.listUserSessions(userId);

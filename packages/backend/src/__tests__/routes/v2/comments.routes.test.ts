@@ -33,7 +33,7 @@ vi.mock('express', async () => {
     Router: () => {
       const mockRouter: Record<string, unknown> = {};
       const methods = ['get', 'post', 'put', 'delete', 'patch'];
-      methods.forEach((method) => {
+      methods.forEach(method => {
         mockRouter[method] = vi.fn((...args: unknown[]) => {
           const path = args[0] as string;
           const fns = args.slice(1) as HandlerFn[];
@@ -129,20 +129,23 @@ function makeResponse(): {
   res: Response;
   json: ReturnType<typeof vi.fn>;
   status: ReturnType<typeof vi.fn>;
+  send: ReturnType<typeof vi.fn>;
 } {
   const json = vi.fn();
-  const statusFn = vi.fn().mockReturnThis();
+  const send = vi.fn();
+  const statusFn = vi.fn().mockImplementation(() => ({ json, send }));
   const res = {
     json,
+    send,
     status: statusFn,
   } as unknown as Response;
-  return { res, json, status: statusFn };
+  return { res, json, status: statusFn, send };
 }
 
 const nextFn = vi.fn() as unknown as NextFunction;
 
 function getRoute(method: string, path: string): RouteEntry | undefined {
-  return capturedRoutes.find((r) => r.method === method && r.path === path);
+  return capturedRoutes.find(r => r.method === method && r.path === path);
 }
 
 // ============================================================================
@@ -168,7 +171,7 @@ describe('Comments Routes (v2)', () => {
 
   describe('Route Registration', () => {
     it('registers all expected comment routes', () => {
-      const routePaths = capturedRoutes.map((r) => `${r.method} ${r.path}`);
+      const routePaths = capturedRoutes.map(r => `${r.method} ${r.path}`);
 
       expect(routePaths).toContain('GET /:commentId/replies');
       expect(routePaths).toContain('GET /:contentId');
@@ -178,7 +181,7 @@ describe('Comments Routes (v2)', () => {
 
     it('registers /:commentId/replies BEFORE /:contentId (named segment ordering)', () => {
       const getRouteIndex = (method: string, path: string) =>
-        capturedRoutes.findIndex((r) => r.method === method && r.path === path);
+        capturedRoutes.findIndex(r => r.method === method && r.path === path);
 
       const repliesIdx = getRouteIndex('GET', '/:commentId/replies');
       const listIdx = getRouteIndex('GET', '/:contentId');
@@ -422,16 +425,17 @@ describe('Comments Routes (v2)', () => {
   // ==========================================================================
 
   describe('DELETE /:commentId', () => {
-    it('returns 200 with null data on success', async () => {
+    it('returns 204 with no body on success', async () => {
       mockDeleteComment.mockResolvedValue(undefined);
 
       const req = makeRequest({ params: { commentId: COMMENT_ID } });
-      const { res, json } = makeResponse();
+      const { res, status, send } = makeResponse();
 
       const route = getRoute('DELETE', '/:commentId')!;
       await route.handler(req, res, nextFn);
 
-      expect(json).toHaveBeenCalledWith({ success: true, data: null });
+      expect(status).toHaveBeenCalledWith(204);
+      expect(send).toHaveBeenCalled();
     });
 
     it('throws ValidationError for non-UUID commentId', async () => {
@@ -451,11 +455,12 @@ describe('Comments Routes (v2)', () => {
         user: { nostr_pubkey: 'owner-pubkey', role: 'creator' } as Request['user'],
         params: { commentId: COMMENT_ID_2 },
       });
-      const { res } = makeResponse();
+      const { res, status } = makeResponse();
 
       const route = getRoute('DELETE', '/:commentId')!;
       await route.handler(req, res, nextFn);
 
+      expect(status).toHaveBeenCalledWith(204);
       expect(mockDeleteComment).toHaveBeenCalledWith('owner-pubkey', COMMENT_ID_2);
     });
 

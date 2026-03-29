@@ -33,49 +33,35 @@ const ANALYTICS_API_BASE =
 const WEBSOCKET_URL = import.meta.env.VITE_ANALYTICS_WS_URL || 'ws://localhost:3001/analytics';
 
 // 🔐 **AUTH HELPERS**
-const getAuthToken = (): string | null => {
-  return localStorage.getItem('auth_token');
-};
-
 const getCurrentUser = (): User | null => {
   const demoUser = localStorage.getItem('demo_user');
   if (demoUser) {
     return JSON.parse(demoUser);
   }
 
-  const token = getAuthToken();
-  if (!token) return null;
-
-  try {
-    // Decode JWT payload (basic implementation)
-    const payload = JSON.parse(atob(token.split('.')[1])) as {
-      sub?: string;
-      email?: string;
-      name?: string;
-      nostr_pubkey?: string;
-      role?: 'creator' | 'supporter' | 'admin';
-      iat?: number;
-    };
-
-    return {
-      id: payload.sub || payload.nostr_pubkey || 'unknown',
-      email: payload.email || '',
-      name: payload.name || payload.email || 'Unknown',
-      nostr_pubkey: payload.nostr_pubkey,
-      role: payload.role || 'supporter',
-      avatar_url: undefined,
-      bio: undefined,
-      created_at: new Date((payload.iat || 0) * 1000).toISOString(),
-      updated_at: new Date().toISOString(),
-      email_verified: false,
-      nostr_verified: false,
-      permissions: [],
-    };
-  } catch (error) {
-    // Invalid token
-    localStorage.removeItem('auth_token');
+  // User identity is now managed via httpOnly cookies (credentials: 'include').
+  // The nostr pubkey is still stored in localStorage for non-sensitive metadata.
+  // Use it as the user ID for query params; the backend resolves full identity
+  // from the session cookie.
+  const pubkey = localStorage.getItem('nostr_pubkey');
+  if (!pubkey) {
     return null;
   }
+
+  return {
+    id: pubkey,
+    email: '',
+    name: pubkey.slice(0, 8),
+    nostr_pubkey: pubkey,
+    role: 'supporter',
+    avatar_url: undefined,
+    bio: undefined,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    email_verified: false,
+    nostr_verified: true,
+    permissions: [],
+  };
 };
 
 // 📡 **REAL-TIME ANALYTICS WEBSOCKET**
@@ -92,15 +78,12 @@ class AnalyticsWebSocketManager {
     }
 
     try {
-      const token = getAuthToken();
-      if (!token) {
-        throw new AnalyticsError(
-          'Authentication required for real-time analytics',
-          'AUTH_REQUIRED'
-        );
-      }
-
-      const wsUrl = `${WEBSOCKET_URL}?token=${token}&userId=${userId}`;
+      // WebSocket connections rely on the auth cookie sent during the HTTP upgrade
+      // handshake (credentials are included automatically by the browser for same-origin
+      // or CORS-allowed origins). The WS server must read req.cookies on upgrade to
+      // authenticate the user. The userId query param is used for routing/subscription
+      // purposes only — it is NOT a security credential.
+      const wsUrl = `${WEBSOCKET_URL}?userId=${userId}`;
       this.ws = new WebSocket(wsUrl);
 
       this.ws.onopen = () => {
@@ -110,10 +93,10 @@ class AnalyticsWebSocketManager {
         this.reconnectDelay = 1000;
       };
 
-      this.ws.onmessage = (event) => {
+      this.ws.onmessage = event => {
         try {
           const analyticsEvent: AnalyticsEvent = JSON.parse(event.data);
-          this.eventListeners.forEach((listener) => listener(analyticsEvent));
+          this.eventListeners.forEach(listener => listener(analyticsEvent));
         } catch (error) {
           // eslint-disable-next-line no-console
           console.error('Failed to parse analytics event:', error);
@@ -126,7 +109,7 @@ class AnalyticsWebSocketManager {
         this.attemptReconnect(userId);
       };
 
-      this.ws.onerror = (error) => {
+      this.ws.onerror = error => {
         // eslint-disable-next-line no-console
         console.error('📡 Analytics WebSocket error:', error);
       };
@@ -181,7 +164,7 @@ class AnalyticsWebSocketManager {
 class AnalyticsServiceImpl {
   private wsManager = new AnalyticsWebSocketManager();
   private cache = new Map<string, { data: unknown; timestamp: number; ttl: number }>();
-  private retryDelay: (attempt: number) => number = (attempt) => Math.pow(2, attempt) * 1000;
+  private retryDelay: (attempt: number) => number = attempt => Math.pow(2, attempt) * 1000;
   private readonly CACHE_TTL = {
     earnings: 5 * 60 * 1000, // 5 minutes
     payments: 2 * 60 * 1000, // 2 minutes
@@ -199,11 +182,6 @@ class AnalyticsServiceImpl {
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        const token = getAuthToken();
-        if (!token) {
-          throw new AnalyticsError('Authentication required', 'AUTH_REQUIRED');
-        }
-
         // Add timeout to prevent hanging requests
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
@@ -211,9 +189,9 @@ class AnalyticsServiceImpl {
         const response = await fetch(`${ANALYTICS_API_BASE}${endpoint}`, {
           ...options,
           signal: controller.signal,
+          credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
             ...options.headers,
           },
         });
@@ -258,7 +236,7 @@ class AnalyticsServiceImpl {
         }
 
         // Wait before retry (exponential backoff)
-        await new Promise((resolve) => setTimeout(resolve, this.retryDelay(attempt)));
+        await new Promise(resolve => setTimeout(resolve, this.retryDelay(attempt)));
       }
     }
 
@@ -345,7 +323,7 @@ class AnalyticsServiceImpl {
         `/payments?${queryParams.toString()}`
       );
 
-      const payments = data.map((payment) => validateLightningPayment(payment));
+      const payments = data.map(payment => validateLightningPayment(payment));
       this.setCachedData(cacheKey, payments, this.CACHE_TTL.payments);
 
       return payments;
@@ -428,12 +406,11 @@ class AnalyticsServiceImpl {
         throw new AnalyticsError('User authentication required', 'AUTH_REQUIRED');
       }
 
-      const token = getAuthToken();
       const response = await fetch(`${ANALYTICS_API_BASE}/export`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ ...exportConfig, userId: user.id }),
       });
@@ -613,7 +590,7 @@ export const useRealTimeAnalytics = () => {
     await analyticsService.connectRealTime();
 
     // Subscribe to events and invalidate relevant queries
-    return analyticsService.subscribeToEvents((event) => {
+    return analyticsService.subscribeToEvents(event => {
       switch (event.type) {
         case 'payment_received':
           queryClient.invalidateQueries({ queryKey: analyticsKeys.all });

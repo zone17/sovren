@@ -122,6 +122,7 @@ export class AuthService {
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -138,10 +139,7 @@ export class AuthService {
         };
       }
 
-      // Store token in localStorage for subsequent requests
-      if (result.data?.token) {
-        localStorage.setItem('auth_token', result.data.token);
-      }
+      // Token is now stored in HttpOnly cookie by the backend automatically.
 
       return {
         user: result.data?.user || null,
@@ -161,6 +159,7 @@ export class AuthService {
     try {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -180,10 +179,7 @@ export class AuthService {
         };
       }
 
-      // Store token if provided
-      if (result.data?.token) {
-        localStorage.setItem('auth_token', result.data.token);
-      }
+      // Token is now stored in HttpOnly cookie by the backend automatically.
 
       return {
         user: result.data?.user || null,
@@ -203,6 +199,7 @@ export class AuthService {
     try {
       const response = await fetch('/api/auth/challenge', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -231,6 +228,7 @@ export class AuthService {
     try {
       const response = await fetch('/api/auth/authenticate', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -247,10 +245,7 @@ export class AuthService {
         };
       }
 
-      // Store JWT token
-      if (result.data?.token) {
-        localStorage.setItem('auth_token', result.data.token);
-      }
+      // Token is now stored in HttpOnly cookie by the backend automatically.
 
       return {
         user: result.data?.user || null,
@@ -268,20 +263,11 @@ export class AuthService {
   // 🔍 Verify Current Authentication
   async verifyAuth(): Promise<AuthResponse> {
     try {
-      const token = localStorage.getItem('auth_token');
-
-      if (!token) {
-        return {
-          user: null,
-          session: null,
-          error: 'No authentication token found',
-        };
-      }
-
+      // Token is in HttpOnly cookie, sent automatically with credentials: 'include'
       const response = await fetch('/api/auth/verify', {
         method: 'GET',
+        credentials: 'include',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
@@ -289,8 +275,6 @@ export class AuthService {
       const result = await safeParseApiResponse(response, AuthVerificationResponseSchema);
 
       if (!response.ok) {
-        // Clear invalid token
-        localStorage.removeItem('auth_token');
         return {
           user: null,
           session: null,
@@ -300,10 +284,9 @@ export class AuthService {
 
       return {
         user: result.data?.user || null,
-        session: { token, valid: result.data?.valid || false },
+        session: { token: 'httponly-cookie', valid: result.data?.valid || false },
       };
     } catch (error: unknown) {
-      localStorage.removeItem('auth_token');
       return {
         user: null,
         session: null,
@@ -315,26 +298,17 @@ export class AuthService {
   // 🚪 Logout
   async logout(): Promise<{ success: boolean; error?: string }> {
     try {
-      const token = localStorage.getItem('auth_token');
-
-      if (token) {
-        // Call backend logout if we have a token
-        await fetch('/api/auth/logout', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-      }
-
-      // Clear local storage
-      localStorage.removeItem('auth_token');
+      // Call backend logout — HttpOnly cookie cleared server-side
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
       return { success: true };
     } catch (error: unknown) {
-      // Still clear local storage even if backend call fails
-      localStorage.removeItem('auth_token');
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Logout failed',
@@ -343,34 +317,17 @@ export class AuthService {
   }
 
   // 🔑 Get Current Token
+  // Token is stored in HttpOnly cookie — not accessible from JS.
+  // This method is kept for backward compatibility but returns null.
   getToken(): string | null {
-    return localStorage.getItem('auth_token');
+    return null;
   }
 
-  // 👤 Get Current User from Local Storage
+  // 👤 Get Current User — requires a server call since JWT is in HttpOnly cookie
   getCurrentUser(): User | null {
-    const token = this.getToken();
-    if (!token) return null;
-
-    try {
-      // Decode JWT payload (basic implementation)
-      const payload = JSON.parse(atob(token.split('.')[1])) as {
-        sub?: string;
-        nostr_pubkey?: string;
-        role?: 'creator' | 'supporter' | 'admin';
-        iat?: number;
-      };
-
-      return {
-        id: payload.sub || payload.nostr_pubkey || 'unknown',
-        nostr_pubkey: payload.nostr_pubkey,
-        role: payload.role,
-        created_at: new Date((payload.iat || 0) * 1000).toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-    } catch {
-      return null;
-    }
+    // Cannot decode JWT from HttpOnly cookie client-side.
+    // Use verifyAuth() for async user retrieval instead.
+    return null;
   }
 }
 
@@ -388,7 +345,7 @@ export async function generateNostrKeys(): Promise<{ publicKey: string; privateK
   return {
     publicKey,
     privateKey: Array.from(privateKey)
-      .map((b) => b.toString(16).padStart(2, '0'))
+      .map(b => b.toString(16).padStart(2, '0'))
       .join(''),
   };
 }
@@ -398,7 +355,7 @@ export async function signNostrChallenge(privateKey: string, challenge: string):
 
   // Convert hex string back to Uint8Array
   const privateKeyBytes = new Uint8Array(
-    privateKey.match(/.{1,2}/g)?.map((byte) => parseInt(byte, 16)) || []
+    privateKey.match(/.{1,2}/g)?.map(byte => parseInt(byte, 16)) || []
   );
 
   const event = {

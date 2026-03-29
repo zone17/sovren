@@ -80,7 +80,7 @@ describe('DiscoveryPage', () => {
         </MemoryRouter>
       );
       expect(screen.getByText('Discover Creators')).toBeInTheDocument();
-      expect(screen.getByText(/Find and support creators building on NOSTR/)).toBeInTheDocument();
+      expect(screen.getByText(/Find and support independent creators/)).toBeInTheDocument();
     });
 
     it('renders search input', () => {
@@ -136,7 +136,8 @@ describe('DiscoveryPage', () => {
           <DiscoveryPage />
         </MemoryRouter>
       );
-      expect(screen.getByRole('status')).toBeInTheDocument();
+      const statusElements = screen.getAllByRole('status');
+      expect(statusElements.length).toBeGreaterThanOrEqual(1);
     });
 
     it('shows error state with retry button', () => {

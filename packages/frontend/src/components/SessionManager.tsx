@@ -118,14 +118,14 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
 
       const [sessionsResponse, statsResponse] = await Promise.all([
         fetch('/api/sessions', {
+          credentials: 'include',
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
             'Content-Type': 'application/json',
           },
         }),
         fetch('/api/sessions/stats', {
+          credentials: 'include',
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
             'Content-Type': 'application/json',
           },
         }),
@@ -156,8 +156,8 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
     try {
       const response = await fetch(`/api/sessions/${sessionId}`, {
         method: 'DELETE',
+        credentials: 'include',
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
           'Content-Type': 'application/json',
         },
       });
@@ -172,7 +172,7 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
       }
 
       // Update local state
-      setSessions((prev) => prev.filter((s) => s.id !== sessionId));
+      setSessions(prev => prev.filter(s => s.id !== sessionId));
       setShowRevokeDialog(false);
       setSelectedSession(null);
 
@@ -187,8 +187,8 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
     try {
       const response = await fetch('/api/sessions/revoke-others', {
         method: 'POST',
+        credentials: 'include',
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
           'Content-Type': 'application/json',
         },
       });
@@ -217,8 +217,8 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
     try {
       await fetch(`/api/sessions/${sessionId}/activity`, {
         method: 'PUT',
+        credentials: 'include',
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ activity_type: 'page_view' }),
@@ -232,33 +232,19 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
   const getDeviceIcon = (deviceType: string) => {
     switch (deviceType) {
       case 'mobile':
-        return <Smartphone className="h-4 w-4" />;
+        return <Smartphone className='h-4 w-4' />;
       case 'tablet':
-        return <Tablet className="h-4 w-4" />;
+        return <Tablet className='h-4 w-4' />;
       case 'desktop':
-        return <Monitor className="h-4 w-4" />;
+        return <Monitor className='h-4 w-4' />;
       default:
-        return <Monitor className="h-4 w-4" />;
-    }
-  };
-
-  // 🎨 Device Badge Color
-  const getDeviceBadgeColor = (deviceType: string) => {
-    switch (deviceType) {
-      case 'mobile':
-        return 'bg-blue-100 text-blue-800';
-      case 'tablet':
-        return 'bg-purple-100 text-purple-800';
-      case 'desktop':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-muted text-foreground';
+        return <Monitor className='h-4 w-4' />;
     }
   };
 
   // 🔍 Filter and Sort Sessions
   const filteredAndSortedSessions = sessions
-    .filter((session) => {
+    .filter(session => {
       const matchesSearch =
         session.device_info.browser.toLowerCase().includes(searchQuery.toLowerCase()) ||
         session.device_info.os.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -291,7 +277,7 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
   if (isLoading) {
     return (
       <div className={`flex items-center justify-center p-8 ${className}`}>
-        <RefreshCw className="h-6 w-6 animate-spin mr-2" />
+        <RefreshCw className='h-6 w-6 animate-spin mr-2' />
         <span>Loading sessions...</span>
       </div>
     );
@@ -301,50 +287,50 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
     <div className={`space-y-6 ${className}`}>
       {/* 📊 Session Statistics */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <Shield className="h-5 w-5 text-blue-500" />
+            <CardContent className='p-4'>
+              <div className='flex items-center space-x-2'>
+                <Shield className='h-5 w-5 text-blue-500' />
                 <div>
-                  <p className="text-sm font-medium">Active Sessions</p>
-                  <p className="text-2xl font-bold">{stats.total_active_sessions}</p>
+                  <p className='text-sm font-medium'>Active Sessions</p>
+                  <p className='text-2xl font-bold'>{stats.total_active_sessions}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <Clock className="h-5 w-5 text-green-500" />
+            <CardContent className='p-4'>
+              <div className='flex items-center space-x-2'>
+                <Clock className='h-5 w-5 text-green-500' />
                 <div>
-                  <p className="text-sm font-medium">Recent Activity</p>
-                  <p className="text-2xl font-bold">{stats.recent_activity}</p>
+                  <p className='text-sm font-medium'>Recent Activity</p>
+                  <p className='text-2xl font-bold'>{stats.recent_activity}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <Monitor className="h-5 w-5 text-purple-500" />
+            <CardContent className='p-4'>
+              <div className='flex items-center space-x-2'>
+                <Monitor className='h-5 w-5 text-purple-500' />
                 <div>
-                  <p className="text-sm font-medium">Desktop</p>
-                  <p className="text-2xl font-bold">{stats.sessions_by_device.desktop || 0}</p>
+                  <p className='text-sm font-medium'>Desktop</p>
+                  <p className='text-2xl font-bold'>{stats.sessions_by_device.desktop || 0}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <Smartphone className="h-5 w-5 text-orange-500" />
+            <CardContent className='p-4'>
+              <div className='flex items-center space-x-2'>
+                <Smartphone className='h-5 w-5 text-orange-500' />
                 <div>
-                  <p className="text-sm font-medium">Mobile</p>
-                  <p className="text-2xl font-bold">{stats.sessions_by_device.mobile || 0}</p>
+                  <p className='text-sm font-medium'>Mobile</p>
+                  <p className='text-2xl font-bold'>{stats.sessions_by_device.mobile || 0}</p>
                 </div>
               </div>
             </CardContent>
@@ -355,63 +341,63 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
       {/* 🔍 Search and Filter Controls */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
+          <CardTitle className='flex items-center justify-between'>
             <span>Active Sessions</span>
-            <div className="flex items-center space-x-2">
-              <Button variant="outline" size="sm" onClick={loadSessions} disabled={isLoading}>
+            <div className='flex items-center space-x-2'>
+              <Button variant='outline' size='sm' onClick={loadSessions} disabled={isLoading}>
                 <RefreshCw className={`h-4 w-4 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
                 Refresh
               </Button>
               <Button
-                variant="destructive"
-                size="sm"
+                variant='destructive'
+                size='sm'
                 onClick={() => setShowBulkRevokeDialog(true)}
                 disabled={sessions.length <= 1}
               >
-                <Trash2 className="h-4 w-4 mr-1" />
+                <Trash2 className='h-4 w-4 mr-1' />
                 Revoke Others
               </Button>
             </div>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className='space-y-4'>
           {/* Search and Filter Bar */}
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <Label htmlFor="search">Search Sessions</Label>
+          <div className='flex flex-col sm:flex-row gap-4'>
+            <div className='flex-1'>
+              <Label htmlFor='search'>Search Sessions</Label>
               <Input
-                id="search"
-                placeholder="Search by browser, OS, IP, or location..."
+                id='search'
+                placeholder='Search by browser, OS, IP, or location...'
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={e => setSearchQuery(e.target.value)}
               />
             </div>
-            <div className="flex gap-2">
+            <div className='flex gap-2'>
               <div>
-                <Label htmlFor="sort">Sort By</Label>
+                <Label htmlFor='sort'>Sort By</Label>
                 <select
-                  id="sort"
-                  className="w-full p-2 border rounded-md"
+                  id='sort'
+                  className='w-full p-2 border rounded-md'
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as any)}
+                  onChange={e => setSortBy(e.target.value as any)}
                 >
-                  <option value="activity">Last Activity</option>
-                  <option value="created">Created Date</option>
-                  <option value="device">Device Type</option>
+                  <option value='activity'>Last Activity</option>
+                  <option value='created'>Created Date</option>
+                  <option value='device'>Device Type</option>
                 </select>
               </div>
               <div>
-                <Label htmlFor="filter">Filter Device</Label>
+                <Label htmlFor='filter'>Filter Device</Label>
                 <select
-                  id="filter"
-                  className="w-full p-2 border rounded-md"
+                  id='filter'
+                  className='w-full p-2 border rounded-md'
                   value={filterDevice}
-                  onChange={(e) => setFilterDevice(e.target.value)}
+                  onChange={e => setFilterDevice(e.target.value)}
                 >
-                  <option value="all">All Devices</option>
-                  <option value="desktop">Desktop</option>
-                  <option value="mobile">Mobile</option>
-                  <option value="tablet">Tablet</option>
+                  <option value='all'>All Devices</option>
+                  <option value='desktop'>Desktop</option>
+                  <option value='mobile'>Mobile</option>
+                  <option value='tablet'>Tablet</option>
                 </select>
               </div>
             </div>
@@ -419,22 +405,22 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
 
           {/* Error Display */}
           {error && (
-            <Alert variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
+            <Alert variant='destructive'>
+              <AlertTriangle className='h-4 w-4' />
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
 
           {/* Sessions List */}
-          <div className="space-y-3">
+          <div className='space-y-3'>
             {filteredAndSortedSessions.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
+              <div className='text-center py-8 text-muted-foreground'>
                 {searchQuery || filterDevice !== 'all'
                   ? 'No sessions match your search criteria'
                   : 'No active sessions found'}
               </div>
             ) : (
-              filteredAndSortedSessions.map((session) => (
+              filteredAndSortedSessions.map(session => (
                 <SessionCard
                   key={session.id}
                   session={session}
@@ -461,14 +447,14 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
             </DialogDescription>
           </DialogHeader>
           {selectedSession && (
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
+            <div className='space-y-2'>
+              <div className='flex items-center space-x-2'>
                 {getDeviceIcon(selectedSession.device_info.deviceType)}
-                <span className="font-medium">
+                <span className='font-medium'>
                   {selectedSession.device_info.browser} on {selectedSession.device_info.os}
                 </span>
               </div>
-              <div className="text-sm text-muted-foreground">
+              <div className='text-sm text-muted-foreground'>
                 <div>IP: {selectedSession.ip_address}</div>
                 <div>
                   Last active: {new Date(selectedSession.last_activity_at).toLocaleString()}
@@ -482,11 +468,11 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowRevokeDialog(false)}>
+            <Button variant='outline' onClick={() => setShowRevokeDialog(false)}>
               Cancel
             </Button>
             <Button
-              variant="destructive"
+              variant='destructive'
               onClick={() => selectedSession && handleRevokeSession(selectedSession.id)}
             >
               Revoke Session
@@ -505,19 +491,19 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
               device, but all other devices will be logged out.
             </DialogDescription>
           </DialogHeader>
-          <div className="bg-yellow-50 p-4 rounded-md">
-            <div className="flex items-center space-x-2">
-              <AlertTriangle className="h-5 w-5 text-yellow-600" />
-              <span className="font-medium text-yellow-800">
-                This will affect {sessions.filter((s) => !s.is_current).length} sessions
+          <div className='bg-yellow-50 p-4 rounded-md'>
+            <div className='flex items-center space-x-2'>
+              <AlertTriangle className='h-5 w-5 text-yellow-600' />
+              <span className='font-medium text-yellow-800'>
+                This will affect {sessions.filter(s => !s.is_current).length} sessions
               </span>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowBulkRevokeDialog(false)}>
+            <Button variant='outline' onClick={() => setShowBulkRevokeDialog(false)}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleRevokeOtherSessions}>
+            <Button variant='destructive' onClick={handleRevokeOtherSessions}>
               Revoke All Others
             </Button>
           </DialogFooter>
@@ -551,10 +537,10 @@ const SessionCard: React.FC<SessionCardProps> = ({
     <Card
       className={`transition-all hover:shadow-md ${isCurrentSession ? 'ring-2 ring-blue-500' : ''}`}
     >
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-2">
+      <CardContent className='p-4'>
+        <div className='flex items-center justify-between'>
+          <div className='flex items-center space-x-3'>
+            <div className='flex items-center space-x-2'>
               {React.createElement(
                 session.device_info.deviceType === 'mobile'
                   ? Smartphone
@@ -564,62 +550,62 @@ const SessionCard: React.FC<SessionCardProps> = ({
                 { className: 'h-5 w-5 text-muted-foreground' }
               )}
               <div>
-                <div className="flex items-center space-x-2">
-                  <span className="font-medium">
+                <div className='flex items-center space-x-2'>
+                  <span className='font-medium'>
                     {session.device_info.browser} {session.device_info.browserVersion}
                   </span>
                   <Badge className={getDeviceBadgeColor(session.device_info.deviceType)}>
                     {session.device_info.deviceType}
                   </Badge>
-                  {isCurrentSession && <Badge variant="default">Current</Badge>}
+                  {isCurrentSession && <Badge variant='default'>Current</Badge>}
                   {isRecentActivity && (
-                    <div className="flex items-center space-x-1">
-                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                      <span className="text-xs text-green-600">Active</span>
+                    <div className='flex items-center space-x-1'>
+                      <div className='w-2 h-2 bg-green-500 rounded-full animate-pulse' />
+                      <span className='text-xs text-green-600'>Active</span>
                     </div>
                   )}
                 </div>
-                <div className="text-sm text-muted-foreground">
+                <div className='text-sm text-muted-foreground'>
                   {session.device_info.os} {session.device_info.osVersion}
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center space-x-4">
-            <div className="text-right text-sm">
-              <div className="flex items-center space-x-1 text-muted-foreground">
-                <MapPin className="h-3 w-3" />
+          <div className='flex items-center space-x-4'>
+            <div className='text-right text-sm'>
+              <div className='flex items-center space-x-1 text-muted-foreground'>
+                <MapPin className='h-3 w-3' />
                 <span>
                   {session.location?.city}, {session.location?.country}
                 </span>
               </div>
-              <div className="flex items-center space-x-1 text-muted-foreground">
-                <Wifi className="h-3 w-3" />
+              <div className='flex items-center space-x-1 text-muted-foreground'>
+                <Wifi className='h-3 w-3' />
                 <span>{session.ip_address}</span>
               </div>
-              <div className="flex items-center space-x-1 text-muted-foreground">
-                <Clock className="h-3 w-3" />
+              <div className='flex items-center space-x-1 text-muted-foreground'>
+                <Clock className='h-3 w-3' />
                 <span>{lastActivity.toLocaleString()}</span>
               </div>
             </div>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  <MoreVertical className="h-4 w-4" />
+                <Button variant='ghost' size='sm'>
+                  <MoreVertical className='h-4 w-4' />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align='end'>
                 <DropdownMenuItem onClick={onViewDetails}>View Details</DropdownMenuItem>
                 <DropdownMenuItem onClick={onUpdateActivity}>Update Activity</DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={onRevoke}
                   disabled={isCurrentSession}
-                  className="text-red-600"
+                  className='text-red-600'
                 >
-                  <Trash2 className="h-4 w-4 mr-2" />
+                  <Trash2 className='h-4 w-4 mr-2' />
                   Revoke Session
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -628,25 +614,25 @@ const SessionCard: React.FC<SessionCardProps> = ({
         </div>
 
         {/* Session Details */}
-        <div className="mt-3 pt-3 border-t">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs text-muted-foreground">
+        <div className='mt-3 pt-3 border-t'>
+          <div className='grid grid-cols-2 md:grid-cols-4 gap-4 text-xs text-muted-foreground'>
             <div>
-              <span className="font-medium">Created:</span>
+              <span className='font-medium'>Created:</span>
               <br />
               {new Date(session.created_at).toLocaleDateString()}
             </div>
             <div>
-              <span className="font-medium">Expires:</span>
+              <span className='font-medium'>Expires:</span>
               <br />
               {new Date(session.expires_at).toLocaleDateString()}
             </div>
             <div>
-              <span className="font-medium">Activities:</span>
+              <span className='font-medium'>Activities:</span>
               <br />
               {session.activity_summary?.total_activities || 0}
             </div>
             <div>
-              <span className="font-medium">Lightning:</span>
+              <span className='font-medium'>Lightning:</span>
               <br />
               {session.lightning_enabled ? 'Enabled' : 'Disabled'}
             </div>

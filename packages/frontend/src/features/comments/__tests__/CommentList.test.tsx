@@ -88,7 +88,8 @@ describe('CommentList', () => {
 
       render(<CommentList contentId="content-1" />, { wrapper });
 
-      expect(screen.getByRole('status')).toBeInTheDocument();
+      const statusElements = screen.getAllByRole('status');
+      expect(statusElements.length).toBeGreaterThanOrEqual(1);
       expect(screen.getByText('Loading comments...')).toBeInTheDocument();
     });
   });

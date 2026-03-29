@@ -49,6 +49,9 @@ const DEFAULT_OPTIONS: Required<CsrfOptions> = {
     '/api/v1/payments/webhooks',
     '/api/auth/challenge',
     '/api/auth/authenticate',
+    '/api/auth/verify',
+    '/api/auth/refresh',
+    '/api/auth/logout',
     '/health',
     '/ready',
     '/live',
@@ -106,7 +109,7 @@ export function csrfProtection(
   return (req: Request, res: Response, next: NextFunction): void => {
     // Skip excluded paths
     const requestPath = req.path || req.url;
-    if (opts.excludePaths.some((p) => requestPath === p || requestPath.startsWith(p + '/'))) {
+    if (opts.excludePaths.some(p => requestPath === p || requestPath.startsWith(p + '/'))) {
       next();
       return;
     }

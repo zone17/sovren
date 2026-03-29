@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useCallback, useEffect, useState } from 'react';
 
 import {
@@ -91,19 +90,19 @@ export const useAnalyticsService = (userId: string): AnalyticsServiceHook => {
   const [isInitialized, setIsInitialized] = useState(false);
 
   // API base URL
-  const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
   // Generic API request handler
   const apiRequest = useCallback(
     async (endpoint: string, options: RequestInit = {}) => {
       try {
         const response = await fetch(`${API_BASE}${endpoint}`, {
+          ...options,
+          credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
             ...options.headers,
           },
-          ...options,
         });
 
         if (!response.ok) {

@@ -69,17 +69,17 @@ describe('Home Component - Code of Craft Standards', () => {
       expect(screen.getByText(/Monetize your audience with Bitcoin/i)).toBeInTheDocument();
     });
 
-    it('renders NOSTR Protocol in footer', () => {
+    it('renders NOSTR mention in hero', () => {
       renderWithProviders(<Home />);
-      expect(screen.getByText('NOSTR Protocol')).toBeInTheDocument();
+      expect(screen.getByText('NOSTR')).toBeInTheDocument();
     });
   });
 
   describe('Navigation buttons', () => {
     it('renders Start Creating button', () => {
       renderWithProviders(<Home />);
-      const btn = screen.getByRole('button', { name: /Start Creating/i });
-      expect(btn).toBeInTheDocument();
+      const btns = screen.getAllByRole('button', { name: /Start Creating/i });
+      expect(btns.length).toBeGreaterThanOrEqual(1);
     });
 
     it('renders See How It Works button', () => {

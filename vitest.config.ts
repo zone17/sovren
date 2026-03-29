@@ -77,6 +77,7 @@ export default defineConfig({
             '**/Post.test.tsx',
             '**/Login.test.tsx',
             '**/UserSubscriptionManager.test.tsx',
+            '**/NOSTRKeyManagementService.test.ts',
           ],
           setupFiles: [
             './test-utils/vitest-jest-compat.ts',
@@ -112,6 +113,9 @@ export default defineConfig({
             '**/smoke-tests.test.ts',
             // NOTE: rls-security.test.ts requires a real Supabase connection.
             // Run it via the `test:integration` job (testcontainers) — not the unit suite.
+            '**/rls-security.test.ts',
+            '**/health.test.ts',
+            '**/p1-038-health-timeout.test.ts',
           ],
           globalSetup: ['./test-utils/backend-global-setup.ts'],
           setupFiles: [

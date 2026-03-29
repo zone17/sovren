@@ -30,7 +30,12 @@ const API_BASE_URL = '/api/content-management';
 // Request Headers
 const getHeaders = () => ({
   'Content-Type': 'application/json',
-  Authorization: `Bearer ${localStorage.getItem('auth_token') || ''}`,
+});
+
+// Request options with credentials (reserved for authenticated endpoints)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const getRequestOptions = (): RequestInit => ({
+  credentials: 'include',
 });
 
 // Error Handling
@@ -72,7 +77,7 @@ class UnifiedContentService {
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         if (Array.isArray(value)) {
-          value.forEach((item) => params.append(key, String(item)));
+          value.forEach(item => params.append(key, String(item)));
         } else {
           params.append(key, String(value));
         }
@@ -81,6 +86,7 @@ class UnifiedContentService {
 
     const response = await fetch(`${API_BASE_URL}/content?${params.toString()}`, {
       method: 'GET',
+      credentials: 'include',
       headers: getHeaders(),
     });
 
@@ -106,6 +112,7 @@ class UnifiedContentService {
   async createContent(data: Partial<ContentItem>): Promise<ContentItem> {
     const response = await fetch(`${API_BASE_URL}/content`, {
       method: 'POST',
+      credentials: 'include',
       headers: getHeaders(),
       body: JSON.stringify(data),
     });
@@ -121,6 +128,7 @@ class UnifiedContentService {
   async updateContent(id: string, data: Partial<ContentItem>): Promise<ContentItem> {
     const response = await fetch(`${API_BASE_URL}/content/${id}`, {
       method: 'PUT',
+      credentials: 'include',
       headers: getHeaders(),
       body: JSON.stringify(data),
     });
@@ -136,6 +144,7 @@ class UnifiedContentService {
   async deleteContent(id: string): Promise<void> {
     const response = await fetch(`${API_BASE_URL}/content/${id}`, {
       method: 'DELETE',
+      credentials: 'include',
       headers: getHeaders(),
     });
 
@@ -147,6 +156,7 @@ class UnifiedContentService {
   async getContentById(id: string): Promise<ContentItem> {
     const response = await fetch(`${API_BASE_URL}/content/${id}`, {
       method: 'GET',
+      credentials: 'include',
       headers: getHeaders(),
     });
 
@@ -161,6 +171,7 @@ class UnifiedContentService {
   async publishContent(id: string): Promise<ContentItem> {
     const response = await fetch(`${API_BASE_URL}/content/${id}/publish`, {
       method: 'POST',
+      credentials: 'include',
       headers: getHeaders(),
     });
 
@@ -175,6 +186,7 @@ class UnifiedContentService {
   async performBulkOperation(operation: BulkOperation): Promise<BulkOperationResult> {
     const response = await fetch(`${API_BASE_URL}/content/bulk`, {
       method: 'POST',
+      credentials: 'include',
       headers: getHeaders(),
       body: JSON.stringify(operation),
     });
@@ -200,6 +212,7 @@ class UnifiedContentService {
 
     const response = await fetch(`${API_BASE_URL}/collections?${params.toString()}`, {
       method: 'GET',
+      credentials: 'include',
       headers: getHeaders(),
     });
 
@@ -214,6 +227,7 @@ class UnifiedContentService {
   async createCollection(data: Partial<ContentCollection>): Promise<ContentCollection> {
     const response = await fetch(`${API_BASE_URL}/collections`, {
       method: 'POST',
+      credentials: 'include',
       headers: getHeaders(),
       body: JSON.stringify(data),
     });
@@ -229,6 +243,7 @@ class UnifiedContentService {
   async updateCollection(id: string, data: Partial<ContentCollection>): Promise<ContentCollection> {
     const response = await fetch(`${API_BASE_URL}/collections/${id}`, {
       method: 'PUT',
+      credentials: 'include',
       headers: getHeaders(),
       body: JSON.stringify(data),
     });
@@ -244,6 +259,7 @@ class UnifiedContentService {
   async deleteCollection(id: string): Promise<void> {
     const response = await fetch(`${API_BASE_URL}/collections/${id}`, {
       method: 'DELETE',
+      credentials: 'include',
       headers: getHeaders(),
     });
 
@@ -255,6 +271,7 @@ class UnifiedContentService {
   async addToCollection(collectionId: string, contentId: string): Promise<void> {
     const response = await fetch(`${API_BASE_URL}/collections/${collectionId}/items`, {
       method: 'POST',
+      credentials: 'include',
       headers: getHeaders(),
       body: JSON.stringify({ content_id: contentId }),
     });
@@ -267,6 +284,7 @@ class UnifiedContentService {
   async removeFromCollection(collectionId: string, contentId: string): Promise<void> {
     const response = await fetch(`${API_BASE_URL}/collections/${collectionId}/items/${contentId}`, {
       method: 'DELETE',
+      credentials: 'include',
       headers: getHeaders(),
     });
 
@@ -288,6 +306,7 @@ class UnifiedContentService {
 
     const response = await fetch(`${API_BASE_URL}/series?${params.toString()}`, {
       method: 'GET',
+      credentials: 'include',
       headers: getHeaders(),
     });
 
@@ -302,6 +321,7 @@ class UnifiedContentService {
   async createSeries(data: Partial<ContentSeries>): Promise<ContentSeries> {
     const response = await fetch(`${API_BASE_URL}/series`, {
       method: 'POST',
+      credentials: 'include',
       headers: getHeaders(),
       body: JSON.stringify(data),
     });
@@ -317,6 +337,7 @@ class UnifiedContentService {
   async updateSeries(id: string, data: Partial<ContentSeries>): Promise<ContentSeries> {
     const response = await fetch(`${API_BASE_URL}/series/${id}`, {
       method: 'PUT',
+      credentials: 'include',
       headers: getHeaders(),
       body: JSON.stringify(data),
     });
@@ -332,6 +353,7 @@ class UnifiedContentService {
   async deleteSeries(id: string): Promise<void> {
     const response = await fetch(`${API_BASE_URL}/series/${id}`, {
       method: 'DELETE',
+      credentials: 'include',
       headers: getHeaders(),
     });
 
@@ -349,7 +371,7 @@ class UnifiedContentService {
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         if (Array.isArray(value)) {
-          value.forEach((item) => params.append(key, String(item)));
+          value.forEach(item => params.append(key, String(item)));
         } else if (typeof value === 'object') {
           params.append(key, JSON.stringify(value));
         } else {
@@ -360,6 +382,7 @@ class UnifiedContentService {
 
     const response = await fetch(`${API_BASE_URL}/analytics?${params.toString()}`, {
       method: 'GET',
+      credentials: 'include',
       headers: getHeaders(),
     });
 
@@ -378,6 +401,7 @@ class UnifiedContentService {
   }): Promise<void> {
     const response = await fetch(`${API_BASE_URL}/analytics/events`, {
       method: 'POST',
+      credentials: 'include',
       headers: getHeaders(),
       body: JSON.stringify(event),
     });
@@ -392,6 +416,7 @@ class UnifiedContentService {
   async searchContent(query: SearchQuery): Promise<SearchResults> {
     const response = await fetch(`${API_BASE_URL}/search`, {
       method: 'POST',
+      credentials: 'include',
       headers: getHeaders(),
       body: JSON.stringify(query),
     });
@@ -413,6 +438,7 @@ class UnifiedContentService {
   async getRecommendations(contentId: string): Promise<ContentItem[]> {
     const response = await fetch(`${API_BASE_URL}/content/${contentId}/recommendations`, {
       method: 'GET',
+      credentials: 'include',
       headers: getHeaders(),
     });
 
@@ -439,9 +465,7 @@ class UnifiedContentService {
 
     const response = await fetch(`${API_BASE_URL}/media`, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('auth_token') || ''}`,
-      },
+      credentials: 'include',
       body: formData,
     });
 
@@ -457,7 +481,7 @@ class UnifiedContentService {
 
   async subscribeToUpdates(
     contentId: string,
-    callback: (update: any) => void
+    _callback: (update: unknown) => void
   ): Promise<() => void> {
     // Mock implementation for real-time updates
     // In a real implementation, this would use WebSockets or Server-Sent Events

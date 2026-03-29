@@ -23,7 +23,7 @@ import {
 } from '../types/supporterExperience';
 
 // 🏗️ **SERVICE CONFIGURATION**
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000;
@@ -75,7 +75,7 @@ const cache = new ServiceCache();
 
 // 🔧 **UTILITY FUNCTIONS**
 
-const delay = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+const delay = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
 
 const retryFetch = async <T>(
   fetchFn: () => Promise<T>,
@@ -99,6 +99,7 @@ const apiRequest = async <T>(endpoint: string, options: RequestInit = {}): Promi
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
         ...options.headers,

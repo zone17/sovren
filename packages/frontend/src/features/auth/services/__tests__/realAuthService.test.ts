@@ -1,58 +1,49 @@
 /**
- * 🧪 **REAL AUTH SERVICE TESTS - ELITE TDD**
+ * Real Auth Service Tests
  *
- * Elite Engineering Standards:
- * - Comprehensive test coverage for all auth flows
- * - Mock backend API responses
- * - Test both success and error scenarios
- * - NOSTR authentication testing
- * - Type safety verification
+ * Updated for cookie-based auth (JWT in httpOnly cookies).
+ * - No more localStorage token storage
+ * - Uses apiClient for HTTP transport
+ * - Auth verification relies on credentials:'include' (cookies sent automatically)
  */
 
 import type { NostrSignature } from '../../types';
+
+// Must use vi.hoisted() because vi.mock factories are hoisted above imports
+const mockApiClient = vi.hoisted(() => ({
+  get: vi.fn(),
+  post: vi.fn(),
+  setToken: vi.fn(),
+  getToken: vi.fn(),
+}));
+
+vi.mock('../../../../services/api/apiClient', () => ({
+  apiClient: mockApiClient,
+}));
+
 import { realAuthService } from '../realAuthService';
 
-// 🔧 **LOCAL STORAGE MOCK**
-const mockLocalStorage = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-};
-Object.defineProperty(window, 'localStorage', { value: mockLocalStorage, writable: true });
-
-// Helper to create a mock Response object
-const createMockResponse = (body: unknown, ok = true, status = 200): Response =>
-  ({
-    ok,
-    status,
-    json: vi.fn().mockResolvedValue(body),
-    clone: vi.fn().mockReturnThis(),
-  }) as unknown as Response;
-
-describe('🔐 RealAuthService - Elite Backend Integration', () => {
-  let fetchSpy: ReturnType<typeof vi.spyOn>;
-
+describe('RealAuthService - Cookie-based Auth', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    fetchSpy = vi.spyOn(globalThis, 'fetch');
   });
 
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
-  describe('🔍 verifyAuth', () => {
-    it('should return null user when no token exists', async () => {
-      mockLocalStorage.getItem.mockReturnValue(null);
+  describe('verifyAuth', () => {
+    it('should return null user when backend returns unsuccessful response', async () => {
+      mockApiClient.get.mockResolvedValue({
+        success: false,
+        error: 'Not authenticated',
+      });
 
       const result = await realAuthService.verifyAuth();
 
-      expect(result).toEqual({ user: null });
-      expect(mockLocalStorage.getItem).toHaveBeenCalledWith('auth_token');
+      expect(result.user).toBeNull();
+      expect(result.error).toBeDefined();
+      expect(mockApiClient.get).toHaveBeenCalledWith('/api/auth/verify');
+      expect(mockApiClient.setToken).toHaveBeenCalledWith(null);
     });
 
-    it('should verify valid token and return user', async () => {
-      const mockToken = 'valid-jwt-token';
+    it('should verify auth and return user on successful response', async () => {
       const mockBackendResponse = {
         success: true,
         data: {
@@ -67,16 +58,11 @@ describe('🔐 RealAuthService - Elite Backend Integration', () => {
         },
       };
 
-      mockLocalStorage.getItem.mockReturnValue(mockToken);
-      fetchSpy.mockResolvedValue(createMockResponse(mockBackendResponse, true));
+      mockApiClient.get.mockResolvedValue(mockBackendResponse);
 
       const result = await realAuthService.verifyAuth();
 
-      expect(fetchSpy).toHaveBeenCalledWith(
-        expect.stringContaining('/api/auth/verify'),
-        expect.objectContaining({ method: 'GET' })
-      );
-
+      expect(mockApiClient.get).toHaveBeenCalledWith('/api/auth/verify');
       expect(result.user).toMatchObject({
         id: 'user-123',
         email: 'test@example.com',
@@ -88,21 +74,18 @@ describe('🔐 RealAuthService - Elite Backend Integration', () => {
       });
     });
 
-    it('should handle invalid token and clear storage', async () => {
-      const mockToken = 'invalid-token';
-
-      mockLocalStorage.getItem.mockReturnValue(mockToken);
-      fetchSpy.mockResolvedValue(createMockResponse({}, false, 401));
+    it('should handle network error and clear token', async () => {
+      mockApiClient.get.mockRejectedValue(new Error('Network error'));
 
       const result = await realAuthService.verifyAuth();
 
       expect(result.user).toBeNull();
       expect(result.error).toBeDefined();
-      expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('auth_token');
+      expect(mockApiClient.setToken).toHaveBeenCalledWith(null);
     });
   });
 
-  describe('🌐 authenticateNostr', () => {
+  describe('authenticateNostr', () => {
     it('should successfully authenticate with NOSTR signature', async () => {
       const nostrSignature: NostrSignature = {
         pubkey: 'npub1234567890abcdef',
@@ -124,16 +107,21 @@ describe('🔐 RealAuthService - Elite Backend Integration', () => {
         },
       };
 
-      fetchSpy.mockResolvedValue(createMockResponse(mockBackendResponse, true));
+      mockApiClient.post.mockResolvedValue(mockBackendResponse);
 
       const result = await realAuthService.authenticateNostr(nostrSignature);
 
-      expect(fetchSpy).toHaveBeenCalledWith(
-        expect.stringContaining('/api/auth/authenticate'),
-        expect.objectContaining({ method: 'POST' })
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        '/api/auth/authenticate',
+        expect.objectContaining({
+          nostr_pubkey: 'npub1234567890abcdef',
+          challenge: 'challenge-123',
+          signature: 'signature-abc',
+        })
       );
 
-      expect(mockLocalStorage.setItem).toHaveBeenCalledWith('auth_token', 'nostr-jwt-token');
+      // Token stored via apiClient.setToken (not localStorage)
+      expect(mockApiClient.setToken).toHaveBeenCalledWith('nostr-jwt-token');
       expect(result.success).toBe(true);
       expect(result.user?.nostr_verified).toBe(true);
       expect(result.user?.nostr_pubkey).toBe('npub1234567890abcdef');
@@ -151,7 +139,7 @@ describe('🔐 RealAuthService - Elite Backend Integration', () => {
         error: 'Invalid NOSTR signature',
       };
 
-      fetchSpy.mockResolvedValue(createMockResponse(mockBackendResponse, false));
+      mockApiClient.post.mockResolvedValue(mockBackendResponse);
 
       const result = await realAuthService.authenticateNostr(nostrSignature);
 
@@ -160,7 +148,7 @@ describe('🔐 RealAuthService - Elite Backend Integration', () => {
     });
   });
 
-  describe('🔑 generateNostrChallenge', () => {
+  describe('generateNostrChallenge', () => {
     it('should successfully generate NOSTR challenge', async () => {
       const mockBackendResponse = {
         success: true,
@@ -172,15 +160,11 @@ describe('🔐 RealAuthService - Elite Backend Integration', () => {
         },
       };
 
-      fetchSpy.mockResolvedValue(createMockResponse(mockBackendResponse, true));
+      mockApiClient.post.mockResolvedValue(mockBackendResponse);
 
       const result = await realAuthService.generateNostrChallenge();
 
-      expect(fetchSpy).toHaveBeenCalledWith(
-        expect.stringContaining('/api/auth/challenge'),
-        expect.objectContaining({ method: 'POST' })
-      );
-
+      expect(mockApiClient.post).toHaveBeenCalledWith('/api/auth/challenge', {});
       expect(result.challenge).toBe('nostr-challenge-abc123');
       expect(result.error).toBeUndefined();
     });
@@ -191,7 +175,7 @@ describe('🔐 RealAuthService - Elite Backend Integration', () => {
         error: 'Unable to generate challenge',
       };
 
-      fetchSpy.mockResolvedValue(createMockResponse(mockBackendResponse, false));
+      mockApiClient.post.mockResolvedValue(mockBackendResponse);
 
       const result = await realAuthService.generateNostrChallenge();
 
@@ -200,38 +184,38 @@ describe('🔐 RealAuthService - Elite Backend Integration', () => {
     });
   });
 
-  describe('🚪 logout', () => {
-    it('should successfully logout and clear token', async () => {
-      const mockToken = 'logout-token';
-
-      mockLocalStorage.getItem.mockReturnValue(mockToken);
-      fetchSpy.mockResolvedValue(createMockResponse({ success: true }, true));
+  describe('logout', () => {
+    it('should successfully logout and clear token via apiClient', async () => {
+      mockApiClient.getToken.mockReturnValue('some-token');
+      mockApiClient.post.mockResolvedValue({ success: true });
 
       await realAuthService.logout();
 
-      expect(fetchSpy).toHaveBeenCalledWith(
-        expect.stringContaining('/api/auth/logout'),
-        expect.objectContaining({ method: 'POST' })
-      );
-
-      expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('auth_token');
+      expect(mockApiClient.post).toHaveBeenCalledWith('/api/auth/logout', {});
+      expect(mockApiClient.setToken).toHaveBeenCalledWith(null);
     });
 
-    it('should clear local storage even if backend logout fails', async () => {
-      const mockToken = 'failing-token';
-
-      mockLocalStorage.getItem.mockReturnValue(mockToken);
-      fetchSpy.mockRejectedValue(new Error('Network error'));
+    it('should clear token even if backend logout fails', async () => {
+      mockApiClient.getToken.mockReturnValue('failing-token');
+      mockApiClient.post.mockRejectedValue(new Error('Network error'));
 
       await realAuthService.logout();
 
-      expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('auth_token');
+      expect(mockApiClient.setToken).toHaveBeenCalledWith(null);
+    });
+
+    it('should skip backend call if no token exists', async () => {
+      mockApiClient.getToken.mockReturnValue(null);
+
+      await realAuthService.logout();
+
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+      expect(mockApiClient.setToken).toHaveBeenCalledWith(null);
     });
   });
 
-  describe('🔧 Helper Methods', () => {
+  describe('Helper Methods', () => {
     it('should map backend roles correctly', async () => {
-      // Test through the auth flow to verify role mapping
       const mockBackendResponse = {
         success: true,
         data: {
@@ -240,12 +224,10 @@ describe('🔐 RealAuthService - Elite Backend Integration', () => {
             email: 'test@example.com',
             role: 'admin',
           },
-          token: 'test-token',
         },
       };
 
-      mockLocalStorage.getItem.mockReturnValue('test-token');
-      fetchSpy.mockResolvedValue(createMockResponse(mockBackendResponse, true));
+      mockApiClient.get.mockResolvedValue(mockBackendResponse);
 
       const result = await realAuthService.verifyAuth();
 

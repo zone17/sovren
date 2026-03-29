@@ -1,51 +1,21 @@
 /**
  * LIGHTNING API SERVICE - TEST SUITE
  *
- * Elite Testing Standards:
- * - TDD approach
- * - Comprehensive coverage
- * - Real API integration patterns
- * - Type-safe error handling
- * - vi.spyOn for fetch (compatible with MSW global setup)
+ * Updated for cookie-based auth (credentials: 'include').
+ * Authorization header removed — auth is via httpOnly cookies.
+ * vi.spyOn for fetch (compatible with MSW global setup).
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { lightningApi } from './lightningApi';
 
-// Mock localStorage
-const localStorageMock = (() => {
-  let store: Record<string, string> = {};
-  return {
-    getItem: (key: string) => store[key] || null,
-    setItem: (key: string, value: string) => {
-      store[key] = value;
-    },
-    removeItem: (key: string) => {
-      delete store[key];
-    },
-    clear: () => {
-      store = {};
-    },
-  };
-})();
-
-Object.defineProperty(window, 'localStorage', {
-  value: localStorageMock,
-});
-
 describe('LightningAPI', () => {
-  const mockAuthToken = 'mock-auth-token-12345';
-  // The test setup sets VITE_API_URL = 'http://localhost:3000/api'
-  // but lightningApi reads import.meta.env.VITE_API_URL at construction time.
-  // We stub env before describe so the instance picks up the value.
   const mockApiUrl = 'http://localhost:3001';
 
   let fetchSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    localStorageMock.clear();
-    localStorageMock.setItem('auth_token', mockAuthToken);
 
     // Use vi.spyOn so MSW infrastructure stays intact
     fetchSpy = vi.spyOn(globalThis, 'fetch');
@@ -78,10 +48,6 @@ describe('LightningAPI', () => {
         settled: false,
       };
 
-      // Create a fresh lightningApi instance that uses the stubbed env
-      // lightningApi is a singleton that reads env at construction time.
-      // We need to create a fresh one or mock the URL resolution.
-      // Instead, test the behavior: verify fetch is called correctly.
       fetchSpy.mockResolvedValueOnce(makeResponse(mockResponse));
 
       const result = await lightningApi.createInvoice({
@@ -94,9 +60,9 @@ describe('LightningAPI', () => {
         expect.stringContaining('/api/lightning/invoice'),
         expect.objectContaining({
           method: 'POST',
+          credentials: 'include',
           headers: expect.objectContaining({
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${mockAuthToken}`,
           }),
           body: JSON.stringify({
             amount: 1000,
@@ -104,17 +70,6 @@ describe('LightningAPI', () => {
           }),
         })
       );
-    });
-
-    it('should throw error when authentication is missing', async () => {
-      localStorageMock.clear();
-
-      await expect(
-        lightningApi.createInvoice({
-          amount: 1000,
-          description: 'Test payment',
-        })
-      ).rejects.toThrow('Authentication required');
     });
 
     it('should throw error when API returns 500', async () => {
@@ -197,9 +152,9 @@ describe('LightningAPI', () => {
         expect.stringContaining(`/api/lightning/invoice/${mockPaymentHash}`),
         expect.objectContaining({
           method: 'GET',
+          credentials: 'include',
           headers: expect.objectContaining({
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${mockAuthToken}`,
           }),
         })
       );
@@ -272,6 +227,7 @@ describe('LightningAPI', () => {
         expect.stringContaining('/api/lightning/user/payments'),
         expect.objectContaining({
           method: 'GET',
+          credentials: 'include',
         })
       );
     });
@@ -348,7 +304,7 @@ describe('LightningAPI', () => {
       );
     });
 
-    it('should include auth token in all requests', async () => {
+    it('should use credentials include for cookie-based auth', async () => {
       fetchSpy.mockResolvedValueOnce(makeResponse({ settled: false }));
 
       await lightningApi.checkInvoiceStatus('hash-123');
@@ -356,9 +312,7 @@ describe('LightningAPI', () => {
       expect(fetchSpy).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({
-          headers: expect.objectContaining({
-            Authorization: `Bearer ${mockAuthToken}`,
-          }),
+          credentials: 'include',
         })
       );
     });

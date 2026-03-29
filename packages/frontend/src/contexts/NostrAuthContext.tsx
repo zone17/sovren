@@ -113,7 +113,7 @@ export interface NostrAuthProviderProps {
 
 export const NostrAuthProvider: React.FC<NostrAuthProviderProps> = ({
   children,
-  apiBaseUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001',
+  apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001',
   autoConnect = true,
   persistSession = true,
 }) => {
@@ -138,7 +138,7 @@ export const NostrAuthProvider: React.FC<NostrAuthProviderProps> = ({
 
   const login = useCallback(
     async (privateKey?: string) => {
-      setState((prev) => ({ ...prev, isLoading: true, error: null }));
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
 
       try {
         // Step 1: Get or import key
@@ -163,6 +163,7 @@ export const NostrAuthProvider: React.FC<NostrAuthProviderProps> = ({
         const challengeResponse = await fetch(`${apiBaseUrl}/api/auth/challenge`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({ pubkey: keyPair.publicKey }),
         });
 
@@ -173,13 +174,13 @@ export const NostrAuthProvider: React.FC<NostrAuthProviderProps> = ({
         const challenge: AuthChallenge = await challengeResponse.json();
 
         // Step 3: Sign the challenge
-        const timestamp = Date.now();
+        const timestamp = Math.floor(Date.now() / 1000);
         const message = createSignatureMessage(challenge.challenge, timestamp);
 
         const event = {
           kind: 22242, // AUTH kind
           pubkey: keyPair.publicKey,
-          created_at: Math.floor(timestamp / 1000),
+          created_at: timestamp,
           tags: [['challenge', challenge.challenge]],
           content: message,
         };
@@ -190,6 +191,7 @@ export const NostrAuthProvider: React.FC<NostrAuthProviderProps> = ({
         const verifyResponse = await fetch(`${apiBaseUrl}/api/auth/verify`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({
             pubkey: keyPair.publicKey,
             signature: signedEvent.sig,
@@ -222,9 +224,9 @@ export const NostrAuthProvider: React.FC<NostrAuthProviderProps> = ({
           error: null,
         });
 
-        // Persist session if enabled
-        if (persistSession && authResult.token) {
-          localStorage.setItem('nostr_auth_token', authResult.token);
+        // Session persistence: token is now stored in HttpOnly cookie by backend.
+        // Only persist non-sensitive session metadata client-side.
+        if (persistSession) {
           localStorage.setItem('nostr_pubkey', keyPair.publicKey);
           sessionStorage.setItem('nostr_session_id', authResult.sessionId);
         }
@@ -232,7 +234,7 @@ export const NostrAuthProvider: React.FC<NostrAuthProviderProps> = ({
         // Step 6: Load profile (async, non-blocking)
         loadProfile(keyPair.publicKey);
       } catch (error) {
-        setState((prev) => ({
+        setState(prev => ({
           ...prev,
           isLoading: false,
           error: error instanceof Error ? error.message : 'Authentication failed',
@@ -243,7 +245,7 @@ export const NostrAuthProvider: React.FC<NostrAuthProviderProps> = ({
   );
 
   const loginWithExtension = useCallback(async () => {
-    setState((prev) => ({ ...prev, isLoading: true, error: null }));
+    setState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
       // Step 1: Connect to browser extension
@@ -257,6 +259,7 @@ export const NostrAuthProvider: React.FC<NostrAuthProviderProps> = ({
       const challengeResponse = await fetch(`${apiBaseUrl}/api/auth/challenge`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ pubkey: extension.publicKey }),
       });
 
@@ -267,13 +270,13 @@ export const NostrAuthProvider: React.FC<NostrAuthProviderProps> = ({
       const challenge: AuthChallenge = await challengeResponse.json();
 
       // Step 3: Sign with extension
-      const timestamp = Date.now();
+      const timestamp = Math.floor(Date.now() / 1000);
       const message = createSignatureMessage(challenge.challenge, timestamp);
 
       const event = {
         kind: 22242,
         pubkey: extension.publicKey,
-        created_at: Math.floor(timestamp / 1000),
+        created_at: timestamp,
         tags: [['challenge', challenge.challenge]],
         content: message,
       };
@@ -284,6 +287,7 @@ export const NostrAuthProvider: React.FC<NostrAuthProviderProps> = ({
       const verifyResponse = await fetch(`${apiBaseUrl}/api/auth/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           pubkey: extension.publicKey,
           signature: signedEvent.sig,
@@ -315,14 +319,14 @@ export const NostrAuthProvider: React.FC<NostrAuthProviderProps> = ({
         error: null,
       });
 
-      if (persistSession && authResult.token) {
-        localStorage.setItem('nostr_auth_token', authResult.token);
+      // Token is now stored in HttpOnly cookie by backend.
+      if (persistSession) {
         localStorage.setItem('nostr_pubkey', extension.publicKey);
       }
 
       loadProfile(extension.publicKey);
     } catch (error) {
-      setState((prev) => ({
+      setState(prev => ({
         ...prev,
         isLoading: false,
         error: error instanceof Error ? error.message : 'Extension authentication failed',
@@ -331,18 +335,14 @@ export const NostrAuthProvider: React.FC<NostrAuthProviderProps> = ({
   }, [apiBaseUrl, keyManagement, persistSession]);
 
   const logout = useCallback(async () => {
-    setState((prev) => ({ ...prev, isLoading: true }));
+    setState(prev => ({ ...prev, isLoading: true }));
 
     try {
-      // Call backend logout if we have a token
-      if (state.token) {
-        await fetch(`${apiBaseUrl}/api/auth/logout`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${state.token}`,
-          },
-        });
-      }
+      // Call backend logout — cookie cleared server-side
+      await fetch(`${apiBaseUrl}/api/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      });
 
       // Clear local state
       setState({
@@ -356,8 +356,7 @@ export const NostrAuthProvider: React.FC<NostrAuthProviderProps> = ({
         error: null,
       });
 
-      // Clear storage
-      localStorage.removeItem('nostr_auth_token');
+      // Clear storage (non-sensitive metadata only; token cookie cleared by backend)
       localStorage.removeItem('nostr_pubkey');
       sessionStorage.removeItem('nostr_session_id');
 
@@ -377,38 +376,28 @@ export const NostrAuthProvider: React.FC<NostrAuthProviderProps> = ({
         error: null,
       });
     }
-  }, [apiBaseUrl, state.token, keyManagement]);
+  }, [apiBaseUrl, keyManagement]);
 
   const refreshToken = useCallback(async () => {
-    if (!state.token) {
-      throw new Error('No token to refresh');
-    }
-
     try {
       const response = await fetch(`${apiBaseUrl}/api/auth/refresh`, {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${state.token}`,
-        },
+        credentials: 'include',
       });
 
       if (!response.ok) {
         throw new Error('Token refresh failed');
       }
 
-      const { newToken } = await response.json();
+      const data = await response.json();
 
-      setState((prev) => ({ ...prev, token: newToken }));
-
-      if (persistSession) {
-        localStorage.setItem('nostr_auth_token', newToken);
-      }
+      setState(prev => ({ ...prev, token: data.data?.token || prev.token }));
     } catch (error) {
       // If refresh fails, logout
       await logout();
       throw error;
     }
-  }, [apiBaseUrl, state.token, persistSession, logout]);
+  }, [apiBaseUrl, logout]);
 
   // =====================================================
   // KEY MANAGEMENT
@@ -432,14 +421,12 @@ export const NostrAuthProvider: React.FC<NostrAuthProviderProps> = ({
   // =====================================================
 
   const getSessions = useCallback(async (): Promise<Session[]> => {
-    if (!state.token) {
+    if (!state.isAuthenticated) {
       return [];
     }
 
     const response = await fetch(`${apiBaseUrl}/api/auth/sessions`, {
-      headers: {
-        Authorization: `Bearer ${state.token}`,
-      },
+      credentials: 'include',
     });
 
     if (!response.ok) {
@@ -448,19 +435,17 @@ export const NostrAuthProvider: React.FC<NostrAuthProviderProps> = ({
 
     const { sessions } = await response.json();
     return sessions;
-  }, [apiBaseUrl, state.token]);
+  }, [apiBaseUrl, state.isAuthenticated]);
 
   const revokeSession = useCallback(
     async (sessionId: string) => {
-      if (!state.token) {
+      if (!state.isAuthenticated) {
         throw new Error('Not authenticated');
       }
 
       const response = await fetch(`${apiBaseUrl}/api/auth/sessions/${sessionId}`, {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${state.token}`,
-        },
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -472,7 +457,7 @@ export const NostrAuthProvider: React.FC<NostrAuthProviderProps> = ({
         await logout();
       }
     },
-    [apiBaseUrl, state.token, state.sessionId, logout]
+    [apiBaseUrl, state.isAuthenticated, state.sessionId, logout]
   );
 
   // =====================================================
@@ -480,13 +465,13 @@ export const NostrAuthProvider: React.FC<NostrAuthProviderProps> = ({
   // =====================================================
 
   const clearError = useCallback(() => {
-    setState((prev) => ({ ...prev, error: null }));
+    setState(prev => ({ ...prev, error: null }));
   }, []);
 
   const loadProfile = useCallback(async (pubkey: string) => {
     // This would fetch the profile from NOSTR relays
     // Simplified for now
-    setState((prev) => ({
+    setState(prev => ({
       ...prev,
       profile: {
         name: pubkey.substring(0, 8),
@@ -510,18 +495,15 @@ export const NostrAuthProvider: React.FC<NostrAuthProviderProps> = ({
     const initAuth = async () => {
       if (!autoConnect) return;
 
-      const token = localStorage.getItem('nostr_auth_token');
       const pubkey = localStorage.getItem('nostr_pubkey');
 
-      if (token && pubkey) {
-        setState((prev) => ({ ...prev, isLoading: true }));
+      if (pubkey) {
+        setState(prev => ({ ...prev, isLoading: true }));
 
         try {
-          // Validate token with backend
+          // Validate session via HttpOnly cookie (sent automatically)
           const response = await fetch(`${apiBaseUrl}/api/auth/validate`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            credentials: 'include',
           });
 
           if (response.ok) {
@@ -533,20 +515,19 @@ export const NostrAuthProvider: React.FC<NostrAuthProviderProps> = ({
               npub: '', // Convert later
               profile: null,
               sessionId: data.sessionId,
-              token,
+              token: null, // Token is in HttpOnly cookie, not accessible client-side
               error: null,
             });
 
             loadProfile(pubkey);
           } else {
-            // Token invalid, clear storage
-            localStorage.removeItem('nostr_auth_token');
+            // Session invalid, clear metadata
             localStorage.removeItem('nostr_pubkey');
-            setState((prev) => ({ ...prev, isLoading: false }));
+            setState(prev => ({ ...prev, isLoading: false }));
           }
         } catch (error) {
           console.error('Auto-connect failed:', error);
-          setState((prev) => ({ ...prev, isLoading: false }));
+          setState(prev => ({ ...prev, isLoading: false }));
         }
       }
     };

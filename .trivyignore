@@ -5,3 +5,28 @@
 # fast-xml-parser stack overflow via @aws-sdk/xml-builder (low severity, transitive)
 # Tracked upstream: https://github.com/advisories/GHSA-fj3w-jwp8-x2g3
 # Fix requires @aws-sdk major bump — deferred per PR #99 decision.
+
+# handlebars CLI precompiler CVEs (not runtime — we don't use the CLI precompiler)
+# All 6 are in the template compilation CLI, not the runtime rendering.
+GHSA-xjpj-3mr7-gcpf
+GHSA-xhpv-hc6g-r9c6
+GHSA-9cx6-37pm-9jff
+GHSA-3mfm-83xf-c92r
+GHSA-2w6w-674q-4c4q
+GHSA-2qvq-rjwj-gvw9
+
+# node-forge signature/constraint bypass (transitive via puppeteer/pdfkit)
+# Not used directly for crypto operations — NOSTR uses nostr-tools/noble.
+GHSA-2328-f5f3-gj25
+GHSA-q67f-28xg-22rw
+GHSA-ppp5-5v6c-4jwp
+GHSA-5m6q-g25r-mvwx
+
+# nodemailer SMTP command injection (not exploitable — envelope.size is always numeric)
+GHSA-c7w3-x93f-qmm8
+
+# path-to-regexp ReDoS (transitive via Express — pinned, no fix without breaking Express)
+GHSA-37ch-88jc-xwx2
+
+# brace-expansion DoS (transitive via eslint/rimraf — dev tooling, not runtime)
+GHSA-f886-m6hf-6m8v

@@ -4,13 +4,16 @@ import { Button } from '../components/ui';
 import { Spinner } from '../components/ui/spinner';
 import { useAuth } from '../features/auth';
 import { createSignatureMessage } from '@shared/types/nostr/auth';
+import { bytesToHex, hexToBytes } from '../shared/utils/hex';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 async function sha256Hex(input: string): Promise<string> {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input));
-  return Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, '0')).join('');
+  return Array.from(new Uint8Array(buf), b => b.toString(16).padStart(2, '0')).join('');
 }
 
 const Login: React.FC = () => {
+  useDocumentTitle('Log In');
   const navigate = useNavigate();
   const { generateNostrChallenge, authenticateNostr } = useAuth();
 
@@ -31,7 +34,7 @@ const Login: React.FC = () => {
       const { generateSecretKey, getPublicKey } = await import('nostr-tools/pure');
       const privateKey = generateSecretKey();
       const publicKey = getPublicKey(privateKey);
-      setPrivateKeyInput(Buffer.from(privateKey).toString('hex'));
+      setPrivateKeyInput(bytesToHex(privateKey));
       privateKey.fill(0); // Zero key material after hex conversion
       setPublicKeyInput(publicKey);
       setError(null);
@@ -134,10 +137,10 @@ const Login: React.FC = () => {
         const decoded = nip19Decode(privateKeyInput);
         if (decoded.type !== 'nsec') throw new Error('Invalid nsec key');
         privateKeyBytes = decoded.data as Uint8Array;
-        hexPrivate = Buffer.from(privateKeyBytes).toString('hex');
+        hexPrivate = bytesToHex(privateKeyBytes);
       } else {
         hexPrivate = privateKeyInput;
-        privateKeyBytes = new Uint8Array(Buffer.from(hexPrivate, 'hex'));
+        privateKeyBytes = hexToBytes(hexPrivate);
       }
 
       // Decode public key — support npub and hex
@@ -214,20 +217,20 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="border-b border-border bg-card/80 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link to="/" className="flex items-center">
-              <span className="text-2xl font-bold text-purple-500">Sovren</span>
-              <span className="ml-2 text-sm text-muted-foreground">
+    <div className='min-h-screen bg-background'>
+      <div className='border-b border-border bg-card/80 backdrop-blur-sm'>
+        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+          <div className='flex justify-between items-center h-16'>
+            <Link to='/' className='flex items-center'>
+              <span className='text-2xl font-bold text-purple-500'>Sovren</span>
+              <span className='ml-2 text-sm text-muted-foreground'>
                 Decentralized Creator Platform
               </span>
             </Link>
-            <div className="flex space-x-4">
+            <div className='flex space-x-4'>
               <Link
-                to="/signup"
-                className="text-muted-foreground hover:text-foreground px-3 py-2 text-sm font-medium transition-colors duration-150"
+                to='/signup'
+                className='text-muted-foreground hover:text-foreground px-3 py-2 text-sm font-medium transition-colors duration-150'
               >
                 Sign Up
               </Link>
@@ -236,45 +239,53 @@ const Login: React.FC = () => {
         </div>
       </div>
 
-      <div className="min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-        <div className="sm:mx-auto sm:w-full sm:max-w-md">
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-foreground font-display">
+      <div className='min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8'>
+        <div className='sm:mx-auto sm:w-full sm:max-w-md'>
+          <h2 className='mt-6 text-center text-3xl font-extrabold text-foreground font-display'>
             Sign in to Sovren
           </h2>
-          <p className="mt-2 text-center text-sm text-muted-foreground">
+          <p className='mt-2 text-center text-sm text-muted-foreground'>
             Decentralized authentication with NOSTR
           </p>
         </div>
 
-        <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-          <div className="glass py-8 px-4 shadow-lg sm:rounded-lg sm:px-10">
-            <div className="bg-purple-500/10 border border-purple-500/20 rounded-md p-4 mb-6">
-              <h3 className="text-sm font-medium text-purple-300 mb-2">Sovereign Authentication</h3>
-              <p className="text-sm text-purple-200/80">
-                Use your NOSTR keys for true decentralized authentication. Your identity works
-                across all NOSTR-compatible platforms.
+        <div className='mt-8 sm:mx-auto sm:w-full sm:max-w-md'>
+          <div className='glass py-8 px-4 shadow-lg sm:rounded-lg sm:px-10'>
+            <div className='bg-purple-500/10 border border-purple-500/20 rounded-md p-4 mb-6'>
+              <h3 className='text-sm font-medium text-purple-300 mb-2'>
+                Independent Authentication
+              </h3>
+              <p className='text-sm text-purple-200/80 mb-2'>
+                NOSTR is a new way to publish online where no company can delete your content or ban
+                your account.
+              </p>
+              <p className='text-sm text-purple-200/80'>
+                Sign in with your NOSTR keys. Your identity works across all compatible platforms.
               </p>
             </div>
 
             {error && (
-              <div className="mb-6 rounded-md bg-red-500/10 border border-red-500/20 p-4">
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-red-400">{error}</h3>
+              <div
+                role='alert'
+                className='mb-6 rounded-md bg-red-500/10 border border-red-500/20 p-4'
+              >
+                <div className='ml-3'>
+                  <h3 className='text-sm font-medium text-red-400'>{error}</h3>
                 </div>
               </div>
             )}
 
             {/* Primary: NIP-07 extension sign-in */}
             {hasExtension !== false && (
-              <div className="mb-6">
+              <div className='mb-6'>
                 <Button
                   onClick={handleSignInClick}
                   disabled={isLoading}
-                  className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white shadow-[0_4px_16px_rgba(139,92,246,0.3)] transition-all duration-150"
+                  className='w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white shadow-[0_4px_16px_rgba(139,92,246,0.3)] transition-all duration-150'
                 >
                   {isLoading ? (
-                    <span className="flex items-center justify-center">
-                      <Spinner size="sm" className="mr-2" />
+                    <span className='flex items-center justify-center'>
+                      <Spinner size='sm' className='mr-2' />
                       Authenticating...
                     </span>
                   ) : (
@@ -282,7 +293,7 @@ const Login: React.FC = () => {
                   )}
                 </Button>
                 {hasExtension === null && (
-                  <p className="mt-2 text-xs text-muted-foreground text-center">
+                  <p className='mt-2 text-xs text-muted-foreground text-center'>
                     Uses Alby, nos2x, or any NIP-07 browser extension
                   </p>
                 )}
@@ -291,48 +302,50 @@ const Login: React.FC = () => {
 
             {/* Fallback: manual key entry */}
             {hasExtension === false && (
-              <div className="space-y-6">
-                <div className="text-sm text-muted-foreground text-center">
+              <div className='space-y-6'>
+                <div className='text-sm text-muted-foreground text-center'>
                   No NOSTR extension detected. Enter your keys manually.
                 </div>
 
                 <div>
                   <label
-                    htmlFor="publicKey"
-                    className="block text-sm font-medium text-foreground mb-2"
+                    htmlFor='publicKey'
+                    className='block text-sm font-medium text-foreground mb-2'
                   >
                     Public Key (npub or hex)
                   </label>
                   <textarea
-                    id="publicKey"
+                    id='publicKey'
                     rows={3}
+                    aria-required='true'
                     value={publicKeyInput}
                     onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                       setPublicKeyInput(e.target.value)
                     }
-                    className="block w-full px-3 py-2 border border-border rounded-md shadow-sm bg-card text-foreground placeholder-muted-foreground focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-sm font-mono transition-colors duration-150"
-                    placeholder="npub1... or hex format"
+                    className='block w-full px-3 py-2 border border-border rounded-md shadow-sm bg-card text-foreground placeholder-muted-foreground focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-sm font-mono transition-colors duration-150'
+                    placeholder='npub1... or hex format'
                   />
                 </div>
 
                 <div>
                   <label
-                    htmlFor="privateKey"
-                    className="block text-sm font-medium text-foreground mb-2"
+                    htmlFor='privateKey'
+                    className='block text-sm font-medium text-foreground mb-2'
                   >
                     Private Key (nsec or hex)
                   </label>
                   <textarea
-                    id="privateKey"
+                    id='privateKey'
                     rows={3}
+                    aria-required='true'
                     value={privateKeyInput}
                     onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                       setPrivateKeyInput(e.target.value)
                     }
-                    className="block w-full px-3 py-2 border border-border rounded-md shadow-sm bg-card text-foreground placeholder-muted-foreground focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-sm font-mono transition-colors duration-150"
-                    placeholder="nsec1... or hex format (never sent to server)"
+                    className='block w-full px-3 py-2 border border-border rounded-md shadow-sm bg-card text-foreground placeholder-muted-foreground focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-sm font-mono transition-colors duration-150'
+                    placeholder='nsec1... or hex format (never sent to server)'
                   />
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <p className='mt-1 text-xs text-muted-foreground'>
                     Private key stays in your browser and is never sent to our servers
                   </p>
                 </div>
@@ -341,12 +354,12 @@ const Login: React.FC = () => {
                   <Button
                     onClick={generateNostrKeys}
                     disabled={isGeneratingKeys}
-                    variant="outline"
-                    className="w-full mb-4 border-purple-500/30 hover:border-purple-500/50 transition-colors duration-150"
+                    variant='outline'
+                    className='w-full mb-4 border-purple-500/30 hover:border-purple-500/50 transition-colors duration-150'
                   >
                     {isGeneratingKeys ? (
-                      <span className="flex items-center justify-center">
-                        <Spinner size="sm" className="mr-2" />
+                      <span className='flex items-center justify-center'>
+                        <Spinner size='sm' className='mr-2' />
                         Generating...
                       </span>
                     ) : (
@@ -358,11 +371,11 @@ const Login: React.FC = () => {
                 <Button
                   onClick={handleManualLogin}
                   disabled={isLoading || !publicKeyInput || !privateKeyInput}
-                  className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white shadow-[0_4px_16px_rgba(139,92,246,0.3)] transition-all duration-150"
+                  className='w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white shadow-[0_4px_16px_rgba(139,92,246,0.3)] transition-all duration-150'
                 >
                   {isLoading ? (
-                    <span className="flex items-center justify-center">
-                      <Spinner size="sm" className="mr-2" />
+                    <span className='flex items-center justify-center'>
+                      <Spinner size='sm' className='mr-2' />
                       Authenticating...
                     </span>
                   ) : (
@@ -370,10 +383,10 @@ const Login: React.FC = () => {
                   )}
                 </Button>
 
-                <div className="text-center">
+                <div className='text-center'>
                   <button
                     onClick={() => setHasExtension(null)}
-                    className="text-sm text-purple-400 hover:text-purple-300 transition-colors duration-150"
+                    className='text-sm text-purple-400 hover:text-purple-300 transition-colors duration-150'
                   >
                     Try extension sign-in instead
                   </button>
@@ -381,12 +394,12 @@ const Login: React.FC = () => {
               </div>
             )}
 
-            <div className="mt-6 text-center">
-              <p className="text-sm text-muted-foreground">
+            <div className='mt-6 text-center'>
+              <p className='text-sm text-muted-foreground'>
                 Don't have an account?{' '}
                 <Link
-                  to="/signup"
-                  className="font-medium text-purple-400 hover:text-purple-300 transition-colors duration-150"
+                  to='/signup'
+                  className='font-medium text-purple-400 hover:text-purple-300 transition-colors duration-150'
                 >
                   Create account
                 </Link>

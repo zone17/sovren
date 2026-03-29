@@ -47,11 +47,8 @@ export class RealAuthService {
    */
   async verifyAuth(): Promise<{ user: User | null; error?: string }> {
     try {
-      const token = apiClient.getToken();
-      if (!token) {
-        return { user: null };
-      }
-
+      // Always call the backend — the auth cookie is sent automatically
+      // via credentials: 'include'. Do not guard on a local token.
       const result = await apiClient.get<BackendAuthResponse>('/api/auth/verify');
 
       if (!result.success || !result.data?.user) {
