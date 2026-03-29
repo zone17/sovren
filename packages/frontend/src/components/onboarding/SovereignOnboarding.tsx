@@ -377,11 +377,13 @@ const SovereignOnboarding: React.FC = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleProfileSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!nostrKeys) return; // Guard: identity must be created before advancing
     // Save username, displayName, bio to Sovren profile and publish as NOSTR profile event (future implementation)
     setCurrentStep(currentStep + 1);
   };
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const skipProfileStep = () => {
+    if (!nostrKeys) return; // Guard: identity must be created before skipping
     setCurrentStep(currentStep + 1);
   };
 
@@ -521,7 +523,11 @@ const SovereignOnboarding: React.FC = () => {
                       : 'border-border/50 bg-secondary hover:border-amber-500/50 hover:bg-gradient-to-br hover:from-amber-500/10 hover:to-orange-500/5 hover:scale-102 hover:shadow-xl hover:shadow-amber-500/15'
                   }
                 `}
+                role='button'
+                tabIndex={0}
                 onClick={() => setUserType('creator')}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setUserType('creator'); } }}
+                aria-pressed={userType === 'creator'}
               >
                 {userType === 'creator' && (
                   <div className='absolute top-4 right-4 p-2 bg-amber-500/30 rounded-full border border-amber-500/50 shadow-lg'>
@@ -569,7 +575,11 @@ const SovereignOnboarding: React.FC = () => {
                       : 'border-border/50 bg-secondary hover:border-violet-500/50 hover:bg-gradient-to-br hover:from-violet-500/10 hover:to-purple-500/5 hover:scale-102 hover:shadow-xl hover:shadow-violet-500/15'
                   }
                 `}
+                role='button'
+                tabIndex={0}
                 onClick={() => setUserType('supporter')}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setUserType('supporter'); } }}
+                aria-pressed={userType === 'supporter'}
               >
                 {userType === 'supporter' && (
                   <div className='absolute top-4 right-4 p-2 bg-violet-500/30 rounded-full border border-violet-500/50 shadow-lg'>
@@ -731,7 +741,7 @@ const SovereignOnboarding: React.FC = () => {
             {/* Navigation */}
             <div className='flex justify-between max-w-2xl pt-6 mx-auto'>
               <Button
-                onClick={() => setCurrentStep(currentStep - 1)}
+                onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
                 className='flex items-center px-6 py-3 rounded-xl bg-gradient-to-r from-amber-400 via-orange-500 to-amber-600 text-white font-bold shadow-lg hover:from-amber-500 hover:to-orange-500 transition-all duration-300 text-base gap-2'
                 style={{ minWidth: 120 }}
               >
@@ -911,7 +921,7 @@ const SovereignOnboarding: React.FC = () => {
                 {/* Navigation */}
                 <div className='flex justify-between max-w-2xl pt-6 mx-auto'>
                   <Button
-                    onClick={() => setCurrentStep(currentStep - 1)}
+                    onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
                     className='flex items-center px-6 py-3 rounded-xl bg-gradient-to-r from-amber-400 via-orange-500 to-amber-600 text-white font-bold shadow-lg hover:from-amber-500 hover:to-orange-500 transition-all duration-300 text-base gap-2'
                     style={{ minWidth: 120 }}
                   >

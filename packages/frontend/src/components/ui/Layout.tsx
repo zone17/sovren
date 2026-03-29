@@ -210,6 +210,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <Link
                 key={item.path}
                 to={item.path}
+                aria-current={isActive(item.path) ? 'page' : undefined}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 no-underline ${
                   isActive(item.path)
                     ? 'bg-purple-500/10 text-purple-400'
@@ -307,13 +308,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 </button>
                 <Link
                   to="/login"
-                  className="text-xs text-white/50 hover:text-white px-3 py-1.5 no-underline hidden sm:inline"
+                  className="text-xs text-white/50 hover:text-white px-3 py-3 no-underline hidden sm:inline"
                 >
                   Log in
                 </Link>
                 <Link
                   to="/signup"
-                  className="text-xs font-medium text-white px-3 py-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-purple-600 no-underline hidden sm:inline"
+                  className="text-xs font-medium text-white px-3 py-3 rounded-lg bg-gradient-to-r from-violet-600 to-purple-600 no-underline hidden sm:inline"
                 >
                   Sign Up
                 </Link>
@@ -347,6 +348,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                         key={item.path}
                         to={item.path}
                         onClick={() => setMobileMenuOpen(false)}
+                        aria-current={isActive(item.path) ? 'page' : undefined}
                         className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium no-underline ${
                           isActive(item.path)
                             ? 'bg-purple-500/10 text-purple-400'

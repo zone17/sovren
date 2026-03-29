@@ -1,5 +1,7 @@
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Spinner } from '../../../components/ui/spinner';
+import { DEMO_CREATORS } from '../../../seed/demo-creators';
 import { useDiscovery } from '../hooks/useDiscovery';
 import { CreatorCard } from './CreatorCard';
 import { CATEGORIES } from '../types';
@@ -15,8 +17,35 @@ export const DiscoveryPage = () => {
     isLoading,
     isFetching,
     error,
-    refetch,
   } = useDiscovery();
+
+  // Use demo creators as fallback when API errors or returns empty results
+  const showDemoFallback = !isLoading && (!!error || creators.length === 0);
+
+  const displayCreators = useMemo(() => {
+    if (!showDemoFallback) return creators;
+
+    let filtered = [...DEMO_CREATORS];
+
+    // Apply category filter to demo data
+    if (filters.category) {
+      filtered = filtered.filter((c) =>
+        c.categories.includes(filters.category!)
+      );
+    }
+
+    // Apply search filter to demo data
+    if (filters.query) {
+      const q = filters.query.toLowerCase();
+      filtered = filtered.filter(
+        (c) =>
+          c.displayName.toLowerCase().includes(q) ||
+          c.bio.toLowerCase().includes(q)
+      );
+    }
+
+    return filtered;
+  }, [showDemoFallback, creators, filters.category, filters.query]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -103,44 +132,37 @@ export const DiscoveryPage = () => {
           </div>
         )}
 
-        {error && (
-          <div className="text-center py-16" role="alert">
-            <p className="text-lg font-semibold text-foreground">Something went wrong</p>
-            <p className="mt-1 text-muted-foreground">Failed to load creators</p>
-            <button
-              onClick={() => refetch()}
-              className="mt-4 px-4 py-2 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-lg text-sm font-medium shadow-[0_4px_16px_rgba(139,92,246,0.3)] hover:opacity-90 transition-all duration-150"
-            >
-              Try Again
-            </button>
-          </div>
-        )}
+        {/* Screen-reader result count announcement */}
+        <div aria-live="polite" aria-atomic="true" className="sr-only">
+          {!isLoading && `${displayCreators.length} creators found`}
+        </div>
 
-        {!isLoading && !error && creators.length === 0 && (
+        {showDemoFallback && displayCreators.length === 0 && (
           <div className="text-center py-16">
             <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-purple-500/20 to-violet-500/20 border border-purple-500/20 flex items-center justify-center">
               <svg className="w-8 h-8 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
               </svg>
             </div>
-            <p className="text-lg font-semibold text-foreground">No creators found yet</p>
-            <p className="mt-2 text-muted-foreground">Be the first to join and start creating on Sovren!</p>
-            <Link
-              to="/signup"
-              className="inline-block mt-6 px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-lg text-sm font-medium shadow-[0_4px_16px_rgba(139,92,246,0.3)] hover:opacity-90 transition-all duration-150 no-underline"
-            >
-              Join Sovren
-            </Link>
+            <p className="text-lg font-semibold text-foreground">No creators match your search</p>
+            <p className="mt-2 text-muted-foreground">Try a different search or category filter.</p>
           </div>
         )}
 
-        {/* Screen-reader result count announcement */}
-        <div aria-live="polite" aria-atomic="true" className="sr-only">
-          {!isLoading && !error && `${creators.length} creators found`}
-        </div>
-
-        {!isLoading && !error && creators.length > 0 && (
+        {!isLoading && displayCreators.length > 0 && (
           <>
+            {/* Demo fallback banner */}
+            {showDemoFallback && (
+              <div className="mb-6 text-center">
+                <span className="inline-block px-3 py-1 text-xs font-medium text-purple-300 bg-purple-500/10 border border-purple-500/20 rounded-full">
+                  Featured Creators
+                </span>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Meet some of the creators building on Sovren
+                </p>
+              </div>
+            )}
+
             {/* Subtle fetching indicator for subsequent queries */}
             {isFetching && (
               <div className="flex justify-center pb-4" role="status" aria-label="Updating results">
@@ -151,13 +173,31 @@ export const DiscoveryPage = () => {
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {creators.map((creator) => (
-                <CreatorCard key={creator.id} creator={creator} />
+              {displayCreators.map((creator) => (
+                <div key={creator.id} className="relative">
+                  {showDemoFallback && (
+                    <span className="absolute top-3 right-3 z-10 px-2 py-0.5 text-[10px] font-medium text-purple-300 bg-purple-500/20 border border-purple-500/30 rounded-full">
+                      Featured
+                    </span>
+                  )}
+                  <CreatorCard creator={creator} />
+                </div>
               ))}
             </div>
 
-            {/* Pagination */}
-            {pagination && pagination.totalPages > 1 && (
+            {showDemoFallback && (
+              <div className="mt-8 text-center">
+                <Link
+                  to="/signup"
+                  className="inline-block px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-lg text-sm font-medium shadow-[0_4px_16px_rgba(139,92,246,0.3)] hover:opacity-90 transition-all duration-150 no-underline"
+                >
+                  Join Sovren as a Creator
+                </Link>
+              </div>
+            )}
+
+            {/* Pagination — only for real API results */}
+            {!showDemoFallback && pagination && pagination.totalPages > 1 && (
               <nav aria-label="Pagination" className="mt-8 flex items-center justify-center gap-4">
                 <button
                   onClick={() => setPage(page - 1)}

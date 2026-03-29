@@ -361,7 +361,7 @@ const Signup: React.FC = () => {
                       onClick={generateNostrKeys}
                       disabled={isGeneratingKeys}
                       variant="outline"
-                      className="w-full mb-4 border-purple-500/30 hover:border-purple-500/50 transition-colors duration-150"
+                      className="w-full mb-4 h-11 border-purple-500/30 hover:border-purple-500/50 transition-colors duration-150"
                     >
                       {isGeneratingKeys ? (
                         <span className="flex items-center justify-center">
@@ -380,7 +380,7 @@ const Signup: React.FC = () => {
                   <Button
                     onClick={handleNostrSignup}
                     disabled={isLoading || !isNostrKeysValid()}
-                    className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white shadow-[0_4px_16px_rgba(139,92,246,0.3)] transition-all duration-150"
+                    className="w-full h-11 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white shadow-[0_4px_16px_rgba(139,92,246,0.3)] transition-all duration-150"
                   >
                     {isLoading ? (
                       <span className="flex items-center justify-center">

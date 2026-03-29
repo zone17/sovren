@@ -9,7 +9,7 @@ const Terms: React.FC = () => {
     <div className='min-h-screen bg-background'>
       <div className='max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16'>
         <nav className='mb-8'>
-          <Link to='/' className='text-sm text-purple-400 hover:text-purple-300 transition-colors'>
+          <Link to='/' className='text-sm text-purple-400 hover:text-purple-300 transition-colors inline-flex items-center py-3 min-h-[44px]'>
             &larr; Back to Home
           </Link>
         </nav>

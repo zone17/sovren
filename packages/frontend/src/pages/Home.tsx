@@ -503,12 +503,12 @@ const Home: React.FC = () => {
               </h4>
               <ul className="space-y-3">
                 <li>
-                  <a href="/help" className="text-sm text-white/40 hover:text-white/70 transition-colors no-underline">
+                  <a href="/help" className="text-sm text-white/40 hover:text-white/70 transition-colors no-underline inline-flex items-center min-h-[44px]">
                     Help
                   </a>
                 </li>
                 <li>
-                  <a href="/faq" className="text-sm text-white/40 hover:text-white/70 transition-colors no-underline">
+                  <a href="/faq" className="text-sm text-white/40 hover:text-white/70 transition-colors no-underline inline-flex items-center min-h-[44px]">
                     FAQ
                   </a>
                 </li>
@@ -522,12 +522,12 @@ const Home: React.FC = () => {
               </h4>
               <ul className="space-y-3">
                 <li>
-                  <a href="/terms" className="text-sm text-white/40 hover:text-white/70 transition-colors no-underline">
+                  <a href="/terms" className="text-sm text-white/40 hover:text-white/70 transition-colors no-underline inline-flex items-center min-h-[44px]">
                     Terms of Service
                   </a>
                 </li>
                 <li>
-                  <a href="/privacy" className="text-sm text-white/40 hover:text-white/70 transition-colors no-underline">
+                  <a href="/privacy" className="text-sm text-white/40 hover:text-white/70 transition-colors no-underline inline-flex items-center min-h-[44px]">
                     Privacy Policy
                   </a>
                 </li>

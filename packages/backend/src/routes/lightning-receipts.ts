@@ -104,6 +104,86 @@ const receiptAccessLimit = rateLimit({
 const router = Router();
 
 // ===============================
+// 🔄 Health Check Endpoint
+// ===============================
+// IMPORTANT: Static routes MUST be defined BEFORE parameterized routes.
+// Express matches top-to-bottom, so /:identifier would capture /health and /analytics/summary
+// if they were defined after it.
+
+/**
+ * GET /api/lightning/receipt/health
+ * Health check for receipt service
+ */
+router.get('/health', async (req: Request, res: Response) => {
+  try {
+    // Check service health
+    const health = {
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      version: '1.0.0',
+      services: {
+        receiptGeneration: 'operational',
+        pdfGeneration: 'operational',
+        emailService: 'operational',
+        storage: 'operational',
+      },
+    };
+
+    res.json({
+      success: true,
+      data: health,
+    });
+  } catch (error) {
+    console.error('Health check failed:', error);
+    res.status(503).json({
+      success: false,
+      error: 'Service unhealthy',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+// ===============================
+// 📊 Receipt Analytics Endpoint
+// ===============================
+
+/**
+ * GET /api/lightning/receipt/analytics/summary
+ * Get receipt generation analytics (admin only)
+ */
+router.get('/analytics/summary', authenticate, authorize(['admin']), receiptAccessLimit, async (req: Request, res: Response) => {
+  try {
+    // TODO(backlog): Implement analytics aggregation
+    // This would typically require database queries to aggregate receipt data
+
+    const analyticsData = {
+      totalReceipts: 0,
+      totalAmount: 0,
+      averageAmount: 0,
+      pdfGenerated: 0,
+      emailsSent: 0,
+      verificationCount: 0,
+      timeRange: {
+        from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days ago
+        to: new Date().toISOString(),
+      },
+    };
+
+    res.json({
+      success: true,
+      data: analyticsData,
+    });
+  } catch (error) {
+    console.error('Analytics retrieval failed:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Analytics retrieval failed',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+// ===============================
 // 📝 Receipt Generation Endpoint
 // ===============================
 
@@ -456,83 +536,6 @@ router.post('/:receiptId/verify', authenticate, receiptAccessLimit, async (req: 
     res.status(500).json({
       success: false,
       error: 'Verification failed',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
-});
-
-// ===============================
-// 📊 Receipt Analytics Endpoint
-// ===============================
-
-/**
- * GET /api/lightning/receipt/analytics/summary
- * Get receipt generation analytics (admin only)
- */
-router.get('/analytics/summary', authenticate, authorize(['admin']), receiptAccessLimit, async (req: Request, res: Response) => {
-  try {
-    // TODO(backlog): Implement analytics aggregation
-    // This would typically require database queries to aggregate receipt data
-
-    const analyticsData = {
-      totalReceipts: 0,
-      totalAmount: 0,
-      averageAmount: 0,
-      pdfGenerated: 0,
-      emailsSent: 0,
-      verificationCount: 0,
-      timeRange: {
-        from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days ago
-        to: new Date().toISOString(),
-      },
-    };
-
-    res.json({
-      success: true,
-      data: analyticsData,
-    });
-  } catch (error) {
-    console.error('Analytics retrieval failed:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Analytics retrieval failed',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
-});
-
-// ===============================
-// 🔄 Health Check Endpoint
-// ===============================
-
-/**
- * GET /api/lightning/receipt/health
- * Health check for receipt service
- */
-router.get('/health', async (req: Request, res: Response) => {
-  try {
-    // Check service health
-    const health = {
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      version: '1.0.0',
-      services: {
-        receiptGeneration: 'operational',
-        pdfGeneration: 'operational',
-        emailService: 'operational',
-        storage: 'operational',
-      },
-    };
-
-    res.json({
-      success: true,
-      data: health,
-    });
-  } catch (error) {
-    console.error('Health check failed:', error);
-    res.status(503).json({
-      success: false,
-      error: 'Service unhealthy',
       message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
