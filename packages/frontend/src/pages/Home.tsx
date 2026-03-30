@@ -61,39 +61,6 @@ function useInView(threshold = 0.15) {
   return { ref, inView };
 }
 
-// Animated counter for stats
-const AnimatedNumber = React.memo(function AnimatedNumber({
-  value,
-  suffix = '',
-}: {
-  value: number;
-  suffix?: string;
-}) {
-  const [display, setDisplay] = useState(0);
-  const { ref, inView } = useInView(0.3);
-  const rafRef = useRef<number>(0);
-  useEffect(() => {
-    if (!inView) return;
-    const duration = 1200;
-    const start = performance.now();
-    const step = (now: number) => {
-      const progress = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setDisplay(Math.round(eased * value));
-      if (progress < 1) {
-        rafRef.current = requestAnimationFrame(step);
-      }
-    };
-    rafRef.current = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(rafRef.current);
-  }, [inView, value]);
-  return (
-    <span ref={ref}>
-      {display.toLocaleString()}
-      {suffix}
-    </span>
-  );
-});
 
 const Home: React.FC = () => {
   const navigate = useNavigate();

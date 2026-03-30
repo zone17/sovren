@@ -9,7 +9,6 @@ import {
   ExternalLink,
   Eye,
   EyeOff,
-  Globe,
   Heart,
   HelpCircle,
   Key,
