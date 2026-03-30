@@ -21,7 +21,7 @@ import type {
   DiscoveryResponse,
   DiscoveryCategory,
 } from '@shared/types/discovery';
-import { ServiceError } from '../../utils/errors';
+import { ServiceError, NotFoundError } from '../../utils/errors';
 
 /** Row shape returned by the discovery_creators view (post-COALESCE). */
 interface DiscoveryCreatorRow {
@@ -98,20 +98,22 @@ export class DiscoveryService implements IDiscoveryService {
     const total = count ?? 0;
     const totalPages = Math.ceil(total / limit);
 
-    const creators: CreatorSearchResult[] = ((rows ?? []) as unknown as DiscoveryCreatorRow[]).map((row) => ({
-      id: row.id,
-      displayName: row.display_name,
-      username: row.username,
-      avatarUrl: row.avatar_url,
-      bio: row.bio,
-      nip05Verified: row.nip05_verified,
-      categories: row.categories ?? [],
-      tags: row.tags,
-      followerCount: row.follower_count,
-      contentCount: row.content_count,
-      verified: row.verified,
-      createdAt: row.created_at,
-    }));
+    const creators: CreatorSearchResult[] = ((rows ?? []) as unknown as DiscoveryCreatorRow[]).map(
+      row => ({
+        id: row.id,
+        displayName: row.display_name,
+        username: row.username,
+        avatarUrl: row.avatar_url,
+        bio: row.bio,
+        nip05Verified: row.nip05_verified,
+        categories: row.categories ?? [],
+        tags: row.tags,
+        followerCount: row.follower_count,
+        contentCount: row.content_count,
+        verified: row.verified,
+        createdAt: row.created_at,
+      })
+    );
 
     return {
       creators,
@@ -135,7 +137,7 @@ export class DiscoveryService implements IDiscoveryService {
       .single();
 
     if (error || !row) {
-      throw new ServiceError('Creator not found', { statusCode: 404 } as any);
+      throw new NotFoundError('Creator', { details: 'Creator not found' });
     }
 
     const creatorRow = row as unknown as DiscoveryCreatorRow;
