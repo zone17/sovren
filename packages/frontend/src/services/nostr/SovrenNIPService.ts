@@ -672,18 +672,9 @@ export class SovrenNIPService {
    * Clear all cached Sovren events
    */
   async clearCache(): Promise<void> {
-    // Clear cache for all Sovren event kinds
-    const sovrenKinds = [
-      SovrenEventKind.CREATOR_PROFILE_EXTENDED,
-      SovrenEventKind.CONTENT_MONETIZATION,
-      SovrenEventKind.ANALYTICS_EVENT,
-      SovrenEventKind.SUBSCRIPTION_MANAGEMENT,
-      SovrenEventKind.CONTENT_RECOMMENDATIONS,
-    ];
-    // Note: EventCacheService doesn't have kind-specific clear,
-    // so this is a placeholder for future implementation
-    // In a real implementation, you'd need to add this functionality
-    // to the EventCacheService
+    // Note: EventCacheService doesn't have kind-specific clear.
+    // Placeholder for future implementation when cache supports
+    // clearing by Sovren event kinds (CREATOR_PROFILE_EXTENDED, etc.)
   }
 }
 /**

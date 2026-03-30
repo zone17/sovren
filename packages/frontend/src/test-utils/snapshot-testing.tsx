@@ -410,7 +410,7 @@ export const setupSnapshotTesting = (): void => {
 };
 
 // 🎯 **SNAPSHOT VALIDATION UTILITIES**
-export const validateSnapshotExists = (testName: string): boolean => {
+export const validateSnapshotExists = (_testName: string): boolean => {
   // This would typically check if snapshot file exists
   // For now, we'll return true as a placeholder
   return true;
