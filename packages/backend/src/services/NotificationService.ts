@@ -255,7 +255,7 @@ export class NotificationService implements INotificationService {
       if (!priorityGroups.has(priority)) {
         priorityGroups.set(priority, []);
       }
-      priorityGroups.get(priority)!.push(notification);
+      priorityGroups.get(priority)?.push(notification);
     }
 
     // Process in priority order
@@ -473,9 +473,10 @@ export class NotificationService implements INotificationService {
   private initializeChannelHandlers(): void {
     // Email channel handler
     if (this.emailService) {
+      const emailSvc = this.emailService;
       this.channelHandlers.set('email', {
         send: async (notification) => {
-          const result = await this.emailService!.send({
+          const result = await emailSvc.send({
             to: notification.email || '',
             subject: notification.title,
             text: notification.body,
@@ -584,8 +585,8 @@ export class NotificationService implements INotificationService {
     if (!quiet?.enabled) return false;
 
     const now = new Date();
-    const start = this.parseTime(quiet.start!);
-    const end = this.parseTime(quiet.end!);
+    const start = this.parseTime(quiet.start ?? '22:00');
+    const end = this.parseTime(quiet.end ?? '08:00');
 
     const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
@@ -640,9 +641,9 @@ export class NotificationService implements INotificationService {
     };
   }
 
-  private renderTemplate(template: string, data: Record<string, any>): string {
+  private renderTemplate(template: string, data: Record<string, unknown>): string {
     return template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
-      return data[key] || match;
+      return String(data[key] ?? match);
     });
   }
 
@@ -652,7 +653,7 @@ export class NotificationService implements INotificationService {
     status: 'sent' | 'failed'
   ): Promise<void> {
     const history: NotificationHistory = {
-      id: notification.id!,
+      id: notification.id ?? '',
       userId: notification.userId,
       title: notification.title,
       body: notification.body,

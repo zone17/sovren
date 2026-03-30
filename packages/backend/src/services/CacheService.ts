@@ -628,7 +628,7 @@ export class CacheService implements ICacheService {
 
     // Disconnect from provider
     if ('disconnect' in this.provider) {
-      await (this.provider as any).disconnect();
+      await (this.provider as unknown as { disconnect(): Promise<void> }).disconnect();
     }
 
     this.logger.info('CacheService disposed');

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * @file Logger.ts
  * @description Logging utility for the testing system
@@ -104,7 +103,7 @@ export class Logger {
    */
   private log(level: LogLevel, message: string, metadata: Record<string, unknown> = {}): void {
     // Skip if below minimum level
-    if (level < this.options.minLevel) {
+    if (level < (this.options.minLevel ?? LogLevel.INFO)) {
       return;
     }
 
@@ -148,7 +147,8 @@ export class Logger {
       formattedMessage = this.colorize(formattedMessage, level);
     }
 
-    // Output to console
+    // Output to console — Logger IS the console abstraction, so direct console use is intentional
+    /* eslint-disable no-console */
     switch (level) {
       case LogLevel.DEBUG:
         console.debug(formattedMessage);
@@ -163,6 +163,7 @@ export class Logger {
         console.error(formattedMessage);
         break;
     }
+    /* eslint-enable no-console */
 
     // Log to file if enabled
     if (this.options.logToFile) {
@@ -217,6 +218,7 @@ export class Logger {
     // fs.appendFileSync(this.options.logFilePath, message + '\n');
 
     // For now, we'll just log that we would write to file
+    // eslint-disable-next-line no-console
     console.debug(`[WOULD LOG TO FILE: ${this.options.logFilePath}]: ${message}`);
   }
 }

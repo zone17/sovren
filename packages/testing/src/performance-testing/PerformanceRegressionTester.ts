@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * @fileoverview Elite Performance Regression Tester - Self-optimizing performance regression testing
  */
@@ -30,7 +29,7 @@ export interface Regression {
 
 export class PerformanceRegressionTester extends EventEmitter {
   private config: RegressionConfig;
-  private historicalData: any[] = [];
+  private historicalData: unknown[] = [];
 
   constructor(config: RegressionConfig) {
     super();
@@ -41,7 +40,7 @@ export class PerformanceRegressionTester extends EventEmitter {
     this.emit('initialized');
   }
 
-  public async detectRegressions(current: any[], baseline: any[]): Promise<RegressionResult> {
+  public async detectRegressions(current: unknown[], baseline: unknown[]): Promise<RegressionResult> {
     const regressions = this.analyzeRegressions(current, baseline);
 
     return {
@@ -53,7 +52,7 @@ export class PerformanceRegressionTester extends EventEmitter {
     };
   }
 
-  private analyzeRegressions(current: any[], baseline: any[]): Regression[] {
+  private analyzeRegressions(_current: unknown[], _baseline: unknown[]): Regression[] {
     // Simulate regression analysis
     return [
       {

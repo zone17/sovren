@@ -1,4 +1,4 @@
-// @ts-nocheck — SubscriptionManagementService interface mismatch needs service refactor
+// @ts-nocheck
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 /**
  * SUBSCRIPTION TIERS MANAGEMENT ROUTES
@@ -85,13 +85,14 @@ router.post(
         success: true,
         data: tier,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to create subscription tier', { error });
+      const errMsg = error instanceof Error ? error.message : String(error);
 
-      if (error.message?.includes('Maximum number of subscription tiers')) {
+      if (errMsg.includes('Maximum number of subscription tiers')) {
         return res.status(400).json({
           success: false,
-          error: error.message,
+          error: errMsg,
           code: 'TIER_LIMIT_EXCEEDED',
         });
       }
@@ -382,10 +383,11 @@ router.post(
         success: true,
         data: subscription,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to create subscription', { error });
+      const errMsg = error instanceof Error ? error.message : String(error);
 
-      if (error.message?.includes('already subscribed')) {
+      if (errMsg.includes('already subscribed')) {
         return res.status(400).json({
           success: false,
           error: 'You are already subscribed to this tier',

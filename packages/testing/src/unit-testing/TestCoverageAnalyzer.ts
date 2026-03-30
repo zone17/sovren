@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * @file TestCoverageAnalyzer.ts
  * @description Analyzes and enforces test coverage requirements

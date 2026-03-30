@@ -13,6 +13,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import logger from '../lib/logger';
 import type {
   ContentBlock,
   ContentCollection,
@@ -428,7 +429,7 @@ export class ContentManagementService {
 
     // Check if content already exists
     const existingItems = collection.content_items || [];
-    if (existingItems.some((item: any) => item.content_id === contentId)) {
+    if (existingItems.some((item: { content_id: string }) => item.content_id === contentId)) {
       throw new ConflictError('Content already exists in collection');
     }
 
@@ -657,7 +658,7 @@ export class ContentManagementService {
       .eq('id', contentId);
 
     if (updateError) {
-      console.error('Failed to update view count:', updateError.message);
+      logger.error('Failed to update view count:', { error: updateError.message });
     }
 
     // Track view event
@@ -673,7 +674,7 @@ export class ContentManagementService {
     const { error: eventError } = await this.supabase.from('content_analytics').insert(viewEvent);
 
     if (eventError) {
-      console.error('Failed to track view event:', eventError.message);
+      logger.error('Failed to track view event:', { error: eventError.message });
     }
   }
 

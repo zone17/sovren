@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Performance Accuracy Validator - US-154.8
  * Continuous performance testing accuracy validation
@@ -113,7 +112,7 @@ export class PerformanceAccuracyValidator extends EventEmitter {
       this.detectAccuracyTrends();
       this.emit('validation-cycle-complete', { resultsCount: validationResults.length });
     } catch (error) {
-      this.emit('validation-error', { error: error.message });
+      this.emit('validation-error', { error: error instanceof Error ? error.message : String(error) });
     }
   }
 

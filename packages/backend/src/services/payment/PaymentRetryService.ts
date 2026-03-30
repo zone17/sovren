@@ -343,7 +343,7 @@ export class PaymentRetryService {
     if (!this.isRetryAllowed()) {
       const error = new CircuitBreakerOpenError(
         this.circuitBreakerState.failureCount,
-        this.circuitBreakerState.openedAt!
+        this.circuitBreakerState.openedAt ?? new Date()
       );
       this.logger?.error('Retry blocked by circuit breaker', {
         paymentId,
@@ -379,7 +379,7 @@ export class PaymentRetryService {
     const isFinalAttempt = attemptNumber === this.config.maxAttempts;
 
     // Step 7: Create retry attempt record
-    const { data: retryAttempt, error: insertError } = await this.supabase
+    const { data: _retryAttempt, error: insertError } = await this.supabase
       .from('payment_retry_attempts')
       .insert({
         payment_id: paymentId,

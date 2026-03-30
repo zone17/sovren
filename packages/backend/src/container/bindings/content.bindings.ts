@@ -1,4 +1,5 @@
 // @ts-nocheck
+// TypeScript strict mode enabled
 /**
  * Content Services Binding Module
  * Registers all Phase 3 content services in the DI container

@@ -108,7 +108,7 @@ export class RecommendationService {
 
       // Score and rank recommendations
       const creatorScores = new Map<string, number>();
-      const creatorData = new Map<string, any>();
+      const creatorData = new Map<string, Record<string, unknown>>();
 
       recommendedCreators?.forEach((rec) => {
         const creatorId = rec.creator_id;
@@ -120,7 +120,7 @@ export class RecommendationService {
         }
 
         // Increase score for each similar user who follows this creator
-        creatorScores.set(creatorId, creatorScores.get(creatorId)! + 1);
+        creatorScores.set(creatorId, (creatorScores.get(creatorId) ?? 0) + 1);
 
         // Bonus score for matching categories
         const matchingCategories = creator.categories?.filter((cat: string) =>
@@ -128,7 +128,7 @@ export class RecommendationService {
         );
         creatorScores.set(
           creatorId,
-          creatorScores.get(creatorId)! + matchingCategories.length * 0.5
+          (creatorScores.get(creatorId) ?? 0) + matchingCategories.length * 0.5
         );
       });
 
@@ -387,7 +387,7 @@ export class RecommendationService {
    * Helper: Calculate personalization score
    */
   private calculatePersonalizationScore(
-    content: any,
+    content: { category?: string; tags?: string[] },
     userCategories: string[],
     userTags: string[]
   ): number {

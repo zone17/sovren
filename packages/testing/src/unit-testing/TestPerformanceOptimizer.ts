@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * @file TestPerformanceOptimizer.ts
  * @description Analyzes and optimizes test performance

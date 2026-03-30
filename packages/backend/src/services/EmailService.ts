@@ -258,7 +258,7 @@ export class EmailService implements IEmailService {
   async sendTemplate(
     templateName: string,
     to: string | string[],
-    data: Record<string, any>,
+    data: Record<string, unknown>,
     options?: Partial<EmailMessage>
   ): Promise<EmailSendResult> {
     const template: EmailTemplate = {
@@ -497,13 +497,14 @@ export class EmailService implements IEmailService {
     return false;
   }
 
-  private isRetriableError(error: any): boolean {
+  private isRetriableError(error: unknown): boolean {
     const retriableErrors = ['ECONNREFUSED', 'ETIMEDOUT', 'ENOTFOUND', 'ENETUNREACH'];
+    const err = error as { code?: string; message?: string };
 
     return (
-      retriableErrors.includes(error.code) ||
-      error.message?.includes('rate limit') ||
-      error.message?.includes('temporary')
+      retriableErrors.includes(err.code ?? '') ||
+      (err.message?.includes('rate limit') ?? false) ||
+      (err.message?.includes('temporary') ?? false)
     );
   }
 

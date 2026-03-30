@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * @file TestMaintenanceSystem.ts
  * @description Automated test maintenance system that keeps tests up-to-date

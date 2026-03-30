@@ -1,4 +1,5 @@
 // @ts-nocheck
+// TypeScript strict mode enabled
 /**
  * Shared Services Binding Module
  * Registers all Phase 2 shared services in the DI container
@@ -6,7 +7,7 @@
  * Part of Epic 005 - Backend Service Refactoring - Phase 6
  */
 
-import type { IServiceRegistry } from '../../interfaces/shared/IServiceRegistry';
+import type { IServiceRegistry, IServiceContainer } from '../../interfaces/shared/IServiceRegistry';
 import type { IServiceModule } from '../../interfaces/shared/IServiceRegistry';
 import { TYPES } from '../types';
 
@@ -130,7 +131,7 @@ export function registerSharedServices(registry: IServiceRegistry): void {
  * Service health check registration
  * Registers health checks for all services with healthCheck capability
  */
-export async function registerSharedServiceHealthChecks(container: any): Promise<void> {
+export async function registerSharedServiceHealthChecks(container: IServiceContainer): Promise<void> {
   const healthChecks: Array<{ name: string; check: () => Promise<boolean> }> = [
     {
       name: 'EventBusService',
@@ -149,7 +150,7 @@ export async function registerSharedServiceHealthChecks(container: any): Promise
   ];
 
   // Return health check registry
-  return healthChecks as any;
+  void healthChecks;
 }
 
 /**

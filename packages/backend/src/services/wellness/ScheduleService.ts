@@ -47,7 +47,7 @@ export class ScheduleService implements IScheduleService {
     const rows = patterns || [];
 
     // Calculate current posting rate
-    const totalPosts = rows.reduce((s: number, r: any) => s + (r.post_count || 0), 0);
+    const totalPosts = rows.reduce((s: number, r: { post_count?: number }) => s + (r.post_count || 0), 0);
     const currentPostsPerWeek = Math.round((totalPosts / 4) * 10) / 10;
 
     // Recommend a sustainable posting rate (capped at baseline avg if high)
@@ -143,10 +143,10 @@ export class ScheduleService implements IScheduleService {
       .order('date', { ascending: true });
 
     const scheduled = futureContent || [];
-    const scheduledPosts = scheduled.reduce((s: number, r: any) => s + (r.post_count || 0), 0);
+    const scheduledPosts = scheduled.reduce((s: number, r: { post_count?: number }) => s + (r.post_count || 0), 0);
 
     // Buffer days = number of distinct future dates with posts
-    const bufferDays = scheduled.filter((r: any) => r.post_count > 0).length;
+    const bufferDays = scheduled.filter((r: { post_count?: number }) => r.post_count && r.post_count > 0).length;
     const threshold = 5;
 
     const status: BufferStatus = bufferDays >= threshold ? 'above_threshold' : 'below_threshold';

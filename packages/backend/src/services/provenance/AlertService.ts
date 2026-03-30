@@ -50,7 +50,7 @@ export class AlertService implements IAlertService {
     const totalCount = total || 0;
     const totalPages = Math.ceil(totalCount / limit);
 
-    const alerts: ContentAlert[] = (data || []).map((row: any) => ({
+    const alerts: ContentAlert[] = (data || []).map((row: Record<string, string>) => ({
       id: row.id,
       original_content_id: row.original_content_id,
       original_title: row.original_title || 'Untitled',

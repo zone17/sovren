@@ -791,7 +791,7 @@ export class InvoiceService implements IInvoiceService {
       const pdf = await this.generatePDF(invoiceId);
 
       // Get customer info
-      const customer = await this.getCustomer(recipientId);
+      const _customer = await this.getCustomer(recipientId);
 
       // Send via notification service
       await this.notification.send({
@@ -1121,7 +1121,7 @@ export class InvoiceService implements IInvoiceService {
       const { limit = 100, offset = 0, status, startDate, endDate } = options;
 
       let query = `SELECT * FROM invoices WHERE customer_id = $1`;
-      const params: any[] = [customerId];
+      const params: (string | Date | number)[] = [customerId];
       let paramIndex = 2;
 
       if (status) {
@@ -1427,7 +1427,7 @@ export class InvoiceService implements IInvoiceService {
     );
   }
 
-  private async getCustomer(customerId: string): Promise<any> {
+  private async getCustomer(customerId: string): Promise<Record<string, unknown>> {
     const result = await this.db.query('SELECT * FROM users WHERE id = $1', [customerId]);
 
     if (result.rows.length === 0) {
@@ -1456,7 +1456,7 @@ export class InvoiceService implements IInvoiceService {
     });
   }
 
-  private mapDbRowToInvoice(row: any): Invoice {
+  private mapDbRowToInvoice(row: Record<string, string | number | null>): Invoice {
     return {
       id: row.id,
       number: row.number,
@@ -1488,7 +1488,7 @@ export class InvoiceService implements IInvoiceService {
     };
   }
 
-  private mapDbRowToInvoiceItem(row: any): InvoiceItem {
+  private mapDbRowToInvoiceItem(row: Record<string, string | number | null>): InvoiceItem {
     return {
       id: row.id,
       description: row.description,

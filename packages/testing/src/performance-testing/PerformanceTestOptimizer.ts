@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Performance Test Optimizer - US-154.7
  * Autonomous performance test optimization
@@ -71,7 +70,7 @@ export interface TestScenario {
     endpoint: string;
     method: 'GET' | 'POST' | 'PUT' | 'DELETE';
     headers: Record<string, string>;
-    body?: any;
+    body?: unknown;
     weight: number; // Probability distribution
   }[];
   /** Think time between requests */
@@ -511,7 +510,7 @@ export class PerformanceTestOptimizer extends EventEmitter {
   /**
    * Get training data for model type
    */
-  private getTrainingData(modelType: string): any[] {
+  private getTrainingData(_modelType: string): Record<string, unknown>[] {
     // In a real implementation, this would fetch actual performance data
     return this.optimizationHistory.slice(-100).map((result) => ({
       input: {
@@ -533,7 +532,7 @@ export class PerformanceTestOptimizer extends EventEmitter {
   /**
    * Calculate model accuracy based on training data
    */
-  private async calculateModelAccuracy(model: LearningModel, trainingData: any[]): Promise<number> {
+  private async calculateModelAccuracy(model: LearningModel, trainingData: Record<string, unknown>[]): Promise<number> {
     if (trainingData.length === 0) return model.accuracy;
 
     // Simulate accuracy calculation based on prediction vs actual performance
@@ -552,7 +551,7 @@ export class PerformanceTestOptimizer extends EventEmitter {
   /**
    * Make prediction using model
    */
-  private makePrediction(model: LearningModel, input: any): any {
+  private makePrediction(model: LearningModel, input: Record<string, number>): Record<string, number> {
     // Simplified prediction based on model type
     switch (model.type) {
       case 'performance_predictor':
@@ -581,7 +580,7 @@ export class PerformanceTestOptimizer extends EventEmitter {
     const recommendations: OptimizationRecommendation[] = [];
 
     // Analyze current scenarios for optimization opportunities
-    for (const [scenarioId, scenario] of this.scenarios) {
+    for (const [_scenarioId, scenario] of this.scenarios) {
       const scenarioRecommendations = await this.analyzeScenario(scenario);
       recommendations.push(...scenarioRecommendations);
     }
@@ -887,7 +886,7 @@ export class PerformanceTestOptimizer extends EventEmitter {
    * Apply infrastructure optimization
    */
   private async applyInfrastructureOptimization(
-    recommendation: OptimizationRecommendation
+    _recommendation: OptimizationRecommendation
   ): Promise<void> {
     // Handle infrastructure-level optimizations
     // This would interface with cloud provider APIs in a real implementation
@@ -1094,7 +1093,7 @@ export class PerformanceTestOptimizer extends EventEmitter {
   /**
    * Export optimization configuration
    */
-  public exportConfiguration(): any {
+  public exportConfiguration(): Record<string, unknown> {
     return {
       config: this.config,
       scenarios: Array.from(this.scenarios.entries()),
@@ -1107,7 +1106,7 @@ export class PerformanceTestOptimizer extends EventEmitter {
   /**
    * Import optimization configuration
    */
-  public importConfiguration(data: any): void {
+  public importConfiguration(data: Record<string, unknown>): void {
     if (data.config) this.config = data.config;
     if (data.scenarios) this.scenarios = new Map(data.scenarios);
     if (data.resourceAllocations) this.resourceAllocations = new Map(data.resourceAllocations);
