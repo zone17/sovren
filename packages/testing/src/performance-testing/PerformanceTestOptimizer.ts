@@ -321,7 +321,7 @@ export class PerformanceTestOptimizer extends EventEmitter {
     // Initialize default resource allocations
     const resourceTypes = ['cpu', 'memory', 'bandwidth', 'storage'];
 
-    resourceTypes.forEach((type) => {
+    resourceTypes.forEach(type => {
       this.resourceAllocations.set(type, {
         type: type as 'cpu' | 'memory' | 'bandwidth' | 'storage',
         current: this.getDefaultAllocation(type),
@@ -464,7 +464,7 @@ export class PerformanceTestOptimizer extends EventEmitter {
       this.emit('optimization-cycle-complete', {
         timestamp: Date.now(),
         recommendationsGenerated: recommendations.length,
-        optimizationsApplied: recommendations.filter((r) => r.priority === 'high').length,
+        optimizationsApplied: recommendations.filter(r => r.priority === 'high').length,
       });
     } catch (error) {
       this.emit('optimization-cycle-error', { error: error.message });
@@ -512,7 +512,7 @@ export class PerformanceTestOptimizer extends EventEmitter {
    */
   private getTrainingData(_modelType: string): Record<string, unknown>[] {
     // In a real implementation, this would fetch actual performance data
-    return this.optimizationHistory.slice(-100).map((result) => ({
+    return this.optimizationHistory.slice(-100).map(result => ({
       input: {
         virtualUsers: result.originalScenario.loadPattern.virtualUsers,
         rampUpTime: result.originalScenario.loadPattern.rampUpTime,
@@ -532,12 +532,15 @@ export class PerformanceTestOptimizer extends EventEmitter {
   /**
    * Calculate model accuracy based on training data
    */
-  private async calculateModelAccuracy(model: LearningModel, trainingData: Record<string, unknown>[]): Promise<number> {
+  private async calculateModelAccuracy(
+    model: LearningModel,
+    trainingData: Record<string, unknown>[]
+  ): Promise<number> {
     if (trainingData.length === 0) return model.accuracy;
 
     // Simulate accuracy calculation based on prediction vs actual performance
-    const predictions = trainingData.map((data) => this.makePrediction(model, data.input));
-    const actuals = trainingData.map((data) => data.output);
+    const predictions = trainingData.map(data => this.makePrediction(model, data.input));
+    const actuals = trainingData.map(data => data.output);
 
     const errors = predictions.map(
       (pred, idx) =>
@@ -551,7 +554,10 @@ export class PerformanceTestOptimizer extends EventEmitter {
   /**
    * Make prediction using model
    */
-  private makePrediction(model: LearningModel, input: Record<string, number>): Record<string, number> {
+  private makePrediction(
+    model: LearningModel,
+    input: Record<string, number>
+  ): Record<string, number> {
     // Simplified prediction based on model type
     switch (model.type) {
       case 'performance_predictor':
@@ -580,7 +586,7 @@ export class PerformanceTestOptimizer extends EventEmitter {
     const recommendations: OptimizationRecommendation[] = [];
 
     // Analyze current scenarios for optimization opportunities
-    for (const [_scenarioId, scenario] of this.scenarios) {
+    for (const [, scenario] of this.scenarios) {
       const scenarioRecommendations = await this.analyzeScenario(scenario);
       recommendations.push(...scenarioRecommendations);
     }
@@ -780,7 +786,7 @@ export class PerformanceTestOptimizer extends EventEmitter {
     recommendations: OptimizationRecommendation[]
   ): Promise<void> {
     const autoApplyable = recommendations.filter(
-      (r) =>
+      r =>
         r.priority === 'high' &&
         r.expectedBenefit.riskReduction > 10 &&
         r.implementation.estimatedTime < 60

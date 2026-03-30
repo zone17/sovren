@@ -151,25 +151,25 @@ export class TestPerformanceOptimizer {
 
     // Calculate trends
     const trends = {
-      executionTime: this.calculateTrend(this.performanceHistory.map((p) => p.executionTime)),
-      setupTime: this.calculateTrend(this.performanceHistory.map((p) => p.setupTime)),
-      teardownTime: this.calculateTrend(this.performanceHistory.map((p) => p.teardownTime)),
-      memoryUsage: this.calculateTrend(this.performanceHistory.map((p) => p.memoryUsage)),
-      cpuUsage: this.calculateTrend(this.performanceHistory.map((p) => p.cpuUsage)),
+      executionTime: this.calculateTrend(this.performanceHistory.map(p => p.executionTime)),
+      setupTime: this.calculateTrend(this.performanceHistory.map(p => p.setupTime)),
+      teardownTime: this.calculateTrend(this.performanceHistory.map(p => p.teardownTime)),
+      memoryUsage: this.calculateTrend(this.performanceHistory.map(p => p.memoryUsage)),
+      cpuUsage: this.calculateTrend(this.performanceHistory.map(p => p.cpuUsage)),
     };
 
     // Calculate predictions
     const predictions = {
       nextRun: {
-        executionTime: this.predictNextValue(this.performanceHistory.map((p) => p.executionTime)),
-        memoryUsage: this.predictNextValue(this.performanceHistory.map((p) => p.memoryUsage)),
-        cpuUsage: this.predictNextValue(this.performanceHistory.map((p) => p.cpuUsage)),
+        executionTime: this.predictNextValue(this.performanceHistory.map(p => p.executionTime)),
+        memoryUsage: this.predictNextValue(this.performanceHistory.map(p => p.memoryUsage)),
+        cpuUsage: this.predictNextValue(this.performanceHistory.map(p => p.cpuUsage)),
       },
     };
 
     return {
       available: true,
-      history: this.performanceHistory.map((p) => ({
+      history: this.performanceHistory.map(p => ({
         date: p.timestamp || new Date().toISOString(),
         executionTime: p.executionTime,
         memoryUsage: p.memoryUsage,
@@ -457,12 +457,12 @@ export class TestPerformanceOptimizer {
     // For this example, we'll just log the changes
 
     const changes = optimization.changes as string[];
-    changes.forEach((change) => {
+    changes.forEach(change => {
       this.logger.info(`- ${change}`);
     });
 
     // Simulate some delay for the optimization process
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, 100));
   }
 
   /**
@@ -560,15 +560,24 @@ export class TestPerformanceOptimizer {
       avgImpact?: number;
     }> = [];
 
-    this.performanceHistory.forEach((metrics) => {
-      metrics.bottlenecks.forEach((bottleneck) => {
+    this.performanceHistory.forEach(metrics => {
+      metrics.bottlenecks.forEach(bottleneck => {
         allBottlenecks.push(bottleneck);
       });
     });
 
     // Group by component and type
-    const groupedBottlenecks: Record<string, any> = {};
-    allBottlenecks.forEach((bottleneck) => {
+    const groupedBottlenecks: Record<
+      string,
+      {
+        component: string;
+        type: string;
+        occurrences: number;
+        totalImpact: number;
+        totalDuration: number;
+      }
+    > = {};
+    allBottlenecks.forEach(bottleneck => {
       const key = `${bottleneck.component}-${bottleneck.type}`;
       if (!groupedBottlenecks[key]) {
         groupedBottlenecks[key] = {
@@ -586,7 +595,7 @@ export class TestPerformanceOptimizer {
     });
 
     // Calculate averages and convert to array
-    return Object.values(groupedBottlenecks).map((group) => ({
+    return Object.values(groupedBottlenecks).map(group => ({
       component: group.component,
       type: group.type,
       occurrences: group.occurrences,
