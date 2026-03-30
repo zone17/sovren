@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * @fileoverview Elite E2E Test Data Manager - AI-powered test data management
  * with intelligent data generation and dynamic data lifecycle management.
@@ -299,7 +298,7 @@ export class E2ETestDataManager extends EventEmitter {
    */
   public async createDataSet(
     schema: DataSchema,
-    config?: Partial<TestDataConfig>
+    _config?: Partial<TestDataConfig>
   ): Promise<TestDataSet> {
     if (!this.isInitialized) {
       throw new Error('Data manager not initialized. Call initialize() first.');
@@ -371,7 +370,7 @@ export class E2ETestDataManager extends EventEmitter {
       this.logger.debug('Reserving test data', { dataSetId, count });
 
       // Filter available records
-      let availableRecords = dataSet.data.filter((record) => !record.locked);
+      let availableRecords = dataSet.data.filter(record => !record.locked);
 
       if (filters) {
         availableRecords = this.applyFilters(availableRecords, filters);
@@ -380,12 +379,12 @@ export class E2ETestDataManager extends EventEmitter {
       if (availableRecords.length < count) {
         // Generate more data if needed
         await this.generateData(dataSet, count - availableRecords.length);
-        availableRecords = dataSet.data.filter((record) => !record.locked);
+        availableRecords = dataSet.data.filter(record => !record.locked);
       }
 
       // Reserve records
       const reservedRecords = availableRecords.slice(0, count);
-      reservedRecords.forEach((record) => {
+      reservedRecords.forEach(record => {
         record.locked = true;
         record.lastUsed = new Date();
         record.usageCount++;
@@ -416,7 +415,7 @@ export class E2ETestDataManager extends EventEmitter {
       this.logger.debug('Releasing test data', { reservationId, count: reservedRecords.length });
 
       // Unlock records
-      reservedRecords.forEach((record) => {
+      reservedRecords.forEach(record => {
         record.locked = false;
       });
 
@@ -522,7 +521,7 @@ export class E2ETestDataManager extends EventEmitter {
   /**
    * Generates date value
    */
-  private generateDate(field: SchemaField): Date {
+  private generateDate(_field: SchemaField): Date {
     const now = new Date();
     const pastDays = Math.floor(Math.random() * 365);
     return new Date(now.getTime() - pastDays * 24 * 60 * 60 * 1000);
@@ -568,7 +567,7 @@ export class E2ETestDataManager extends EventEmitter {
    * Gets constraint value from field
    */
   private getConstraintValue(field: SchemaField, type: string, defaultValue: any): any {
-    const constraint = field.constraints?.find((c) => c.type === type);
+    const constraint = field.constraints?.find(c => c.type === type);
     return constraint ? constraint.value : defaultValue;
   }
 
@@ -576,7 +575,7 @@ export class E2ETestDataManager extends EventEmitter {
    * Applies filters to records
    */
   private applyFilters(records: TestRecord[], filters: Record<string, any>): TestRecord[] {
-    return records.filter((record) => {
+    return records.filter(record => {
       for (const [field, value] of Object.entries(filters)) {
         if (record.data[field] !== value) {
           return false;

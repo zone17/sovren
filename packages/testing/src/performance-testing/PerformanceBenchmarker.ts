@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * @fileoverview Elite Performance Benchmarker - Automated performance benchmarking
  * with anomaly detection, baseline tracking, and intelligent analysis.
@@ -112,7 +111,7 @@ export class PerformanceBenchmarker extends EventEmitter {
     console.log('Loading performance baselines...');
   }
 
-  private async collectBenchmarkMetrics(target: BenchmarkTarget): Promise<BenchmarkMetric[]> {
+  private async collectBenchmarkMetrics(_target: BenchmarkTarget): Promise<BenchmarkMetric[]> {
     // Simulate comprehensive metric collection
     return [
       {
@@ -147,7 +146,7 @@ export class PerformanceBenchmarker extends EventEmitter {
   }
 
   private async compareToBaselines(metrics: BenchmarkMetric[]): Promise<BaselineComparison[]> {
-    return metrics.map((metric) => {
+    return metrics.map(metric => {
       const baseline = this.baselines.get(metric.name);
 
       if (!baseline) {
@@ -201,7 +200,7 @@ export class PerformanceBenchmarker extends EventEmitter {
       }
 
       // Check for statistical anomalies
-      const baseline = baselines.find((b) => b.metric === metric.name);
+      const baseline = baselines.find(b => b.metric === metric.name);
       if (baseline && baseline.deviation !== null && Math.abs(baseline.deviation) > 0.3) {
         anomalies.push({
           type: 'statistical_anomaly',
@@ -236,7 +235,7 @@ export class PerformanceBenchmarker extends EventEmitter {
       }
 
       // Adjust based on baseline comparison
-      const baseline = baselines.find((b) => b.metric === metric.name);
+      const baseline = baselines.find(b => b.metric === metric.name);
       if (baseline && baseline.deviation !== null) {
         if (baseline.deviation > 0.2) metricScore *= 0.8;
         else if (baseline.deviation < -0.2) metricScore *= 1.2;
@@ -263,7 +262,7 @@ export class PerformanceBenchmarker extends EventEmitter {
     score: number,
     anomalies: PerformanceAnomaly[]
   ): 'excellent' | 'good' | 'poor' | 'critical' {
-    const criticalAnomalies = anomalies.filter((a) => a.severity === 'critical').length;
+    const criticalAnomalies = anomalies.filter(a => a.severity === 'critical').length;
 
     if (criticalAnomalies > 0 || score < 40) return 'critical';
     if (score < 60) return 'poor';
@@ -288,19 +287,19 @@ export class PerformanceBenchmarker extends EventEmitter {
   private filterHistoryByPeriod(period: string): BenchmarkResult[] {
     const days = parseInt(period) || 30;
     const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-    return this.benchmarkHistory.filter((result) => result.timestamp > cutoff);
+    return this.benchmarkHistory.filter(result => result.timestamp > cutoff);
   }
 
-  private calculateTrends(history: BenchmarkResult[]): any[] {
+  private calculateTrends(_history: BenchmarkResult[]): any[] {
     return [];
   }
-  private identifyImprovements(history: BenchmarkResult[]): any[] {
+  private identifyImprovements(_history: BenchmarkResult[]): any[] {
     return [];
   }
-  private identifyRegressions(history: BenchmarkResult[]): any[] {
+  private identifyRegressions(_history: BenchmarkResult[]): any[] {
     return [];
   }
-  private generateTrendRecommendations(history: BenchmarkResult[]): string[] {
+  private generateTrendRecommendations(_history: BenchmarkResult[]): string[] {
     return [];
   }
 }

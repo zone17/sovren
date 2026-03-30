@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * @fileoverview Elite Mobile E2E Tester - Autonomous mobile E2E testing
  * with device farm integration and mobile-specific testing capabilities.
@@ -268,7 +267,7 @@ export class MobileE2ETester extends EventEmitter {
         const chunks = this.chunkArray(this.config.devices, this.config.maxConcurrency);
 
         for (const chunk of chunks) {
-          const chunkResults = await Promise.all(chunk.map((device) => this.runDeviceTest(device)));
+          const chunkResults = await Promise.all(chunk.map(device => this.runDeviceTest(device)));
           results.push(...chunkResults);
         }
       } else {
@@ -286,8 +285,8 @@ export class MobileE2ETester extends EventEmitter {
 
       this.logger.info('Mobile E2E tests completed', {
         totalDevices: results.length,
-        passed: results.filter((r) => r.status === 'passed').length,
-        failed: results.filter((r) => r.status === 'failed').length,
+        passed: results.filter(r => r.status === 'passed').length,
+        failed: results.filter(r => r.status === 'failed').length,
       });
 
       return results;
@@ -542,7 +541,7 @@ export class MobileE2ETester extends EventEmitter {
   private async testAccessibilityStandard(
     session: any,
     standard: string,
-    device: MobileDeviceConfig
+    _device: MobileDeviceConfig
   ): Promise<AccessibilityResult[]> {
     // Implementation would test actual accessibility standard
     await this.sleep(1000);
@@ -758,8 +757,8 @@ export class MobileE2ETester extends EventEmitter {
       const report = {
         summary: {
           totalDevices: results.length,
-          passed: results.filter((r) => r.status === 'passed').length,
-          failed: results.filter((r) => r.status === 'failed').length,
+          passed: results.filter(r => r.status === 'passed').length,
+          failed: results.filter(r => r.status === 'failed').length,
           averageTestDuration: results.reduce((sum, r) => sum + r.duration, 0) / results.length,
         },
         deviceResults: results,
@@ -782,7 +781,7 @@ export class MobileE2ETester extends EventEmitter {
   private analyzePerformance(results: MobileTestResult[]): Record<string, any> {
     const analysis: Record<string, any> = {};
 
-    results.forEach((result) => {
+    results.forEach(result => {
       analysis[result.deviceId] = {
         cpuUsage: result.performanceMetrics.cpuUsage,
         memoryUsage: result.performanceMetrics.memoryUsage,
@@ -812,10 +811,10 @@ export class MobileE2ETester extends EventEmitter {
   private analyzeAccessibility(results: MobileTestResult[]): Record<string, any> {
     const analysis: Record<string, any> = {};
 
-    results.forEach((result) => {
+    results.forEach(result => {
       const totalIssues = result.accessibilityResults.length;
       const criticalIssues = result.accessibilityResults.filter(
-        (r) => r.severity === 'critical'
+        r => r.severity === 'critical'
       ).length;
 
       analysis[result.deviceId] = {
@@ -834,13 +833,13 @@ export class MobileE2ETester extends EventEmitter {
   private generateMobileRecommendations(results: MobileTestResult[]): string[] {
     const recommendations: string[] = [];
 
-    const failedDevices = results.filter((r) => r.status === 'failed');
+    const failedDevices = results.filter(r => r.status === 'failed');
     if (failedDevices.length > 0) {
       recommendations.push(`Address failures on ${failedDevices.length} device(s)`);
     }
 
     const performanceIssues = results.filter(
-      (r) => r.performanceMetrics.cpuUsage > 70 || r.performanceMetrics.memoryUsage > 512
+      r => r.performanceMetrics.cpuUsage > 70 || r.performanceMetrics.memoryUsage > 512
     );
     if (performanceIssues.length > 0) {
       recommendations.push('Optimize performance for resource-constrained devices');
@@ -869,7 +868,7 @@ export class MobileE2ETester extends EventEmitter {
    * Utility method to sleep
    */
   private sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   /**
@@ -902,8 +901,9 @@ export class MobileE2ETester extends EventEmitter {
       }
 
       // Close device sessions
-      for (const session of this.deviceSessions.values()) {
+      for (const _ of this.deviceSessions.values()) {
         // Implementation would close actual device session
+        void _;
       }
       this.deviceSessions.clear();
 

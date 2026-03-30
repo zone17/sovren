@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * @file AIAccessibilityTestingFramework.ts
  * @description Comprehensive automated accessibility testing for WCAG compliance without manual verification
@@ -646,7 +645,7 @@ export class AIAccessibilityTestingFramework {
 
   private async enhanceWithAI(
     results: AccessibilityValidationResult[],
-    element: Element
+    _element: Element
   ): Promise<AccessibilityValidationResult[]> {
     // Implementation for AI enhancement
     return results;
@@ -658,7 +657,7 @@ export class AIAccessibilityTestingFramework {
   }
 
   private async generateTestsForComponent(
-    component: ComponentAccessibilityAnalysis
+    _component: ComponentAccessibilityAnalysis
   ): Promise<void> {
     // Implementation for component test generation
   }
@@ -679,7 +678,7 @@ export class AIAccessibilityTestingFramework {
     return await this.generateRealTimeReport();
   }
 
-  private async checkComplianceRegressions(report: AccessibilityReport): Promise<void> {
+  private async checkComplianceRegressions(_report: AccessibilityReport): Promise<void> {
     // Implementation for compliance regression checking
   }
 
@@ -687,7 +686,7 @@ export class AIAccessibilityTestingFramework {
     // Implementation for component analysis updates
   }
 
-  private async generateRemediationRecommendations(report: AccessibilityReport): Promise<void> {
+  private async generateRemediationRecommendations(_report: AccessibilityReport): Promise<void> {
     // Implementation for remediation recommendations
   }
 
@@ -697,7 +696,7 @@ export class AIAccessibilityTestingFramework {
   }
 
   private async calculateComplianceScore(
-    components: ComponentAccessibilityAnalysis[]
+    _components: ComponentAccessibilityAnalysis[]
   ): Promise<number> {
     // Implementation for compliance score calculation
     return 85; // Example score
@@ -710,7 +709,7 @@ export class AIAccessibilityTestingFramework {
     return 'non-compliant';
   }
 
-  private async categorizeIssuesBySeverity(components: ComponentAccessibilityAnalysis[]): Promise<{
+  private async categorizeIssuesBySeverity(_components: ComponentAccessibilityAnalysis[]): Promise<{
     critical: AccessibilityIssue[];
     high: AccessibilityIssue[];
     medium: AccessibilityIssue[];
@@ -720,7 +719,7 @@ export class AIAccessibilityTestingFramework {
     return { critical: [], high: [], medium: [], low: [] };
   }
 
-  private async generateRemediationPriorities(issues: any): Promise<RemediationPriority[]> {
+  private async generateRemediationPriorities(_issues: any): Promise<RemediationPriority[]> {
     // Implementation for remediation priority generation
     return [];
   }
@@ -736,7 +735,7 @@ export class AIAccessibilityTestingFramework {
     };
   }
 
-  private generateComplianceOverview(report: AccessibilityReport): any {
+  private generateComplianceOverview(_report: AccessibilityReport): any {
     // Implementation for compliance overview generation
     return {};
   }
@@ -746,7 +745,7 @@ export class AIAccessibilityTestingFramework {
     return {};
   }
 
-  private generateRemediationGuide(report: AccessibilityReport): any {
+  private generateRemediationGuide(_report: AccessibilityReport): any {
     // Implementation for remediation guide generation
     return {};
   }
@@ -761,7 +760,7 @@ export class AIAccessibilityTestingFramework {
     return {};
   }
 
-  private formatDocumentationAsMarkdown(documentation: any): string {
+  private formatDocumentationAsMarkdown(_documentation: any): string {
     // Implementation for markdown formatting
     return '# Accessibility Testing Documentation\n\nGenerated automatically by AI framework.';
   }
@@ -782,7 +781,7 @@ export class AIAccessibilityTestingFramework {
   }
 
   private async wait(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   /**
