@@ -104,7 +104,7 @@ export class ContentPublishingService implements IContentPublishingService {
             contentId: row.content_id,
             scheduleId: row.schedule_id,
           });
-          this.publish(row.content_id, { immediate: true }).catch((error) => {
+          this.publish(row.content_id, { immediate: true }).catch(error => {
             this.logger.error('Failed to execute overdue publish', {
               contentId: row.content_id,
               error,
@@ -527,7 +527,7 @@ export class ContentPublishingService implements IContentPublishingService {
          WHERE c.status = 'scheduled'
          ORDER BY cs.scheduled_for ASC`
       );
-      return result.rows.map((row) => ({
+      return result.rows.map(row => ({
         ...row,
         scheduledFor: new Date(row.scheduled_for),
         scheduleId: row.schedule_id,
@@ -545,7 +545,7 @@ export class ContentPublishingService implements IContentPublishingService {
   async shutdown(): Promise<void> {
     this.logger.info('Shutting down ContentPublishingService');
     // Clear all scheduled jobs
-    for (const [scheduleId, job] of this.scheduledJobs) {
+    for (const [, /* scheduleId */ job] of this.scheduledJobs) {
       clearTimeout(job.timeout);
     }
     this.scheduledJobs.clear();
@@ -675,7 +675,7 @@ export class ContentPublishingService implements IContentPublishingService {
            AND status = 'active'`,
         [content.authorId]
       );
-      const subscribers = result.rows.map((row) => row.user_id);
+      const subscribers = result.rows.map(row => row.user_id);
       // Send notifications
       for (const subscriberId of subscribers) {
         await this.notification.send({
@@ -760,7 +760,7 @@ export class ContentPublishingService implements IContentPublishingService {
     }
     // Add content tags
     if (content.tags && content.tags.length > 0) {
-      content.tags.forEach((tag) => {
+      content.tags.forEach(tag => {
         tags.push(['t', tag]);
       });
     }

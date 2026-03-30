@@ -298,7 +298,6 @@ export class AIRecommendationService {
     userPrefs: UserPreferences | null,
     behaviorData: any
   ): Promise<ContentRecommendation[]> {
-    const recommendations: ContentRecommendation[] = [];
     const limit = request.limit || 10;
     // Combine multiple recommendation strategies
     const [contentBased, collaborative, behavioral, trending] = await Promise.all([

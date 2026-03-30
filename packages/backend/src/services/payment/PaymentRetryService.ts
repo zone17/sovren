@@ -327,7 +327,7 @@ export class PaymentRetryService {
     const nextRetryAt = new Date(Date.now() + delay);
     const isFinalAttempt = attemptNumber === this.config.maxAttempts;
     // Step 7: Create retry attempt record
-    const { data: retryAttempt, error: insertError } = await this.supabase
+    const { error: insertError } = await this.supabase
       .from('payment_retry_attempts')
       .insert({
         payment_id: paymentId,

@@ -526,7 +526,7 @@ export class InvoiceService implements IInvoiceService {
       const PDFDocument = (await import('pdfkit')).default;
       const doc = new PDFDocument({ margin: 50 });
       const chunks: Buffer[] = [];
-      doc.on('data', (chunk) => chunks.push(chunk));
+      doc.on('data', chunk => chunks.push(chunk));
       // Header
       doc.fontSize(20).text('INVOICE', { align: 'center' });
       doc.fontSize(12).text(`Invoice #: ${invoice.number}`, { align: 'right' });
@@ -670,7 +670,7 @@ export class InvoiceService implements IInvoiceService {
         date: invoice.createdAt.toLocaleDateString(),
         customerName: invoice.billingAddress.name,
         customerAddress: `${invoice.billingAddress.line1}, ${invoice.billingAddress.city}`,
-        items: invoice.items.map((item) => ({
+        items: invoice.items.map(item => ({
           description: item.description,
           quantity: item.quantity,
           unitPrice: item.unitPrice.toFixed(2),
@@ -703,7 +703,7 @@ export class InvoiceService implements IInvoiceService {
       // Generate PDF
       const pdf = await this.generatePDF(invoiceId);
       // Get customer info
-      const customer = await this.getCustomer(recipientId);
+      await this.getCustomer(recipientId);
       // Send via notification service
       await this.notification.send({
         recipientId,
@@ -970,7 +970,7 @@ export class InvoiceService implements IInvoiceService {
         `SELECT * FROM invoice_items WHERE invoice_id = $1 ORDER BY created_at`,
         [id]
       );
-      invoice.items = itemsResult.rows.map((row) => this.mapDbRowToInvoiceItem(row));
+      invoice.items = itemsResult.rows.map(row => this.mapDbRowToInvoiceItem(row));
       // Cache for quick retrieval
       await this.cache.set(`invoice:${id}`, invoice, 3600);
       return invoice;
@@ -1017,7 +1017,7 @@ export class InvoiceService implements IInvoiceService {
       query += ` ORDER BY created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
       params.push(limit, offset);
       const result = await this.db.query(query, params);
-      return result.rows.map((row) => this.mapDbRowToInvoice(row));
+      return result.rows.map(row => this.mapDbRowToInvoice(row));
     } catch (error) {
       this.logger.error('Failed to get customer invoices', error);
       throw new ServiceError('Failed to retrieve customer invoices', {
@@ -1038,7 +1038,7 @@ export class InvoiceService implements IInvoiceService {
          AND due_date < CURRENT_DATE
          ORDER BY due_date ASC`
       );
-      return result.rows.map((row) => this.mapDbRowToInvoice(row));
+      return result.rows.map(row => this.mapDbRowToInvoice(row));
     } catch (error) {
       this.logger.error('Failed to get overdue invoices', error);
       throw new ServiceError('Failed to retrieve overdue invoices', {
@@ -1136,7 +1136,7 @@ export class InvoiceService implements IInvoiceService {
     return `${this.INVOICE_PREFIX}-${year}${month}-${sequence}`;
   }
   private processLineItems(items: InvoiceItem[]): InvoiceItem[] {
-    return items.map((item) => {
+    return items.map(item => {
       const quantity = new Decimal(item.quantity);
       const unitPrice = new Decimal(item.unitPrice.amount);
       const total = quantity.mul(unitPrice);

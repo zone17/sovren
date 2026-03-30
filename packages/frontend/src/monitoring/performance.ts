@@ -4,6 +4,7 @@ let onCLS: any, onFCP: any, onFID: any, onINP: any, onLCP: any, onTTFB: any;
 if (typeof window !== 'undefined' && typeof jest === 'undefined') {
   // Only import web-vitals in browser environment (not Jest)
   try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const webVitals = require('web-vitals');
     ({ onCLS, onFCP, onFID, onINP, onLCP, onTTFB } = webVitals);
   } catch (error) {
@@ -180,7 +181,7 @@ class PerformanceMonitor {
     // Monitor Element Timing API for custom elements
     if ('PerformanceObserver' in window) {
       try {
-        const elementObserver = new PerformanceObserver((list) => {
+        const elementObserver = new PerformanceObserver(list => {
           for (const entry of list.getEntries()) {
             const elementEntry = entry as ElementTimingEntry;
             if (elementEntry.identifier) {
@@ -204,7 +205,7 @@ class PerformanceMonitor {
 
       // Monitor Layout Shift API for detailed CLS attribution
       try {
-        const layoutShiftObserver = new PerformanceObserver((list) => {
+        const layoutShiftObserver = new PerformanceObserver(list => {
           let cumulativeScore = 0;
           for (const entry of list.getEntries()) {
             const layoutShift = entry as LayoutShiftEntry;
@@ -235,7 +236,7 @@ class PerformanceMonitor {
 
       // Monitor User Timing API for custom measurements
       try {
-        const userTimingObserver = new PerformanceObserver((list) => {
+        const userTimingObserver = new PerformanceObserver(list => {
           for (const entry of list.getEntries()) {
             if (entry.entryType === 'measure') {
               this.recordMetric(
@@ -293,7 +294,7 @@ class PerformanceMonitor {
     // Monitor long tasks
     if ('PerformanceObserver' in window) {
       try {
-        const longTaskObserver = new PerformanceObserver((list) => {
+        const longTaskObserver = new PerformanceObserver(list => {
           for (const entry of list.getEntries()) {
             this.recordMetric(
               'LONG_TASK',
@@ -328,7 +329,7 @@ class PerformanceMonitor {
   private measureNavigationTiming(): void {
     if ('PerformanceObserver' in window) {
       try {
-        const navigationObserver = new PerformanceObserver((list) => {
+        const navigationObserver = new PerformanceObserver(list => {
           for (const entry of list.getEntries()) {
             const navEntry = entry as PerformanceNavigationTiming;
 
@@ -388,7 +389,7 @@ class PerformanceMonitor {
   private measurePaintTiming(): void {
     if ('PerformanceObserver' in window) {
       try {
-        const paintObserver = new PerformanceObserver((list) => {
+        const paintObserver = new PerformanceObserver(list => {
           for (const entry of list.getEntries()) {
             if (entry.name === 'first-paint') {
               this.recordMetric(
@@ -418,7 +419,7 @@ class PerformanceMonitor {
   private measureResourceTiming(): void {
     if ('PerformanceObserver' in window) {
       try {
-        const resourceObserver = new PerformanceObserver((list) => {
+        const resourceObserver = new PerformanceObserver(list => {
           for (const entry of list.getEntries()) {
             const resourceEntry = entry as PerformanceResourceTiming;
             const resourceType = this.getResourceType(resourceEntry.name);
@@ -487,7 +488,7 @@ class PerformanceMonitor {
     this.metrics.push(metric);
 
     // Trigger callbacks
-    this.vitalsCallbacks.forEach((callback) => {
+    this.vitalsCallbacks.forEach(callback => {
       try {
         callback();
       } catch (error) {
@@ -625,9 +626,9 @@ class PerformanceMonitor {
   } {
     const summary = {
       total: this.metrics.length,
-      good: this.metrics.filter((m) => m.rating === 'good').length,
-      needsImprovement: this.metrics.filter((m) => m.rating === 'needs-improvement').length,
-      poor: this.metrics.filter((m) => m.rating === 'poor').length,
+      good: this.metrics.filter(m => m.rating === 'good').length,
+      needsImprovement: this.metrics.filter(m => m.rating === 'needs-improvement').length,
+      poor: this.metrics.filter(m => m.rating === 'poor').length,
       byType: {} as Record<
         string,
         { count: number; avgValue: number; rating: string; trend?: string }
@@ -693,7 +694,7 @@ class PerformanceMonitor {
 
   // Disconnect observers
   public disconnect(): void {
-    this.observers.forEach((observer) => observer.disconnect());
+    this.observers.forEach(observer => observer.disconnect());
     this.observers.clear();
     this.vitalsCallbacks = [];
   }
@@ -769,7 +770,7 @@ export const getPerformanceReport = (): {
     summary,
     coreWebVitals: summary.coreWebVitals,
     recentMetrics: metrics.slice(-10),
-    poorPerformance: metrics.filter((m) => m.rating === 'poor').slice(-5),
+    poorPerformance: metrics.filter(m => m.rating === 'poor').slice(-5),
     trends: Object.entries(summary.byType)
       .filter(([, data]) => data.trend !== 'stable')
       .reduce((acc, [name, data]) => ({ ...acc, [name]: data.trend }), {}),

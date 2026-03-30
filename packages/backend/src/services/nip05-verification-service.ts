@@ -4,7 +4,6 @@ import { z } from 'zod';
 import { SupabaseDatabase } from '../config/database';
 
 // 🔍 DNS Lookup Utilities
-const dnsLookup = promisify(dns.lookup);
 const dnsResolveTxt = promisify(dns.resolveTxt);
 
 // 🔐 NIP-05 Verification Types and Schemas
@@ -221,10 +220,7 @@ export class NIP05VerificationService {
       }
 
       // Start verification process
-      const verificationResult = await this.performVerification(
-        data.id,
-        validatedRequest.verification_method
-      );
+      await this.performVerification(data.id, validatedRequest.verification_method);
 
       return { success: true, verification: data };
     } catch (error) {

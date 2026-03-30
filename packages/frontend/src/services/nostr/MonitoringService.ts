@@ -167,7 +167,7 @@ export class MonitoringService extends EventEmitter {
     }
     // Initialize relay metrics for all configured relays
     const relays = this.relayPool.getConfiguredRelays();
-    relays.forEach((url) => {
+    relays.forEach(url => {
       this.initializeRelayMetrics(url);
     });
     // Set up event listeners
@@ -244,9 +244,9 @@ export class MonitoringService extends EventEmitter {
    */
   private getConnectionHealthSummary(): ConnectionHealthSummary {
     const metrics = Array.from(this.relayMetrics.values());
-    const connectedRelays = metrics.filter((m) => m.status === RelayStatus.CONNECTED).length;
-    const disconnectedRelays = metrics.filter((m) => m.status === RelayStatus.DISCONNECTED).length;
-    const errorRelays = metrics.filter((m) => m.status === RelayStatus.ERROR).length;
+    const connectedRelays = metrics.filter(m => m.status === RelayStatus.CONNECTED).length;
+    const disconnectedRelays = metrics.filter(m => m.status === RelayStatus.DISCONNECTED).length;
+    const errorRelays = metrics.filter(m => m.status === RelayStatus.ERROR).length;
     const averageHealthScore =
       metrics.length > 0 ? metrics.reduce((sum, m) => sum + m.healthScore, 0) / metrics.length : 0;
     const averageUptime =
@@ -254,7 +254,7 @@ export class MonitoringService extends EventEmitter {
     const averageLatency =
       connectedRelays > 0
         ? metrics
-            .filter((m) => m.status === RelayStatus.CONNECTED)
+            .filter(m => m.status === RelayStatus.CONNECTED)
             .reduce((sum, m) => sum + m.latency, 0) / connectedRelays
         : 0;
     return {
@@ -266,9 +266,9 @@ export class MonitoringService extends EventEmitter {
       averageUptime,
       averageLatency,
       relaysByHealth: {
-        healthy: metrics.filter((m) => m.health === RelayHealth.HEALTHY).length,
-        degraded: metrics.filter((m) => m.health === RelayHealth.DEGRADED).length,
-        unhealthy: metrics.filter((m) => m.health === RelayHealth.UNHEALTHY).length,
+        healthy: metrics.filter(m => m.health === RelayHealth.HEALTHY).length,
+        degraded: metrics.filter(m => m.health === RelayHealth.DEGRADED).length,
+        unhealthy: metrics.filter(m => m.health === RelayHealth.UNHEALTHY).length,
       },
     };
   }
@@ -280,7 +280,7 @@ export class MonitoringService extends EventEmitter {
    */
   private trackPublishEvent(result: PublishResultComplete): void {
     const { relayResults } = result;
-    relayResults.forEach((relayResult) => {
+    relayResults.forEach(relayResult => {
       const { relay, success, latency } = relayResult;
       let metrics = this.publishMetrics.get(relay);
       if (!metrics) {
@@ -393,7 +393,7 @@ export class MonitoringService extends EventEmitter {
   /**
    * Track subscription event
    */
-  private trackSubscriptionEvent(subId: string, event: NostrEvent): void {
+  private trackSubscriptionEvent(subId: string, _event: NostrEvent): void {
     let metrics = this.subscriptionMetrics.get(subId);
     if (!metrics) {
       const subInfo = this.subscriptionManager.getSubscription(subId);
@@ -456,8 +456,8 @@ export class MonitoringService extends EventEmitter {
    */
   private getSubscriptionSummary(): SubscriptionSummary {
     const allSubs = this.subscriptionManager.getSubscriptions();
-    const activeSubs = allSubs.filter((s) => s.state === 'active');
-    const pausedSubs = allSubs.filter((s) => s.state === 'paused');
+    const activeSubs = allSubs.filter(s => s.state === 'active');
+    const pausedSubs = allSubs.filter(s => s.state === 'paused');
     const metrics = Array.from(this.subscriptionMetrics.values());
     const totalEventsReceived = metrics.reduce((sum, m) => sum + m.totalEvents, 0);
     const averageEventsPerSecond =
@@ -485,7 +485,7 @@ export class MonitoringService extends EventEmitter {
     this.throughputSamples.push({ timestamp: now, count: 1 });
     // Clean up old samples (keep last hour)
     const cutoff = now - this.config.retentionWindow;
-    this.throughputSamples = this.throughputSamples.filter((s) => s.timestamp > cutoff);
+    this.throughputSamples = this.throughputSamples.filter(s => s.timestamp > cutoff);
   }
   /**
    * Calculate latency percentiles
@@ -523,12 +523,8 @@ export class MonitoringService extends EventEmitter {
     const now = Date.now();
     const oneSecondAgo = now - 1000;
     const oneMinuteAgo = now - 60000;
-    const eventsLastSecond = this.throughputSamples.filter(
-      (s) => s.timestamp > oneSecondAgo
-    ).length;
-    const eventsLastMinute = this.throughputSamples.filter(
-      (s) => s.timestamp > oneMinuteAgo
-    ).length;
+    const eventsLastSecond = this.throughputSamples.filter(s => s.timestamp > oneSecondAgo).length;
+    const eventsLastMinute = this.throughputSamples.filter(s => s.timestamp > oneMinuteAgo).length;
     const totalEvents = this.throughputSamples.length;
     // Calculate average EPS over entire retention window
     const oldestSample = this.throughputSamples[0];
@@ -583,7 +579,7 @@ export class MonitoringService extends EventEmitter {
       return;
     }
     // Check if this alert type is enabled
-    const condition = this.config.alerts.conditions.find((c) => c.type === params.type);
+    const condition = this.config.alerts.conditions.find(c => c.type === params.type);
     if (!condition || !condition.enabled) {
       return;
     }
@@ -617,7 +613,7 @@ export class MonitoringService extends EventEmitter {
    * Acknowledge alert
    */
   acknowledgeAlert(alertId: string): void {
-    const alert = this.alerts.find((a) => a.id === alertId);
+    const alert = this.alerts.find(a => a.id === alertId);
     if (alert) {
       alert.acknowledged = true;
       alert.acknowledgedAt = Date.now();
@@ -627,7 +623,7 @@ export class MonitoringService extends EventEmitter {
    * Get active alerts
    */
   getActiveAlerts(): Alert[] {
-    return this.alerts.filter((a) => !a.acknowledged);
+    return this.alerts.filter(a => !a.acknowledged);
   }
   /**
    * Get all alerts
@@ -660,7 +656,7 @@ export class MonitoringService extends EventEmitter {
   private collectMetrics(): void {
     // Update relay health for all relays
     const relays = this.relayPool.getConfiguredRelays();
-    relays.forEach((url) => {
+    relays.forEach(url => {
       this.updateRelayHealth(url);
     });
     // Get current metrics
@@ -722,8 +718,8 @@ export class MonitoringService extends EventEmitter {
           : HealthStatus.UNHEALTHY;
     // Calculate overall status
     const healthScores = [relayHealth, publishHealth, subscriptionHealth, performanceHealth];
-    const unhealthyCount = healthScores.filter((h) => h === HealthStatus.UNHEALTHY).length;
-    const degradedCount = healthScores.filter((h) => h === HealthStatus.DEGRADED).length;
+    const unhealthyCount = healthScores.filter(h => h === HealthStatus.UNHEALTHY).length;
+    const degradedCount = healthScores.filter(h => h === HealthStatus.DEGRADED).length;
     let overallStatus: HealthStatus;
     if (unhealthyCount > 1) {
       overallStatus = HealthStatus.UNHEALTHY;
@@ -734,8 +730,8 @@ export class MonitoringService extends EventEmitter {
     }
     // Calculate health score
     const score =
-      (healthScores.filter((h) => h === HealthStatus.HEALTHY).length * 100 +
-        healthScores.filter((h) => h === HealthStatus.DEGRADED).length * 50) /
+      (healthScores.filter(h => h === HealthStatus.HEALTHY).length * 100 +
+        healthScores.filter(h => h === HealthStatus.DEGRADED).length * 50) /
       healthScores.length;
     return {
       status: overallStatus,
@@ -887,7 +883,7 @@ export class MonitoringService extends EventEmitter {
     });
     // Convert to Prometheus text format
     return prometheusMetrics
-      .map((m) => {
+      .map(m => {
         const labels = m.labels
           ? `{${Object.entries(m.labels)
               .map(([k, v]) => `${k}="${v}"`)

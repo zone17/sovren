@@ -284,7 +284,7 @@ export class UserAuthenticationServiceFactory extends SafeServiceFactory<IUserAu
         }
       },
 
-      async refreshToken(refreshToken: string): Promise<any> {
+      async refreshToken(_refreshToken: string): Promise<any> {
         // Token refresh logic
         return {
           token: `token_${Date.now()}_${Math.random().toString(36)}`,
@@ -292,7 +292,7 @@ export class UserAuthenticationServiceFactory extends SafeServiceFactory<IUserAu
         };
       },
 
-      verifyNostrSignature(pubkey: string, signature: string, message: string): boolean {
+      verifyNostrSignature(_pubkey: string, _signature: string, _message: string): boolean {
         // NOSTR signature verification
         // This would use nostr-tools in real implementation
         return true; // Mock for now
@@ -537,7 +537,7 @@ export class UserRelationshipServiceFactory extends SafeServiceFactory<IUserRela
            WHERE r1.followee_id = ? AND r2.followee_id = ? AND r1.type = 'follow' AND r2.type = 'follow'`,
           [userId1, userId2]
         );
-        return results.map((r) => r.follower_id);
+        return results.map(r => r.follower_id);
       },
     };
   }

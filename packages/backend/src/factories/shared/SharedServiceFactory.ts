@@ -163,7 +163,8 @@ export class EmailServiceFactory extends SafeServiceFactory<IEmailService> {
   async create(): Promise<IEmailService> {
     const logger = this.resolve(SHARED_SERVICE_TOKENS.Logger);
     const db = this.resolve(SHARED_SERVICE_TOKENS.Database);
-    const eventBus = this.resolve(SHARED_SERVICE_TOKENS.EventBus);
+    // EventBus resolved but not yet used in email service
+    this.resolve(SHARED_SERVICE_TOKENS.EventBus);
 
     return {
       async sendEmail(options: EmailOptions): Promise<EmailResult> {
@@ -208,7 +209,7 @@ export class EmailServiceFactory extends SafeServiceFactory<IEmailService> {
         logger.info(`Sending bulk emails to ${recipients.length} recipients`);
 
         const results = await Promise.all(
-          recipients.map((recipient) =>
+          recipients.map(recipient =>
             this.sendEmail({
               to: recipient.email,
               subject: recipient.subject,
@@ -220,8 +221,8 @@ export class EmailServiceFactory extends SafeServiceFactory<IEmailService> {
 
         return {
           total: recipients.length,
-          successful: results.filter((r) => r.success).length,
-          failed: results.filter((r) => !r.success).length,
+          successful: results.filter(r => r.success).length,
+          failed: results.filter(r => !r.success).length,
           results,
         };
       },
@@ -274,7 +275,8 @@ export class NotificationServiceFactory extends SafeServiceFactory<INotification
   async create(): Promise<INotificationService> {
     const logger = this.resolve(SHARED_SERVICE_TOKENS.Logger);
     const db = this.resolve(SHARED_SERVICE_TOKENS.Database);
-    const eventBus = this.resolve(SHARED_SERVICE_TOKENS.EventBus);
+    // EventBus resolved but not yet used in notification service
+    this.resolve(SHARED_SERVICE_TOKENS.EventBus);
     const cache = this.resolve(SHARED_SERVICE_TOKENS.CacheService);
 
     return {
@@ -316,12 +318,12 @@ export class NotificationServiceFactory extends SafeServiceFactory<INotification
       },
 
       async sendBulkNotifications(notifications: Notification[]): Promise<any> {
-        const results = await Promise.all(notifications.map((n) => this.sendNotification(n)));
+        const results = await Promise.all(notifications.map(n => this.sendNotification(n)));
 
         return {
           total: notifications.length,
-          successful: results.filter((r) => r.success).length,
-          failed: results.filter((r) => !r.success).length,
+          successful: results.filter(r => r.success).length,
+          failed: results.filter(r => !r.success).length,
         };
       },
 
@@ -333,7 +335,7 @@ export class NotificationServiceFactory extends SafeServiceFactory<INotification
         return results;
       },
 
-      async updateNotificationPreferences(userId: string, preferences: any): Promise<void> {
+      async updateNotificationPreferences(userId: string, _preferences: any): Promise<void> {
         logger.info(`Updating notification preferences for user ${userId}`);
         // Update preferences in database
       },
@@ -457,14 +459,14 @@ export class AuditLogServiceFactory extends SafeServiceFactory<IAuditLogService>
         } else {
           // CSV export logic
           const headers = ['timestamp', 'userId', 'action', 'entityType', 'entityId'];
-          const rows = entries.map((e) => [
+          const rows = entries.map(e => [
             e.timestamp,
             e.userId,
             e.action,
             e.entityType,
             e.entityId,
           ]);
-          return [headers, ...rows].map((r) => r.join(',')).join('\n');
+          return [headers, ...rows].map(r => r.join(',')).join('\n');
         }
       },
 
@@ -476,7 +478,7 @@ export class AuditLogServiceFactory extends SafeServiceFactory<IAuditLogService>
       },
 
       async purgeOldLogs(beforeDate: Date): Promise<number> {
-        const result = await db.execute('DELETE FROM audit_logs WHERE timestamp < ?', [beforeDate]);
+        await db.execute('DELETE FROM audit_logs WHERE timestamp < ?', [beforeDate]);
         logger.info(`Purged audit logs before ${beforeDate}`);
         return 0; // Would return affected rows count
       },
@@ -553,7 +555,7 @@ export class CacheServiceFactory extends SafeServiceFactory<ICacheService> {
         if (redis) {
           const keys = await redis.keys(pattern);
           if (keys.length > 0) {
-            await Promise.all(keys.map((k) => redis.del(k)));
+            await Promise.all(keys.map(k => redis.del(k)));
           }
           return keys.length;
         } else {

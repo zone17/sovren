@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
 /**
  * 🧪 **MOCK STORE UTILITY**
@@ -138,7 +139,7 @@ export function createMockStore(initialState: DeepPartial<MockStoreState> = {}) 
     },
   };
 
-  const mockDispatch = vi.fn().mockImplementation((action) => {
+  const mockDispatch = vi.fn().mockImplementation(action => {
     // For async thunks, return a promise-like object
     if (typeof action === 'function') {
       return action(mockDispatch, () => mergedState, undefined);
@@ -166,7 +167,7 @@ export function createMockStore(initialState: DeepPartial<MockStoreState> = {}) 
       cms: mockCmsSlice.reducer,
     },
     preloadedState: mergedState as Record<string, unknown>,
-    middleware: (getDefaultMiddleware) =>
+    middleware: getDefaultMiddleware =>
       getDefaultMiddleware({
         serializableCheck: false,
         immutableCheck: false,

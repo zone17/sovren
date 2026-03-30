@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
 /**
  * 📸 **ELITE SNAPSHOT TESTING UTILITIES**
@@ -100,7 +101,7 @@ const createCustomSerializer = (options: SnapshotSerializerOptions = {}) => {
       }
 
       // Remove custom attributes
-      attributeFilters.forEach((filter) => {
+      attributeFilters.forEach(filter => {
         const regex = new RegExp(`${filter}="[^"]*"`, 'g');
         html = html.replace(regex, '');
       });
@@ -291,7 +292,7 @@ export class SnapshotTestingManager {
     themes: string[] = ['light', 'dark'],
     options: SnapshotOptions = {}
   ): void {
-    themes.forEach((theme) => {
+    themes.forEach(theme => {
       it(`renders correctly with ${theme} theme`, () => {
         this.createSnapshot(component, {
           ...options,

@@ -82,7 +82,7 @@ export class UserAuthenticationService implements IUserAuthenticationService {
    */
   public async login(credentials: LoginCredentials): Promise<AuthSession> {
     try {
-      const { username, password, mfaToken, rememberMe, ipAddress, userAgent } = credentials;
+      const { username, password, mfaToken, ipAddress, userAgent } = credentials;
       this.logger.info('Login attempt', { username, ipAddress });
       // Check rate limiting
       await this.checkRateLimit(ipAddress, username);
@@ -410,7 +410,7 @@ export class UserAuthenticationService implements IUserAuthenticationService {
     }
     // Check common passwords (simplified - use a proper library in production)
     const commonPasswords = ['password', '12345678', 'qwerty', 'abc123'];
-    if (commonPasswords.some((common) => password.toLowerCase().includes(common))) {
+    if (commonPasswords.some(common => password.toLowerCase().includes(common))) {
       errors.push('Password is too common');
     }
     // Calculate password strength score

@@ -49,7 +49,9 @@ interface SessionRow {
 /**
  * Database schema for session_activities table
  */
-interface SessionActivityRow {
+// Used for database schema documentation
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+interface _SessionActivityRow {
   id: string;
   session_id: string;
   action: string;
@@ -206,7 +208,7 @@ export class DatabaseSessionManager {
       return [];
     }
 
-    return data.map((row) => this.mapRowToSession(row));
+    return data.map(row => this.mapRowToSession(row));
   }
 
   /**
@@ -408,7 +410,7 @@ export class DatabaseSessionManager {
       return [];
     }
 
-    return data.map((row) => this.mapRowToSession(row));
+    return data.map(row => this.mapRowToSession(row));
   }
 
   /**
@@ -491,7 +493,7 @@ export class DatabaseSessionManager {
       return [];
     }
 
-    return data.map((row) => ({
+    return data.map(row => ({
       id: row.id,
       sessionId: row.session_id,
       action: row.action,

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
 /**
  * 🎯 SOVREN NIP SERVICE
@@ -408,7 +409,7 @@ export class SovrenNIPService {
         filter.until = options.until;
       }
       const events = await this.queryEvents(filter);
-      const results = events.map((event) => {
+      const results = events.map(event => {
         try {
           const content = parseAnalyticsEvent(event.content);
           return {
@@ -423,7 +424,7 @@ export class SovrenNIPService {
           };
         }
       });
-      const successCount = results.filter((r) => r.success).length;
+      const successCount = results.filter(r => r.success).length;
       return {
         success: true,
         results,
@@ -626,14 +627,14 @@ export class SovrenNIPService {
       }, this.config.fetchTimeout);
       try {
         const subscription = this.relayPool.subscribe([filter], {
-          onEvent: (event) => {
+          onEvent: event => {
             events.push(event);
           },
           onEose: () => {
             clearTimeout(timeout);
             resolve(events);
           },
-          onError: (error) => {
+          onError: error => {
             clearTimeout(timeout);
             reject(error);
           },

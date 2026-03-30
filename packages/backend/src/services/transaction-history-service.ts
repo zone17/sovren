@@ -303,7 +303,7 @@ export class TransactionHistoryService extends EventEmitter {
       const { data, error, count } = await query;
       if (error) throw error;
       // Map to Transaction objects
-      const transactions: Transaction[] = (data || []).map((item) => ({
+      const transactions: Transaction[] = (data || []).map(item => ({
         id: item.id,
         user_id: item.user_id,
         type: item.type,
@@ -637,7 +637,7 @@ export class TransactionHistoryService extends EventEmitter {
     const total_amount = transactions.reduce((sum, txn) => sum + txn.amount_msats, 0);
     const total_fees = transactions.reduce((sum, txn) => sum + txn.fee_msats, 0);
     const transaction_count_by_type: Record<string, number> = {};
-    transactions.forEach((txn) => {
+    transactions.forEach(txn => {
       transaction_count_by_type[txn.type] = (transaction_count_by_type[txn.type] || 0) + 1;
     });
     const average_transaction_amount =
@@ -672,7 +672,7 @@ export class TransactionHistoryService extends EventEmitter {
       path: filePath,
       header: headers,
     });
-    const records = transactions.map((txn) => ({
+    const records = transactions.map(txn => ({
       id: txn.id,
       created_at: txn.created_at.toISOString(),
       type: txn.type,
@@ -695,7 +695,7 @@ export class TransactionHistoryService extends EventEmitter {
       export_date: new Date().toISOString(),
       date_range: options.date_range,
       transaction_count: transactions.length,
-      transactions: transactions.map((txn) => ({
+      transactions: transactions.map(txn => ({
         ...txn,
         metadata: options.include_metadata ? txn.metadata : undefined,
       })),
@@ -725,18 +725,19 @@ export class TransactionHistoryService extends EventEmitter {
   }
   private calculateRevenueByPeriod(transactions: any[], period: string): Record<string, number> {
     const revenue: Record<string, number> = {};
-    transactions.forEach((txn) => {
+    transactions.forEach(txn => {
       const date = new Date(txn.completed_at || txn.created_at);
       let key: string;
       switch (period) {
         case 'day':
           key = date.toISOString().split('T')[0];
           break;
-        case 'week':
+        case 'week': {
           const weekStart = new Date(date);
           weekStart.setDate(date.getDate() - date.getDay());
           key = weekStart.toISOString().split('T')[0];
           break;
+        }
         case 'month':
           key = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
           break;
@@ -752,14 +753,14 @@ export class TransactionHistoryService extends EventEmitter {
   }
   private calculateRevenueByType(transactions: any[]): Record<string, number> {
     const revenue: Record<string, number> = {};
-    transactions.forEach((txn) => {
+    transactions.forEach(txn => {
       revenue[txn.type] = (revenue[txn.type] || 0) + (txn.net_amount_msats || 0);
     });
     return revenue;
   }
   private async calculateGrowthMetrics(
-    creator_id: string,
-    transactions: any[]
+    _creator_id: string,
+    _transactions: any[]
   ): Promise<{
     daily_growth: number;
     weekly_growth: number;
@@ -800,7 +801,7 @@ export class TransactionHistoryService extends EventEmitter {
   }
   private calculateSpendingByCreator(transactions: any[]): Record<string, number> {
     const spending: Record<string, number> = {};
-    transactions.forEach((txn) => {
+    transactions.forEach(txn => {
       if (txn.creator_id) {
         spending[txn.creator_id] = (spending[txn.creator_id] || 0) + (txn.amount_msats || 0);
       }
@@ -809,7 +810,7 @@ export class TransactionHistoryService extends EventEmitter {
   }
   private calculateSpendingByCategory(transactions: any[]): Record<string, number> {
     const categories: Record<string, number> = {};
-    transactions.forEach((txn) => {
+    transactions.forEach(txn => {
       categories[txn.type] = (categories[txn.type] || 0) + (txn.amount_msats || 0);
     });
     return categories;
@@ -828,7 +829,7 @@ export class TransactionHistoryService extends EventEmitter {
       string,
       { total_amount: number; transaction_count: number; name: string }
     > = {};
-    transactions.forEach((txn) => {
+    transactions.forEach(txn => {
       if (txn.creator_id) {
         if (!creators[txn.creator_id]) {
           creators[txn.creator_id] = {

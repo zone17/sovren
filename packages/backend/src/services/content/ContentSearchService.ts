@@ -40,7 +40,7 @@ export class ContentSearchService implements IContentSearchService {
     config: ElasticsearchConfig
   ) {
     this.esClient = new ElasticsearchClient(config);
-    this.initializeIndex().catch((error) => {
+    this.initializeIndex().catch(error => {
       this.logger.error('Failed to initialize Elasticsearch index', error);
     });
   }
@@ -285,7 +285,7 @@ export class ContentSearchService implements IContentSearchService {
       if (documents.length === 0) {
         return;
       }
-      const operations = documents.flatMap((doc) => [
+      const operations = documents.flatMap(doc => [
         { index: { _index: this.indexName, _id: doc.id } },
         this.prepareDocumentForIndexing(doc),
       ]);
@@ -395,7 +395,7 @@ export class ContentSearchService implements IContentSearchService {
     }
     // Apply filters
     if (query.filters) {
-      query.filters.forEach((f) => {
+      query.filters.forEach(f => {
         const filterClause = this.buildFilterClause(f);
         if (filterClause) {
           filter.push(filterClause);
@@ -445,7 +445,7 @@ export class ContentSearchService implements IContentSearchService {
    */
   private buildAggregations(facets: SearchFacet[]): any {
     const aggs: any = {};
-    facets.forEach((facet) => {
+    facets.forEach(facet => {
       switch (facet.type) {
         case 'terms':
           aggs[facet.name] = {
@@ -504,7 +504,7 @@ export class ContentSearchService implements IContentSearchService {
    * Build sort configuration
    */
   private buildSort(sort: SearchSort[]): any {
-    return sort.map((s) => ({
+    return sort.map(s => ({
       [s.field]: {
         order: s.order,
         ...(s.mode && { mode: s.mode }),
@@ -528,7 +528,7 @@ export class ContentSearchService implements IContentSearchService {
     // Process aggregations into facets
     const facets: SearchAggregation[] = [];
     if (aggregations) {
-      Object.keys(aggregations).forEach((key) => {
+      Object.keys(aggregations).forEach(key => {
         const agg = aggregations[key];
         facets.push({
           name: key,
@@ -553,6 +553,7 @@ export class ContentSearchService implements IContentSearchService {
    * Prepare document for indexing (remove internal fields)
    */
   private prepareDocumentForIndexing(document: Partial<ContentDocument>): any {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { _id, _score, _highlight, ...indexableDoc } = document as any;
     return indexableDoc;
   }
@@ -574,7 +575,7 @@ export class ContentSearchService implements IContentSearchService {
   /**
    * Invalidate cache entries related to a document
    */
-  private async invalidateRelatedCache(document: Partial<ContentDocument>): Promise<void> {
+  private async invalidateRelatedCache(_document: Partial<ContentDocument>): Promise<void> {
     // Invalidate all search cache when content changes
     // In production, implement smarter cache invalidation based on tags, categories, etc.
     await this.cache.invalidate(`${this.cachePrefix}*`);

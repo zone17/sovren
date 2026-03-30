@@ -444,7 +444,7 @@ export class NIP04Service {
    * Process received read receipt
    */
   async processReadReceipt(receipt: ReadReceiptEvent): Promise<void> {
-    const messageIdTag = receipt.tags.find((tag) => tag[0] === 'e');
+    const messageIdTag = receipt.tags.find(tag => tag[0] === 'e');
     if (!messageIdTag || !messageIdTag[1]) {
       console.warn('[NIP04Service] Invalid read receipt: missing message ID');
       return;
@@ -548,7 +548,7 @@ export class NIP04Service {
   /**
    * Get all currently typing users in a conversation
    */
-  getTypingUsers(conversationWithPubkey: string): string[] {
+  getTypingUsers(_conversationWithPubkey: string): string[] {
     const typingUsers: string[] = [];
     for (const [pubkey, timestamp] of this.typingIndicators.entries()) {
       if (Date.now() - timestamp < 3000) {
@@ -567,10 +567,10 @@ export class NIP04Service {
     let filtered = thread;
     // Apply time filters
     if (request.before) {
-      filtered = filtered.filter((msg) => msg.timestamp < request.before!);
+      filtered = filtered.filter(msg => msg.timestamp < request.before!);
     }
     if (request.after) {
-      filtered = filtered.filter((msg) => msg.timestamp > request.after!);
+      filtered = filtered.filter(msg => msg.timestamp > request.after!);
     }
     // Sort by timestamp (descending for pagination)
     filtered.sort((a, b) => b.timestamp - a.timestamp);
@@ -589,7 +589,7 @@ export class NIP04Service {
     const threadId = await this.getThreadIdForConversation(conversationWithPubkey);
     const thread = this.threads.get(threadId) || [];
     const query = searchQuery.toLowerCase();
-    return thread.filter((msg) => {
+    return thread.filter(msg => {
       // Search in decrypted content if available
       const cacheEntry = this.messageCache.get(msg.id);
       const content = cacheEntry?.decrypted || msg.content;
@@ -729,10 +729,10 @@ export class NIP04Service {
     }
     // Clean old timestamps
     tracker.messageTimestamps = tracker.messageTimestamps.filter(
-      (ts) => now - ts < 60 * 60 * 1000 // Keep last hour
+      ts => now - ts < 60 * 60 * 1000 // Keep last hour
     );
     // Check per-minute limit
-    const lastMinute = tracker.messageTimestamps.filter((ts) => now - ts < 60 * 1000);
+    const lastMinute = tracker.messageTimestamps.filter(ts => now - ts < 60 * 1000);
     if (lastMinute.length >= this.spamConfig.rateLimit.maxMessagesPerMinute) {
       return false;
     }
@@ -904,7 +904,7 @@ export class NIP04Service {
    */
   private bytesToHex(bytes: Uint8Array): string {
     return Array.from(bytes)
-      .map((b) => b.toString(16).padStart(2, '0'))
+      .map(b => b.toString(16).padStart(2, '0'))
       .join('');
   }
   /**
