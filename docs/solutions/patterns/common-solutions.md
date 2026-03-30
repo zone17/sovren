@@ -4631,6 +4631,117 @@ this.viewsLabel = page.getByText(/views/i).first();
 
 ---
 
+## 132. Security Re-Audit Must List All Worktrees Reviewed
+
+**Recurrence:** 1 P1 (PR #186). When using persistent worktrees for parallel development, security reviewers only examined the primary worktree and missed vulnerabilities in secondary worktrees.
+
+### Root Cause
+
+Security audits scope their file search to `$(pwd)` or the repo root. When multiple worktrees exist, each has its own working directory with potentially different file states. Reviewers don't know other worktrees exist.
+
+### Standard Pattern
+
+```bash
+# In security audit scripts, always enumerate ALL worktrees
+git worktree list | while read -r wt_path _; do
+  echo "Auditing worktree: $wt_path"
+  # Run security scan on each worktree
+  npx trivy fs "$wt_path" --scanners vuln,secret
+done
+```
+
+### Checklist
+
+- [ ] Security audit brief explicitly lists all active worktrees
+- [ ] Audit script enumerates worktrees via `git worktree list`
+- [ ] Each worktree is scanned independently (different dependencies may be installed)
+- [ ] Audit report includes a "Worktrees Reviewed" section
+
+---
+
+## 133. Linear Webhook Field Names Verified Against Real Payload
+
+**Recurrence:** 1 P2 (task-sync-linear.sh). TaskCreate sends `subject` not `title` as the task name field. Hook silently produced empty titles until verified against actual tool parameters.
+
+### Root Cause
+
+Hook code assumed field names from documentation or convention (`title`, `name`) without verifying against the actual JSON payload from Claude Code's Task tool. The real payload uses `subject`.
+
+### Standard Pattern
+
+```bash
+# Extract task title — check ALL possible field names, prefer 'subject'
+task_title=$(echo "$tool_input" | jq -r '.subject // .title // .name // ""' 2>/dev/null || echo "")
+```
+
+### Checklist
+
+- [ ] Before writing a hook that reads tool payloads, log the raw JSON once to verify field names
+- [ ] Use jq `//` fallback chains for field names that may vary between tool versions
+- [ ] Add a debug mode (`LINEAR_DEBUG=true`) that logs raw payloads for troubleshooting
+
+---
+
+## 134. Never Show Fake Stats on Landing Pages
+
+**Recurrence:** 1 P2 (Home.tsx). Hardcoded "12,500+ Creators" and "2,100,000 Sats Earned" on the landing page — numbers with no basis in reality. Destroys user trust immediately if anyone investigates.
+
+### Root Cause
+
+Placeholder stats added during development were never replaced with real data or honest messaging before going live.
+
+### Standard Pattern
+
+```tsx
+// WRONG — fake numbers destroy trust
+{ value: 12500, suffix: '+', label: 'Creators' },
+{ value: 2100000, suffix: '', label: 'Sats Earned' },
+
+// RIGHT — honest value propositions (no fabricated numbers)
+{ label: '0% Platform Fees', icon: Zap },
+{ label: '100% Content Ownership', icon: Shield },
+{ label: 'Zero Middlemen', icon: Globe },
+{ label: 'Your Identity, Yours', icon: Key },
+```
+
+### Checklist
+
+- [ ] Audit all landing pages for hardcoded numeric stats
+- [ ] Replace fabricated stats with honest value propositions or live data from an API
+- [ ] If using live counts, add a loading state and fallback text
+- [ ] Code review flags any hardcoded number > 100 in marketing-facing UI
+
+---
+
+## 135. Plain-English Explainer for NOSTR on First Mention Per Page
+
+**Recurrence:** 1 P2 (onboarding, landing page). Users encounter "NOSTR" with no context. Technical terms without explanation cause drop-off in onboarding funnels.
+
+### Root Cause
+
+Engineers familiar with the protocol assume users know what NOSTR is. First-time visitors need a one-sentence definition before any technical details.
+
+### Standard Pattern
+
+```tsx
+// First mention of NOSTR on any page — always include a plain-English explainer
+<p>
+  <strong>NOSTR</strong> — an open protocol that lets you own your identity online,
+  like having a universal login that no company controls.
+</p>
+
+// Subsequent mentions on the same page can use just "NOSTR" without explanation
+```
+
+### Checklist
+
+- [ ] Every page that mentions NOSTR includes a one-sentence definition on first mention
+- [ ] Definition avoids jargon (no "relays", "events", "pubkeys" in the explainer)
+- [ ] Tooltip or info icon available for deeper explanation
+- [ ] Onboarding flow explains NOSTR before asking users to create keys
+
+---
+
 ## Agent Brief Template Addition
 
 Add this to every agent brief's CONTEXT TO LOAD section:
@@ -4801,3 +4912,11 @@ CONTEXT TO LOAD:
 | CI bootstrap missing Supabase roles              | 129       | common-solutions.md  |
 | RLS policy uses wrong cast for column type       | 130       | common-solutions.md  |
 | Stale nested lockfile ignores root overrides     | 131       | common-solutions.md  |
+| Security audit misses worktrees                  | 132       | common-solutions.md  |
+| Linear webhook field names wrong                 | 133       | common-solutions.md  |
+| Fake stats on landing pages                      | 134       | common-solutions.md  |
+| NOSTR jargon without plain-English explainer     | 135       | common-solutions.md  |
+| Auth migration breaks downstream silently        | 23        | critical-patterns.md |
+| NOSTR auth event construction mismatch           | 24        | critical-patterns.md |
+| Node.js crypto APIs crash in browser             | 25        | critical-patterns.md |
+| Cross-type identifier comparison = IDOR bypass   | 26        | critical-patterns.md |

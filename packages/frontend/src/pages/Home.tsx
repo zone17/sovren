@@ -61,39 +61,6 @@ function useInView(threshold = 0.15) {
   return { ref, inView };
 }
 
-// Animated counter for stats
-const AnimatedNumber = React.memo(function AnimatedNumber({
-  value,
-  suffix = '',
-}: {
-  value: number;
-  suffix?: string;
-}) {
-  const [display, setDisplay] = useState(0);
-  const { ref, inView } = useInView(0.3);
-  const rafRef = useRef<number>(0);
-  useEffect(() => {
-    if (!inView) return;
-    const duration = 1200;
-    const start = performance.now();
-    const step = (now: number) => {
-      const progress = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setDisplay(Math.round(eased * value));
-      if (progress < 1) {
-        rafRef.current = requestAnimationFrame(step);
-      }
-    };
-    rafRef.current = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(rafRef.current);
-  }, [inView, value]);
-  return (
-    <span ref={ref}>
-      {display.toLocaleString()}
-      {suffix}
-    </span>
-  );
-});
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -586,17 +553,17 @@ const Home: React.FC = () => {
             className={`grid grid-cols-2 md:grid-cols-4 gap-6 ${statsSection.inView ? 'reveal-stagger' : ''}`}
           >
             {[
-              { value: 12500, suffix: '+', label: 'Creators' },
-              { value: 2100000, suffix: '', label: 'Sats Earned' },
-              { value: 99, suffix: '%', label: 'Uptime' },
-              { value: 0, suffix: '', label: 'Platform Fees', display: '0%' },
+              { display: '0%', label: 'Platform Fees' },
+              { display: '100%', label: 'Content Ownership' },
+              { display: 'Zero', label: 'Middlemen' },
+              { display: 'Yours', label: 'Your Identity' },
             ].map(stat => (
               <div key={stat.label} className='glass-dark rounded-2xl p-6 text-center'>
                 <p
                   className='text-3xl sm:text-4xl font-bold text-white mb-1'
                   style={{ fontFamily: "'Sora', sans-serif" }}
                 >
-                  {stat.display ?? <AnimatedNumber value={stat.value} suffix={stat.suffix} />}
+                  {stat.display}
                 </p>
                 <p className='text-sm text-white/60'>{stat.label}</p>
               </div>

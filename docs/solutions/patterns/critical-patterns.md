@@ -1046,6 +1046,119 @@ const breaker = new CircuitBreaker(externalCall, {
 
 ---
 
+## 23. Auth Migration Blast-Radius Audit (Bearer → Cookies — PR #186)
+
+**Recurrence:** When migrating auth transport (e.g., Bearer tokens → HTTP-only cookies), downstream effects are silently broken because middleware, WebSockets, analytics, and session validation all assume the old transport.
+
+**Rule:** When changing auth transport, audit ALL downstream effects before merge:
+
+1. **CSRF middleware** — Cookie-based auth requires CSRF protection that Bearer tokens didn't need
+2. **WebSocket auth** — `ws://` connections can't send cookies on upgrade; need explicit token param
+3. **Analytics user identity** — If analytics reads `Authorization` header, it breaks silently (no error, just anonymous)
+4. **Session validation** — Cookie expiry, domain, SameSite, Secure flags must all be explicitly set
+5. **CORS credentials** — `credentials: 'include'` required on all fetch calls; server must echo `Access-Control-Allow-Credentials: true`
+
+```typescript
+// Blast-radius checklist — run BEFORE merging any auth transport change
+const AUTH_TRANSPORT_AUDIT = [
+  'middleware/csrf.ts',        // Must add CSRF token validation
+  'middleware/websocket.ts',   // Must accept token query param fallback
+  'services/analytics.ts',    // Must read user from req.user, not header
+  'middleware/session.ts',     // Must set cookie flags explicitly
+  'middleware/cors.ts',        // Must allow credentials
+] as const;
+```
+
+**Detection:** `grep -rn "Authorization.*Bearer\|req.headers.authorization" src/` — if migrating away from Bearer, every match is a candidate for breakage.
+
+---
+
+## 24. NOSTR Auth Event Canonical Construction (NIP-22242 — PR #186)
+
+**Recurrence:** Auth events constructed differently between frontend and backend cause signature verification failures. The challenge-response must use identical byte-level construction on both sides.
+
+**Rule:** NOSTR auth events must use `kind: 22242`, `content: createSignatureMessage(challenge, timestamp)`, timestamp in seconds (not milliseconds), and a shared utility between frontend and backend.
+
+```typescript
+// packages/shared/src/nostr/auth.ts — SINGLE SOURCE OF TRUTH
+export function createSignatureMessage(challenge: string, timestamp: number): string {
+  return `sovren-auth:${challenge}:${timestamp}`;
+}
+
+export function createAuthEvent(challenge: string, privateKey: string) {
+  const timestamp = Math.floor(Date.now() / 1000); // SECONDS, not ms
+  return {
+    kind: 22242,
+    content: createSignatureMessage(challenge, timestamp),
+    created_at: timestamp,
+    tags: [['challenge', challenge]],
+  };
+}
+```
+
+**Detection:** `grep -rn "kind.*22242\|createSignatureMessage\|sovren-auth:" src/` — if this pattern appears in more than one file without importing from shared, it's a P1.
+
+---
+
+## 25. Browser-Safe Crypto Utilities (No Node.js APIs in Frontend — PR #186)
+
+**Recurrence:** Frontend code that imports Node.js-only APIs (`Buffer`, `crypto.createHash`, `process.env`) compiles fine with Vite but crashes at runtime in the browser.
+
+**Rule:** Never use Node.js `Buffer`, `crypto.createHash`, or `process.env` in browser code. Use Web API equivalents:
+
+```typescript
+// WRONG — crashes in browser
+import { Buffer } from 'buffer';
+import crypto from 'crypto';
+const hash = crypto.createHash('sha256').update(data).digest('hex');
+const key = process.env.VITE_API_KEY;
+
+// RIGHT — works in all browsers
+const encoder = new TextEncoder();
+const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(data));
+const hash = Array.from(new Uint8Array(hashBuffer))
+  .map(b => b.toString(16).padStart(2, '0'))
+  .join('');
+const key = import.meta.env.VITE_API_KEY;
+```
+
+| Node.js API | Browser Equivalent |
+| --- | --- |
+| `Buffer.from(hex, 'hex')` | `Uint8Array.from(hex.match(/.{2}/g)!, h => parseInt(h, 16))` |
+| `crypto.createHash('sha256')` | `crypto.subtle.digest('SHA-256', data)` |
+| `crypto.randomBytes(32)` | `crypto.getRandomValues(new Uint8Array(32))` |
+| `process.env.VITE_*` | `import.meta.env.VITE_*` |
+
+**Detection:** `grep -rn "require('crypto')\|from 'buffer'\|process\.env\." packages/frontend/src/` — any match is a P1 for browser-safe code.
+
+---
+
+## 26. Cross-Type Identifier Comparison — IDOR Bypass via Type Mismatch (PR #186)
+
+**Recurrence:** Authorization checks comparing `nostr_pubkey` (64-char hex string) against `userId` (UUID format) always fail, silently granting or denying access incorrectly. This is a silent IDOR bypass.
+
+**Rule:** When comparing user identifiers across different systems (NOSTR pubkey vs Supabase UUID), always check BOTH identifier types with OR logic. Type mismatch = silent bypass.
+
+```typescript
+// WRONG — if row uses UUID but request has hex pubkey, this ALWAYS fails
+if (row.owner_id !== req.user.nostr_pubkey) {
+  return res.status(403).json({ error: 'Forbidden' });
+}
+
+// RIGHT — check both identifier types
+function isOwner(row: { owner_id: string }, user: { id: string; nostr_pubkey?: string }): boolean {
+  return row.owner_id === user.id || row.owner_id === user.nostr_pubkey;
+}
+
+if (!isOwner(row, req.user)) {
+  return res.status(403).json({ error: 'Forbidden' });
+}
+```
+
+**Detection:** `grep -rn "owner_id.*nostr_pubkey\|nostr_pubkey.*owner_id\|user_id.*pubkey" src/routes/` — any single-field comparison between hex and UUID identifiers is a candidate P1.
+
+---
+
 ## How to Use This File
 
 1. **In agent briefs:** Add `"Read docs/solutions/patterns/critical-patterns.md before writing code"` to the CONTEXT TO LOAD section.
