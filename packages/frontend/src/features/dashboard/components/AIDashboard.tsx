@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 🤖 **ELITE AI ANALYTICS DASHBOARD - ZERO VIOLATIONS**
  *
@@ -15,21 +14,10 @@
 import React, { useEffect, useState } from 'react';
 import { Spinner } from '../../../components/ui/spinner';
 import { predictiveAnalytics } from '../../analytics/services/predictiveAnalytics';
+import type { UserBehaviorPrediction, AnomalyDetection } from '../../analytics/types';
 import { useAuth } from '../../auth';
 
 // 🛡️ **ELITE TYPE SAFETY - PROPER INTERFACES**
-
-interface UserBehaviorPrediction {
-  userId: string;
-  sessionDuration: number;
-  clickPatterns: number[];
-  scrollDepth: number;
-  bounceRate: number;
-  conversionProbability: number;
-  churnRisk: 'low' | 'medium' | 'high';
-  nextAction: 'continue' | 'purchase' | 'leave';
-  confidence: number;
-}
 
 interface PerformanceForecast {
   metric: string;
@@ -48,14 +36,6 @@ interface FeatureInsight {
   userSegment: string;
   optimizationSuggestion: string;
   impactScore: number;
-}
-
-interface AnomalyDetection {
-  type: 'performance' | 'user_behavior' | 'feature_usage';
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  description: string;
-  confidence: number;
-  suggestedActions: string[];
 }
 
 interface RealtimeRecommendations {
@@ -133,7 +113,7 @@ const TrendIndicator: React.FC<{ trend: 'improving' | 'degrading' | 'stable' | n
     return (
       <span className={`flex items-center ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
         {isPositive ? '📈' : '📉'}
-        <span className="ml-1 text-sm">{(trend * 100).toFixed(1)}%</span>
+        <span className='ml-1 text-sm'>{(trend * 100).toFixed(1)}%</span>
       </span>
     );
   }
@@ -153,7 +133,7 @@ const TrendIndicator: React.FC<{ trend: 'improving' | 'degrading' | 'stable' | n
   return (
     <span className={`flex items-center ${trendColors[trend]}`}>
       {trendIcons[trend]}
-      <span className="ml-1 text-sm capitalize">{trend}</span>
+      <span className='ml-1 text-sm capitalize'>{trend}</span>
     </span>
   );
 };
@@ -161,10 +141,10 @@ const TrendIndicator: React.FC<{ trend: 'improving' | 'degrading' | 'stable' | n
 // 🚨 ANOMALY CARD
 const AnomalyCard: React.FC<{ anomaly: AnomalyDetection }> = ({ anomaly }) => (
   <div className={`border rounded-lg p-4 ${getSeverityColor(anomaly.severity)}`}>
-    <div className="flex justify-between items-start mb-2">
-      <div className="flex items-center">
-        <span className="text-lg mr-2">🚨</span>
-        <h4 className="font-semibold">{anomaly.type.replace('_', ' ').toUpperCase()}</h4>
+    <div className='flex justify-between items-start mb-2'>
+      <div className='flex items-center'>
+        <span className='text-lg mr-2'>🚨</span>
+        <h4 className='font-semibold'>{anomaly.type.replace('_', ' ').toUpperCase()}</h4>
       </div>
       <span
         className={`px-2 py-1 rounded text-xs font-bold uppercase ${anomaly.severity === 'critical' ? 'bg-red-600 text-white' : ''}`}
@@ -173,17 +153,17 @@ const AnomalyCard: React.FC<{ anomaly: AnomalyDetection }> = ({ anomaly }) => (
       </span>
     </div>
 
-    <p className="text-sm mb-3">{anomaly.description}</p>
+    <p className='text-sm mb-3'>{anomaly.description}</p>
 
-    <div className="flex justify-between items-center mb-3">
+    <div className='flex justify-between items-center mb-3'>
       <ConfidenceBadge confidence={anomaly.confidence * 100} />
     </div>
 
-    <div className="space-y-1">
-      <h5 className="text-xs font-semibold uppercase tracking-wide">Suggested Actions:</h5>
+    <div className='space-y-1'>
+      <h5 className='text-xs font-semibold uppercase tracking-wide'>Suggested Actions:</h5>
       {anomaly.suggestedActions.map((action, index) => (
-        <div key={index} className="text-xs flex items-center">
-          <span className="mr-2">•</span>
+        <div key={index} className='text-xs flex items-center'>
+          <span className='mr-2'>•</span>
           {action}
         </div>
       ))}
@@ -193,35 +173,35 @@ const AnomalyCard: React.FC<{ anomaly: AnomalyDetection }> = ({ anomaly }) => (
 
 // 📊 PERFORMANCE FORECAST CARD
 const PerformanceForecastCard: React.FC<{ forecast: PerformanceForecast }> = ({ forecast }) => (
-  <div className="bg-card rounded-lg shadow p-6 border">
-    <div className="flex justify-between items-start mb-4">
+  <div className='bg-card rounded-lg shadow p-6 border'>
+    <div className='flex justify-between items-start mb-4'>
       <div>
-        <h3 className="text-lg font-semibold text-foreground">{forecast.metric}</h3>
-        <p className="text-sm text-muted-foreground">Forecast for {forecast.timeframe}</p>
+        <h3 className='text-lg font-semibold text-foreground'>{forecast.metric}</h3>
+        <p className='text-sm text-muted-foreground'>Forecast for {forecast.timeframe}</p>
       </div>
       <TrendIndicator trend={forecast.trend} />
     </div>
 
-    <div className="grid grid-cols-2 gap-4 mb-4">
+    <div className='grid grid-cols-2 gap-4 mb-4'>
       <div>
-        <p className="text-xs text-muted-foreground">Current Value</p>
-        <p className="text-2xl font-bold text-foreground">{forecast.currentValue.toFixed(2)}</p>
+        <p className='text-xs text-muted-foreground'>Current Value</p>
+        <p className='text-2xl font-bold text-foreground'>{forecast.currentValue.toFixed(2)}</p>
       </div>
       <div>
-        <p className="text-xs text-muted-foreground">Predicted Value</p>
-        <p className="text-2xl font-bold text-blue-600">{forecast.predictedValue.toFixed(2)}</p>
+        <p className='text-xs text-muted-foreground'>Predicted Value</p>
+        <p className='text-2xl font-bold text-blue-600'>{forecast.predictedValue.toFixed(2)}</p>
       </div>
     </div>
 
-    <div className="mb-4">
+    <div className='mb-4'>
       <ConfidenceBadge confidence={forecast.confidence * 100} />
     </div>
 
     <div>
-      <h4 className="text-sm font-medium text-foreground mb-2">Influencing Factors:</h4>
-      <div className="flex flex-wrap gap-1">
+      <h4 className='text-sm font-medium text-foreground mb-2'>Influencing Factors:</h4>
+      <div className='flex flex-wrap gap-1'>
         {forecast.factors.map((factor: string, index: number) => (
-          <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
+          <span key={index} className='px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded'>
             {factor.replace('_', ' ')}
           </span>
         ))}
@@ -232,11 +212,11 @@ const PerformanceForecastCard: React.FC<{ forecast: PerformanceForecast }> = ({ 
 
 // 🎯 USER BEHAVIOR PREDICTION CARD
 const UserBehaviorCard: React.FC<{ pattern: UserBehaviorPrediction }> = ({ pattern }) => (
-  <div className="bg-card rounded-lg shadow p-6 border">
-    <div className="flex justify-between items-start mb-4">
+  <div className='bg-card rounded-lg shadow p-6 border'>
+    <div className='flex justify-between items-start mb-4'>
       <div>
-        <h3 className="text-lg font-semibold text-foreground">User Behavior Analysis</h3>
-        <p className="text-sm text-muted-foreground">User: {pattern.userId}</p>
+        <h3 className='text-lg font-semibold text-foreground'>User Behavior Analysis</h3>
+        <p className='text-sm text-muted-foreground'>User: {pattern.userId}</p>
       </div>
       <span
         className={`px-3 py-1 rounded-full text-sm font-medium ${
@@ -251,29 +231,29 @@ const UserBehaviorCard: React.FC<{ pattern: UserBehaviorPrediction }> = ({ patte
       </span>
     </div>
 
-    <div className="grid grid-cols-3 gap-4 mb-4">
-      <div className="text-center">
-        <p className="text-xs text-muted-foreground">Conversion Probability</p>
-        <p className="text-xl font-bold text-green-600">
+    <div className='grid grid-cols-3 gap-4 mb-4'>
+      <div className='text-center'>
+        <p className='text-xs text-muted-foreground'>Conversion Probability</p>
+        <p className='text-xl font-bold text-green-600'>
           {(pattern.conversionProbability * 100).toFixed(1)}%
         </p>
       </div>
-      <div className="text-center">
-        <p className="text-xs text-muted-foreground">Session Duration</p>
-        <p className="text-xl font-bold text-blue-600">
+      <div className='text-center'>
+        <p className='text-xs text-muted-foreground'>Session Duration</p>
+        <p className='text-xl font-bold text-blue-600'>
           {Math.round(pattern.sessionDuration / 1000)}s
         </p>
       </div>
-      <div className="text-center">
-        <p className="text-xs text-muted-foreground">Scroll Depth</p>
-        <p className="text-xl font-bold text-purple-600">{pattern.scrollDepth}%</p>
+      <div className='text-center'>
+        <p className='text-xs text-muted-foreground'>Scroll Depth</p>
+        <p className='text-xl font-bold text-purple-600'>{pattern.scrollDepth}%</p>
       </div>
     </div>
 
-    <div className="flex justify-between items-center">
+    <div className='flex justify-between items-center'>
       <div>
-        <p className="text-sm font-medium text-foreground">Predicted Next Action:</p>
-        <p className="text-lg font-bold text-foreground capitalize">{pattern.nextAction}</p>
+        <p className='text-sm font-medium text-foreground'>Predicted Next Action:</p>
+        <p className='text-lg font-bold text-foreground capitalize'>{pattern.nextAction}</p>
       </div>
       <ConfidenceBadge confidence={pattern.confidence} />
     </div>
@@ -282,29 +262,29 @@ const UserBehaviorCard: React.FC<{ pattern: UserBehaviorPrediction }> = ({ patte
 
 // 🎨 FEATURE INSIGHT CARD
 const FeatureInsightCard: React.FC<{ insight: FeatureInsight }> = ({ insight }) => (
-  <div className="bg-card rounded-lg shadow p-6 border">
-    <div className="flex justify-between items-start mb-4">
+  <div className='bg-card rounded-lg shadow p-6 border'>
+    <div className='flex justify-between items-start mb-4'>
       <div>
-        <h3 className="text-lg font-semibold text-foreground">{insight.feature}</h3>
-        <p className="text-sm text-muted-foreground">{insight.userSegment} users</p>
+        <h3 className='text-lg font-semibold text-foreground'>{insight.feature}</h3>
+        <p className='text-sm text-muted-foreground'>{insight.userSegment} users</p>
       </div>
       <TrendIndicator trend={insight.trend} />
     </div>
 
-    <div className="grid grid-cols-2 gap-4 mb-4">
+    <div className='grid grid-cols-2 gap-4 mb-4'>
       <div>
-        <p className="text-xs text-muted-foreground">Usage Rate</p>
-        <p className="text-2xl font-bold text-blue-600">{insight.usage.toFixed(1)}%</p>
+        <p className='text-xs text-muted-foreground'>Usage Rate</p>
+        <p className='text-2xl font-bold text-blue-600'>{insight.usage.toFixed(1)}%</p>
       </div>
       <div>
-        <p className="text-xs text-muted-foreground">Impact Score</p>
-        <p className="text-2xl font-bold text-green-600">{insight.impactScore}/100</p>
+        <p className='text-xs text-muted-foreground'>Impact Score</p>
+        <p className='text-2xl font-bold text-green-600'>{insight.impactScore}/100</p>
       </div>
     </div>
 
-    <div className="bg-muted rounded p-3">
-      <h4 className="text-sm font-medium text-foreground mb-1">Optimization Suggestion:</h4>
-      <p className="text-sm text-muted-foreground">{insight.optimizationSuggestion}</p>
+    <div className='bg-muted rounded p-3'>
+      <h4 className='text-sm font-medium text-foreground mb-1'>Optimization Suggestion:</h4>
+      <p className='text-sm text-muted-foreground'>{insight.optimizationSuggestion}</p>
     </div>
   </div>
 );
@@ -313,23 +293,23 @@ const FeatureInsightCard: React.FC<{ insight: FeatureInsight }> = ({ insight }) 
 const RecommendationsSection: React.FC<{ recommendations: RealtimeRecommendations }> = ({
   recommendations,
 }) => (
-  <div className="bg-card rounded-lg shadow p-6 border">
-    <h3 className="text-lg font-semibold text-foreground mb-4">💡 AI Recommendations</h3>
+  <div className='bg-card rounded-lg shadow p-6 border'>
+    <h3 className='text-lg font-semibold text-foreground mb-4'>💡 AI Recommendations</h3>
 
-    <div className="space-y-4">
+    <div className='space-y-4'>
       {/* Content Recommendations */}
       {recommendations.personalizedContent.length > 0 && (
         <div>
-          <h4 className="text-sm font-medium text-foreground mb-2">Content Recommendations:</h4>
-          <div className="space-y-2">
+          <h4 className='text-sm font-medium text-foreground mb-2'>Content Recommendations:</h4>
+          <div className='space-y-2'>
             {recommendations.personalizedContent.slice(0, 3).map((content, index) => (
-              <div key={index} className="flex items-center p-2 bg-blue-50 rounded">
-                <span className="text-blue-600 mr-2">📄</span>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground">{content.title}</p>
-                  <p className="text-xs text-muted-foreground">{content.reason}</p>
+              <div key={index} className='flex items-center p-2 bg-blue-50 rounded'>
+                <span className='text-blue-600 mr-2'>📄</span>
+                <div className='flex-1'>
+                  <p className='text-sm font-medium text-foreground'>{content.title}</p>
+                  <p className='text-xs text-muted-foreground'>{content.reason}</p>
                 </div>
-                <span className="text-xs text-blue-600 font-medium">
+                <span className='text-xs text-blue-600 font-medium'>
                   {(content.relevanceScore * 100).toFixed(0)}%
                 </span>
               </div>
@@ -341,16 +321,16 @@ const RecommendationsSection: React.FC<{ recommendations: RealtimeRecommendation
       {/* UI Optimizations */}
       {recommendations.uiOptimizations.length > 0 && (
         <div>
-          <h4 className="text-sm font-medium text-foreground mb-2">UI Optimizations:</h4>
-          <div className="space-y-2">
+          <h4 className='text-sm font-medium text-foreground mb-2'>UI Optimizations:</h4>
+          <div className='space-y-2'>
             {recommendations.uiOptimizations.slice(0, 3).map((optimization, index) => (
-              <div key={index} className="flex items-center p-2 bg-green-50 rounded">
-                <span className="text-green-600 mr-2">🎨</span>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground">{optimization.element}</p>
-                  <p className="text-xs text-muted-foreground">{optimization.suggestion}</p>
+              <div key={index} className='flex items-center p-2 bg-green-50 rounded'>
+                <span className='text-green-600 mr-2'>🎨</span>
+                <div className='flex-1'>
+                  <p className='text-sm font-medium text-foreground'>{optimization.element}</p>
+                  <p className='text-xs text-muted-foreground'>{optimization.suggestion}</p>
                 </div>
-                <span className="text-xs text-green-600 font-medium">
+                <span className='text-xs text-green-600 font-medium'>
                   +{optimization.expectedImpact}%
                 </span>
               </div>
@@ -362,14 +342,14 @@ const RecommendationsSection: React.FC<{ recommendations: RealtimeRecommendation
       {/* Performance Hints */}
       {recommendations.performanceHints.length > 0 && (
         <div>
-          <h4 className="text-sm font-medium text-foreground mb-2">Performance Hints:</h4>
-          <div className="space-y-2">
+          <h4 className='text-sm font-medium text-foreground mb-2'>Performance Hints:</h4>
+          <div className='space-y-2'>
             {recommendations.performanceHints.slice(0, 3).map((hint, index) => (
-              <div key={index} className="flex items-center p-2 bg-orange-50 rounded">
-                <span className="text-orange-600 mr-2">⚡</span>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground">{hint.metric}</p>
-                  <p className="text-xs text-muted-foreground">{hint.suggestion}</p>
+              <div key={index} className='flex items-center p-2 bg-orange-50 rounded'>
+                <span className='text-orange-600 mr-2'>⚡</span>
+                <div className='flex-1'>
+                  <p className='text-sm font-medium text-foreground'>{hint.metric}</p>
+                  <p className='text-xs text-muted-foreground'>{hint.suggestion}</p>
                 </div>
                 <span
                   className={`text-xs font-medium px-2 py-1 rounded ${
@@ -451,7 +431,6 @@ const AIDashboard: React.FC = () => {
         recommendations,
       });
     } catch (err) {
-      console.error('AI Dashboard Error:', err);
       setError(err instanceof Error ? err.message : 'Failed to load AI insights');
     } finally {
       setLoading(false);
@@ -471,22 +450,22 @@ const AIDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Spinner size="xl" />
+      <div className='flex items-center justify-center min-h-screen'>
+        <Spinner size='xl' />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-muted p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-            <h2 className="text-lg font-semibold text-red-800 mb-2">AI Dashboard Error</h2>
-            <p className="text-red-600">{error}</p>
+      <div className='min-h-screen bg-muted p-6'>
+        <div className='max-w-7xl mx-auto'>
+          <div className='bg-red-50 border border-red-200 rounded-lg p-6'>
+            <h2 className='text-lg font-semibold text-red-800 mb-2'>AI Dashboard Error</h2>
+            <p className='text-red-600'>{error}</p>
             <button
               onClick={() => void loadAIInsights()}
-              className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+              className='mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700'
             >
               Retry
             </button>
@@ -497,58 +476,58 @@ const AIDashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-muted p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className='min-h-screen bg-muted p-6'>
+      <div className='max-w-7xl mx-auto'>
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">🤖 AI Analytics Dashboard</h1>
-          <p className="text-muted-foreground">
+        <div className='mb-8'>
+          <h1 className='text-3xl font-bold text-foreground mb-2'>🤖 AI Analytics Dashboard</h1>
+          <p className='text-muted-foreground'>
             Enterprise-grade predictive insights powered by machine learning
           </p>
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-card rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="text-2xl mr-3">🎯</div>
+        <div className='grid grid-cols-1 md:grid-cols-4 gap-6 mb-8'>
+          <div className='bg-card rounded-lg shadow p-6'>
+            <div className='flex items-center'>
+              <div className='text-2xl mr-3'>🎯</div>
               <div>
-                <p className="text-sm text-muted-foreground">Predictions Made</p>
-                <p className="text-2xl font-bold text-foreground">
+                <p className='text-sm text-muted-foreground'>Predictions Made</p>
+                <p className='text-2xl font-bold text-foreground'>
                   {metrics.userBehaviorPredictions.length}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-card rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="text-2xl mr-3">📈</div>
+          <div className='bg-card rounded-lg shadow p-6'>
+            <div className='flex items-center'>
+              <div className='text-2xl mr-3'>📈</div>
               <div>
-                <p className="text-sm text-muted-foreground">Performance Forecasts</p>
-                <p className="text-2xl font-bold text-foreground">
+                <p className='text-sm text-muted-foreground'>Performance Forecasts</p>
+                <p className='text-2xl font-bold text-foreground'>
                   {metrics.performanceForecasts.length}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-card rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="text-2xl mr-3">🚨</div>
+          <div className='bg-card rounded-lg shadow p-6'>
+            <div className='flex items-center'>
+              <div className='text-2xl mr-3'>🚨</div>
               <div>
-                <p className="text-sm text-muted-foreground">Anomalies Detected</p>
-                <p className="text-2xl font-bold text-red-600">{metrics.anomalies.length}</p>
+                <p className='text-sm text-muted-foreground'>Anomalies Detected</p>
+                <p className='text-2xl font-bold text-red-600'>{metrics.anomalies.length}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-card rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="text-2xl mr-3">💡</div>
+          <div className='bg-card rounded-lg shadow p-6'>
+            <div className='flex items-center'>
+              <div className='text-2xl mr-3'>💡</div>
               <div>
-                <p className="text-sm text-muted-foreground">AI Recommendations</p>
-                <p className="text-2xl font-bold text-blue-600">
+                <p className='text-sm text-muted-foreground'>AI Recommendations</p>
+                <p className='text-2xl font-bold text-blue-600'>
                   {metrics.recommendations
                     ? metrics.recommendations.personalizedContent.length +
                       metrics.recommendations.uiOptimizations.length +
@@ -562,9 +541,9 @@ const AIDashboard: React.FC = () => {
 
         {/* Anomalies Section */}
         {metrics.anomalies.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-foreground mb-4">🚨 Anomalies Detected</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className='mb-8'>
+            <h2 className='text-2xl font-bold text-foreground mb-4'>🚨 Anomalies Detected</h2>
+            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
               {metrics.anomalies.map((anomaly, index) => (
                 <AnomalyCard key={index} anomaly={anomaly} />
               ))}
@@ -573,9 +552,9 @@ const AIDashboard: React.FC = () => {
         )}
 
         {/* Performance Forecasts */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-foreground mb-4">📈 Performance Forecasts</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className='mb-8'>
+          <h2 className='text-2xl font-bold text-foreground mb-4'>📈 Performance Forecasts</h2>
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
             {metrics.performanceForecasts.map((forecast, index) => (
               <PerformanceForecastCard key={index} forecast={forecast} />
             ))}
@@ -583,9 +562,9 @@ const AIDashboard: React.FC = () => {
         </div>
 
         {/* User Behavior Predictions */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-foreground mb-4">🎯 User Behavior Analysis</h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className='mb-8'>
+          <h2 className='text-2xl font-bold text-foreground mb-4'>🎯 User Behavior Analysis</h2>
+          <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
             {metrics.userBehaviorPredictions.map((pattern, index) => (
               <UserBehaviorCard key={index} pattern={pattern} />
             ))}
@@ -593,9 +572,9 @@ const AIDashboard: React.FC = () => {
         </div>
 
         {/* Feature Insights */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-foreground mb-4">🎨 Feature Usage Insights</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className='mb-8'>
+          <h2 className='text-2xl font-bold text-foreground mb-4'>🎨 Feature Usage Insights</h2>
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
             {metrics.featureInsights.slice(0, 6).map((insight, index) => (
               <FeatureInsightCard key={index} insight={insight} />
             ))}
@@ -604,7 +583,7 @@ const AIDashboard: React.FC = () => {
 
         {/* AI Recommendations */}
         {metrics.recommendations && (
-          <div className="mb-8">
+          <div className='mb-8'>
             <RecommendationsSection recommendations={metrics.recommendations} />
           </div>
         )}

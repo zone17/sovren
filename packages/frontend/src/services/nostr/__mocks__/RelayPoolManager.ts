@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Mock for RelayPoolManager
  */
@@ -23,7 +22,7 @@ export const RelayPoolManager = vi.fn().mockImplementation(() => ({
   off: vi.fn().mockReturnThis(),
   emit: vi.fn(),
   destroy: vi.fn().mockResolvedValue(undefined),
-}));
+})) as ReturnType<typeof vi.fn> & { getInstance: ReturnType<typeof vi.fn> };
 
 const mockInstance = new RelayPoolManager();
 

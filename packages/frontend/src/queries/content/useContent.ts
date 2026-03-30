@@ -1,5 +1,8 @@
-// @ts-nocheck
-import { useInfiniteQuery, UseInfiniteQueryOptions } from '@tanstack/react-query';
+import {
+  useInfiniteQuery,
+  type UseInfiniteQueryOptions,
+  type InfiniteData,
+} from '@tanstack/react-query';
 import { ContentFilters, ContentResponse } from '@/types/content-query';
 
 /**
@@ -54,14 +57,20 @@ export const contentKeys = {
 export const useContent = (
   filters?: ContentFilters,
   options?: Omit<
-    UseInfiniteQueryOptions<ContentResponse, Error>,
-    'queryKey' | 'queryFn' | 'getNextPageParam'
+    UseInfiniteQueryOptions<
+      ContentResponse,
+      Error,
+      InfiniteData<ContentResponse>,
+      readonly unknown[],
+      number
+    >,
+    'queryKey' | 'queryFn' | 'getNextPageParam' | 'initialPageParam'
   >
 ) => {
-  return useInfiniteQuery<ContentResponse, Error>({
+  return useInfiniteQuery({
     queryKey: contentKeys.list(filters),
     queryFn: ({ pageParam }) => fetchContent({ pageParam: pageParam as number, filters }),
-    getNextPageParam: (lastPage) => {
+    getNextPageParam: lastPage => {
       const { page, totalPages } = lastPage.pagination;
       return page < totalPages ? page + 1 : undefined;
     },

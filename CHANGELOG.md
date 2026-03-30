@@ -6,6 +6,17 @@ Production readiness milestone. All slices complete, CI/CD fully automated, elit
 
 ## [Unreleased]
 
+### chore(types): remove @ts-nocheck from 11 frontend files — 2026-03-30
+
+**Category**: Code Quality — Type Safety
+**Status**: Complete
+
+Remove `// @ts-nocheck` from 11 frontend files, fixing all exposed TypeScript and ESLint errors properly (no `as any` shortcuts). Fixes include: React Query v5 InfiniteData generics, toast API migration from callable to object methods, duplicate type declarations replaced with imports, proper BufferSource handling for Web Crypto API, mock getInstance typing, and Record indexing.
+
+**Files cleaned** (11): performance.ts, useContent.ts, useContentRefactored.ts, useUpdateCreator.ts, KeyManagementService mock, RelayPoolManager mock, BackupEncryptionService.ts, test-environment-variables.ts, EngagementAnalyticsDashboard.tsx, RecommendationFeedback.tsx, PersonalizedRecommendations.tsx (features/ai), AIDashboard.tsx
+
+**Remaining**: 16 frontend files still have @ts-nocheck (complex service/component files requiring interface redesign)
+
 ### fix(ux): prevent comparison table clipping at 375px mobile width — 2026-03-30
 
 **Category**: Bug Fix — P2 UX

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Mock for KeyManagementService
  */
@@ -18,7 +17,7 @@ export const KeyManagementService = vi.fn().mockImplementation(() => ({
   generateKeyPair: vi.fn().mockResolvedValue({ publicKey: 'pubkey', privateKey: 'privkey' }),
   rotateKey: vi.fn().mockResolvedValue({ success: true }),
   exportKey: vi.fn().mockResolvedValue({ success: true, data: 'exported' }),
-}));
+})) as ReturnType<typeof vi.fn> & { getInstance: ReturnType<typeof vi.fn> };
 
 const mockInstance = new KeyManagementService();
 

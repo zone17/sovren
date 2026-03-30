@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * NOSTR Backup Encryption Service
  * US-322: Secure backup and recovery - Encryption Service
@@ -152,7 +151,7 @@ export class BackupEncryptionService {
   /**
    * Derive encryption key from password using PBKDF2
    */
-  private async deriveKey(password: string, salt: Uint8Array | ArrayBuffer): Promise<CryptoKey> {
+  private async deriveKey(password: string, salt: Uint8Array): Promise<CryptoKey> {
     const encoder = new TextEncoder();
     const passwordBuffer = encoder.encode(password);
 
@@ -166,7 +165,7 @@ export class BackupEncryptionService {
     return await crypto.subtle.deriveKey(
       {
         name: 'PBKDF2',
-        salt,
+        salt: salt as BufferSource,
         iterations: ENCRYPTION_CONFIG.PBKDF2_ITERATIONS,
         hash: ENCRYPTION_CONFIG.HASH_ALGORITHM,
       },
@@ -362,7 +361,7 @@ export class BackupEncryptionService {
   private arrayBufferToHex(buffer: ArrayBuffer): string {
     const bytes = new Uint8Array(buffer);
     return Array.from(bytes)
-      .map((b) => b.toString(16).padStart(2, '0'))
+      .map(b => b.toString(16).padStart(2, '0'))
       .join('');
   }
 }
