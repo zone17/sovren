@@ -1,4 +1,3 @@
-// @ts-nocheck
 // 🤖 Content Similarity Analysis Component
 // Implementation of US-097: Content similarity analysis
 // Elite engineering standards with advanced similarity algorithms and clustering
@@ -690,11 +689,10 @@ export const ContentSimilarity: React.FC<ContentSimilarityProps> = ({
         setContentClusters(mockContentClusters);
       }
     } catch (error) {
-      toast({
-        title: 'Analysis Error',
-        description: 'Failed to analyze content similarity',
-        variant: 'destructive',
-      });
+      toast.error(
+        'Analysis Error',
+        'Failed to analyze content similarity',
+      );
     } finally {
       setLoading(false);
     }

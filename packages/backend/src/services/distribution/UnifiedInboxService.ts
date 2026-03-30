@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Unified Inbox Service
  * EPIC-009: Multi-platform message aggregation and routing
@@ -76,13 +75,13 @@ export class UnifiedInboxService implements IUnifiedInboxService {
     const total = count || 0;
     const totalPages = Math.ceil(total / query.limit);
 
-    const messages: InboxMessage[] = ((data as InboxMessageRow[]) || []).map((row) => ({
+    const messages: InboxMessage[] = ((data as unknown as InboxMessageRow[]) || []).map((row) => ({
       id: row.id,
-      platform: row.platform,
+      platform: row.platform as InboxMessage['platform'],
       author: row.author,
       author_avatar_url: row.author_avatar_url,
       content: row.content,
-      type: row.type,
+      type: row.type as InboxMessage['type'],
       parent_post_id: row.parent_post_id,
       is_read: row.is_read,
       created_at: row.platform_created_at,
@@ -115,7 +114,7 @@ export class UnifiedInboxService implements IUnifiedInboxService {
     }
 
     // Route reply to the correct platform adapter
-    const platform = message.platform as SupportedPlatform;
+    const platform = message.platform as SupportedPlatform | 'nostr';
     if (platform === 'nostr') {
       // NOSTR replies handled separately through existing NOSTR service
       this.logger.info('[UnifiedInboxService] NOSTR reply delegated to NostrService', {
@@ -125,11 +124,11 @@ export class UnifiedInboxService implements IUnifiedInboxService {
     }
 
     const adapter = this.platformService.getAdapter(platform);
-    const accessToken = await this.platformService.getDecryptedToken(creatorId, platform);
+    const accessToken = await this.platformService.getDecryptedToken(creatorId, platform) as string;
 
     await adapter.sendReply(
       { access_token: accessToken, refresh_token: null, expires_at: null, scopes: [] },
-      message.platform_message_id,
+      message.platform_message_id as string,
       content
     );
 

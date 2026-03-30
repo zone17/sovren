@@ -1,4 +1,3 @@
-// @ts-nocheck
 // =====================================================
 // 🔒 RLS POLICY VALIDATION SCRIPT - CI/CD INTEGRATION
 // =====================================================
@@ -141,13 +140,13 @@ class RLSPolicyValidator {
           'RLS_ENABLEMENT_CHECK',
           'FAIL',
           `${missingRLS.length} critical tables missing RLS`,
-          { missingTables: missingRLS.map((t) => t.tablename) }
+          { missingTables: missingRLS.map((t: { tablename: string }) => t.tablename) }
         );
       }
 
       // Check total RLS coverage
       const totalTables = await this.getTotalTableCount();
-      const rlsEnabledCount = data.filter((t) => t.rowsecurity).length;
+      const rlsEnabledCount = data.filter((t: { rowsecurity: boolean }) => t.rowsecurity).length;
       const coverage = (rlsEnabledCount / totalTables) * 100;
 
       if (coverage >= 90) {
@@ -198,10 +197,10 @@ class RLSPolicyValidator {
       }
 
       // Group policies by table
-      const policiesByTable = data.reduce((acc, policy) => {
+      const policiesByTable = data.reduce((acc: Record<string, number>, policy: { tablename: string }) => {
         acc[policy.tablename] = (acc[policy.tablename] || 0) + 1;
         return acc;
-      }, {});
+      }, {} as Record<string, number>);
 
       const missingPolicies = [];
 
@@ -585,8 +584,8 @@ class RLSPolicyValidator {
       const { data, error } = await this.serviceClient.rpc('cleanup_expired_sessions');
 
       this.addResult('DATA_RETENTION', 'PASS', 'Data retention functions operational');
-    } catch (error) {
-      if (error.message.includes('does not exist')) {
+    } catch (error: unknown) {
+      if (error instanceof Error && error.message.includes('does not exist')) {
         this.addResult('DATA_RETENTION', 'FAIL', 'Data retention functions missing');
       } else {
         this.addResult('DATA_RETENTION', 'WARNING', `Data retention check inconclusive: ${error}`);

@@ -1,5 +1,4 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
 /**
  * IWellnessService Interface
  * Handles work pattern CRUD and pulse check-ins

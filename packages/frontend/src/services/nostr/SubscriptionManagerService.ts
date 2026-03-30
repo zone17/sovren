@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 🎯 ELITE SERVICE: Subscription Manager Service
  *
@@ -42,7 +41,7 @@ import type {
   NostrFilter,
   NostrEvent,
   EnhancedSubscriptionInfo,
-  EventCallback,
+  EventCallbackFromEvents as EventCallback,
   EOSECallback,
   SubscriptionErrorCallback,
   SubscriptionState,

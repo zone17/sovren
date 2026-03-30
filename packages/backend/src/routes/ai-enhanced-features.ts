@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 🤖 **AI-ENHANCED FEATURES API ROUTES**
  *
@@ -29,6 +28,10 @@ import {
 
 const router = Router();
 const aiService = createAIEnhancedFeaturesService();
+
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
 
 // =====================================================
 // VALIDATION MIDDLEWARE
@@ -226,12 +229,12 @@ router.post(
         success: true,
         message: 'Tag feedback processed successfully',
       });
-    } catch (error) {
+    } catch (error: unknown) {
       res.status(400).json({
         success: false,
         error: {
           code: 'FEEDBACK_ERROR',
-          message: error.message,
+          message: getErrorMessage(error),
         },
       });
     }
@@ -256,12 +259,12 @@ router.get('/tags/:contentId', authenticate, async (req, res) => {
       success: true,
       data: tags,
     });
-  } catch (error) {
+  } catch (error: unknown) {
     res.status(500).json({
       success: false,
       error: {
         code: 'TAG_RETRIEVAL_ERROR',
-        message: error.message,
+        message: getErrorMessage(error),
       },
     });
   }
@@ -337,12 +340,12 @@ router.get('/topics/trends/:topicId', authenticate, async (req, res) => {
       success: true,
       data: trends,
     });
-  } catch (error) {
+  } catch (error: unknown) {
     res.status(400).json({
       success: false,
       error: {
         code: 'TREND_ANALYSIS_ERROR',
-        message: error.message,
+        message: getErrorMessage(error),
       },
     });
   }
@@ -365,12 +368,12 @@ router.get('/topics/hierarchy', authenticate, async (req, res) => {
       success: true,
       data: hierarchy,
     });
-  } catch (error) {
+  } catch (error: unknown) {
     res.status(500).json({
       success: false,
       error: {
         code: 'HIERARCHY_ERROR',
-        message: error.message,
+        message: getErrorMessage(error),
       },
     });
   }
@@ -447,12 +450,12 @@ router.get('/clusters', authenticate, async (req, res) => {
       success: true,
       data: clusters,
     });
-  } catch (error) {
+  } catch (error: unknown) {
     res.status(500).json({
       success: false,
       error: {
         code: 'CLUSTER_RETRIEVAL_ERROR',
-        message: error.message,
+        message: getErrorMessage(error),
       },
     });
   }
@@ -476,12 +479,12 @@ router.get('/clusters/:clusterId/analytics', authenticate, async (req, res) => {
       success: true,
       data: analytics,
     });
-  } catch (error) {
+  } catch (error: unknown) {
     res.status(400).json({
       success: false,
       error: {
         code: 'ANALYTICS_ERROR',
-        message: error.message,
+        message: getErrorMessage(error),
       },
     });
   }
@@ -568,12 +571,12 @@ router.get('/related/:contentId/analytics', authenticate, async (req, res) => {
       success: true,
       data: analytics,
     });
-  } catch (error) {
+  } catch (error: unknown) {
     res.status(400).json({
       success: false,
       error: {
         code: 'ANALYTICS_ERROR',
-        message: error.message,
+        message: getErrorMessage(error),
       },
     });
   }
@@ -612,12 +615,12 @@ router.post(
         success: true,
         message: 'Interaction tracked successfully',
       });
-    } catch (error) {
+    } catch (error: unknown) {
       res.status(400).json({
         success: false,
         error: {
           code: 'TRACKING_ERROR',
-          message: error.message,
+          message: getErrorMessage(error),
         },
       });
     }
@@ -664,12 +667,12 @@ router.post(
           qualityScore: results.metadata.qualityScore,
         },
       });
-    } catch (error) {
+    } catch (error: unknown) {
       res.status(500).json({
         success: false,
         error: {
           code: 'ENHANCEMENT_ERROR',
-          message: error.message,
+          message: getErrorMessage(error),
         },
       });
     }
@@ -694,11 +697,11 @@ router.get('/health', async (req, res) => {
       services: health,
       timestamp: new Date().toISOString(),
     });
-  } catch (error) {
+  } catch (error: unknown) {
     res.status(503).json({
       success: false,
       status: 'unhealthy',
-      error: error.message,
+      error: getErrorMessage(error),
       timestamp: new Date().toISOString(),
     });
   }
@@ -716,12 +719,12 @@ router.get('/config', authenticate, async (req, res) => {
       success: true,
       data: config,
     });
-  } catch (error) {
+  } catch (error: unknown) {
     res.status(500).json({
       success: false,
       error: {
         code: 'CONFIG_ERROR',
-        message: error.message,
+        message: getErrorMessage(error),
       },
     });
   }

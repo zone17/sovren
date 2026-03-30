@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * RedisAdapter - Production-Ready Redis Caching Layer
  *
@@ -108,7 +107,9 @@ export class RedisAdapter implements CacheAdapter {
     this.config = {
       host: config.host ?? process.env.REDIS_HOST ?? 'localhost',
       port: config.port ?? parseInt(process.env.REDIS_PORT ?? '6379', 10),
-      password: config.password ?? process.env.REDIS_PASSWORD,
+      ...(config.password || process.env.REDIS_PASSWORD
+        ? { password: config.password ?? process.env.REDIS_PASSWORD }
+        : {}),
       db: config.db ?? parseInt(process.env.REDIS_DB ?? '0', 10),
       enableCluster: config.enableCluster ?? false,
       clusterNodes: config.clusterNodes ?? [],
@@ -181,7 +182,7 @@ export class RedisAdapter implements CacheAdapter {
       this.isUsingFallback = false;
     });
 
-    this.client.on('error', (error) => {
+    this.client.on('error', error => {
       logger.error('Redis error', { error });
       this.stats.errors++;
       if (!this.isUsingFallback) {
@@ -220,7 +221,7 @@ export class RedisAdapter implements CacheAdapter {
       this.isUsingFallback = false;
     });
 
-    this.client.on('error', (error) => {
+    this.client.on('error', error => {
       logger.error('Redis Cluster error', { error });
       this.stats.errors++;
       if (!this.isUsingFallback) {
@@ -448,7 +449,7 @@ export class RedisAdapter implements CacheAdapter {
       }
     });
 
-    keysToDelete.forEach((key) => {
+    keysToDelete.forEach(key => {
       this.memoryFallback.delete(key);
       count++;
     });

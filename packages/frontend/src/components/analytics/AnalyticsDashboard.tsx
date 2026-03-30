@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   Activity,
   AlertTriangle,
@@ -102,7 +101,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
   // Load metrics data
   const loadMetrics = useCallback(async () => {
     try {
-      const [events, users, conversion, errors, performance, health] = await Promise.all([
+      const [events, users, conversion, errors, perfData, health] = await Promise.all([
         analytics.getTotalEvents(timeRange),
         analytics.getActiveUsers(timeRange),
         analytics.getConversionRate(timeRange),
@@ -116,7 +115,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
         activeUsers: users,
         conversionRate: conversion,
         errorRate: errors,
-        averageResponseTime: performance,
+        averageResponseTime: perfData,
         systemHealth: health,
       });
     } catch (err) {

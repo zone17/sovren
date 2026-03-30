@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Discovery Service
  * Todo #568: Extracted from inline discovery.routes.ts logic
@@ -22,7 +21,7 @@ import type {
   DiscoveryResponse,
   DiscoveryCategory,
 } from '@shared/types/discovery';
-import { ServiceError } from '../../utils/errors';
+import { ServiceError, NotFoundError } from '../../utils/errors';
 
 /** Row shape returned by the discovery_creators view (post-COALESCE). */
 interface DiscoveryCreatorRow {
@@ -99,20 +98,22 @@ export class DiscoveryService implements IDiscoveryService {
     const total = count ?? 0;
     const totalPages = Math.ceil(total / limit);
 
-    const creators: CreatorSearchResult[] = ((rows ?? []) as DiscoveryCreatorRow[]).map((row) => ({
-      id: row.id,
-      displayName: row.display_name,
-      username: row.username,
-      avatarUrl: row.avatar_url,
-      bio: row.bio,
-      nip05Verified: row.nip05_verified,
-      categories: row.categories ?? [],
-      tags: row.tags,
-      followerCount: row.follower_count,
-      contentCount: row.content_count,
-      verified: row.verified,
-      createdAt: row.created_at,
-    }));
+    const creators: CreatorSearchResult[] = ((rows ?? []) as unknown as DiscoveryCreatorRow[]).map(
+      row => ({
+        id: row.id,
+        displayName: row.display_name,
+        username: row.username,
+        avatarUrl: row.avatar_url,
+        bio: row.bio,
+        nip05Verified: row.nip05_verified,
+        categories: row.categories ?? [],
+        tags: row.tags,
+        followerCount: row.follower_count,
+        contentCount: row.content_count,
+        verified: row.verified,
+        createdAt: row.created_at,
+      })
+    );
 
     return {
       creators,
@@ -136,10 +137,10 @@ export class DiscoveryService implements IDiscoveryService {
       .single();
 
     if (error || !row) {
-      throw new ServiceError('Creator not found', 404);
+      throw new NotFoundError('Creator', { details: 'Creator not found' });
     }
 
-    const creatorRow = row as DiscoveryCreatorRow;
+    const creatorRow = row as unknown as DiscoveryCreatorRow;
 
     // Fetch subscription tiers and user data in parallel
     const [{ data: tiers }, { data: userData }] = await Promise.all([
@@ -169,8 +170,8 @@ export class DiscoveryService implements IDiscoveryService {
       contentCount: creatorRow.content_count,
       verified: creatorRow.verified,
       createdAt: creatorRow.created_at,
-      nostrPubkey: userData?.nostr_pubkey ?? '',
-      lightningAddress: userData?.lightning_address ?? null,
+      nostrPubkey: (userData?.nostr_pubkey as string) ?? '',
+      lightningAddress: (userData?.lightning_address as string | null) ?? null,
       subscriptionTiers: (tiers ?? []).map((t: any) => ({
         id: t.id,
         name: t.name,

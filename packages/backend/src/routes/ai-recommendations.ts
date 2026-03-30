@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 🤖 **AI RECOMMENDATIONS API ROUTES**
  *
@@ -130,6 +129,24 @@ const feedbackSchema = z.object({
   }),
 });
 
+const userPreferencesSchema = z.object({
+  preferred_content_types: z.array(z.string()).optional(),
+  preferred_tags: z.array(z.string()).optional(),
+  preferred_creators: z.array(z.string()).optional(),
+  preferred_difficulty_levels: z
+    .array(z.enum(['beginner', 'intermediate', 'advanced', 'expert']))
+    .optional(),
+  reading_time_preference: z.number().optional(),
+  content_length_preference: z.enum(['short', 'medium', 'long']).optional(),
+  preferred_publish_timeframe: z.enum(['recent', 'popular', 'evergreen']).optional(),
+  allow_behavioral_tracking: z.boolean().optional(),
+  allow_collaborative_filtering: z.boolean().optional(),
+});
+
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
 // ===== US-095: Personalized Content Recommendations =====
 
 /**
@@ -179,7 +196,7 @@ router.get(
         success: false,
         error: 'Failed to get recommendations',
         code: 'RECOMMENDATION_ERROR',
-        details: error?.message || 'Unknown error',
+        details: getErrorMessage(error),
       });
     }
   }
@@ -192,7 +209,7 @@ router.get(
  */
 router.put(
   '/preferences',
-  authenticateToken,
+  authenticate,
   createRateLimiter({ windowMs: 60 * 1000, max: 10 }), // 10 updates per minute
   validateRequest(z.object({ body: userPreferencesSchema })),
   async (req, res) => {
@@ -213,13 +230,13 @@ router.put(
         data: preferences,
         message: 'User preferences updated successfully',
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Preferences update error:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to update preferences',
         code: 'PREFERENCES_ERROR',
-        details: error.message,
+        details: getErrorMessage(error),
       });
     }
   }
@@ -265,7 +282,7 @@ router.post(
         success: false,
         error: 'Failed to track behavior event',
         code: 'BEHAVIOR_TRACKING_ERROR',
-        details: error?.message || 'Unknown error',
+        details: getErrorMessage(error),
       });
     }
   }
@@ -305,7 +322,7 @@ router.get('/behavioral', authenticate, aiRateLimiter, async (req: Request, res:
       success: false,
       error: 'Failed to get behavioral recommendations',
       code: 'BEHAVIORAL_ERROR',
-      details: error?.message || 'Unknown error',
+      details: getErrorMessage(error),
     });
   }
 });
@@ -358,7 +375,7 @@ router.get(
         success: false,
         error: 'Failed to calculate content similarity',
         code: 'SIMILARITY_ERROR',
-        details: error?.message || 'Unknown error',
+        details: getErrorMessage(error),
       });
     }
   }
@@ -371,7 +388,7 @@ router.get(
  */
 router.post(
   '/similarity',
-  authenticateToken,
+  authenticate,
   createRateLimiter({ windowMs: 60 * 1000, max: 20 }), // 20 calculations per minute
   validateRequest(
     z.object({
@@ -410,13 +427,13 @@ router.post(
         data: result,
         message: 'Content similarity calculated successfully',
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Similarity storage error:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to calculate similarity',
         code: 'SIMILARITY_CALCULATION_ERROR',
-        details: error.message,
+        details: getErrorMessage(error),
       });
     }
   }
@@ -465,7 +482,7 @@ router.post(
         success: false,
         error: 'Failed to process feedback',
         code: 'FEEDBACK_ERROR',
-        details: error?.message || 'Unknown error',
+        details: getErrorMessage(error),
       });
     }
   }
@@ -478,7 +495,7 @@ router.post(
  */
 router.get(
   '/feedback/analytics',
-  authenticateToken,
+  authenticate,
   createRateLimiter({ windowMs: 60 * 1000, max: 10 }), // 10 requests per minute
   async (req, res) => {
     try {
@@ -510,13 +527,13 @@ router.get(
           filters: { algorithm_type: algorithmType },
         },
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Feedback analytics error:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to get feedback analytics',
         code: 'ANALYTICS_ERROR',
-        details: error.message,
+        details: getErrorMessage(error),
       });
     }
   }
@@ -551,7 +568,7 @@ router.get('/health', async (req: Request, res: Response) => {
     res.status(503).json({
       success: false,
       error: 'Service unhealthy',
-      details: error?.message || 'Unknown error',
+      details: getErrorMessage(error),
     });
   }
 });

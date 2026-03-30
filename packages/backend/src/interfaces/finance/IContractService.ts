@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Contract Service Interface
  * EPIC-011: Business Manager — Contract templates and red flag analysis

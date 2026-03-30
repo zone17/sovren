@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 📧 **EMAIL INTEGRATION SERVICE** 📧
  *
@@ -1006,7 +1005,7 @@ export class EmailIntegrationService extends EventEmitter implements EmailServic
   // EVENT HANDLERS
   // ==========================================
 
-  private async handleEmailSent(notification: EmailNotification): void {
+  private async handleEmailSent(notification: EmailNotification): Promise<void> {
     this.wsService.sendToUser(notification.user_id, 'email:sent', {
       id: notification.id,
       type: notification.type,
@@ -1014,23 +1013,23 @@ export class EmailIntegrationService extends EventEmitter implements EmailServic
     });
   }
 
-  private async handleEmailDelivered(notification: EmailNotification): void {
+  private async handleEmailDelivered(notification: EmailNotification): Promise<void> {
     await this.analyticsTracker.trackEvent(notification.id, 'delivered');
   }
 
-  private async handleEmailOpened(notification: EmailNotification): void {
+  private async handleEmailOpened(notification: EmailNotification): Promise<void> {
     await this.analyticsTracker.trackEvent(notification.id, 'opened');
   }
 
-  private async handleEmailClicked(notification: EmailNotification, metadata?: any): void {
+  private async handleEmailClicked(notification: EmailNotification, metadata?: any): Promise<void> {
     await this.analyticsTracker.trackEvent(notification.id, 'clicked', metadata);
   }
 
-  private async handleEmailBounced(notification: EmailNotification): void {
+  private async handleEmailBounced(notification: EmailNotification): Promise<void> {
     await this.analyticsTracker.trackEvent(notification.id, 'bounced');
   }
 
-  private async handleEmailComplained(notification: EmailNotification): void {
+  private async handleEmailComplained(notification: EmailNotification): Promise<void> {
     await this.analyticsTracker.trackEvent(notification.id, 'complained');
   }
 

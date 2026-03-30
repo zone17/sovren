@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * FilterBuilder Component
  *
@@ -71,7 +70,7 @@ interface ValidationFeedback {
 // ========================================
 
 const EVENT_KIND_OPTIONS = [
-  { value: NostrEventKind.METADATA, label: 'Metadata (0)' },
+  { value: NostrEventKind.SET_METADATA, label: 'Metadata (0)' },
   { value: NostrEventKind.TEXT_NOTE, label: 'Text Note (1)' },
   { value: NostrEventKind.RECOMMEND_RELAY, label: 'Recommend Relay (2)' },
   { value: NostrEventKind.CONTACTS, label: 'Contacts (3)' },
@@ -81,7 +80,7 @@ const EVENT_KIND_OPTIONS = [
   { value: NostrEventKind.REACTION, label: 'Reaction (7)' },
   { value: NostrEventKind.CHANNEL_CREATE, label: 'Channel Create (40)' },
   { value: NostrEventKind.CHANNEL_METADATA, label: 'Channel Metadata (41)' },
-  { value: NostrEventKind.LONG_FORM, label: 'Long Form (30023)' },
+  { value: NostrEventKind.LONG_FORM_CONTENT, label: 'Long Form (30023)' },
 ];
 
 const TAG_TYPE_OPTIONS = [

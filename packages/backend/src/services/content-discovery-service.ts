@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 🔍 CONTENT DISCOVERY SERVICE
  *
@@ -162,7 +161,7 @@ export class ContentDiscoveryService {
       };
 
       const windowStart = new Date(
-        Date.now() - (timeWindows[params.timeframe] || timeWindows['24h'])
+        Date.now() - (timeWindows[params.timeframe as keyof typeof timeWindows] || timeWindows['24h'])
       );
 
       let query = supabase
@@ -205,7 +204,11 @@ export class ContentDiscoveryService {
 
       if (error) throw error;
 
-      return data || [];
+      return (data || []).map((item) => ({
+        name: item.name as string,
+        count: item.content_count as number,
+        icon: item.icon as string | undefined,
+      }));
     } catch (error) {
       this.logger.error('Failed to get categories', error);
       throw error;
@@ -371,9 +374,9 @@ export class ContentDiscoveryService {
           .limit(50);
 
         if (userHistory) {
-          const categories = userHistory.map((h) => h.content?.category).filter(Boolean);
+          const categories = userHistory.map((h: Record<string, any>) => h.content?.category).filter(Boolean) as string[];
           const categoryCounts = categories.reduce(
-            (acc, cat) => {
+            (acc: Record<string, number>, cat: string) => {
               acc[cat] = (acc[cat] || 0) + 1;
               return acc;
             },
@@ -382,7 +385,7 @@ export class ContentDiscoveryService {
 
           // Exclude top 3 most viewed categories
           excludeCategories = Object.entries(categoryCounts)
-            .sort(([, a], [, b]) => b - a)
+            .sort(([, a], [, b]) => (b as number) - (a as number))
             .slice(0, 3)
             .map(([cat]) => cat);
         }
