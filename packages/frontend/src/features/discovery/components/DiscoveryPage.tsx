@@ -20,10 +20,13 @@ export const DiscoveryPage = () => {
     isLoading,
     isFetching,
     error,
+    refetch,
   } = useDiscovery();
 
-  // Use demo creators as fallback when API errors or returns empty results
-  const showDemoFallback = !isLoading && (!!error || creators.length === 0);
+  // Distinguish between API errors and empty results
+  const hasApiError = !isLoading && !!error;
+  // Show demo creators only when there are no results (not on errors)
+  const showDemoFallback = !isLoading && !error && creators.length === 0;
 
   const displayCreators = useMemo(() => {
     if (!showDemoFallback) return creators;
@@ -136,6 +139,38 @@ export const DiscoveryPage = () => {
           {!isLoading && `${displayCreators.length} creators found`}
         </div>
 
+        {/* API error state — show error message with retry button */}
+        {hasApiError && (
+          <div className='text-center py-16' role='alert'>
+            <div className='w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-red-500/20 to-orange-500/20 border border-red-500/20 flex items-center justify-center'>
+              <svg
+                className='w-8 h-8 text-red-400'
+                fill='none'
+                viewBox='0 0 24 24'
+                stroke='currentColor'
+                strokeWidth={1.5}
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  d='M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z'
+                />
+              </svg>
+            </div>
+            <p className='text-lg font-semibold text-foreground'>Something went wrong</p>
+            <p className='mt-2 text-muted-foreground'>
+              We couldn&apos;t load creators right now. Please try again.
+            </p>
+            <button
+              onClick={() => refetch()}
+              className='mt-4 px-6 py-2.5 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-lg text-sm font-medium shadow-[0_4px_16px_rgba(139,92,246,0.3)] hover:opacity-90 transition-all duration-150'
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
+        {/* Empty results with demo fallback — no matching creators after filtering */}
         {showDemoFallback && displayCreators.length === 0 && (
           <div className='text-center py-16'>
             <div className='w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-purple-500/20 to-violet-500/20 border border-purple-500/20 flex items-center justify-center'>
@@ -158,16 +193,16 @@ export const DiscoveryPage = () => {
           </div>
         )}
 
-        {!isLoading && displayCreators.length > 0 && (
+        {!isLoading && !hasApiError && displayCreators.length > 0 && (
           <>
-            {/* Demo fallback banner */}
+            {/* Demo fallback banner — shown for empty results, not errors */}
             {showDemoFallback && (
               <div className='mb-6 text-center'>
                 <span className='inline-block px-3 py-1 text-xs font-medium text-purple-300 bg-purple-500/10 border border-purple-500/20 rounded-full'>
                   Featured Creators
                 </span>
                 <p className='mt-2 text-sm text-muted-foreground'>
-                  Meet some of the creators building on Sovren
+                  Check out these creators while we grow our community
                 </p>
               </div>
             )}
