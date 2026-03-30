@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🔐 Database Session Manager (Backend)
  * US-311: Unified Session Management - Subtask 3

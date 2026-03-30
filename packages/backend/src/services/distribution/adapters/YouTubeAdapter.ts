@@ -60,14 +60,14 @@ export class YouTubeAdapter extends BasePlatformAdapter {
       throw new Error(`YouTube token exchange failed: ${response.status}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as Record<string, unknown>;
     return {
-      access_token: data.access_token,
-      refresh_token: data.refresh_token || null,
+      access_token: data.access_token as string,
+      refresh_token: (data.refresh_token as string) || null,
       expires_at: data.expires_in
-        ? new Date(Date.now() + data.expires_in * 1000).toISOString()
+        ? new Date(Date.now() + (data.expires_in as number) * 1000).toISOString()
         : null,
-      scopes: (data.scope || '').split(' '),
+      scopes: ((data.scope as string) || '').split(' '),
     };
   }
 
@@ -87,14 +87,14 @@ export class YouTubeAdapter extends BasePlatformAdapter {
       throw new Error(`YouTube token refresh failed: ${response.status}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as Record<string, unknown>;
     return {
-      access_token: data.access_token,
+      access_token: data.access_token as string,
       refresh_token: refreshToken, // Google doesn't return new refresh token on refresh
       expires_at: data.expires_in
-        ? new Date(Date.now() + data.expires_in * 1000).toISOString()
+        ? new Date(Date.now() + (data.expires_in as number) * 1000).toISOString()
         : null,
-      scopes: (data.scope || '').split(' '),
+      scopes: ((data.scope as string) || '').split(' '),
     };
   }
 

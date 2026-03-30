@@ -116,7 +116,7 @@ export class CrossPostService implements ICrossPostService {
     try {
       for (const row of (inserted || []) as Array<{
         id: string;
-        platform: string;
+        platform: SupportedPlatform;
         status: string;
         scheduled_at: string | null;
       }>) {
@@ -180,7 +180,14 @@ export class CrossPostService implements ICrossPostService {
       throw err;
     }
 
-    const entries: CrossPostEntry[] = (inserted || []).map(row => ({
+    const entries: CrossPostEntry[] = (
+      (inserted || []) as Array<{
+        id: string;
+        platform: SupportedPlatform;
+        status: string;
+        scheduled_at: string | null;
+      }>
+    ).map(row => ({
       id: row.id,
       content_id: request.content_id,
       platform: row.platform,
@@ -216,7 +223,7 @@ export class CrossPostService implements ICrossPostService {
       throw error;
     }
 
-    return data || [];
+    return (data || []) as CrossPostEntry[];
   }
 
   async cancel(creatorId: string, crossPostId: string): Promise<void> {

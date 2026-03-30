@@ -112,17 +112,19 @@ export class RepurposingService implements IRepurposingService {
       platforms: targetPlatforms,
     });
 
-    return rows.map(row => ({
-      id: row.id,
-      source_content_id: contentId,
-      platform: row.platform,
-      format_type: row.format_type,
-      text: row.text,
-      character_count: row.character_count,
-      character_limit: PLATFORM_CHAR_LIMITS[row.platform as SupportedPlatform],
-      approved: false,
-      backlink_url: row.backlink_url,
-    }));
+    return rows.map(
+      (row): RepurposedContent => ({
+        id: row.id,
+        source_content_id: contentId,
+        platform: row.platform as SupportedPlatform,
+        format_type: row.format_type,
+        text: row.text,
+        character_count: row.character_count,
+        character_limit: PLATFORM_CHAR_LIMITS[row.platform as SupportedPlatform],
+        approved: false,
+        backlink_url: row.backlink_url,
+      })
+    );
   }
 
   async getRepurposed(creatorId: string, contentId: string): Promise<RepurposedContent[]> {
@@ -139,7 +141,7 @@ export class RepurposingService implements IRepurposingService {
       throw error;
     }
 
-    return (data || []).map((row: RepurposedContent & { platform: string }) => ({
+    return ((data || []) as Array<RepurposedContent & { platform: string }>).map(row => ({
       ...row,
       character_limit: PLATFORM_CHAR_LIMITS[row.platform as SupportedPlatform] || 500,
     }));
