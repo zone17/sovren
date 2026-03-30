@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useMutation, useQueryClient, UseMutationOptions } from '@tanstack/react-query';
 import { CreatorProfile, UpdateCreatorInput } from '@/types/creator';
 import { creatorsKeys } from './useCreators';
@@ -60,17 +59,20 @@ export const useUpdateCreator = (
 
       // Optimistically update to the new value
       if (previousCreator) {
-        queryClient.setQueryData<CreatorProfile>(creatorsKeys.detail(creatorId), {
-          ...previousCreator,
-          ...data,
-          updatedAt: new Date().toISOString(),
+        queryClient.setQueryData<CreatorProfile>(creatorsKeys.detail(creatorId), old => {
+          if (!old) return old;
+          return {
+            ...old,
+            ...data,
+            updatedAt: new Date().toISOString(),
+          } as CreatorProfile;
         });
       }
 
       // Return a context with the previous and new data
       return { previousCreator };
     },
-    onError: (err, { creatorId }, context) => {
+    onError: (_err, { creatorId }, context) => {
       // If the mutation fails, use the context to roll back
       if (context?.previousCreator) {
         queryClient.setQueryData(creatorsKeys.detail(creatorId), context.previousCreator);

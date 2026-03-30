@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 🌍 **ELITE TEST ENVIRONMENT VARIABLES**
  *
@@ -202,7 +201,7 @@ export function setupTestEnvironment(): void {
  * Setup Vite-specific environment variables
  */
 export function setupViteEnvironment(): void {
-  const viteEnv = {};
+  const viteEnv: Record<string, string> = {};
 
   Object.entries(TEST_ENVIRONMENT_VARIABLES).forEach(([key, value]) => {
     if (key.startsWith('VITE_') || ['NODE_ENV', 'DEV', 'MODE', 'PROD'].includes(key)) {
@@ -228,12 +227,12 @@ export function setupViteEnvironment(): void {
 export function setupGlobalEnvironment(): void {
   // Add environment to window for client-side access
   if (typeof window !== 'undefined') {
-    window.__TEST_ENV__ = TEST_ENVIRONMENT_VARIABLES;
+    (window as unknown as Record<string, unknown>).__TEST_ENV__ = TEST_ENVIRONMENT_VARIABLES;
   }
 
   // Add to global for Node.js access
   if (typeof global !== 'undefined') {
-    global.__TEST_ENV__ = TEST_ENVIRONMENT_VARIABLES;
+    (global as Record<string, unknown>).__TEST_ENV__ = TEST_ENVIRONMENT_VARIABLES;
   }
 }
 
@@ -241,7 +240,12 @@ export function setupGlobalEnvironment(): void {
  * Get environment variable with fallback
  */
 export function getTestEnvVar(key: string, fallback?: string): string {
-  return process.env[key] || TEST_ENVIRONMENT_VARIABLES[key] || fallback || '';
+  return (
+    process.env[key] ||
+    (TEST_ENVIRONMENT_VARIABLES as Record<string, string>)[key] ||
+    fallback ||
+    ''
+  );
 }
 
 /**
@@ -279,7 +283,7 @@ export function validateTestEnvironment(): { valid: boolean; missing: string[] }
 
   const missing: string[] = [];
 
-  requiredVars.forEach((varName) => {
+  requiredVars.forEach(varName => {
     if (!process.env[varName] && !(TEST_ENVIRONMENT_VARIABLES as Record<string, string>)[varName]) {
       missing.push(varName);
     }
@@ -320,7 +324,7 @@ export function createEnvMock(overrides: Record<string, string>): () => void {
   });
 
   return () => {
-    cleanupFunctions.forEach((cleanup) => cleanup());
+    cleanupFunctions.forEach(cleanup => cleanup());
   };
 }
 
@@ -364,7 +368,7 @@ export function setupNostrEnvironment(): () => void {
  */
 export function resetTestEnvironment(): void {
   // Clear any overrides
-  Object.keys(TEST_ENVIRONMENT_VARIABLES).forEach((key) => {
+  Object.keys(TEST_ENVIRONMENT_VARIABLES).forEach(key => {
     process.env[key] = (TEST_ENVIRONMENT_VARIABLES as Record<string, string>)[key];
   });
 

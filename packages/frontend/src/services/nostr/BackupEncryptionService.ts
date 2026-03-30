@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * NOSTR Backup Encryption Service
  * US-322: Secure backup and recovery - Encryption Service
@@ -162,11 +161,17 @@ export class BackupEncryptionService {
       'deriveKey',
     ]);
 
+    // Ensure salt is an ArrayBuffer for BufferSource compatibility
+    const saltArrayBuffer =
+      salt instanceof Uint8Array
+        ? (salt.buffer.slice(salt.byteOffset, salt.byteOffset + salt.byteLength) as ArrayBuffer)
+        : salt;
+
     // Derive key using PBKDF2
     return await crypto.subtle.deriveKey(
       {
         name: 'PBKDF2',
-        salt,
+        salt: saltArrayBuffer,
         iterations: ENCRYPTION_CONFIG.PBKDF2_ITERATIONS,
         hash: ENCRYPTION_CONFIG.HASH_ALGORITHM,
       },
@@ -362,7 +367,7 @@ export class BackupEncryptionService {
   private arrayBufferToHex(buffer: ArrayBuffer): string {
     const bytes = new Uint8Array(buffer);
     return Array.from(bytes)
-      .map((b) => b.toString(16).padStart(2, '0'))
+      .map(b => b.toString(16).padStart(2, '0'))
       .join('');
   }
 }
