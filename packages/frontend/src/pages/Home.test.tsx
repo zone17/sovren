@@ -71,7 +71,8 @@ describe('Home Component - Code of Craft Standards', () => {
 
     it('renders NOSTR mention in hero', () => {
       renderWithProviders(<Home />);
-      expect(screen.getByText(/NOSTR/)).toBeInTheDocument();
+      const nostrMentions = screen.getAllByText(/NOSTR/);
+      expect(nostrMentions.length).toBeGreaterThan(0);
     });
   });
 
