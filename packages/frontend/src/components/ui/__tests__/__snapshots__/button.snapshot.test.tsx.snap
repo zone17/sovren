@@ -3,7 +3,7 @@
 exports[`Button Component Snapshots > Basic Button Variants > Button Variants Snapshots > renders default variant correctly > default variant 1`] = `
 <div>
   <button
-    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-11 px-4 text-[13px]"
   >
     Default Button
   </button>
@@ -13,7 +13,7 @@ exports[`Button Component Snapshots > Basic Button Variants > Button Variants Sn
 exports[`Button Component Snapshots > Basic Button Variants > Button Variants Snapshots > renders destructive variant correctly > destructive variant 1`] = `
 <div>
   <button
-    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 hover:shadow-md active:bg-destructive/80 active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 hover:shadow-md active:bg-destructive/80 active:translate-y-[0.5px] h-11 px-4 text-[13px]"
   >
     Delete
   </button>
@@ -23,7 +23,7 @@ exports[`Button Component Snapshots > Basic Button Variants > Button Variants Sn
 exports[`Button Component Snapshots > Basic Button Variants > Button Variants Snapshots > renders ghost variant correctly > ghost variant 1`] = `
 <div>
   <button
-    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 text-muted-foreground hover:bg-secondary hover:text-foreground active:bg-secondary/80 active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 text-muted-foreground hover:bg-secondary hover:text-foreground active:bg-secondary/80 active:translate-y-[0.5px] h-11 px-4 text-[13px]"
   >
     Ghost
   </button>
@@ -33,7 +33,7 @@ exports[`Button Component Snapshots > Basic Button Variants > Button Variants Sn
 exports[`Button Component Snapshots > Basic Button Variants > Button Variants Snapshots > renders lightning variant correctly > lightning variant 1`] = `
 <div>
   <button
-    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-amber-500 text-white shadow-sm hover:bg-amber-600 hover:shadow-md active:bg-amber-700 active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-amber-500 text-white shadow-sm hover:bg-amber-600 hover:shadow-md active:bg-amber-700 active:translate-y-[0.5px] h-11 px-4 text-[13px]"
   >
     ⚡ Lightning
   </button>
@@ -43,7 +43,7 @@ exports[`Button Component Snapshots > Basic Button Variants > Button Variants Sn
 exports[`Button Component Snapshots > Basic Button Variants > Button Variants Snapshots > renders link variant correctly > link variant 1`] = `
 <div>
   <button
-    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 text-primary underline-offset-4 hover:underline hover:text-primary/90 active:text-primary/80 h-8 px-4 text-[13px]"
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 text-primary underline-offset-4 hover:underline hover:text-primary/90 active:text-primary/80 h-11 px-4 text-[13px]"
   >
     Link
   </button>
@@ -53,7 +53,7 @@ exports[`Button Component Snapshots > Basic Button Variants > Button Variants Sn
 exports[`Button Component Snapshots > Basic Button Variants > Button Variants Snapshots > renders outline variant correctly > outline variant 1`] = `
 <div>
   <button
-    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background text-foreground shadow-sm hover:border-muted-foreground/50 hover:shadow-md active:border-muted-foreground active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background text-foreground shadow-sm hover:border-muted-foreground/50 hover:shadow-md active:border-muted-foreground active:translate-y-[0.5px] h-11 px-4 text-[13px]"
   >
     Outline
   </button>
@@ -63,7 +63,7 @@ exports[`Button Component Snapshots > Basic Button Variants > Button Variants Sn
 exports[`Button Component Snapshots > Basic Button Variants > Button Variants Snapshots > renders premium variant correctly > premium variant 1`] = `
 <div>
   <button
-    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-gray-800 text-white shadow-sm hover:bg-gray-900 hover:shadow-md active:bg-gray-950 active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-gray-800 text-white shadow-sm hover:bg-gray-900 hover:shadow-md active:bg-gray-950 active:translate-y-[0.5px] h-11 px-4 text-[13px]"
   >
     Premium
   </button>
@@ -73,7 +73,7 @@ exports[`Button Component Snapshots > Basic Button Variants > Button Variants Sn
 exports[`Button Component Snapshots > Basic Button Variants > Button Variants Snapshots > renders primary variant correctly > primary variant 1`] = `
 <div>
   <button
-    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-11 px-4 text-[13px]"
   >
     Primary Button
   </button>
@@ -83,7 +83,7 @@ exports[`Button Component Snapshots > Basic Button Variants > Button Variants Sn
 exports[`Button Component Snapshots > Basic Button Variants > Button Variants Snapshots > renders secondary variant correctly > secondary variant 1`] = `
 <div>
   <button
-    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-secondary text-secondary-foreground border border-input shadow-sm hover:bg-secondary/80 hover:border-muted-foreground/50 hover:shadow-md active:bg-secondary/60 active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-secondary text-secondary-foreground border border-input shadow-sm hover:bg-secondary/80 hover:border-muted-foreground/50 hover:shadow-md active:bg-secondary/60 active:translate-y-[0.5px] h-11 px-4 text-[13px]"
   >
     Secondary
   </button>
@@ -93,7 +93,7 @@ exports[`Button Component Snapshots > Basic Button Variants > Button Variants Sn
 exports[`Button Component Snapshots > Basic Button Variants > Button Variants Snapshots > renders sovereign variant correctly > sovereign variant 1`] = `
 <div>
   <button
-    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-indigo-500 text-white shadow-sm hover:bg-indigo-600 hover:shadow-md active:bg-indigo-700 active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-indigo-500 text-white shadow-sm hover:bg-indigo-600 hover:shadow-md active:bg-indigo-700 active:translate-y-[0.5px] h-11 px-4 text-[13px]"
   >
     🔵 Sovereign
   </button>
@@ -104,7 +104,7 @@ exports[`Button Component Snapshots > Button Accessibility > renders disabled bu
 <div>
   <button
     aria-label="Disabled action"
-    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-11 px-4 text-[13px]"
     disabled=""
   >
     Disabled Action
@@ -116,7 +116,7 @@ exports[`Button Component Snapshots > Button Accessibility > renders loading but
 <div>
   <button
     aria-label="Loading action"
-    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-11 px-4 text-[13px]"
     disabled=""
   >
     <div
@@ -132,7 +132,7 @@ exports[`Button Component Snapshots > Button Accessibility > renders with proper
   <button
     aria-describedby="save-description"
     aria-label="Save document"
-    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-11 px-4 text-[13px]"
     role="button"
     tabindex="0"
   >
@@ -147,17 +147,17 @@ exports[`Button Component Snapshots > Button Combinations > Button Combinations 
     class="flex flex-col space-y-2"
   >
     <button
-      class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-amber-500 text-white shadow-sm hover:bg-amber-600 hover:shadow-md active:bg-amber-700 active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+      class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-amber-500 text-white shadow-sm hover:bg-amber-600 hover:shadow-md active:bg-amber-700 active:translate-y-[0.5px] h-11 px-4 text-[13px]"
     >
       ⚡ Send Lightning
     </button>
     <button
-      class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-indigo-500 text-white shadow-sm hover:bg-indigo-600 hover:shadow-md active:bg-indigo-700 active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+      class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-indigo-500 text-white shadow-sm hover:bg-indigo-600 hover:shadow-md active:bg-indigo-700 active:translate-y-[0.5px] h-11 px-4 text-[13px]"
     >
       🔵 Create Invoice
     </button>
     <button
-      class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-gray-800 text-white shadow-sm hover:bg-gray-900 hover:shadow-md active:bg-gray-950 active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+      class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-gray-800 text-white shadow-sm hover:bg-gray-900 hover:shadow-md active:bg-gray-950 active:translate-y-[0.5px] h-11 px-4 text-[13px]"
     >
       💎 Premium Features
     </button>
@@ -171,17 +171,17 @@ exports[`Button Component Snapshots > Button Combinations > Button Combinations 
     class="flex space-x-2"
   >
     <button
-      class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background text-foreground shadow-sm hover:border-muted-foreground/50 hover:shadow-md active:border-muted-foreground active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+      class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background text-foreground shadow-sm hover:border-muted-foreground/50 hover:shadow-md active:border-muted-foreground active:translate-y-[0.5px] h-11 px-4 text-[13px]"
     >
       Cancel
     </button>
     <button
-      class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+      class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-11 px-4 text-[13px]"
     >
       Save
     </button>
     <button
-      class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 hover:shadow-md active:bg-destructive/80 active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+      class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 hover:shadow-md active:bg-destructive/80 active:translate-y-[0.5px] h-11 px-4 text-[13px]"
     >
       Delete
     </button>
@@ -195,17 +195,17 @@ exports[`Button Component Snapshots > Button Combinations > Button Combinations 
     class="flex flex-col space-y-2"
   >
     <button
-      class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+      class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-11 px-4 text-[13px]"
     >
       Primary Action
     </button>
     <button
-      class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-secondary text-secondary-foreground border border-input shadow-sm hover:bg-secondary/80 hover:border-muted-foreground/50 hover:shadow-md active:bg-secondary/60 active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+      class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-secondary text-secondary-foreground border border-input shadow-sm hover:bg-secondary/80 hover:border-muted-foreground/50 hover:shadow-md active:bg-secondary/60 active:translate-y-[0.5px] h-11 px-4 text-[13px]"
     >
       Secondary Action
     </button>
     <button
-      class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 text-muted-foreground hover:bg-secondary hover:text-foreground active:bg-secondary/80 active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+      class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 text-muted-foreground hover:bg-secondary hover:text-foreground active:bg-secondary/80 active:translate-y-[0.5px] h-11 px-4 text-[13px]"
     >
       Tertiary Action
     </button>
@@ -216,7 +216,7 @@ exports[`Button Component Snapshots > Button Combinations > Button Combinations 
 exports[`Button Component Snapshots > Button Custom Props > renders with custom className > custom-className 1`] = `
 <div>
   <button
-    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-8 px-4 text-[13px] custom-button-class"
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-11 px-4 text-[13px] custom-button-class"
   >
     Custom Button
   </button>
@@ -226,7 +226,7 @@ exports[`Button Component Snapshots > Button Custom Props > renders with custom 
 exports[`Button Component Snapshots > Button Custom Props > renders with custom data attributes > with-data-attributes 1`] = `
 <div>
   <button
-    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-11 px-4 text-[13px]"
     data-analytics="button-click"
     data-testid="custom-button"
   >
@@ -238,7 +238,7 @@ exports[`Button Component Snapshots > Button Custom Props > renders with custom 
 exports[`Button Component Snapshots > Button Custom Props > renders with custom onClick handler > with-onClick 1`] = `
 <div>
   <button
-    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-11 px-4 text-[13px]"
   >
     Clickable Button
   </button>
@@ -248,7 +248,7 @@ exports[`Button Component Snapshots > Button Custom Props > renders with custom 
 exports[`Button Component Snapshots > Button Edge Cases > Button Edge Cases Snapshots > renders button with long text correctly > button with long text 1`] = `
 <div>
   <button
-    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-11 px-4 text-[13px]"
   >
     This is a very long button text that might wrap or truncate
   </button>
@@ -258,7 +258,7 @@ exports[`Button Component Snapshots > Button Edge Cases > Button Edge Cases Snap
 exports[`Button Component Snapshots > Button Edge Cases > Button Edge Cases Snapshots > renders button with mixed content correctly > button with mixed content 1`] = `
 <div>
   <button
-    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-11 px-4 text-[13px]"
   >
     <span
       class="mr-2"
@@ -278,7 +278,7 @@ exports[`Button Component Snapshots > Button Edge Cases > Button Edge Cases Snap
 exports[`Button Component Snapshots > Button Edge Cases > Button Edge Cases Snapshots > renders button with numbers and symbols correctly > button with numbers and symbols 1`] = `
 <div>
   <button
-    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-11 px-4 text-[13px]"
   >
     $50.00 - Process Payment
   </button>
@@ -288,7 +288,7 @@ exports[`Button Component Snapshots > Button Edge Cases > Button Edge Cases Snap
 exports[`Button Component Snapshots > Button Edge Cases > Button Edge Cases Snapshots > renders button with only icon correctly > button with only icon 1`] = `
 <div>
   <button
-    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] text-[13px] font-medium leading-none tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-8 w-8 p-0"
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] text-[13px] font-medium leading-none tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-11 w-11 p-0"
   >
     🏠
   </button>
@@ -298,7 +298,7 @@ exports[`Button Component Snapshots > Button Edge Cases > Button Edge Cases Snap
 exports[`Button Component Snapshots > Button Edge Cases > Button Edge Cases Snapshots > renders button with special characters correctly > button with special characters 1`] = `
 <div>
   <button
-    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-11 px-4 text-[13px]"
   >
     Save & Continue → Next
   </button>
@@ -308,7 +308,7 @@ exports[`Button Component Snapshots > Button Edge Cases > Button Edge Cases Snap
 exports[`Button Component Snapshots > Button Edge Cases > Button Edge Cases Snapshots > renders empty button correctly > empty button 1`] = `
 <div>
   <button
-    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-11 px-4 text-[13px]"
   />
 </div>
 `;
@@ -316,7 +316,7 @@ exports[`Button Component Snapshots > Button Edge Cases > Button Edge Cases Snap
 exports[`Button Component Snapshots > Button Sizes > Button Sizes Snapshots > renders default size correctly > default size 1`] = `
 <div>
   <button
-    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-11 px-4 text-[13px]"
   >
     Default
   </button>
@@ -326,7 +326,7 @@ exports[`Button Component Snapshots > Button Sizes > Button Sizes Snapshots > re
 exports[`Button Component Snapshots > Button Sizes > Button Sizes Snapshots > renders icon size correctly > icon size 1`] = `
 <div>
   <button
-    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] text-[13px] font-medium leading-none tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-8 w-8 p-0"
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] text-[13px] font-medium leading-none tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-11 w-11 p-0"
   >
     🏠
   </button>
@@ -336,7 +336,7 @@ exports[`Button Component Snapshots > Button Sizes > Button Sizes Snapshots > re
 exports[`Button Component Snapshots > Button Sizes > Button Sizes Snapshots > renders large size correctly > large size 1`] = `
 <div>
   <button
-    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-9 px-6 text-[14px]"
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-12 px-6 text-[14px]"
   >
     Large
   </button>
@@ -346,7 +346,7 @@ exports[`Button Component Snapshots > Button Sizes > Button Sizes Snapshots > re
 exports[`Button Component Snapshots > Button Sizes > Button Sizes Snapshots > renders small size correctly > small size 1`] = `
 <div>
   <button
-    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-7 px-3 text-[12px]"
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-9 px-3 text-[12px]"
   >
     Small
   </button>
@@ -356,7 +356,7 @@ exports[`Button Component Snapshots > Button Sizes > Button Sizes Snapshots > re
 exports[`Button Component Snapshots > Button States > Button States Snapshots > renders disabled state correctly > disabled state 1`] = `
 <div>
   <button
-    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-11 px-4 text-[13px]"
     disabled=""
   >
     Disabled
@@ -367,7 +367,7 @@ exports[`Button Component Snapshots > Button States > Button States Snapshots > 
 exports[`Button Component Snapshots > Button States > Button States Snapshots > renders loading and disabled correctly > loading and disabled 1`] = `
 <div>
   <button
-    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-11 px-4 text-[13px]"
     disabled=""
   >
     <div
@@ -381,7 +381,7 @@ exports[`Button Component Snapshots > Button States > Button States Snapshots > 
 exports[`Button Component Snapshots > Button States > Button States Snapshots > renders loading state correctly > loading state 1`] = `
 <div>
   <button
-    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-11 px-4 text-[13px]"
     disabled=""
   >
     <div
@@ -398,7 +398,7 @@ exports[`Button Component Snapshots > Button States > Button States Snapshots > 
     class="space-y-2"
   >
     <button
-      class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+      class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px] h-11 px-4 text-[13px]"
       disabled=""
     >
       <div
@@ -407,7 +407,7 @@ exports[`Button Component Snapshots > Button States > Button States Snapshots > 
       Default Loading
     </button>
     <button
-      class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 hover:shadow-md active:bg-destructive/80 active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+      class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 hover:shadow-md active:bg-destructive/80 active:translate-y-[0.5px] h-11 px-4 text-[13px]"
       disabled=""
     >
       <div
@@ -416,7 +416,7 @@ exports[`Button Component Snapshots > Button States > Button States Snapshots > 
       Destructive Loading
     </button>
     <button
-      class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-amber-500 text-white shadow-sm hover:bg-amber-600 hover:shadow-md active:bg-amber-700 active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+      class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-amber-500 text-white shadow-sm hover:bg-amber-600 hover:shadow-md active:bg-amber-700 active:translate-y-[0.5px] h-11 px-4 text-[13px]"
       disabled=""
     >
       <div
