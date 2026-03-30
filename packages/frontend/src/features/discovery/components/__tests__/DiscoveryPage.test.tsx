@@ -140,7 +140,7 @@ describe('DiscoveryPage', () => {
       expect(statusElements.length).toBeGreaterThanOrEqual(1);
     });
 
-    it('shows demo creators as fallback on error', () => {
+    it('shows error state with retry button on API error', () => {
       mockUseDiscovery.mockReturnValue({
         ...defaultHookReturn,
         error: new Error('Network error'),
@@ -151,10 +151,27 @@ describe('DiscoveryPage', () => {
           <DiscoveryPage />
         </MemoryRouter>
       );
-      // Demo fallback banner should appear
-      expect(screen.getByText('Featured Creators')).toBeInTheDocument();
-      // Demo creator names should be visible
-      expect(screen.getByText('Mina Aoki')).toBeInTheDocument();
+      // Should show error message, not demo creators
+      expect(screen.getByRole('alert')).toBeInTheDocument();
+      expect(screen.getByText('Something went wrong')).toBeInTheDocument();
+      expect(screen.getByText('Retry')).toBeInTheDocument();
+      // Demo fallback should NOT appear for errors
+      expect(screen.queryByText('Featured Creators')).not.toBeInTheDocument();
+    });
+
+    it('calls refetch when retry button is clicked', () => {
+      mockUseDiscovery.mockReturnValue({
+        ...defaultHookReturn,
+        error: new Error('Network error'),
+        creators: [],
+      });
+      render(
+        <MemoryRouter>
+          <DiscoveryPage />
+        </MemoryRouter>
+      );
+      fireEvent.click(screen.getByText('Retry'));
+      expect(mockRefetch).toHaveBeenCalled();
     });
 
     it('shows demo creators when no creators returned from API', () => {
@@ -166,6 +183,8 @@ describe('DiscoveryPage', () => {
       );
       expect(screen.getByText('Featured Creators')).toBeInTheDocument();
       expect(screen.getByText('Mina Aoki')).toBeInTheDocument();
+      // Should NOT show error state for empty results
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     });
   });
 
