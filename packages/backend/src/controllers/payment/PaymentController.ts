@@ -6,6 +6,7 @@
  */
 
 import { Request, Response } from 'express';
+import { z } from 'zod';
 import {
   PaymentProcessingService,
   InvoiceService,
@@ -21,6 +22,16 @@ import { businessMetrics } from '../../middleware/deployment-monitoring';
 import { Currency } from '../../types/currency';
 import { AnalyticsPeriod } from '../../types/payment-analytics';
 import { SubscriptionTier } from '../../types/subscription';
+
+/**
+ * Zod schema for refund request validation.
+ * transactionId is required to ensure the ownership check always runs.
+ */
+const RefundRequestSchema = z.object({
+  transactionId: z.string().uuid('transactionId must be a valid UUID'),
+  reason: z.string().max(1000).optional(),
+  amount: z.number().positive('amount must be a positive number').optional(),
+});
 
 export class PaymentController {
   constructor(
@@ -152,22 +163,39 @@ export class PaymentController {
 
   public createRefund = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const startTime = Date.now();
-    const refundData = req.body;
+
+    // Validate request body with Zod — transactionId is required
+    const parseResult = RefundRequestSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid refund request',
+        details: parseResult.error.errors,
+      });
+      return;
+    }
+    const refundData = parseResult.data;
 
     // Ownership check: verify the transaction belongs to the authenticated user
-    if (refundData.transactionId && req.user?.role !== 'admin') {
-      const transaction = await this.paymentService.getTransaction(refundData.transactionId);
-      if (transaction) {
-        const ownsTransaction =
-          transaction.userId === req.user?.nostr_pubkey ||
-          (req.user?.id && transaction.userId === req.user.id);
-        if (!ownsTransaction) {
-          res.status(403).json({
-            success: false,
-            error: 'Forbidden: you can only refund your own transactions',
-          });
-          return;
-        }
+    const transaction = await this.paymentService.getTransaction(refundData.transactionId);
+    if (!transaction) {
+      res.status(404).json({
+        success: false,
+        error: 'Transaction not found',
+      });
+      return;
+    }
+
+    if (req.user?.role !== 'admin') {
+      const ownsTransaction =
+        transaction.userId === req.user?.nostr_pubkey ||
+        (req.user?.id && transaction.userId === req.user.id);
+      if (!ownsTransaction) {
+        res.status(403).json({
+          success: false,
+          error: 'Forbidden: you can only refund your own transactions',
+        });
+        return;
       }
     }
 
