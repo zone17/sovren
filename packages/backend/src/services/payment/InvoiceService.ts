@@ -596,7 +596,7 @@ export class InvoiceService implements IInvoiceService {
       const doc = new PDFDocument({ margin: 50 });
       const chunks: Buffer[] = [];
 
-      doc.on('data', (chunk) => chunks.push(chunk));
+      doc.on('data', chunk => chunks.push(chunk));
 
       // Header
       doc.fontSize(20).text('INVOICE', { align: 'center' });
@@ -754,7 +754,7 @@ export class InvoiceService implements IInvoiceService {
         date: invoice.createdAt.toLocaleDateString(),
         customerName: invoice.billingAddress.name,
         customerAddress: `${invoice.billingAddress.line1}, ${invoice.billingAddress.city}`,
-        items: invoice.items.map((item) => ({
+        items: invoice.items.map(item => ({
           description: item.description,
           quantity: item.quantity,
           unitPrice: item.unitPrice.toFixed(2),
@@ -791,7 +791,7 @@ export class InvoiceService implements IInvoiceService {
       const pdf = await this.generatePDF(invoiceId);
 
       // Get customer info
-      const _customer = await this.getCustomer(recipientId);
+      void (await this.getCustomer(recipientId));
 
       // Send via notification service
       await this.notification.send({
@@ -1090,7 +1090,7 @@ export class InvoiceService implements IInvoiceService {
         [id]
       );
 
-      invoice.items = itemsResult.rows.map((row) => this.mapDbRowToInvoiceItem(row));
+      invoice.items = itemsResult.rows.map(row => this.mapDbRowToInvoiceItem(row));
 
       // Cache for quick retrieval
       await this.cache.set(`invoice:${id}`, invoice, 3600);
@@ -1147,7 +1147,7 @@ export class InvoiceService implements IInvoiceService {
 
       const result = await this.db.query(query, params);
 
-      return result.rows.map((row) => this.mapDbRowToInvoice(row));
+      return result.rows.map(row => this.mapDbRowToInvoice(row));
     } catch (error) {
       this.logger.error('Failed to get customer invoices', error);
       throw new ServiceError('Failed to retrieve customer invoices', {
@@ -1170,7 +1170,7 @@ export class InvoiceService implements IInvoiceService {
          ORDER BY due_date ASC`
       );
 
-      return result.rows.map((row) => this.mapDbRowToInvoice(row));
+      return result.rows.map(row => this.mapDbRowToInvoice(row));
     } catch (error) {
       this.logger.error('Failed to get overdue invoices', error);
       throw new ServiceError('Failed to retrieve overdue invoices', {
@@ -1283,7 +1283,7 @@ export class InvoiceService implements IInvoiceService {
   }
 
   private processLineItems(items: InvoiceItem[]): InvoiceItem[] {
-    return items.map((item) => {
+    return items.map(item => {
       const quantity = new Decimal(item.quantity);
       const unitPrice = new Decimal(item.unitPrice.amount);
       const total = quantity.mul(unitPrice);

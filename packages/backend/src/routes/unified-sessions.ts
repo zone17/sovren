@@ -560,7 +560,7 @@ router.get(
       return res.status(200).json({
         success: true,
         data: {
-          sessions: sessions.map((s) => ({
+          sessions: sessions.map(s => ({
             id: s.id,
             device_id: s.device_id,
             device_info: s.device_info,
@@ -745,7 +745,7 @@ router.get('/health', async (req: Request, res: Response) => {
 // ERROR HANDLER
 // =====================================================
 
-router.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+router.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
   logger.error('Unified session route error', { error: err });
 
   return res.status(500).json({
