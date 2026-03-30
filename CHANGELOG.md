@@ -6,6 +6,16 @@ Production readiness milestone. All slices complete, CI/CD fully automated, elit
 
 ## [Unreleased]
 
+### fix(tests): update 6 stale test assertions to match current page content — 2026-03-30
+
+**Category**: Bug Fix — CI Unblock
+**Status**: Complete
+
+Updated 6 stale test assertions across Home.ui.test.tsx, Signup.test.tsx, and Signup.ui.test.tsx to match current page content after sprint redesign. CI on main was failing due to these mismatches.
+
+**Changes**: Sovereign Identity heading, email tab presence, NOSTR feature section selector, copyright footer regex order.
+**Files modified**: `Home.ui.test.tsx`, `Signup.test.tsx`, `Signup.ui.test.tsx`
+
 ### fix(ux): P2 dark mode — add dark: variants to color-coded status badges and alert boxes — 2026-03-10
 
 **Category**: Bug Fix — Production Readiness Phase 5 UI/UX (P2-UX-004)
@@ -10193,7 +10203,7 @@ function App() {
   return (
     <header>
       <NotificationCenter
-        position="right"
+        position='right'
         showSettings={true}
         playSound={true}
         autoMarkRead={true}

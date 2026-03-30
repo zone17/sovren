@@ -44,9 +44,10 @@ describe('Home Page - Sovren Creator Platform', () => {
       expect(screen.getByText(/Monetize your audience with Bitcoin/i)).toBeInTheDocument();
     });
 
-    test('SHOULD have NOSTR mention in hero', () => {
+    test('SHOULD have NOSTR mention on page', () => {
       renderHome();
-      expect(screen.getByText('NOSTR')).toBeInTheDocument();
+      // NOSTR appears in the features section and footer, not the hero subtitle
+      expect(screen.getByText(/Your content lives on NOSTR/i)).toBeInTheDocument();
     });
 
     test('SHOULD display no deplatforming message', () => {
@@ -110,7 +111,8 @@ describe('Home Page - Sovren Creator Platform', () => {
     test('SHOULD show copyright info', () => {
       renderHome();
       const currentYear = new Date().getFullYear().toString();
-      expect(screen.getByText(new RegExp(`Sovren.*${currentYear}`))).toBeInTheDocument();
+      // Footer renders: "© {year} Sovren. All rights reserved."
+      expect(screen.getByText(new RegExp(`${currentYear}.*Sovren`))).toBeInTheDocument();
     });
   });
 
