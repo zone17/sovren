@@ -45,11 +45,11 @@ export const buttonVariants = cva(
           'bg-gray-800 text-white shadow-sm hover:bg-gray-900 hover:shadow-md active:bg-gray-950 active:translate-y-[0.5px]',
       },
       size: {
-        // Modern proportions: not too tall, perfect padding
-        sm: 'h-7 px-3 text-[12px]',
-        default: 'h-8 px-4 text-[13px]',
-        lg: 'h-9 px-6 text-[14px]',
-        icon: 'h-8 w-8 p-0',
+        // Touch-accessible proportions: WCAG 2.5.8 minimum 44px target size
+        sm: 'h-9 px-3 text-[12px]',
+        default: 'h-11 px-4 text-[13px]',
+        lg: 'h-12 px-6 text-[14px]',
+        icon: 'h-11 w-11 p-0',
       },
     },
     defaultVariants: {
@@ -75,7 +75,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {...props}
       >
         {isLoading && (
-          <div className="mr-2 h-3.5 w-3.5 animate-spin rounded-full border-[1.5px] border-current border-t-transparent opacity-60" />
+          <div className='mr-2 h-3.5 w-3.5 animate-spin rounded-full border-[1.5px] border-current border-t-transparent opacity-60' />
         )}
         {children}
       </button>
