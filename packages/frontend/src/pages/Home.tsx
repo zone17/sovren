@@ -586,17 +586,17 @@ const Home: React.FC = () => {
             className={`grid grid-cols-2 md:grid-cols-4 gap-6 ${statsSection.inView ? 'reveal-stagger' : ''}`}
           >
             {[
-              { value: 12500, suffix: '+', label: 'Creators' },
-              { value: 2100000, suffix: '', label: 'Sats Earned' },
-              { value: 99, suffix: '%', label: 'Uptime' },
-              { value: 0, suffix: '', label: 'Platform Fees', display: '0%' },
+              { display: '0%', label: 'Platform Fees' },
+              { display: '100%', label: 'Content Ownership' },
+              { display: 'Zero', label: 'Middlemen' },
+              { display: 'Yours', label: 'Your Identity' },
             ].map(stat => (
               <div key={stat.label} className='glass-dark rounded-2xl p-6 text-center'>
                 <p
                   className='text-3xl sm:text-4xl font-bold text-white mb-1'
                   style={{ fontFamily: "'Sora', sans-serif" }}
                 >
-                  {stat.display ?? <AnimatedNumber value={stat.value} suffix={stat.suffix} />}
+                  {stat.display}
                 </p>
                 <p className='text-sm text-white/60'>{stat.label}</p>
               </div>
