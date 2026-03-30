@@ -214,13 +214,14 @@ describe('authorize()', () => {
     expect(next).toHaveBeenCalledWith();
   });
 
-  it('defaults to "supporter" role when user has no role', () => {
+  it('denies access when user has no role (no default role for security)', () => {
     const middleware = authorize(['supporter']);
     const req = makeReq();
     req.user = { nostr_pubkey: VALID_PUBKEY, signature_verified: true, iat: 0, exp: 9999 };
     const next = makeNext();
     middleware(req, makeRes(), next);
-    expect(next).toHaveBeenCalledWith();
+    // No default role — undefined role is denied to prevent privilege escalation
+    expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 403 }));
   });
 
   it('requires admin role for requireAdmin middleware', () => {
