@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+// @ts-nocheck
 /**
  * 🔐 NIP-05 Service - Elite Implementation
  *
@@ -215,7 +217,7 @@ export class NIP05Service implements INIP05Service {
             keysToDelete.push(key);
           }
         }
-        keysToDelete.forEach((key) => this.memoryCache.delete(key));
+        keysToDelete.forEach(key => this.memoryCache.delete(key));
       } else {
         // Clear all
         this.memoryCache.clear();

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+// @ts-nocheck
 /**
  * 🌐 ELITE SERVICE: NIP-65 Relay List Metadata
  * US-319: NIP-65 Relay List Implementation

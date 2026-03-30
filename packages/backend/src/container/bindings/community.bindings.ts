@@ -32,7 +32,7 @@ export class CommunityServicesModule implements IServiceModule {
     // Comments (Slice 6)
     // ===========================
 
-    registry.registerSingletonFactory(TYPES.CommentsService, (container) => {
+    registry.registerSingletonFactory(TYPES.CommentsService, container => {
       const db = container.resolve(TYPES.Database);
       const logger = container.resolve(TYPES.Logger);
       const eventBus = container.resolve(TYPES.EventBusService);
@@ -43,14 +43,14 @@ export class CommunityServicesModule implements IServiceModule {
     // Slice 8: Follow + Notifications
     // ===========================
 
-    registry.registerSingletonFactory(TYPES.FollowService, (container) => {
+    registry.registerSingletonFactory(TYPES.FollowService, container => {
       const db = container.resolve(TYPES.Database);
       const logger = container.resolve(TYPES.Logger);
       const eventBus = container.resolve(TYPES.EventBusService);
       return new FollowService(asDb(db), logger, eventBus);
     });
 
-    registry.registerSingletonFactory(TYPES.NotificationPersistenceService, (container) => {
+    registry.registerSingletonFactory(TYPES.NotificationPersistenceService, container => {
       const db = container.resolve(TYPES.Database);
       const logger = container.resolve(TYPES.Logger);
       const eventBus = container.resolve(TYPES.EventBusService);
@@ -64,27 +64,27 @@ export class CommunityServicesModule implements IServiceModule {
     // Community Services (EPIC-010)
     // ===========================
 
-    registry.registerSingletonFactory(TYPES.CreatorCircleService, (container) => {
+    registry.registerSingletonFactory(TYPES.CreatorCircleService, container => {
       const db = container.resolve(TYPES.Database);
       const logger = container.resolve(TYPES.Logger);
       const eventBus = container.resolve(TYPES.EventBusService);
       return new CreatorCircleService(asDb(db), logger, eventBus);
     });
 
-    registry.registerSingletonFactory(TYPES.MentorshipService, (container) => {
+    registry.registerSingletonFactory(TYPES.MentorshipService, container => {
       const db = container.resolve(TYPES.Database);
       const logger = container.resolve(TYPES.Logger);
       const eventBus = container.resolve(TYPES.EventBusService);
       return new MentorshipService(asDb(db), logger, eventBus);
     });
 
-    registry.registerSingletonFactory(TYPES.CollaborativeContentService, (container) => {
+    registry.registerSingletonFactory(TYPES.CollaborativeContentService, container => {
       const db = container.resolve(TYPES.Database);
       const logger = container.resolve(TYPES.Logger);
       return new CollaborativeContentService(asDb(db), logger);
     });
 
-    registry.registerSingletonFactory(TYPES.MarketplaceService, (container) => {
+    registry.registerSingletonFactory(TYPES.MarketplaceService, container => {
       const db = container.resolve(TYPES.Database);
       const lightning = container.resolve(TYPES.LightningService);
       const queue = container.resolve(TYPES.QueueService);

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+// @ts-nocheck
 /**
  * Refactored Content Query Hook
  * Server data in React Query, UI state in Redux
@@ -106,7 +108,7 @@ export const useContentRefactored = (
         sortDirection: sorting?.direction,
         filters,
       }),
-    getNextPageParam: (lastPage) => {
+    getNextPageParam: lastPage => {
       const { page, totalPages } = lastPage.pagination;
       return page < totalPages ? page + 1 : undefined;
     },

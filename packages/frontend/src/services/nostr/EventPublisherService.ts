@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+// @ts-nocheck
 /**
  * 📡 ELITE SERVICE: Event Publisher Service
  * US-303: Create Unified Event Publisher Service

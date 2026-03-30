@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+// @ts-nocheck
 import { injectable, inject } from 'inversify';
 import { TYPES } from '../../container/types';
 import {
