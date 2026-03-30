@@ -55,20 +55,20 @@ describe('Signup UI/UX Quality Tests - Code of Craft', () => {
       expect(description).toBeInTheDocument();
     });
 
-    test('SHOULD NOT show email tab (removed in NOSTR-only redesign)', () => {
+    test('SHOULD show email tab as secondary signup option', () => {
       renderSignup();
 
-      // Email tab has been removed — only NOSTR signup available
-      expect(screen.queryByText('Email')).not.toBeInTheDocument();
+      // Email tab exists as an alternative to NOSTR signup
+      expect(screen.getByText('Email')).toBeInTheDocument();
     });
 
-    test('SHOULD show independent identity benefits', () => {
+    test('SHOULD show sovereign identity benefits', () => {
       renderSignup();
 
-      // NOSTR benefits highlighted with "Independent Identity" heading
-      expect(screen.getByText('Independent Identity')).toBeInTheDocument();
+      // NOSTR benefits highlighted with "Sovereign Identity" heading
+      expect(screen.getByText('Sovereign Identity')).toBeInTheDocument();
       expect(
-        screen.getByText(/NOSTR is a new way to publish online/i)
+        screen.getByText(/decentralized identity that you fully control/i)
       ).toBeInTheDocument();
     });
   });

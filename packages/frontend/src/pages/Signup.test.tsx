@@ -47,11 +47,11 @@ describe('Signup Component', () => {
       expect(screen.getByText('Generate New Keys')).toBeInTheDocument();
     });
 
-    it('renders Independent Identity section', () => {
+    it('renders Sovereign Identity section', () => {
       renderWithProviders(<Signup />);
 
-      // New design uses "Independent Identity" instead of "Sovereign Identity"
-      expect(screen.getByText('Independent Identity')).toBeInTheDocument();
+      // NOSTR signup shows "Sovereign Identity" heading
+      expect(screen.getByText('Sovereign Identity')).toBeInTheDocument();
     });
 
     it('renders role selection', () => {
@@ -62,11 +62,11 @@ describe('Signup Component', () => {
       expect(screen.getByText('Creator')).toBeInTheDocument();
     });
 
-    it('does not render email signup tab (removed)', () => {
+    it('renders email signup tab as secondary option', () => {
       renderWithProviders(<Signup />);
 
-      // Email signup tab has been removed — only NOSTR signup is available
-      expect(screen.queryByText('Email')).not.toBeInTheDocument();
+      // Email signup tab exists as an alternative to NOSTR signup
+      expect(screen.getByText('Email')).toBeInTheDocument();
     });
   });
 
