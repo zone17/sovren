@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Tax Service
  * EPIC-011: Business Manager — Tax preparation, expense tracking, quarterly summaries
@@ -45,12 +44,7 @@ interface ExpenseRow {
   created_at: string;
 }
 
-interface ExpenseCategoryRow {
-  id: string;
-  creator_id: string;
-  name: string;
-  type: string;
-}
+// ExpenseCategoryRow schema: { id, creator_id, name, type } — documented in schema.sql
 
 // #659: Typed row interface for getExpensesForExport — replaces any[]
 interface ExportExpenseRow {
@@ -167,7 +161,7 @@ export class TaxService implements ITaxService {
 
       while (hasMoreExpenses) {
         const { data: expPage, error: expenseError } = await this.db
-          .from<ExpenseRow>('expenses')
+          .from('expenses')
           .select('amount_sats, usd_at_time')
           .eq('creator_id', creatorId)
           .gte('expense_date', startDate.split('T')[0])
@@ -246,7 +240,7 @@ export class TaxService implements ITaxService {
     const { categoryId, startDate, endDate, limit, offset } = params;
 
     let query = this.db
-      .from<ExpenseRow>('expenses')
+      .from('expenses')
       .select(
         'id, creator_id, category_id, description, amount_sats, usd_at_time, expense_date, created_at, expense_categories(name, type)',
         { count: 'exact' }
@@ -299,7 +293,7 @@ export class TaxService implements ITaxService {
     if (data.categoryId) row.category_id = data.categoryId;
 
     const { data: inserted, error } = await this.db
-      .from<ExpenseRow>('expenses')
+      .from('expenses')
       .insert(row)
       .select('id')
       .single();
@@ -316,7 +310,7 @@ export class TaxService implements ITaxService {
     this.logger.info('TaxService.getExpenseCategories', { creatorId });
 
     const { data, error } = await this.db
-      .from<ExpenseCategoryRow>('expense_categories')
+      .from('expense_categories')
       .select('id, creator_id, name, type')
       .eq('creator_id', creatorId)
       .order('name', { ascending: true });
@@ -335,7 +329,7 @@ export class TaxService implements ITaxService {
     this.logger.info('TaxService.createExpenseCategory', { creatorId, name: data.name });
 
     const { data: inserted, error } = await this.db
-      .from<ExpenseCategoryRow>('expense_categories')
+      .from('expense_categories')
       .insert({ creator_id: creatorId, name: data.name, type: data.type })
       .select('id')
       .single();
@@ -362,7 +356,7 @@ export class TaxService implements ITaxService {
     });
 
     const quarters = await Promise.all(
-      ([1, 2, 3, 4] as const).map(async (q) => ({
+      ([1, 2, 3, 4] as const).map(async q => ({
         quarter: q,
         summary: await this.getQuarterlySummary(creatorId, year, q, {
           prefetchedRate: btcRateUsd,
@@ -427,7 +421,7 @@ export class TaxService implements ITaxService {
 
     const quarters = [1, 2, 3, 4] as const;
     const results = await Promise.all(
-      quarters.map((q) => this.getQuarterlySummary(creatorId, year, q))
+      quarters.map(q => this.getQuarterlySummary(creatorId, year, q))
     );
     return results.map((r, i) => ({
       year,
@@ -455,7 +449,7 @@ export class TaxService implements ITaxService {
     filters?: { categoryId?: string; startDate?: string; endDate?: string }
   ) {
     let query = this.db
-      .from<ExpenseRow>('expenses')
+      .from('expenses')
       .select(
         'id, creator_id, category_id, description, amount_sats, usd_at_time, expense_date, created_at, expense_categories(name, type)'
       )
@@ -495,7 +489,7 @@ export class TaxService implements ITaxService {
         throw new Error('Failed to fetch expenses for export');
       }
 
-      const rows = data ?? [];
+      const rows = (data ?? []) as ExportExpenseRow[];
 
       // #667: Check cap BEFORE pushing to prevent overshoot beyond MAX_EXPORT_ROWS
       if (all.length + rows.length > MAX_EXPORT_ROWS) {
@@ -537,7 +531,7 @@ export class TaxService implements ITaxService {
 
     // #657: Use { count: 'exact' } to detect no-op deletes (nonexistent or wrong owner)
     const { error, count } = await this.db
-      .from<ExpenseRow>('expenses')
+      .from('expenses')
       .delete({ count: 'exact' })
       .eq('id', expenseId)
       .eq('creator_id', creatorId);
@@ -556,7 +550,7 @@ export class TaxService implements ITaxService {
 
     // #657: Use { count: 'exact' } to detect no-op deletes
     const { error, count } = await this.db
-      .from<ExpenseCategoryRow>('expense_categories')
+      .from('expense_categories')
       .delete({ count: 'exact' })
       .eq('id', categoryId)
       .eq('creator_id', creatorId);

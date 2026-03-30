@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Graceful Shutdown Handler
  * Manages clean disposal of all services and resources
@@ -192,9 +191,12 @@ async function performShutdown(
         const token = (TYPES as any)[serviceName];
         if (!token) continue;
 
-        const service = container.resolveOptional(token);
-        if (service && typeof service.dispose === 'function') {
-          await service.dispose();
+        const service = container.resolveOptional(token) as Record<string, unknown> | null;
+        if (
+          service &&
+          typeof (service as { dispose?: () => Promise<void> }).dispose === 'function'
+        ) {
+          await (service as { dispose: () => Promise<void> }).dispose();
           servicesDisposed.push(serviceName);
         }
       } catch (error) {
@@ -255,7 +257,7 @@ export function setupShutdownHandlers(
   process.on('SIGINT', () => handleShutdown('SIGINT'));
 
   // Handle uncaught errors
-  process.on('uncaughtException', async (error) => {
+  process.on('uncaughtException', async error => {
     logger.error('Uncaught exception', { error });
     await handleShutdown('UNCAUGHT_EXCEPTION');
   });
@@ -286,9 +288,18 @@ export async function preShutdownHealthCheck(
     }
 
     // Check for in-flight payments
-    const paymentService = container.resolveOptional(TYPES.PaymentProcessingService);
-    if (paymentService && paymentService.getPendingPayments) {
-      const pending = await paymentService.getPendingPayments();
+    const paymentService = container.resolveOptional(TYPES.PaymentProcessingService) as Record<
+      string,
+      unknown
+    > | null;
+    if (
+      paymentService &&
+      typeof (paymentService as { getPendingPayments?: () => Promise<unknown[]> })
+        .getPendingPayments === 'function'
+    ) {
+      const pending = await (
+        paymentService as { getPendingPayments: () => Promise<unknown[]> }
+      ).getPendingPayments();
       if (pending && pending.length > 0) {
         blockers.push(`PaymentService has ${pending.length} pending payments`);
       }

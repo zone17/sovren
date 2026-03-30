@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Business Invoice Service
  * EPIC-011: Business Manager — Invoicing with LNURL-pay payment links
@@ -55,8 +54,8 @@ export class BusinessInvoiceService implements IBusinessInvoiceService {
   // #320: Ensure queue exists lazily on first use
   private async ensureQueue(): Promise<void> {
     if (this.queueInitPromise) return this.queueInitPromise;
-    this.queueInitPromise = this.queueService
-      .createQueue(RECURRING_QUEUE, {
+    this.queueInitPromise = Promise.resolve(
+      this.queueService.createQueue(RECURRING_QUEUE, {
         defaultJobOptions: {
           attempts: 3,
           backoff: { type: 'exponential', delay: 10000 },
@@ -64,11 +63,10 @@ export class BusinessInvoiceService implements IBusinessInvoiceService {
           removeOnFail: { count: 5000 },
         },
       })
-      .then(() => {})
-      .catch((err) => {
-        this.queueInitPromise = null;
-        throw err;
-      });
+    ).catch((err: unknown) => {
+      this.queueInitPromise = null;
+      throw err;
+    });
     return this.queueInitPromise;
   }
 

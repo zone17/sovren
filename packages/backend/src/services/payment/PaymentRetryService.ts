@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Payment Retry Service
  *
@@ -862,7 +861,7 @@ export class PaymentRetryService {
    * @private
    * @returns Circuit breaker state
    */
-  private getCircuitBreakerState(): CircuitBreakerState {
+  private _getCircuitBreakerState(): CircuitBreakerState {
     return { ...this.circuitBreakerState };
   }
 
@@ -874,7 +873,7 @@ export class PaymentRetryService {
    * @private
    * @param state Partial circuit breaker state to merge
    */
-  private setCircuitBreakerState(state: Partial<CircuitBreakerState>): void {
+  private _setCircuitBreakerState(state: Partial<CircuitBreakerState>): void {
     this.circuitBreakerState = {
       ...this.circuitBreakerState,
       ...state,

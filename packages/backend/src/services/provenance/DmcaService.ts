@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * DmcaService
  * DMCA report generation (JSON format)
@@ -63,7 +62,7 @@ export class DmcaService implements IDmcaService {
         url: alert.detected_copy_url,
         author_pubkey: alert.detected_author_pubkey,
         detected_at: alert.detected_at,
-        similarity_score: parseFloat(alert.similarity_score),
+        similarity_score: parseFloat(alert.similarity_score as string),
         match_level: alert.match_level,
       },
       verification_url: `https://sovren.dev/verify/${alert.original_content_id}`,
