@@ -1,5 +1,4 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
 // TODO #744: Dual follow systems overlap — this service's follow/unfollow functionality
 // overlaps with FollowService (packages/backend/src/services/community/FollowService.ts).
 // Routes use FollowService for the creator-facing follow flow. This service handles
@@ -1148,8 +1147,8 @@ export class UserRelationshipService implements IUserRelationshipService {
     // Sort
     if (options.sortBy) {
       results.sort((a, b) => {
-        const aVal = (a as Record<string, unknown>)[options.sortBy!];
-        const bVal = (b as Record<string, unknown>)[options.sortBy!];
+        const aVal = (a as unknown as Record<string, unknown>)[options.sortBy!] as string | number;
+        const bVal = (b as unknown as Record<string, unknown>)[options.sortBy!] as string | number;
         const order = options.sortOrder === 'desc' ? -1 : 1;
         return aVal < bVal ? -order : aVal > bVal ? order : 0;
       });

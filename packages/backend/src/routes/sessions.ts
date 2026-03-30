@@ -1,4 +1,3 @@
-// @ts-nocheck
 import crypto from 'crypto';
 import express, { Request, Response } from 'express';
 import rateLimit from 'express-rate-limit';
@@ -220,7 +219,7 @@ router.post(
       });
     }
 
-    const result = await sessionService.revokeAllSessions(userId, currentSessionId);
+    const result = await sessionService.revokeAllSessions(userId, currentSessionId ?? undefined);
 
     if (!result.success) {
       return res.status(400).json({
@@ -271,7 +270,7 @@ router.post(
       });
     }
 
-    const result = await sessionService.revokeAllSessions(userId, currentSessionId);
+    const result = await sessionService.revokeAllSessions(userId, currentSessionId ?? undefined);
 
     if (!result.success) {
       return res.status(400).json({

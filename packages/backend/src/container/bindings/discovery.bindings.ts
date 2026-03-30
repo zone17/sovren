@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Discovery Services Binding Module
  * Todo #568: DiscoveryService DI registration

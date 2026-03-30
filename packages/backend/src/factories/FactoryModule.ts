@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Factory Module Registration System
  * Central registration of all service factories

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Platform Connection Service Interface
  * EPIC-009: Multi-Platform Hub

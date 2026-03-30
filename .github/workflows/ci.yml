@@ -160,12 +160,12 @@ jobs:
       # Ratchet: @ts-nocheck count must only decrease. Baseline set in PR #146 (S9 buffer hardening).
       # To lower the threshold: grep -rn '@ts-nocheck' packages/ --include='*.ts' --include='*.tsx' | wc -l
       # Runs unconditionally — counts ALL files, not just changed ones.
-      - name: '@ts-nocheck ratchet (max 169)'
+      - name: '@ts-nocheck ratchet (max 114)'
         run: |
           COUNT=$(grep -rn '@ts-nocheck' packages/ --include='*.ts' --include='*.tsx' | wc -l | tr -d ' ')
-          echo "@ts-nocheck count: $COUNT (threshold: 169)"
-          if [ "$COUNT" -gt 169 ]; then
-            echo "::error::@ts-nocheck count ($COUNT) exceeds ratchet threshold (169). Remove @ts-nocheck from files before adding new ones."
+          echo "@ts-nocheck count: $COUNT (threshold: 114)"
+          if [ "$COUNT" -gt 114 ]; then
+            echo "::error::@ts-nocheck count ($COUNT) exceeds ratchet threshold (114). Remove @ts-nocheck from files before adding new ones."
             exit 1
           fi
 
