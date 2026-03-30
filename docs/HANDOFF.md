@@ -133,22 +133,42 @@ Plan → Work → Review → Compound
 
 ### P1 — Unlocks Alpha
 
-1. **Run backend with demo mode** — Set `VITE_DEMO_MODE=true` or start real backend. Unlocks 5/6 UAT workflows.
-2. **Merge pending Squad A + B branches** — patterns, stats, onboarding, duplicates, @ts-nocheck. Run `/ce:review` first.
+1. **Start the backend** — `JWT_SECRET` in `packages/backend/.env` has angle brackets and UUID format. Fix with `openssl rand -base64 48`. Also needs `swagger-ui-express` npm package. Frontend demo mode is enabled (`VITE_DEMO_MODE=true` in `.env.local`).
+2. **Configure email routing** — dmca@sovren.app, privacy@sovren.app, abuse@sovren.app referenced in legal pages but not configured.
 
 ### P2 — Quality
 
-3. **@ts-nocheck < 50** — Investor milestone. Continue tier-by-tier removal.
-4. **TypeScript errors** — Fix @shared/ path aliases in root tsconfig, clean up stale imports.
-5. **Snapshot test updates** — `vitest --update-snapshots` for button height changes.
-6. **Content Policy route** — created in PR #199 but may need route verification on main.
+3. **@ts-nocheck < 50** — Currently 114 (was 170). Investor milestone is <50. Continue tier-by-tier removal prioritizing payment and auth services.
+4. **TypeScript errors** — Root `tsc --noEmit` shows ~937 errors. Fix `@shared/types/` path aliases in root tsconfig. Per-package type-check works.
+5. **CE Review hook: background agent reviews don't clear gate** — Reviews run via background Agent tool don't trigger the clear-review-gate PostToolUse hook. Only `/ce:review` Skill invocations clear it. Design gap: need to either detect Agent-based reviews or require Skill invocation.
+6. **DiscoveryPage error/empty state** — API error and empty results both show demo creators with no retry button. Should distinguish error (retry) from empty (demo fallback).
+7. **Home.tsx comparison table mobile clip** — At 375px the rightmost column clips. Need `overflow-x-auto` or mobile card layout.
 
 ### P3 — Growth Features
 
-7. **Email signup** — Supabase email auth (verification, password reset, session management).
-8. **Fiat on-ramp** — Strike/River API integration for credit card → Lightning conversion.
-9. **Creator migration tool** — Import from Patreon/Substack/Medium.
-10. **Real creator onboarding** — Recruit 10-50 crypto-native creators for alpha.
+8. **Email signup** — Supabase email auth (verification, password reset, session management).
+9. **Fiat on-ramp** — Strike/River API integration for credit card → Lightning conversion.
+10. **Creator migration tool** — Import from Patreon/Substack/Medium.
+11. **Real creator onboarding** — Recruit 10-50 crypto-native creators for alpha.
+12. **ai-recommendations.ts** — New Zod schema (`userPreferencesSchema`) added during @ts-nocheck cleanup. Verify fields match service expectations.
+13. **Remaining inline `any` types** — `DiscoveryService.ts:173` (`t: any` in tiers map), `content-discovery-service.ts:377` (`Record<string, any>`). Deferred cleanup.
+
+### Completed This Session (PRs #192-202)
+
+- ✅ 12-agent audit + 14-unit remediation
+- ✅ JWT HttpOnly cookies, Buffer elimination, NOSTR kind fix, env vars
+- ✅ Lightning receipt auth + IDOR, token revocation, admin role
+- ✅ WCAG: skip nav, page titles, spinners, contrast, mobile menu
+- ✅ Settings, Terms, Privacy, Help, Content Policy pages (full legal compliance)
+- ✅ Comparison table, demo creators, touch targets 44px
+- ✅ CE Review enforcement hook (branch-scoped gate)
+- ✅ Pattern cross-reference (#23-26, #132-135)
+- ✅ Onboarding 7→5 steps, honest stats
+- ✅ @ts-nocheck 170→114, duplicate files cleaned
+- ✅ Linear hook: branch-scoped mappings
+- ✅ Snapshot tests updated
+- ✅ 12-layer CI fix (cache, ESLint, npm audit, Trivy, test exclusions)
+- ✅ Retroactive review of unreviewed PRs (3 P1 IDOR bypasses fixed)
 
 ## Credentials & Config
 
