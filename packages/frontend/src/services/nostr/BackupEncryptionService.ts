@@ -151,7 +151,7 @@ export class BackupEncryptionService {
   /**
    * Derive encryption key from password using PBKDF2
    */
-  private async deriveKey(password: string, salt: Uint8Array | ArrayBuffer): Promise<CryptoKey> {
+  private async deriveKey(password: string, salt: Uint8Array): Promise<CryptoKey> {
     const encoder = new TextEncoder();
     const passwordBuffer = encoder.encode(password);
 
@@ -161,17 +161,11 @@ export class BackupEncryptionService {
       'deriveKey',
     ]);
 
-    // Ensure salt is an ArrayBuffer for BufferSource compatibility
-    const saltArrayBuffer =
-      salt instanceof Uint8Array
-        ? (salt.buffer.slice(salt.byteOffset, salt.byteOffset + salt.byteLength) as ArrayBuffer)
-        : salt;
-
     // Derive key using PBKDF2
     return await crypto.subtle.deriveKey(
       {
         name: 'PBKDF2',
-        salt: saltArrayBuffer,
+        salt: salt as BufferSource,
         iterations: ENCRYPTION_CONFIG.PBKDF2_ITERATIONS,
         hash: ENCRYPTION_CONFIG.HASH_ALGORITHM,
       },

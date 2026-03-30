@@ -1,11 +1,14 @@
-// @ts-nocheck
 /**
  * Refactored Content Query Hook
  * Server data in React Query, UI state in Redux
  * Following Elite State Management Standards
  */
 
-import { useInfiniteQuery, UseInfiniteQueryOptions } from '@tanstack/react-query';
+import {
+  useInfiniteQuery,
+  type UseInfiniteQueryOptions,
+  type InfiniteData,
+} from '@tanstack/react-query';
 import { useAppSelector } from '@/store';
 import {
   selectCurrentPage,
@@ -30,7 +33,7 @@ const fetchContent = async ({
   limit: number;
   sortBy?: string;
   sortDirection?: 'asc' | 'desc';
-  filters?: Record<string, any>;
+  filters?: Record<string, unknown>;
 }): Promise<ContentResponse> => {
   const params = new URLSearchParams();
   params.append('page', page.toString());
@@ -86,8 +89,14 @@ export const contentKeys = {
 export const useContentRefactored = (
   section: string = 'content',
   options?: Omit<
-    UseInfiniteQueryOptions<ContentResponse, Error>,
-    'queryKey' | 'queryFn' | 'getNextPageParam'
+    UseInfiniteQueryOptions<
+      ContentResponse,
+      Error,
+      InfiniteData<ContentResponse>,
+      readonly unknown[],
+      number
+    >,
+    'queryKey' | 'queryFn' | 'getNextPageParam' | 'initialPageParam'
   >
 ) => {
   // Get UI state from Redux
@@ -96,7 +105,7 @@ export const useContentRefactored = (
   const sorting = useAppSelector(selectSorting(section));
   const filters = useAppSelector(selectFilters(section));
 
-  return useInfiniteQuery<ContentResponse, Error>({
+  return useInfiniteQuery({
     // Clean query key without UI state
     queryKey: contentKeys.list(),
     queryFn: ({ pageParam }) =>
@@ -107,7 +116,7 @@ export const useContentRefactored = (
         sortDirection: sorting?.direction,
         filters,
       }),
-    getNextPageParam: (lastPage) => {
+    getNextPageParam: lastPage => {
       const { page, totalPages } = lastPage.pagination;
       return page < totalPages ? page + 1 : undefined;
     },
@@ -123,7 +132,16 @@ export const useContentRefactored = (
  */
 export const useContentPaginated = (
   section: string = 'content',
-  options?: Omit<UseInfiniteQueryOptions<ContentResponse, Error>, 'queryKey' | 'queryFn'>
+  options?: Omit<
+    UseInfiniteQueryOptions<
+      ContentResponse,
+      Error,
+      InfiniteData<ContentResponse>,
+      readonly unknown[],
+      number
+    >,
+    'queryKey' | 'queryFn' | 'initialPageParam'
+  >
 ) => {
   // Get UI state from Redux
   const currentPage = useAppSelector(selectCurrentPage(section));
@@ -131,9 +149,10 @@ export const useContentPaginated = (
   const sorting = useAppSelector(selectSorting(section));
   const filters = useAppSelector(selectFilters(section));
 
-  return useInfiniteQuery<ContentResponse, Error>({
+  return useInfiniteQuery({
     // Clean query key without UI state
     queryKey: contentKeys.list(),
+    initialPageParam: currentPage,
     queryFn: () =>
       fetchContent({
         page: currentPage,
@@ -142,6 +161,10 @@ export const useContentPaginated = (
         sortDirection: sorting?.direction,
         filters,
       }),
+    getNextPageParam: lastPage => {
+      const { page, totalPages } = lastPage.pagination;
+      return page < totalPages ? page + 1 : undefined;
+    },
     staleTime: 1 * 60 * 1000,
     gcTime: 5 * 60 * 1000,
     ...options,
