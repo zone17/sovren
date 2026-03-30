@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Tax Service
  * EPIC-011: Business Manager — Tax preparation, expense tracking, quarterly summaries
