@@ -64,19 +64,19 @@ describe('Button Component - Elite CDD Standards', () => {
     it('applies small size styling', () => {
       render(<Button size="sm">Small</Button>);
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('h-7');
+      expect(button).toHaveClass('h-9');
     });
 
     it('applies default size styling', () => {
       render(<Button size="default">Default</Button>);
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('h-8');
+      expect(button).toHaveClass('h-11');
     });
 
     it('applies large size styling', () => {
       render(<Button size="lg">Large</Button>);
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('h-9');
+      expect(button).toHaveClass('h-12');
     });
   });
 
