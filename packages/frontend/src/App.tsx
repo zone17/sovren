@@ -467,7 +467,9 @@ function App(): React.ReactElement {
             element={
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>
-                  <Terms />
+                  <ErrorBoundary level='page' name='Terms'>
+                    <Terms />
+                  </ErrorBoundary>
                 </Suspense>
               </Layout>
             }
@@ -479,7 +481,9 @@ function App(): React.ReactElement {
             element={
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>
-                  <Privacy />
+                  <ErrorBoundary level='page' name='Privacy'>
+                    <Privacy />
+                  </ErrorBoundary>
                 </Suspense>
               </Layout>
             }
@@ -491,7 +495,9 @@ function App(): React.ReactElement {
             element={
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>
-                  <Help />
+                  <ErrorBoundary level='page' name='Help'>
+                    <Help />
+                  </ErrorBoundary>
                 </Suspense>
               </Layout>
             }

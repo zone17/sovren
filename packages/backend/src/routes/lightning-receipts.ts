@@ -204,9 +204,10 @@ router.post('/', authenticate, receiptGenerationLimit, async (req: Request, res:
 
     // Generate receipt — pin the calling user's pubkey so creator/supporter
     // is derived from the JWT, not from untrusted request body data
-    const receipt = await lightningReceiptService.generateReceipt(
-      validatedData as any // callerPubkey enforcement handled by authenticate middleware
-    );
+    const receipt = await lightningReceiptService.generateReceipt({
+      ...validatedData,
+      callerPubkey: req.user?.nostr_pubkey,
+    } as any);
 
     // Return success response
     res.status(201).json({
