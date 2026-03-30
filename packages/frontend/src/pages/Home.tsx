@@ -717,6 +717,14 @@ const Home: React.FC = () => {
                     Privacy Policy
                   </a>
                 </li>
+                <li>
+                  <a
+                    href='/content-policy'
+                    className='text-sm text-white/40 hover:text-white/70 transition-colors no-underline inline-flex items-center min-h-[44px]'
+                  >
+                    Content Policy
+                  </a>
+                </li>
               </ul>
             </div>
 
