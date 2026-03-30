@@ -927,7 +927,6 @@ const SovereignOnboarding: React.FC = () => {
                     </Button>
                     <Button
                       onClick={() => {
-                        setWalletSetupComplete(true);
                         completeSovereignSetup();
                       }}
                       disabled={isAuthenticating}

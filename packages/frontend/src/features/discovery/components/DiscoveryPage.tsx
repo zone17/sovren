@@ -193,7 +193,7 @@ export const DiscoveryPage = () => {
           </div>
         )}
 
-        {!isLoading && displayCreators.length > 0 && (
+        {!isLoading && !hasApiError && displayCreators.length > 0 && (
           <>
             {/* Demo fallback banner — shown for empty results, not errors */}
             {showDemoFallback && (

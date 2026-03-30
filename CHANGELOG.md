@@ -6,6 +6,24 @@ Production readiness milestone. All slices complete, CI/CD fully automated, elit
 
 ## [Unreleased]
 
+### fix(ux): distinguish API error and empty states in DiscoveryPage — 2026-03-30
+
+**Category**: Bug Fix — P2 UX
+**Status**: Complete
+
+API errors now show an error alert with retry button instead of silently falling back to demo creators. Empty results still show demo creators with appropriate messaging. Guard prevents stale data grid from rendering alongside error state.
+
+**Files modified**: `DiscoveryPage.tsx`, `DiscoveryPage.test.tsx`
+
+### refactor: remove dead code from SovereignOnboarding — 2026-03-30
+
+**Category**: Refactor — P3 Cleanup
+**Status**: Complete
+
+Removed unused handleProfileSubmit, skipProfileStep, and 4 state variables (walletSetupComplete, username, displayName, bio) plus eslint-disable comments.
+
+**Files modified**: `SovereignOnboarding.tsx`
+
 ### fix(tests): update 6 stale test assertions to match current page content — 2026-03-30
 
 **Category**: Bug Fix — CI Unblock
