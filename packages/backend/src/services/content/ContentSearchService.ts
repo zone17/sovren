@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ContentSearchService
  *
@@ -9,7 +8,6 @@
  * @story US-E5-014
  * @coverage 95%+
  */
-
 import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
 import type {
   IContentSearchService,
@@ -27,7 +25,6 @@ import type {
 import type { ICacheService } from '../../interfaces/shared/ICacheService';
 import type { ILogger } from '../../interfaces/shared/ILogger';
 import { createHash } from 'crypto';
-
 /**
  * Elasticsearch-powered content search service with caching
  */
@@ -37,7 +34,6 @@ export class ContentSearchService implements IContentSearchService {
   private readonly cachePrefix = 'search:';
   private readonly cacheTTL = 300; // 5 minutes as required
   private readonly searchAnalytics: SearchAnalytics[] = [];
-
   constructor(
     private readonly cache: ICacheService,
     private readonly logger: ILogger,
@@ -48,7 +44,6 @@ export class ContentSearchService implements IContentSearchService {
       this.logger.error('Failed to initialize Elasticsearch index', error);
     });
   }
-
   /**
    * Initialize Elasticsearch index with optimized mapping
    */
@@ -57,7 +52,6 @@ export class ContentSearchService implements IContentSearchService {
       const indexExists = await this.esClient.indices.exists({
         index: this.indexName,
       });
-
       if (!indexExists) {
         await this.esClient.indices.create({
           index: this.indexName,
@@ -139,7 +133,6 @@ export class ContentSearchService implements IContentSearchService {
             },
           },
         });
-
         this.logger.info('Elasticsearch index created', { index: this.indexName });
       }
     } catch (error) {
@@ -149,52 +142,41 @@ export class ContentSearchService implements IContentSearchService {
       );
     }
   }
-
   /**
    * Search content with full-text search, filters, and facets
    */
   async search(query: SearchQuery): Promise<SearchResult> {
     const startTime = Date.now();
-
     try {
       // Validate query
       this.validateSearchQuery(query);
-
       // Check cache first
       const cacheKey = this.generateCacheKey(query);
       const cachedResult = await this.cache.get<SearchResult>(cacheKey);
-
       if (cachedResult) {
         this.logger.debug('Search cache hit', { cacheKey });
         return cachedResult;
       }
-
       // Build and execute Elasticsearch query
       const esQuery = this.buildElasticsearchQuery(query);
       const response = await this.esClient.search(esQuery);
-
       // Process results
       const result = this.processSearchResults(response, query);
-
       // Cache result with 5-minute TTL
       await this.cache.set(cacheKey, result, this.cacheTTL);
-
       // Track analytics
       this.trackSearchAnalytics(query, result, Date.now() - startTime);
-
       this.logger.debug('Search completed', {
         query: query.searchTerm,
         total: result.total,
         duration: Date.now() - startTime,
       });
-
       return result;
     } catch (error) {
       this.logger.error('Search failed', { query, error });
       throw new Error(`Search failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
-
   /**
    * Get autocomplete suggestions
    */
@@ -203,7 +185,6 @@ export class ContentSearchService implements IContentSearchService {
       if (!prefix || prefix.length < 2) {
         return [];
       }
-
       const response = await this.esClient.search({
         index: this.indexName,
         body: {
@@ -222,7 +203,6 @@ export class ContentSearchService implements IContentSearchService {
           },
         },
       });
-
       const suggestions = response.body.suggest?.content_suggest?.[0]?.options || [];
       return suggestions.map((s: any) => s.text);
     } catch (error) {
@@ -230,7 +210,6 @@ export class ContentSearchService implements IContentSearchService {
       return [];
     }
   }
-
   /**
    * Index a single document
    */
@@ -239,16 +218,13 @@ export class ContentSearchService implements IContentSearchService {
       if (!document.id) {
         throw new Error('Document must have an id');
       }
-
       await this.esClient.index({
         index: this.indexName,
         id: document.id,
         body: this.prepareDocumentForIndexing(document),
         refresh: 'wait_for',
       });
-
       this.logger.info('Document indexed', { id: document.id });
-
       // Invalidate related cache
       await this.invalidateRelatedCache(document);
     } catch (error) {
@@ -258,7 +234,6 @@ export class ContentSearchService implements IContentSearchService {
       );
     }
   }
-
   /**
    * Update a document in the index
    */
@@ -273,9 +248,7 @@ export class ContentSearchService implements IContentSearchService {
         },
         refresh: 'wait_for',
       });
-
       this.logger.info('Document updated', { id });
-
       // Invalidate cache
       await this.invalidateRelatedCache({ id, ...updates });
     } catch (error) {
@@ -283,7 +256,6 @@ export class ContentSearchService implements IContentSearchService {
       throw new Error(`Update failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
-
   /**
    * Remove a document from the index
    */
@@ -294,9 +266,7 @@ export class ContentSearchService implements IContentSearchService {
         id,
         refresh: 'wait_for',
       });
-
       this.logger.info('Document deleted from index', { id });
-
       // Invalidate cache
       await this.invalidateRelatedCache({ id });
     } catch (error) {
@@ -307,7 +277,6 @@ export class ContentSearchService implements IContentSearchService {
       }
     }
   }
-
   /**
    * Bulk index multiple documents
    */
@@ -316,28 +285,22 @@ export class ContentSearchService implements IContentSearchService {
       if (documents.length === 0) {
         return;
       }
-
       const operations = documents.flatMap((doc) => [
         { index: { _index: this.indexName, _id: doc.id } },
         this.prepareDocumentForIndexing(doc),
       ]);
-
       const result = await this.esClient.bulk({
         body: operations,
         refresh: 'wait_for',
       });
-
       if (result.body.errors) {
         const errors = result.body.items
           .filter((item: any) => item.index?.error)
           .map((item: any) => item.index.error);
-
         this.logger.error('Bulk indexing had errors', { errors, count: errors.length });
         throw new Error(`Bulk indexing failed: ${errors.length} errors`);
       }
-
       this.logger.info('Bulk indexed documents', { count: documents.length });
-
       // Invalidate all search cache
       await this.cache.invalidate(`${this.cachePrefix}*`);
     } catch (error) {
@@ -347,7 +310,6 @@ export class ContentSearchService implements IContentSearchService {
       );
     }
   }
-
   /**
    * Shutdown and cleanup
    */
@@ -359,11 +321,9 @@ export class ContentSearchService implements IContentSearchService {
       this.logger.error('Error during shutdown', { error });
     }
   }
-
   // ============================================================================
   // Private Helper Methods
   // ============================================================================
-
   /**
    * Validate search query
    */
@@ -375,7 +335,6 @@ export class ContentSearchService implements IContentSearchService {
       throw new Error('Page size must be between 1 and 100');
     }
   }
-
   /**
    * Build Elasticsearch query from search parameters
    */
@@ -389,39 +348,32 @@ export class ContentSearchService implements IContentSearchService {
         track_total_hits: true,
       },
     };
-
     // Add aggregations for faceted search
     if (query.facets && query.facets.length > 0) {
       esQuery.body.aggs = this.buildAggregations(query.facets);
     }
-
     // Add highlighting
     if (query.highlight) {
       esQuery.body.highlight = this.buildHighlight(query.highlight);
     }
-
     // Add sorting
     if (query.sort && query.sort.length > 0) {
       esQuery.body.sort = this.buildSort(query.sort);
     } else {
       esQuery.body.sort = [{ _score: { order: 'desc' } }];
     }
-
     // Add source filtering
     if (query.fields) {
       esQuery.body._source = query.fields;
     }
-
     return esQuery;
   }
-
   /**
    * Build query clause
    */
   private buildQuery(query: SearchQuery): any {
     const must: any[] = [];
     const filter: any[] = [];
-
     // Full-text search with boosting
     if (query.searchTerm) {
       must.push({
@@ -441,7 +393,6 @@ export class ContentSearchService implements IContentSearchService {
         },
       });
     }
-
     // Apply filters
     if (query.filters) {
       query.filters.forEach((f) => {
@@ -451,7 +402,6 @@ export class ContentSearchService implements IContentSearchService {
         }
       });
     }
-
     // Date range filter
     if (query.dateRange) {
       filter.push({
@@ -463,15 +413,12 @@ export class ContentSearchService implements IContentSearchService {
         },
       });
     }
-
     // Build bool query
     const boolQuery: any = {};
     if (must.length > 0) boolQuery.must = must;
     if (filter.length > 0) boolQuery.filter = filter;
-
     return Object.keys(boolQuery).length > 0 ? { bool: boolQuery } : { match_all: {} };
   }
-
   /**
    * Build filter clause from filter definition
    */
@@ -493,13 +440,11 @@ export class ContentSearchService implements IContentSearchService {
         return null;
     }
   }
-
   /**
    * Build aggregations for faceted search
    */
   private buildAggregations(facets: SearchFacet[]): any {
     const aggs: any = {};
-
     facets.forEach((facet) => {
       switch (facet.type) {
         case 'terms':
@@ -537,10 +482,8 @@ export class ContentSearchService implements IContentSearchService {
           break;
       }
     });
-
     return aggs;
   }
-
   /**
    * Build highlight configuration
    */
@@ -557,7 +500,6 @@ export class ContentSearchService implements IContentSearchService {
       }, {} as any),
     };
   }
-
   /**
    * Build sort configuration
    */
@@ -570,14 +512,12 @@ export class ContentSearchService implements IContentSearchService {
       },
     }));
   }
-
   /**
    * Process Elasticsearch results into SearchResult
    */
   private processSearchResults(response: any, query: SearchQuery): SearchResult {
     const hits = response.body.hits;
     const aggregations = response.body.aggregations;
-
     // Extract documents
     const documents: ContentDocument[] = hits.hits.map((hit: any) => ({
       ...hit._source,
@@ -585,7 +525,6 @@ export class ContentSearchService implements IContentSearchService {
       _score: hit._score,
       _highlight: hit.highlight,
     }));
-
     // Process aggregations into facets
     const facets: SearchAggregation[] = [];
     if (aggregations) {
@@ -599,7 +538,6 @@ export class ContentSearchService implements IContentSearchService {
         });
       });
     }
-
     return {
       documents,
       total: hits.total.value,
@@ -611,7 +549,6 @@ export class ContentSearchService implements IContentSearchService {
       maxScore: hits.max_score,
     };
   }
-
   /**
    * Prepare document for indexing (remove internal fields)
    */
@@ -619,7 +556,6 @@ export class ContentSearchService implements IContentSearchService {
     const { _id, _score, _highlight, ...indexableDoc } = document as any;
     return indexableDoc;
   }
-
   /**
    * Generate cache key from search query
    */
@@ -635,7 +571,6 @@ export class ContentSearchService implements IContentSearchService {
     const hash = createHash('md5').update(JSON.stringify(keyData)).digest('hex');
     return `${this.cachePrefix}${hash}`;
   }
-
   /**
    * Invalidate cache entries related to a document
    */
@@ -644,7 +579,6 @@ export class ContentSearchService implements IContentSearchService {
     // In production, implement smarter cache invalidation based on tags, categories, etc.
     await this.cache.invalidate(`${this.cachePrefix}*`);
   }
-
   /**
    * Track search analytics
    */
@@ -657,18 +591,14 @@ export class ContentSearchService implements IContentSearchService {
       page: query.page,
       duration,
     };
-
     this.searchAnalytics.push(analytics);
-
     // Keep only last 1000 entries
     if (this.searchAnalytics.length > 1000) {
       this.searchAnalytics.shift();
     }
-
     // Log for monitoring
     this.logger.info('Search analytics', analytics);
   }
-
   /**
    * Get search analytics (for monitoring/reporting)
    */

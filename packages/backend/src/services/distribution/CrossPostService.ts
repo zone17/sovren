@@ -1,9 +1,7 @@
-// @ts-nocheck
 /**
  * Cross-Post Service
  * EPIC-009: Cross-platform publishing queue via BullMQ
  */
-
 import { v4 as uuidv4 } from 'uuid';
 import type {
   ICrossPostService,
@@ -15,7 +13,6 @@ import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { CrossPostEntry, SupportedPlatform } from '@shared/types/distribution';
 import type { IPlatformConnectionService } from '../../interfaces/distribution/IPlatformConnectionService';
 import { ValidationError, AuthorizationError } from '../../utils/errors';
-
 export interface CrossPublishJobData {
   crossPostId: string;
   contentId: string;
@@ -23,16 +20,13 @@ export interface CrossPublishJobData {
   platform: SupportedPlatform;
   useRepurposed: boolean;
 }
-
 const QUEUE_NAME = 'cross-publish';
 const MAX_CROSS_POST_TARGETS = 10;
-
 export class CrossPostService implements ICrossPostService {
   private readonly db: ISupabaseClient;
   private readonly queueService: IQueueService;
   private readonly platformService: IPlatformConnectionService;
   private readonly logger: ILogger;
-
   constructor(
     db: ISupabaseClient,
     queueService: IQueueService,
@@ -43,7 +37,6 @@ export class CrossPostService implements ICrossPostService {
     this.queueService = queueService;
     this.platformService = platformService;
     this.logger = logger;
-
     // Ensure the queue exists
     this.queueService.createQueue(QUEUE_NAME, {
       defaultJobOptions: {
@@ -54,7 +47,6 @@ export class CrossPostService implements ICrossPostService {
       },
     });
   }
-
   async publish(
     creatorId: string,
     request: PublishRequest
@@ -64,23 +56,19 @@ export class CrossPostService implements ICrossPostService {
         `Cannot cross-post to more than ${MAX_CROSS_POST_TARGETS} platforms at once (received ${request.platforms.length})`
       );
     }
-
     // Verify content exists and caller owns it (service-layer auth per critical-patterns.md #2)
     const { data: content, error: contentError } = await this.db
       .from('content')
       .select('id, creator_id')
       .eq('id', request.content_id)
       .single();
-
     if (contentError || !content) {
       throw new ValidationError('Content not found');
     }
     if (content.creator_id !== creatorId) {
       throw new AuthorizationError('Not authorized to cross-post this content');
     }
-
     const batchJobId = uuidv4();
-
     // Build all cross_posts rows upfront
     const crossPostRows = request.platforms.map((platform) => {
       const scheduledAt = request.schedule?.[platform] || null;
@@ -94,13 +82,11 @@ export class CrossPostService implements ICrossPostService {
         bullmq_job_id: batchJobId,
       };
     });
-
     // Batch insert all rows in a single DB round-trip
     const { data: inserted, error } = await this.db
       .from('cross_posts')
       .insert(crossPostRows)
       .select('id, platform, status, scheduled_at');
-
     if (error) {
       // #453: FK violation means the content was deleted between the ownership check and insert
       if (error.code === '23503') {
@@ -108,7 +94,6 @@ export class CrossPostService implements ICrossPostService {
       }
       throw error;
     }
-
     // Queue BullMQ jobs for each inserted row.
     // Compensating transaction (critical-patterns.md #4c): if enqueue fails
     // mid-loop, rows that were never enqueued are marked 'failed' so they don't
@@ -121,7 +106,6 @@ export class CrossPostService implements ICrossPostService {
           const scheduledTime = new Date(row.scheduled_at).getTime();
           delay = Math.max(0, scheduledTime - Date.now());
         }
-
         const jobData: CrossPublishJobData = {
           crossPostId: row.id,
           contentId: request.content_id,
@@ -129,26 +113,22 @@ export class CrossPostService implements ICrossPostService {
           platform: row.platform,
           useRepurposed: request.use_repurposed || false,
         };
-
         await this.queueService.addJob<CrossPublishJobData>(
           QUEUE_NAME,
           `publish-${row.platform}`,
           jobData,
           { jobId: `crosspost-${row.id}`, delay }
         );
-
         enqueuedIds.push(row.id);
       }
     } catch (err) {
       // Mark un-enqueued rows as 'failed' so they don't stay stuck in 'queued'
       const failedIds = (inserted || []).map((r) => r.id).filter((id) => !enqueuedIds.includes(id));
-
       this.logger.error('[CrossPostService] Enqueue failed mid-loop; compensating', {
         enqueuedCount: enqueuedIds.length,
         totalCount: (inserted || []).length,
         err,
       });
-
       if (failedIds.length > 0) {
         const { error: compensateError } = await this.db
           .from('cross_posts')
@@ -159,7 +139,6 @@ export class CrossPostService implements ICrossPostService {
           })
           .in('id', failedIds)
           .in('status', ['queued', 'scheduled']);
-
         if (compensateError) {
           this.logger.error(
             '[CrossPostService] Compensating update failed — rows may be stuck in queued',
@@ -170,10 +149,8 @@ export class CrossPostService implements ICrossPostService {
           );
         }
       }
-
       throw err;
     }
-
     const entries: CrossPostEntry[] = (inserted || []).map((row) => ({
       id: row.id,
       content_id: request.content_id,
@@ -185,17 +162,14 @@ export class CrossPostService implements ICrossPostService {
       published_at: null,
       error_message: null,
     }));
-
     this.logger.info('[CrossPostService] Content queued for publishing', {
       creatorId,
       contentId: request.content_id,
       platforms: request.platforms,
       batchJobId,
     });
-
     return { job_id: batchJobId, platforms: entries };
   }
-
   async getStatus(creatorId: string, contentId: string): Promise<CrossPostEntry[]> {
     const { data, error } = await this.db
       .from('cross_posts')
@@ -205,14 +179,11 @@ export class CrossPostService implements ICrossPostService {
       .eq('creator_id', creatorId)
       .eq('content_id', contentId)
       .order('created_at', { ascending: false });
-
     if (error) {
       throw error;
     }
-
     return data || [];
   }
-
   async cancel(creatorId: string, crossPostId: string): Promise<void> {
     const { error, count } = await this.db
       .from('cross_posts')
@@ -220,15 +191,12 @@ export class CrossPostService implements ICrossPostService {
       .eq('id', crossPostId)
       .eq('creator_id', creatorId)
       .in('status', ['queued', 'scheduled']);
-
     if (error) {
       throw error;
     }
-
     if (count === 0) {
       throw new ValidationError('Cross-post not found or not in a cancellable state');
     }
-
     // #454: Best-effort BullMQ job removal — prevents cancelled jobs from sitting
     // in the queue for hours. Non-blocking: if job doesn't exist or already
     // completed, the removal is silently ignored.
@@ -237,7 +205,6 @@ export class CrossPostService implements ICrossPostService {
     } catch {
       // Non-blocking — the processor already checks for cancelled status
     }
-
     this.logger.info('[CrossPostService] Cross-post cancelled', {
       creatorId,
       crossPostId,

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 📸 **ELITE SNAPSHOT TESTING UTILITIES**
  *
@@ -19,7 +18,7 @@ import { MemoryRouter } from 'react-router-dom';
 // 🎯 **TYPE DEFINITIONS**
 export interface SnapshotOptions {
   /** Custom props to merge with component */
-  props?: Record<string, any>;
+  props?: Record<string, unknown>;
   /** Custom render options */
   renderOptions?: RenderOptions;
   /** Whether to wrap with providers */
@@ -31,7 +30,7 @@ export interface SnapshotOptions {
   /** Custom threshold for snapshot comparison */
   threshold?: number;
   /** Mock certain props to avoid dynamic values */
-  mockProps?: Record<string, any>;
+  mockProps?: Record<string, unknown>;
   /** Custom serializer options */
   serializer?: SnapshotSerializerOptions;
 }
@@ -54,7 +53,7 @@ export interface SnapshotSerializerOptions {
 export interface SnapshotTestCase {
   name: string;
   component: ReactElement;
-  props?: Record<string, any>;
+  props?: Record<string, unknown>;
   options?: SnapshotOptions;
 }
 

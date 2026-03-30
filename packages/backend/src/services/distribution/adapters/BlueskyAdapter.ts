@@ -1,9 +1,7 @@
-// @ts-nocheck
 /**
  * Bluesky Platform Adapter
  * EPIC-009: AT Protocol / Bluesky integration
  */
-
 import { createHash, randomBytes } from 'crypto';
 import type {
   SupportedPlatform,
@@ -14,7 +12,6 @@ import type {
 } from '@shared/types/distribution';
 import type { PlatformAdapterConfig } from './IPlatformAdapter';
 import { BasePlatformAdapter } from './BasePlatformAdapter';
-
 export class BlueskyAdapter extends BasePlatformAdapter {
   readonly platform: SupportedPlatform = 'bluesky';
   readonly constraints: ContentConstraints = {
@@ -26,17 +23,14 @@ export class BlueskyAdapter extends BasePlatformAdapter {
     supports_video: false,
     max_video_length_seconds: 0,
   };
-
   constructor(config: PlatformAdapterConfig) {
     super(config);
   }
-
   getAuthorizationUrl(state: string): string {
     // Generate PKCE code_verifier and code_challenge (RFC 7636)
     const codeVerifier = randomBytes(32).toString('base64url');
     const codeChallenge = createHash('sha256').update(codeVerifier).digest('base64url');
     this.pkceStore.set(state, codeVerifier);
-
     const params = new URLSearchParams({
       client_id: this.config.clientId,
       redirect_uri: this.config.callbackUrl,
@@ -48,7 +42,6 @@ export class BlueskyAdapter extends BasePlatformAdapter {
     });
     return `https://bsky.social/oauth/authorize?${params.toString()}`;
   }
-
   async exchangeCodeForTokens(code: string, options?: { state?: string }): Promise<OAuthTokens> {
     // Retrieve the PKCE code_verifier for this OAuth flow
     const state = options?.state;
@@ -57,7 +50,6 @@ export class BlueskyAdapter extends BasePlatformAdapter {
       codeVerifier = this.pkceStore.get(state);
       this.pkceStore.delete(state);
     }
-
     const response = await fetch('https://bsky.social/oauth/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -70,11 +62,9 @@ export class BlueskyAdapter extends BasePlatformAdapter {
         ...(codeVerifier ? { code_verifier: codeVerifier } : {}),
       }),
     });
-
     if (!response.ok) {
       throw new Error(`Bluesky token exchange failed: ${response.status}`);
     }
-
     const data = await response.json();
     return {
       access_token: data.access_token,
@@ -85,7 +75,6 @@ export class BlueskyAdapter extends BasePlatformAdapter {
       scopes: ['atproto', 'transition:generic'],
     };
   }
-
   async refreshTokens(refreshToken: string): Promise<OAuthTokens> {
     const response = await fetch('https://bsky.social/oauth/token', {
       method: 'POST',
@@ -97,11 +86,9 @@ export class BlueskyAdapter extends BasePlatformAdapter {
         refresh_token: refreshToken,
       }),
     });
-
     if (!response.ok) {
       throw new Error(`Bluesky token refresh failed: ${response.status}`);
     }
-
     const data = await response.json();
     return {
       access_token: data.access_token,
@@ -112,7 +99,6 @@ export class BlueskyAdapter extends BasePlatformAdapter {
       scopes: ['atproto', 'transition:generic'],
     };
   }
-
   async publish(_tokens: OAuthTokens, _content: FormattedContent): Promise<PublishResult> {
     const postId = `bsky_${Date.now()}`;
     return {

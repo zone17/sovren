@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * @file Logger.ts
  * @description Logging utility for the testing system

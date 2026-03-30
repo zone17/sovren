@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * CacheService Implementation
  * User Story: US-E5-010
@@ -628,7 +627,7 @@ export class CacheService implements ICacheService {
 
     // Disconnect from provider
     if ('disconnect' in this.provider) {
-      await (this.provider as any).disconnect();
+      await (this.provider as ICacheProvider & { disconnect(): Promise<void> }).disconnect();
     }
 
     this.logger.info('CacheService disposed');

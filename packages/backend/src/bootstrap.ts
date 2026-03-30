@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Application Bootstrap Module
  * Initializes DI container and all services with health checks
@@ -233,7 +232,7 @@ function registerInfrastructureServices(registry: ServiceRegistry): void {
   // SecretsService — AWS Secrets Manager with env fallback
   registry.registerSingletonFactory(TYPES.SecretsService, () => {
     const secretsService = new SecretsService({
-      environment: (process.env.NODE_ENV as any) || 'development',
+      environment: (process.env.NODE_ENV as BootstrapConfig['environment']) || 'development',
       useAwsSecrets: process.env.USE_AWS_SECRETS === 'true',
       awsRegion: process.env.AWS_REGION || 'us-east-1',
     });
@@ -248,12 +247,12 @@ function registerInfrastructureServices(registry: ServiceRegistry): void {
       );
     }
     return {
-      query: async (_sql: string, _params: any[]) => {
+      query: async (_sql: string, _params: unknown[]) => {
         throw new Error(
           'Database not configured — resolve TYPES.Database with a real implementation'
         );
       },
-      transaction: async (_callback: any) => {
+      transaction: async (_callback: unknown) => {
         throw new Error(
           'Database not configured — resolve TYPES.Database with a real implementation'
         );
@@ -321,7 +320,7 @@ function registerInfrastructureServices(registry: ServiceRegistry): void {
       );
     }
     return {
-      validate: (_schema: any, _data: any) => ({ valid: true, errors: [] }),
+      validate: (_schema: unknown, _data: unknown) => ({ valid: true, errors: [] }),
     };
   });
 
@@ -334,7 +333,7 @@ function registerInfrastructureServices(registry: ServiceRegistry): void {
     }
     return {
       findById: async (_id: string) => null,
-      save: async (entity: any) => entity,
+      save: async (entity: unknown) => entity,
     };
   });
 
@@ -346,7 +345,7 @@ function registerInfrastructureServices(registry: ServiceRegistry): void {
     }
     return {
       findById: async (_id: string) => null,
-      save: async (entity: any) => entity,
+      save: async (entity: unknown) => entity,
     };
   });
 
@@ -358,7 +357,7 @@ function registerInfrastructureServices(registry: ServiceRegistry): void {
     }
     return {
       findById: async (_id: string) => null,
-      save: async (entity: any) => entity,
+      save: async (entity: unknown) => entity,
     };
   });
 
@@ -370,7 +369,7 @@ function registerInfrastructureServices(registry: ServiceRegistry): void {
     }
     return {
       findById: async (_id: string) => null,
-      save: async (entity: any) => entity,
+      save: async (entity: unknown) => entity,
     };
   });
 
@@ -382,7 +381,7 @@ function registerInfrastructureServices(registry: ServiceRegistry): void {
     }
     return {
       findByUserId: async (_userId: string) => null,
-      save: async (entity: any) => entity,
+      save: async (entity: unknown) => entity,
     };
   });
 }

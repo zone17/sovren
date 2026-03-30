@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Controller Binding Module
  * Registers all API controllers in the DI container

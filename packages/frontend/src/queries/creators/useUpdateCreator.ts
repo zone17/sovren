@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useMutation, useQueryClient, UseMutationOptions } from '@tanstack/react-query';
 import { CreatorProfile, UpdateCreatorInput } from '@/types/creator';
 import { creatorsKeys } from './useCreators';

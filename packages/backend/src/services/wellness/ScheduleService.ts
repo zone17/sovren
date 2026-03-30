@@ -1,10 +1,8 @@
-// @ts-nocheck
 /**
  * ScheduleService
  * Sustainable cadence recommendations and content buffer depth
  * EPIC-007: Creator Wellness System (US-E7-005, US-E7-006)
  */
-
 import type {
   ScheduleRecommendation,
   BufferDepth,
@@ -15,7 +13,6 @@ import type {
 import type { IScheduleService } from '../../interfaces/wellness/IScheduleService';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { ILogger } from '../../interfaces/shared/ILogger';
-
 const DAY_NAMES: DayOfWeek[] = [
   'monday',
   'tuesday',
@@ -25,34 +22,27 @@ const DAY_NAMES: DayOfWeek[] = [
   'saturday',
   'sunday',
 ];
-
 export class ScheduleService implements IScheduleService {
   constructor(
     private readonly db: ISupabaseClient,
     private readonly logger: ILogger
   ) {}
-
   async getRecommendations(creatorId: string): Promise<ScheduleRecommendation> {
     // Get last 4 weeks of work patterns
     const fourWeeksAgo = new Date();
     fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
-
     const { data: patterns } = await this.db
       .from('creator_work_patterns')
       .select('*')
       .eq('creator_id', creatorId)
       .gte('date', fourWeeksAgo.toISOString().split('T')[0])
       .order('date', { ascending: true });
-
     const rows = patterns || [];
-
     // Calculate current posting rate
     const totalPosts = rows.reduce((s: number, r: any) => s + (r.post_count || 0), 0);
     const currentPostsPerWeek = Math.round((totalPosts / 4) * 10) / 10;
-
     // Recommend a sustainable posting rate (capped at baseline avg if high)
     const recommendedPostsPerWeek = Math.max(2, Math.min(7, Math.round(currentPostsPerWeek * 0.8)));
-
     // Find optimal posting days (days with highest content creation)
     const dayActivity: Map<number, number> = new Map();
     for (const row of rows) {
@@ -60,12 +50,10 @@ export class ScheduleService implements IScheduleService {
       const dayOfWeek = (date.getDay() + 6) % 7; // 0=Monday
       dayActivity.set(dayOfWeek, (dayActivity.get(dayOfWeek) || 0) + (row.content_time_mins || 0));
     }
-
     const sortedDays = Array.from(dayActivity.entries())
       .sort((a, b) => b[1] - a[1])
       .slice(0, recommendedPostsPerWeek)
       .map(([day]) => DAY_NAMES[day]);
-
     // Find optimal hours (hours with most productive activity)
     const hourActivity: Map<number, number> = new Map();
     for (const row of rows) {
@@ -74,13 +62,11 @@ export class ScheduleService implements IScheduleService {
         hourActivity.set(hour, (hourActivity.get(hour) || 0) + (row.content_time_mins || 0));
       }
     }
-
     const optimalHours = Array.from(hourActivity.entries())
       .sort((a, b) => b[1] - a[1])
       .slice(0, 3)
       .map(([hour]) => hour)
       .sort((a, b) => a - b);
-
     // Build productive windows
     const productiveWindows: ProductiveWindow[] = [];
     for (const row of rows) {
@@ -95,7 +81,6 @@ export class ScheduleService implements IScheduleService {
           (row.management_time_mins || 0);
         const maxPossibleMins = (lastHour - firstHour + 1) * 60;
         const energyScore = maxPossibleMins > 0 ? Math.min(1, totalMins / maxPossibleMins) : 0;
-
         if (energyScore > 0.5) {
           productiveWindows.push({
             day: DAY_NAMES[dayOfWeek],
@@ -106,7 +91,6 @@ export class ScheduleService implements IScheduleService {
         }
       }
     }
-
     // De-duplicate windows by day (keep highest energy)
     const bestWindows: Map<DayOfWeek, ProductiveWindow> = new Map();
     for (const w of productiveWindows) {
@@ -115,10 +99,8 @@ export class ScheduleService implements IScheduleService {
         bestWindows.set(w.day, w);
       }
     }
-
     // Get buffer depth
     const buffer = await this.getBufferDepth(creatorId);
-
     return {
       recommended_posts_per_week: recommendedPostsPerWeek,
       current_posts_per_week: currentPostsPerWeek,
@@ -130,7 +112,6 @@ export class ScheduleService implements IScheduleService {
       buffer_status: buffer.status,
     };
   }
-
   async getBufferDepth(creatorId: string): Promise<BufferDepth> {
     // Query scheduled/future content to determine buffer depth
     // For now, this checks creator_work_patterns for future-dated content
@@ -141,16 +122,12 @@ export class ScheduleService implements IScheduleService {
       .eq('creator_id', creatorId)
       .gt('date', now.toISOString().split('T')[0])
       .order('date', { ascending: true });
-
     const scheduled = futureContent || [];
     const scheduledPosts = scheduled.reduce((s: number, r: any) => s + (r.post_count || 0), 0);
-
     // Buffer days = number of distinct future dates with posts
     const bufferDays = scheduled.filter((r: any) => r.post_count > 0).length;
     const threshold = 5;
-
     const status: BufferStatus = bufferDays >= threshold ? 'above_threshold' : 'below_threshold';
-
     return {
       buffer_days: bufferDays,
       scheduled_posts: scheduledPosts,

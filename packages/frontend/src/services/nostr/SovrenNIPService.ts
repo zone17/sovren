@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 🎯 SOVREN NIP SERVICE
  *
@@ -21,7 +20,6 @@
  * @author Sovren Development Team
  * @since Epic 003 Wave 5
  */
-
 import {
   SovrenEventKindEnum as SovrenEventKind,
   type CreatorProfileExtendedContent,
@@ -45,14 +43,12 @@ import {
   buildSubscriptionManagementTemplate,
   buildContentRecommendationsTemplate,
 } from '@shared/types/nostr/index';
-
 import type { NostrEvent } from '@shared/types/nostr/index';
 import { EventPublisherService } from './EventPublisherService';
 import { KeyManagementService } from './KeyManagementService';
 import { RelayPoolManager } from './RelayPoolManager';
 import { EventCacheService } from './EventCacheService';
 import type { Filter } from 'nostr-tools';
-
 /**
  * Result type for fetching Sovren events
  */
@@ -64,7 +60,6 @@ export interface SovrenEventResult<T> {
   cached?: boolean;
   relay?: string;
 }
-
 /**
  * Batch result for multiple events
  */
@@ -75,7 +70,6 @@ export interface SovrenBatchResult<T> {
   successCount: number;
   errorCount: number;
 }
-
 /**
  * Service configuration
  */
@@ -93,7 +87,6 @@ export interface SovrenNIPServiceConfig {
   /** Enable strict validation */
   strictValidation?: boolean;
 }
-
 /**
  * Default configuration
  */
@@ -105,7 +98,6 @@ const DEFAULT_CONFIG: Required<SovrenNIPServiceConfig> = {
   fetchTimeout: 15000, // 15 seconds
   strictValidation: true,
 };
-
 /**
  * Sovren NIP Service
  * Manages custom Sovren NOSTR event kinds
@@ -116,7 +108,6 @@ export class SovrenNIPService {
   private keyManager: KeyManagementService;
   private relayPool: RelayPoolManager;
   private cache: EventCacheService;
-
   constructor(
     publisher: EventPublisherService,
     keyManager: KeyManagementService,
@@ -130,11 +121,9 @@ export class SovrenNIPService {
     this.relayPool = relayPool;
     this.cache = cache;
   }
-
   // ========================================
   // CREATOR PROFILE EXTENDED (Kind 30078)
   // ========================================
-
   /**
    * Publish creator profile with extended metadata
    *
@@ -170,27 +159,22 @@ export class SovrenNIPService {
       if (!pubkey) {
         throw new Error('No public key available. User must be authenticated.');
       }
-
       // Build event template
       const template = buildCreatorProfileExtendedTemplate(pubkey, profile);
-
       // Publish event
       const publishResult = await this.publisher.publishEvent(template);
-
       if (!publishResult.success) {
         return {
           success: false,
           error: 'Failed to publish creator profile',
         };
       }
-
       // Cache the event
       if (this.config.enableCache) {
         await this.cache.add(publishResult.event, {
           ttl: this.config.cacheTTL,
         });
       }
-
       return {
         success: true,
         data: publishResult.event as CreatorProfileExtendedEvent,
@@ -203,7 +187,6 @@ export class SovrenNIPService {
       };
     }
   }
-
   /**
    * Fetch creator profile by public key
    *
@@ -227,36 +210,29 @@ export class SovrenNIPService {
           };
         }
       }
-
       // Query relays
       const filter: Filter = {
         kinds: [SovrenEventKind.CREATOR_PROFILE_EXTENDED],
         authors: [pubkey],
         limit: 1,
       };
-
       const events = await this.queryEvents(filter);
-
       if (events.length === 0) {
         return {
           success: false,
           error: 'Creator profile not found',
         };
       }
-
       // Get most recent event (parameterized replaceable)
       const latestEvent = events.sort((a, b) => b.created_at - a.created_at)[0];
-
       // Parse and validate content
       const content = parseCreatorProfileExtended(latestEvent.content);
-
       // Cache the event
       if (this.config.enableCache) {
         await this.cache.add(latestEvent, {
           ttl: this.config.cacheTTL,
         });
       }
-
       return {
         success: true,
         data: content,
@@ -269,11 +245,9 @@ export class SovrenNIPService {
       };
     }
   }
-
   // ========================================
   // CONTENT MONETIZATION (Kind 30079)
   // ========================================
-
   /**
    * Publish content monetization settings
    *
@@ -290,23 +264,19 @@ export class SovrenNIPService {
       if (!pubkey) {
         throw new Error('No public key available');
       }
-
       const template = buildContentMonetizationTemplate(pubkey, contentId, settings);
       const publishResult = await this.publisher.publishEvent(template);
-
       if (!publishResult.success) {
         return {
           success: false,
           error: 'Failed to publish monetization settings',
         };
       }
-
       if (this.config.enableCache) {
         await this.cache.add(publishResult.event, {
           ttl: this.config.cacheTTL,
         });
       }
-
       return {
         success: true,
         data: publishResult.event as ContentMonetizationEvent,
@@ -319,7 +289,6 @@ export class SovrenNIPService {
       };
     }
   }
-
   /**
    * Fetch monetization settings for specific content
    *
@@ -337,23 +306,18 @@ export class SovrenNIPService {
         '#d': [contentId],
         limit: 1,
       };
-
       if (pubkey) {
         filter.authors = [pubkey];
       }
-
       const events = await this.queryEvents(filter);
-
       if (events.length === 0) {
         return {
           success: false,
           error: 'Monetization settings not found',
         };
       }
-
       const latestEvent = events.sort((a, b) => b.created_at - a.created_at)[0];
       const content = parseContentMonetization(latestEvent.content);
-
       return {
         success: true,
         data: content,
@@ -366,11 +330,9 @@ export class SovrenNIPService {
       };
     }
   }
-
   // ========================================
   // ANALYTICS EVENT (Kind 30080)
   // ========================================
-
   /**
    * Track analytics event
    *
@@ -387,24 +349,20 @@ export class SovrenNIPService {
       if (!pubkey) {
         throw new Error('No public key available');
       }
-
       const template = buildAnalyticsEventTemplate(pubkey, analyticsId, analyticsData);
       const publishResult = await this.publisher.publishEvent(template);
-
       if (!publishResult.success) {
         return {
           success: false,
           error: 'Failed to publish analytics event',
         };
       }
-
       // Cache analytics with shorter TTL (analytics are time-sensitive)
       if (this.config.enableCache) {
         await this.cache.add(publishResult.event, {
           ttl: 1800, // 30 minutes
         });
       }
-
       return {
         success: true,
         data: publishResult.event as AnalyticsEvent,
@@ -417,7 +375,6 @@ export class SovrenNIPService {
       };
     }
   }
-
   /**
    * Fetch analytics for specific content
    *
@@ -440,21 +397,16 @@ export class SovrenNIPService {
         '#content': [contentId],
         limit: options?.limit || 50,
       };
-
       if (options?.pubkey) {
         filter.authors = [options.pubkey];
       }
-
       if (options?.since) {
         filter.since = options.since;
       }
-
       if (options?.until) {
         filter.until = options.until;
       }
-
       const events = await this.queryEvents(filter);
-
       const results = events.map((event) => {
         try {
           const content = parseAnalyticsEvent(event.content);
@@ -470,9 +422,7 @@ export class SovrenNIPService {
           };
         }
       });
-
       const successCount = results.filter((r) => r.success).length;
-
       return {
         success: true,
         results,
@@ -490,11 +440,9 @@ export class SovrenNIPService {
       };
     }
   }
-
   // ========================================
   // SUBSCRIPTION MANAGEMENT (Kind 30081)
   // ========================================
-
   /**
    * Publish subscription tier information
    *
@@ -509,23 +457,19 @@ export class SovrenNIPService {
       if (!pubkey) {
         throw new Error('No public key available');
       }
-
       const template = buildSubscriptionManagementTemplate(pubkey, subscriptionInfo);
       const publishResult = await this.publisher.publishEvent(template);
-
       if (!publishResult.success) {
         return {
           success: false,
           error: 'Failed to publish subscription info',
         };
       }
-
       if (this.config.enableCache) {
         await this.cache.add(publishResult.event, {
           ttl: this.config.cacheTTL,
         });
       }
-
       return {
         success: true,
         data: publishResult.event as SubscriptionManagementEvent,
@@ -538,7 +482,6 @@ export class SovrenNIPService {
       };
     }
   }
-
   /**
    * Fetch subscription tiers for a creator
    *
@@ -554,19 +497,15 @@ export class SovrenNIPService {
         authors: [pubkey],
         limit: 1,
       };
-
       const events = await this.queryEvents(filter);
-
       if (events.length === 0) {
         return {
           success: false,
           error: 'Subscription info not found',
         };
       }
-
       const latestEvent = events.sort((a, b) => b.created_at - a.created_at)[0];
       const content = parseSubscriptionManagement(latestEvent.content);
-
       return {
         success: true,
         data: content,
@@ -579,11 +518,9 @@ export class SovrenNIPService {
       };
     }
   }
-
   // ========================================
   // CONTENT RECOMMENDATIONS (Kind 30082)
   // ========================================
-
   /**
    * Publish AI-generated content recommendations
    *
@@ -600,18 +537,14 @@ export class SovrenNIPService {
       if (!pubkey) {
         throw new Error('No public key available');
       }
-
       const template = buildContentRecommendationsTemplate(pubkey, targetPubkey, recommendations);
-
       const publishResult = await this.publisher.publishEvent(template);
-
       if (!publishResult.success) {
         return {
           success: false,
           error: 'Failed to publish recommendations',
         };
       }
-
       // Cache recommendations with shorter TTL (they expire quickly)
       if (this.config.enableCache) {
         const ttl = Math.min(
@@ -620,7 +553,6 @@ export class SovrenNIPService {
         );
         await this.cache.add(publishResult.event, { ttl });
       }
-
       return {
         success: true,
         data: publishResult.event as ContentRecommendationsEvent,
@@ -633,7 +565,6 @@ export class SovrenNIPService {
       };
     }
   }
-
   /**
    * Fetch personalized recommendations for user
    *
@@ -649,19 +580,15 @@ export class SovrenNIPService {
         '#p': [targetPubkey],
         limit: 1,
       };
-
       const events = await this.queryEvents(filter);
-
       if (events.length === 0) {
         return {
           success: false,
           error: 'No recommendations found',
         };
       }
-
       const latestEvent = events.sort((a, b) => b.created_at - a.created_at)[0];
       const content = parseContentRecommendations(latestEvent.content);
-
       // Check if recommendations are expired
       if (content.expiresAt < Math.floor(Date.now() / 1000)) {
         return {
@@ -669,7 +596,6 @@ export class SovrenNIPService {
           error: 'Recommendations have expired',
         };
       }
-
       return {
         success: true,
         data: content,
@@ -682,11 +608,9 @@ export class SovrenNIPService {
       };
     }
   }
-
   // ========================================
   // HELPER METHODS
   // ========================================
-
   /**
    * Query events from relays with timeout
    *
@@ -699,7 +623,6 @@ export class SovrenNIPService {
       const timeout = setTimeout(() => {
         resolve(events);
       }, this.config.fetchTimeout);
-
       try {
         const subscription = this.relayPool.subscribe([filter], {
           onEvent: (event) => {
@@ -714,7 +637,6 @@ export class SovrenNIPService {
             reject(error);
           },
         });
-
         // Auto-cleanup after timeout
         setTimeout(() => {
           try {
@@ -729,7 +651,6 @@ export class SovrenNIPService {
       }
     });
   }
-
   /**
    * Update service configuration
    *
@@ -738,7 +659,6 @@ export class SovrenNIPService {
   updateConfig(config: Partial<SovrenNIPServiceConfig>): void {
     this.config = { ...this.config, ...config };
   }
-
   /**
    * Get current configuration
    *
@@ -747,7 +667,6 @@ export class SovrenNIPService {
   getConfig(): Readonly<Required<SovrenNIPServiceConfig>> {
     return { ...this.config };
   }
-
   /**
    * Clear all cached Sovren events
    */
@@ -760,14 +679,12 @@ export class SovrenNIPService {
       SovrenEventKind.SUBSCRIPTION_MANAGEMENT,
       SovrenEventKind.CONTENT_RECOMMENDATIONS,
     ];
-
     // Note: EventCacheService doesn't have kind-specific clear,
     // so this is a placeholder for future implementation
     // In a real implementation, you'd need to add this functionality
     // to the EventCacheService
   }
 }
-
 /**
  * Create SovrenNIPService instance with default configuration
  *
@@ -787,5 +704,4 @@ export function createSovrenNIPService(
 ): SovrenNIPService {
   return new SovrenNIPService(publisher, keyManager, relayPool, cache, config);
 }
-
 export default SovrenNIPService;

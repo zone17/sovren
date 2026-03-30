@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 🌐 **SOCIAL MEDIA INTEGRATION SERVICE**
  *
@@ -11,7 +10,6 @@
  * - Rate limiting and API quota management
  * - Extensible plugin architecture
  */
-
 import crypto from 'crypto';
 import { EventEmitter } from 'events';
 import {
@@ -47,11 +45,9 @@ interface RedisService {
   keys(pattern: string): Promise<string[]>;
   [key: string]: any;
 }
-
 // =====================================================
 // PLATFORM ADAPTERS INTERFACE
 // =====================================================
-
 export interface SocialPlatformAdapter {
   platform: SocialPlatform;
   authenticate(credentials: any): Promise<{ accessToken: string; refreshToken?: string }>;
@@ -64,11 +60,9 @@ export interface SocialPlatformAdapter {
   ): Promise<{ valid: boolean; adaptedContent?: any; errors?: string[] }>;
   getContentRules(): ContentAdaptationRules;
 }
-
 // =====================================================
 // PLATFORM CONFIGURATION
 // =====================================================
-
 const PLATFORM_CONFIGS = {
   [SocialPlatform.TWITTER]: {
     maxTextLength: 280,
@@ -151,11 +145,9 @@ const PLATFORM_CONFIGS = {
     requiresAltText: false,
   },
 };
-
 // =====================================================
 // MAIN SERVICE CLASS
 // =====================================================
-
 export class SocialMediaIntegrationService extends EventEmitter {
   private logger: Logger;
   private redis: RedisService;
@@ -164,7 +156,6 @@ export class SocialMediaIntegrationService extends EventEmitter {
   private oauthFlows: Map<string, OAuthFlow>;
   private scheduleJobs: Map<string, NodeJS.Timeout>;
   private config: SocialMediaConfig;
-
   constructor(
     logger: Logger,
     redis: RedisService,
@@ -179,15 +170,12 @@ export class SocialMediaIntegrationService extends EventEmitter {
     this.oauthFlows = new Map();
     this.scheduleJobs = new Map();
     this.config = config;
-
     this.initializePlatformAdapters();
     this.startScheduledJobProcessor();
   }
-
   // =====================================================
   // US-135: SOCIAL MEDIA SHARING
   // =====================================================
-
   /**
    * 🔗 Share content to multiple social platforms
    */
@@ -198,32 +186,26 @@ export class SocialMediaIntegrationService extends EventEmitter {
   ): Promise<SocialShareResponse> {
     try {
       this.logger.info('Initiating social media share', { userId, platform: request.platform });
-
       // Validate request
       const validatedRequest = socialMediaSchemas.SocialShareRequest.parse(request);
-
       // Get user's connected account for platform
       const socialAccount = await this.getUserSocialAccount(userId, request.platform);
       if (!socialAccount) {
         throw new Error(`No connected ${request.platform} account found for user`);
       }
-
       // Validate content and adapt for platform
       const adapter = this.platformAdapters.get(request.platform);
       if (!adapter) {
         throw new Error(`Platform adapter not found for ${request.platform}`);
       }
-
       // Get content details
       const content = await this.getContentForSharing(validatedRequest.contentId);
-
       // Adapt content for platform
       const adaptedContent = await this.adaptContentForPlatform(
         content,
         request.platform,
         options?.customMessage
       );
-
       // Post to platform
       let postResult;
       if (request.scheduledAt && request.scheduledAt > new Date()) {
@@ -238,7 +220,6 @@ export class SocialMediaIntegrationService extends EventEmitter {
         // Post immediately
         postResult = await adapter.postContent(adaptedContent, socialAccount.accessToken);
       }
-
       // Create response
       const response: SocialShareResponse = {
         shareId: crypto.randomUUID(),
@@ -255,24 +236,19 @@ export class SocialMediaIntegrationService extends EventEmitter {
         },
         createdAt: new Date(),
       };
-
       // Store share record for analytics
       await this.storeSocialShare(userId, response);
-
       // Track analytics event
       await this.analytics.track(userId, 'social_content_shared', {
         platform: request.platform,
         contentId: request.contentId,
         shareId: response.shareId,
       });
-
       this.emit('content_shared', { userId, response });
       this.logger.info('Content shared successfully', { shareId: response.shareId });
-
       return response;
     } catch (error) {
       this.logger.error('Failed to share content', { error, userId, request });
-
       const errorResponse: SocialShareResponse = {
         shareId: crypto.randomUUID(),
         platform: request.platform,
@@ -280,11 +256,9 @@ export class SocialMediaIntegrationService extends EventEmitter {
         error: error instanceof Error ? error.message : 'Unknown error',
         createdAt: new Date(),
       };
-
       return errorResponse;
     }
   }
-
   /**
    * 🎯 Generate share buttons configuration
    */
@@ -296,7 +270,6 @@ export class SocialMediaIntegrationService extends EventEmitter {
     try {
       const content = await this.getContentForSharing(contentId);
       const buttons: ShareButtonConfig[] = [];
-
       for (const platform of platforms) {
         const buttonConfig: ShareButtonConfig = {
           platform,
@@ -311,21 +284,17 @@ export class SocialMediaIntegrationService extends EventEmitter {
             allowedRoles: [],
           },
         };
-
         buttons.push(buttonConfig);
       }
-
       return buttons;
     } catch (error) {
       this.logger.error('Failed to generate share buttons', { error, contentId });
       throw error;
     }
   }
-
   // =====================================================
   // US-136: CROSS-PLATFORM POSTING
   // =====================================================
-
   /**
    * 📱 Create and publish cross-platform post
    */
@@ -335,10 +304,8 @@ export class SocialMediaIntegrationService extends EventEmitter {
   ): Promise<CrossPlatformPost> {
     try {
       this.logger.info('Creating cross-platform post', { userId, platforms: request.platforms });
-
       // Validate request
       const validatedRequest = socialMediaSchemas.CreateSocialPostRequest.parse(request);
-
       // Create post record
       const post: CrossPlatformPost = {
         id: crypto.randomUUID(),
@@ -363,27 +330,22 @@ export class SocialMediaIntegrationService extends EventEmitter {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-
       // Store post
       await this.storeCrossPlatformPost(post);
-
       // Schedule or publish immediately
       if (post.scheduledAt && post.scheduledAt > new Date()) {
         await this.schedulePostPublication(post);
       } else {
         await this.publishCrossPlatformPost(post.id);
       }
-
       this.emit('cross_platform_post_created', { userId, post });
       this.logger.info('Cross-platform post created', { postId: post.id });
-
       return post;
     } catch (error) {
       this.logger.error('Failed to create cross-platform post', { error, userId, request });
       throw error;
     }
   }
-
   /**
    * 🚀 Publish cross-platform post
    */
@@ -393,11 +355,8 @@ export class SocialMediaIntegrationService extends EventEmitter {
       if (!post) {
         throw new Error(`Post not found: ${postId}`);
       }
-
       this.logger.info('Publishing cross-platform post', { postId, platforms: post.platforms });
-
       const results: Array<{ platform: SocialPlatform; success: boolean; error?: string }> = [];
-
       // Publish to each platform
       for (const platform of post.platforms) {
         try {
@@ -405,20 +364,15 @@ export class SocialMediaIntegrationService extends EventEmitter {
           if (!adapter) {
             throw new Error(`Platform adapter not found for ${platform}`);
           }
-
           const socialAccount = await this.getUserSocialAccount(post.userId, platform);
           if (!socialAccount) {
             throw new Error(`No connected ${platform} account`);
           }
-
           // Get platform-specific content
           const platformContent = await this.getPlatformSpecificContent(post, platform);
-
           // Publish to platform
           const result = await adapter.postContent(platformContent, socialAccount.accessToken);
-
           results.push({ platform, success: true });
-
           // Track success
           await this.analytics.track(post.userId, 'cross_platform_post_published', {
             postId,
@@ -434,15 +388,12 @@ export class SocialMediaIntegrationService extends EventEmitter {
           });
         }
       }
-
       // Update post status
       const allSuccessful = results.every((r) => r.success);
       post.status = allSuccessful ? PostStatus.PUBLISHED : PostStatus.FAILED;
       post.publishedAt = new Date();
       post.updatedAt = new Date();
-
       await this.updateCrossPlatformPost(post);
-
       this.emit('cross_platform_post_published', { post, results });
       this.logger.info('Cross-platform post publication completed', { postId, results });
     } catch (error) {
@@ -450,7 +401,6 @@ export class SocialMediaIntegrationService extends EventEmitter {
       throw error;
     }
   }
-
   /**
    * 📅 Create posting schedule
    */
@@ -465,23 +415,18 @@ export class SocialMediaIntegrationService extends EventEmitter {
         userId,
         createdAt: new Date(),
       };
-
       await this.storePostingSchedule(newSchedule);
-
       this.emit('posting_schedule_created', { userId, schedule: newSchedule });
       this.logger.info('Posting schedule created', { scheduleId: newSchedule.id });
-
       return newSchedule;
     } catch (error) {
       this.logger.error('Failed to create posting schedule', { error, userId });
       throw error;
     }
   }
-
   // =====================================================
   // US-137: SOCIAL MEDIA ANALYTICS
   // =====================================================
-
   /**
    * 📊 Get comprehensive social media analytics
    */
@@ -491,43 +436,34 @@ export class SocialMediaIntegrationService extends EventEmitter {
   ): Promise<CrossPlatformAnalytics> {
     try {
       this.logger.info('Generating social media analytics', { userId, request });
-
       const timeRange = request.timeRange || {
         start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
         end: new Date(),
       };
-
       const platforms = request.platforms || Object.values(SocialPlatform);
       const platformMetrics: Record<SocialPlatform, SocialAnalyticsMetrics> = {} as any;
-
       // Gather metrics from each platform
       for (const platform of platforms) {
         try {
           const socialAccount = await this.getUserSocialAccount(userId, platform);
           if (!socialAccount) continue;
-
           const adapter = this.platformAdapters.get(platform);
           if (!adapter) continue;
-
           const metrics = await this.gatherPlatformAnalytics(
             platform,
             socialAccount,
             timeRange,
             request.contentId
           );
-
           platformMetrics[platform] = metrics;
         } catch (error) {
           this.logger.warn(`Failed to gather analytics for ${platform}`, { error });
         }
       }
-
       // Calculate aggregated metrics
       const aggregatedMetrics = this.calculateAggregatedMetrics(platformMetrics);
-
       // Generate trends analysis
       const trends = await this.analyzeTrends(userId, platformMetrics, timeRange);
-
       const analytics: CrossPlatformAnalytics = {
         userId,
         contentId: request.contentId,
@@ -537,20 +473,16 @@ export class SocialMediaIntegrationService extends EventEmitter {
         trends,
         generatedAt: new Date(),
       };
-
       // Cache analytics
       await this.cacheAnalytics(userId, analytics);
-
       this.emit('analytics_generated', { userId, analytics });
       this.logger.info('Social media analytics generated', { userId });
-
       return analytics;
     } catch (error) {
       this.logger.error('Failed to generate social media analytics', { error, userId });
       throw error;
     }
   }
-
   /**
    * 📈 Generate analytics report
    */
@@ -565,7 +497,6 @@ export class SocialMediaIntegrationService extends EventEmitter {
         platforms,
         timeRange,
       });
-
       const report: AnalyticsReport = {
         id: crypto.randomUUID(),
         userId,
@@ -577,23 +508,18 @@ export class SocialMediaIntegrationService extends EventEmitter {
         insights: await this.generateInsights(analytics),
         createdAt: new Date(),
       };
-
       await this.storeAnalyticsReport(report);
-
       this.emit('analytics_report_generated', { userId, report });
       this.logger.info('Analytics report generated', { reportId: report.id });
-
       return report;
     } catch (error) {
       this.logger.error('Failed to generate analytics report', { error, userId });
       throw error;
     }
   }
-
   // =====================================================
   // US-138: SOCIAL LOGIN
   // =====================================================
-
   /**
    * 🔐 Initiate OAuth flow
    */
@@ -605,16 +531,13 @@ export class SocialMediaIntegrationService extends EventEmitter {
   ): Promise<{ authUrl: string; state: string }> {
     try {
       this.logger.info('Initiating OAuth flow', { platform, userId });
-
       const provider = await this.getSocialLoginProvider(platform);
       if (!provider || !provider.enabled) {
         throw new Error(`OAuth provider not configured for ${platform}`);
       }
-
       // Generate OAuth state and PKCE parameters
       const state = crypto.randomBytes(32).toString('hex');
       const codeVerifier = crypto.randomBytes(32).toString('base64url');
-
       // Store OAuth flow
       const oauthFlow: OAuthFlow = {
         state,
@@ -626,21 +549,16 @@ export class SocialMediaIntegrationService extends EventEmitter {
         createdAt: new Date(),
         expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
       };
-
       this.oauthFlows.set(state, oauthFlow);
-
       // Generate authorization URL
       const authUrl = await this.generateAuthorizationUrl(provider, oauthFlow);
-
       this.logger.info('OAuth flow initiated', { platform, state });
-
       return { authUrl, state };
     } catch (error) {
       this.logger.error('Failed to initiate OAuth flow', { error, platform });
       throw error;
     }
   }
-
   /**
    * 🔑 Complete OAuth flow and link account
    */
@@ -650,41 +568,33 @@ export class SocialMediaIntegrationService extends EventEmitter {
         platform: request.platform,
         state: request.state,
       });
-
       // Validate OAuth flow
       const oauthFlow = this.oauthFlows.get(request.state);
       if (!oauthFlow) {
         throw new Error('Invalid or expired OAuth state');
       }
-
       if (oauthFlow.expiresAt < new Date()) {
         throw new Error('OAuth flow expired');
       }
-
       if (oauthFlow.platform !== request.platform) {
         throw new Error('Platform mismatch');
       }
-
       // Exchange authorization code for tokens
       const provider = await this.getSocialLoginProvider(request.platform);
       if (!provider) {
         throw new Error(`OAuth provider not found for ${request.platform}`);
       }
-
       const adapter = this.platformAdapters.get(request.platform);
       if (!adapter) {
         throw new Error(`Platform adapter not found for ${request.platform}`);
       }
-
       const tokenResult = await adapter.authenticate({
         authCode: request.authCode,
         codeVerifier: oauthFlow.codeVerifier,
         redirectUri: request.redirectUri,
       });
-
       // Get user profile
       const profile = await adapter.getUserProfile(tokenResult.accessToken);
-
       // Create or update social account
       const socialAccount: SocialAccount = {
         id: crypto.randomUUID(),
@@ -706,29 +616,23 @@ export class SocialMediaIntegrationService extends EventEmitter {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-
       // Store social account
       await this.storeSocialAccount(socialAccount);
-
       // Clean up OAuth flow
       this.oauthFlows.delete(request.state);
-
       // Track analytics
       await this.analytics.track(socialAccount.userId, 'social_account_linked', {
         platform: request.platform,
         accountId: socialAccount.id,
       });
-
       this.emit('social_account_linked', { socialAccount });
       this.logger.info('Social account linked successfully', { accountId: socialAccount.id });
-
       return socialAccount;
     } catch (error) {
       this.logger.error('Failed to complete OAuth flow', { error, request });
       throw error;
     }
   }
-
   /**
    * 🔄 Sync social profile data
    */
@@ -738,17 +642,13 @@ export class SocialMediaIntegrationService extends EventEmitter {
       if (!socialAccount) {
         throw new Error(`Social account not found: ${accountId}`);
       }
-
       this.logger.info('Syncing social profile', { accountId, platform: socialAccount.platform });
-
       const adapter = this.platformAdapters.get(socialAccount.platform);
       if (!adapter) {
         throw new Error(`Platform adapter not found for ${socialAccount.platform}`);
       }
-
       // Get updated profile data
       const profile = await adapter.getUserProfile(socialAccount.accessToken);
-
       // Create sync record
       const profileSync: SocialProfileSync = {
         accountId,
@@ -770,7 +670,6 @@ export class SocialMediaIntegrationService extends EventEmitter {
         syncFrequency: 'daily',
         conflicts: [],
       };
-
       // Update social account with synced data
       socialAccount.username = profile.username;
       socialAccount.displayName = profile.displayName || profile.name;
@@ -779,42 +678,34 @@ export class SocialMediaIntegrationService extends EventEmitter {
       socialAccount.profileUrl = profile.profileUrl || socialAccount.profileUrl;
       socialAccount.lastSyncAt = new Date();
       socialAccount.updatedAt = new Date();
-
       await this.updateSocialAccount(socialAccount);
       await this.storeSocialProfileSync(profileSync);
-
       this.emit('social_profile_synced', { accountId, profileSync });
       this.logger.info('Social profile synced successfully', { accountId });
-
       return profileSync;
     } catch (error) {
       this.logger.error('Failed to sync social profile', { error, accountId });
       throw error;
     }
   }
-
   // =====================================================
   // PRIVATE HELPER METHODS
   // =====================================================
-
   private initializePlatformAdapters(): void {
     // Initialize platform adapters for each supported platform
     // In a real implementation, these would be separate adapter classes
     this.logger.info('Initializing platform adapters');
   }
-
   private startScheduledJobProcessor(): void {
     // Start background job processor for scheduled posts
     setInterval(async () => {
       await this.processScheduledPosts();
     }, 60000); // Check every minute
   }
-
   private async processScheduledPosts(): Promise<void> {
     try {
       const scheduledPosts = await this.getScheduledPosts();
       const now = new Date();
-
       for (const post of scheduledPosts) {
         if (post.scheduledAt && post.scheduledAt <= now) {
           await this.publishCrossPlatformPost(post.id);
@@ -824,7 +715,6 @@ export class SocialMediaIntegrationService extends EventEmitter {
       this.logger.error('Failed to process scheduled posts', { error });
     }
   }
-
   private async adaptContentForPlatform(
     content: any,
     platform: SocialPlatform,
@@ -834,14 +724,11 @@ export class SocialMediaIntegrationService extends EventEmitter {
     if (!config) {
       throw new Error(`No configuration found for platform: ${platform}`);
     }
-
     let adaptedContent = customMessage || content.content || content.description || '';
-
     // Truncate if necessary
     if (adaptedContent.length > config.maxTextLength) {
       adaptedContent = adaptedContent.substring(0, config.maxTextLength - 3) + '...';
     }
-
     // Add hashtags if supported
     if (config.maxHashtags > 0 && content.tags) {
       const hashtags = content.tags
@@ -850,14 +737,12 @@ export class SocialMediaIntegrationService extends EventEmitter {
         .join(' ');
       adaptedContent += ` ${hashtags}`;
     }
-
     return {
       content: adaptedContent,
       mediaUrls: content.mediaUrls || [],
       platform,
     };
   }
-
   private detectContentType(content: string, mediaUrls?: string[]): ContentType {
     if (mediaUrls && mediaUrls.length > 0) {
       const firstMedia = mediaUrls[0];
@@ -871,14 +756,11 @@ export class SocialMediaIntegrationService extends EventEmitter {
         return ContentType.AUDIO;
       }
     }
-
     if (content.includes('http')) {
       return ContentType.LINK;
     }
-
     return ContentType.TEXT;
   }
-
   private async processMediaAssets(mediaUrls: string[]): Promise<any[]> {
     const assets = [];
     for (const url of mediaUrls) {
@@ -893,19 +775,16 @@ export class SocialMediaIntegrationService extends EventEmitter {
     }
     return assets;
   }
-
   private getMediaType(url: string): 'image' | 'video' | 'audio' {
     if (url.includes('video') || url.includes('.mp4')) return 'video';
     if (url.includes('audio') || url.includes('.mp3')) return 'audio';
     return 'image';
   }
-
   private async generatePlatformCustomizations(
     content: string,
     platforms: SocialPlatform[]
   ): Promise<Record<SocialPlatform, any>> {
     const customizations: Record<string, any> = {};
-
     for (const platform of platforms) {
       const config = PLATFORM_CONFIGS[platform];
       if (config) {
@@ -919,10 +798,8 @@ export class SocialMediaIntegrationService extends EventEmitter {
         };
       }
     }
-
     return customizations;
   }
-
   private calculateAggregatedMetrics(
     platformMetrics: Record<SocialPlatform, SocialAnalyticsMetrics>
   ): any {
@@ -936,33 +813,26 @@ export class SocialMediaIntegrationService extends EventEmitter {
       worstPerformingPlatform: undefined as SocialPlatform | undefined,
       recommendations: [] as string[],
     };
-
     const platforms = Object.keys(platformMetrics) as SocialPlatform[];
     let bestEngagement = 0;
     let worstEngagement = Infinity;
-
     for (const platform of platforms) {
       const metrics = platformMetrics[platform];
       aggregated.totalImpressions += metrics.metrics.impressions;
       aggregated.totalEngagement += metrics.metrics.engagement;
-
       if (metrics.metrics.engagementRate > bestEngagement) {
         bestEngagement = metrics.metrics.engagementRate;
         aggregated.bestPerformingPlatform = platform;
       }
-
       if (metrics.metrics.engagementRate < worstEngagement) {
         worstEngagement = metrics.metrics.engagementRate;
         aggregated.worstPerformingPlatform = platform;
       }
     }
-
     aggregated.averageEngagementRate =
       platforms.length > 0 ? (aggregated.totalEngagement / aggregated.totalImpressions) * 100 : 0;
-
     return aggregated;
   }
-
   private async analyzeTrends(
     userId: string,
     platformMetrics: Record<SocialPlatform, SocialAnalyticsMetrics>,
@@ -971,7 +841,6 @@ export class SocialMediaIntegrationService extends EventEmitter {
     // Implement trend analysis logic
     return [];
   }
-
   private async generateReportSections(analytics: CrossPlatformAnalytics): Promise<any[]> {
     return [
       {
@@ -987,10 +856,8 @@ export class SocialMediaIntegrationService extends EventEmitter {
       },
     ];
   }
-
   private async generateInsights(analytics: CrossPlatformAnalytics): Promise<any[]> {
     const insights = [];
-
     if (analytics.aggregatedMetrics.averageEngagementRate < 2) {
       insights.push({
         type: 'opportunity',
@@ -1000,10 +867,8 @@ export class SocialMediaIntegrationService extends EventEmitter {
         action: 'Create more polls and questions in posts',
       });
     }
-
     return insights;
   }
-
   private async generateAuthorizationUrl(
     provider: SocialLoginProvider,
     oauthFlow: OAuthFlow
@@ -1017,10 +882,8 @@ export class SocialMediaIntegrationService extends EventEmitter {
       state: oauthFlow.state,
       response_type: 'code',
     });
-
     return `${baseUrl}?${params.toString()}`;
   }
-
   private getAuthorizationBaseUrl(platform: SocialPlatform): string {
     const urls = {
       [SocialPlatform.TWITTER]: 'https://twitter.com/i/oauth2/authorize',
@@ -1034,14 +897,11 @@ export class SocialMediaIntegrationService extends EventEmitter {
       [SocialPlatform.TELEGRAM]: 'https://oauth.telegram.org/auth',
       [SocialPlatform.MASTODON]: 'https://mastodon.social/oauth/authorize',
     };
-
     return urls[platform] || '';
   }
-
   // =====================================================
   // DATA PERSISTENCE METHODS
   // =====================================================
-
   private async getContentForSharing(contentId: string): Promise<any> {
     // Implement content retrieval logic
     return {
@@ -1051,7 +911,6 @@ export class SocialMediaIntegrationService extends EventEmitter {
       tags: [],
     };
   }
-
   private async getUserSocialAccount(
     userId: string,
     platform: SocialPlatform
@@ -1059,24 +918,19 @@ export class SocialMediaIntegrationService extends EventEmitter {
     // Implement database query to get user's social account
     return null;
   }
-
   private async storeSocialShare(userId: string, response: SocialShareResponse): Promise<void> {
     // Store share record in database
   }
-
   private async storeCrossPlatformPost(post: CrossPlatformPost): Promise<void> {
     // Store post in database
   }
-
   private async getCrossPlatformPost(postId: string): Promise<CrossPlatformPost | null> {
     // Retrieve post from database
     return null;
   }
-
   private async updateCrossPlatformPost(post: CrossPlatformPost): Promise<void> {
     // Update post in database
   }
-
   private async getPlatformSpecificContent(
     post: CrossPlatformPost,
     platform: SocialPlatform
@@ -1088,20 +942,16 @@ export class SocialMediaIntegrationService extends EventEmitter {
       }
     );
   }
-
   private async schedulePostPublication(post: CrossPlatformPost): Promise<void> {
     // Schedule post for publication
   }
-
   private async getScheduledPosts(): Promise<CrossPlatformPost[]> {
     // Get posts scheduled for publication
     return [];
   }
-
   private async storePostingSchedule(schedule: PostingSchedule): Promise<void> {
     // Store posting schedule
   }
-
   private async gatherPlatformAnalytics(
     platform: SocialPlatform,
     socialAccount: SocialAccount,
@@ -1133,36 +983,29 @@ export class SocialMediaIntegrationService extends EventEmitter {
       lastUpdated: new Date(),
     };
   }
-
   private async cacheAnalytics(userId: string, analytics: CrossPlatformAnalytics): Promise<void> {
     // Cache analytics in Redis
     await this.redis.setex(`analytics:${userId}`, 3600, JSON.stringify(analytics));
   }
-
   private async storeAnalyticsReport(report: AnalyticsReport): Promise<void> {
     // Store analytics report
   }
-
   private async getSocialLoginProvider(
     platform: SocialPlatform
   ): Promise<SocialLoginProvider | null> {
     // Get OAuth provider configuration
     return null;
   }
-
   private async storeSocialAccount(socialAccount: SocialAccount): Promise<void> {
     // Store social account
   }
-
   private async getSocialAccount(accountId: string): Promise<SocialAccount | null> {
     // Get social account
     return null;
   }
-
   private async updateSocialAccount(socialAccount: SocialAccount): Promise<void> {
     // Update social account
   }
-
   private async storeSocialProfileSync(profileSync: SocialProfileSync): Promise<void> {
     // Store profile sync record
   }

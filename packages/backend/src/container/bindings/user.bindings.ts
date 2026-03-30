@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * User Services Binding Module
  * Registers all Phase 4 user services in the DI container

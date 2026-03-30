@@ -1,4 +1,3 @@
-// @ts-nocheck
 import type {
   IContentVersioningService,
   ContentVersion,
@@ -12,7 +11,6 @@ import type { IDatabase } from '../../interfaces/IDatabase';
 import { Logger } from '../../utils/logger';
 import { ServiceError } from '../../utils/errors';
 import { v4 as uuidv4 } from 'uuid';
-
 /**
  * JSON Patch operation as per RFC 6902
  */
@@ -22,7 +20,6 @@ interface JsonPatchOperation {
   value?: any;
   from?: string;
 }
-
 /**
  * ContentVersioningService manages content version history with efficient delta storage.
  *
@@ -47,7 +44,6 @@ export class ContentVersioningService implements IContentVersioningService {
   private readonly maxVersionsToKeep = 100; // Maximum versions to retain
   private readonly cachePrefix = 'content:version:';
   private readonly cacheTTL = 1800; // 30 minutes
-
   constructor(
     private readonly db: IDatabase,
     private readonly cache: ICacheService,
@@ -56,7 +52,6 @@ export class ContentVersioningService implements IContentVersioningService {
   ) {
     this.logger = new Logger(ContentVersioningService.name);
   }
-
   /**
    * Creates a new version of the content
    * Implements efficient delta storage with periodic snapshots
@@ -71,7 +66,6 @@ export class ContentVersioningService implements IContentVersioningService {
         contentId: content.id,
         currentVersion: content.version,
       });
-
       // Get the latest version number for this content
       const latestVersionResult = await this.db.query(
         `SELECT version_number FROM content_versions
@@ -80,16 +74,12 @@ export class ContentVersioningService implements IContentVersioningService {
          LIMIT 1`,
         [content.id]
       );
-
       const nextVersionNumber =
         latestVersionResult.rows.length > 0 ? latestVersionResult.rows[0].version_number + 1 : 1;
-
       // Determine if this should be a snapshot or delta
       const isSnapshot = nextVersionNumber % this.snapshotInterval === 0;
-
       let delta: JsonPatchOperation[] | null = null;
       let snapshot: Content | null = null;
-
       if (isSnapshot || nextVersionNumber === 1) {
         // Store full snapshot
         snapshot = content;
@@ -103,7 +93,6 @@ export class ContentVersioningService implements IContentVersioningService {
           operations: delta.length,
         });
       }
-
       // Create version record
       const version: ContentVersion = {
         id: uuidv4(),
@@ -115,7 +104,6 @@ export class ContentVersioningService implements IContentVersioningService {
         createdAt: new Date(),
         message,
       };
-
       // Save to database
       await this.db.query(
         `INSERT INTO content_versions (
@@ -133,17 +121,14 @@ export class ContentVersioningService implements IContentVersioningService {
           version.message,
         ]
       );
-
       // Cache the version
       await this.cache.set(`${this.cachePrefix}${version.id}`, version, this.cacheTTL);
-
       // Update content version number
       await this.db.query('UPDATE content SET version = $1, updated_at = $2 WHERE id = $3', [
         nextVersionNumber,
         new Date(),
         content.id,
       ]);
-
       // Log the version creation
       await this.auditLog.log({
         action: 'content.version.created',
@@ -158,7 +143,6 @@ export class ContentVersioningService implements IContentVersioningService {
         },
         timestamp: new Date(),
       });
-
       // Emit event
       await this.eventBus.emit('content.version.created', {
         versionId: version.id,
@@ -166,15 +150,12 @@ export class ContentVersioningService implements IContentVersioningService {
         versionNumber: nextVersionNumber,
         timestamp: Date.now(),
       });
-
       // Check if we need to prune old versions
       await this.autoPruneVersions(content.id);
-
       this.logger.info('Version created successfully', {
         versionId: version.id,
         versionNumber: nextVersionNumber,
       });
-
       return version;
     } catch (error) {
       this.logger.error('Failed to create version', error);
@@ -184,7 +165,6 @@ export class ContentVersioningService implements IContentVersioningService {
       });
     }
   }
-
   /**
    * Retrieves all versions for a content item
    *
@@ -194,21 +174,17 @@ export class ContentVersioningService implements IContentVersioningService {
   public async getVersions(contentId: string): Promise<ContentVersion[]> {
     try {
       this.logger.debug('Fetching version history', { contentId });
-
       const result = await this.db.query(
         `SELECT * FROM content_versions
          WHERE content_id = $1
          ORDER BY version_number DESC`,
         [contentId]
       );
-
       const versions = result.rows.map((row) => this.mapRowToVersion(row));
-
       this.logger.debug('Retrieved versions', {
         contentId,
         count: versions.length,
       });
-
       return versions;
     } catch (error) {
       this.logger.error('Failed to fetch versions', error);
@@ -218,7 +194,6 @@ export class ContentVersioningService implements IContentVersioningService {
       });
     }
   }
-
   /**
    * Retrieves a specific version by ID
    *
@@ -229,28 +204,22 @@ export class ContentVersioningService implements IContentVersioningService {
     try {
       // Check cache first
       const cached = await this.cache.get<ContentVersion>(`${this.cachePrefix}${versionId}`);
-
       if (cached) {
         this.logger.debug('Version retrieved from cache', { versionId });
         return cached;
       }
-
       // Fetch from database
       const result = await this.db.query('SELECT * FROM content_versions WHERE id = $1', [
         versionId,
       ]);
-
       if (result.rows.length === 0) {
         throw new ServiceError('Version not found', {
           context: { versionId },
         });
       }
-
       const version = this.mapRowToVersion(result.rows[0]);
-
       // Cache it
       await this.cache.set(`${this.cachePrefix}${versionId}`, version, this.cacheTTL);
-
       return version;
     } catch (error) {
       this.logger.error('Failed to fetch version', error);
@@ -260,7 +229,6 @@ export class ContentVersioningService implements IContentVersioningService {
       });
     }
   }
-
   /**
    * Reverts content to a specific version
    * Creates a new version with the reverted content
@@ -272,19 +240,15 @@ export class ContentVersioningService implements IContentVersioningService {
   public async revert(contentId: string, versionId: string): Promise<Content> {
     try {
       this.logger.info('Reverting content', { contentId, versionId });
-
       // Get the target version
       const targetVersion = await this.getVersion(versionId);
-
       if (targetVersion.contentId !== contentId) {
         throw new ServiceError('Version does not belong to this content', {
           context: { contentId, versionId },
         });
       }
-
       // Reconstruct the content at that version
       const revertedContent = await this.reconstructContent(contentId, targetVersion.versionNumber);
-
       // Update the current content
       await this.db.query(
         `UPDATE content
@@ -302,13 +266,11 @@ export class ContentVersioningService implements IContentVersioningService {
           contentId,
         ]
       );
-
       // Create a new version for this revert
       const newVersion = await this.createVersion(
         revertedContent,
         `Reverted to version ${targetVersion.versionNumber}`
       );
-
       // Log the revert
       await this.auditLog.log({
         action: 'content.reverted',
@@ -322,7 +284,6 @@ export class ContentVersioningService implements IContentVersioningService {
         },
         timestamp: new Date(),
       });
-
       // Emit event
       await this.eventBus.emit('content.reverted', {
         contentId,
@@ -330,15 +291,12 @@ export class ContentVersioningService implements IContentVersioningService {
         newVersionNumber: newVersion.versionNumber,
         timestamp: Date.now(),
       });
-
       // Invalidate cache
       await this.cache.delete(`content:${contentId}`);
-
       this.logger.info('Content reverted successfully', {
         contentId,
         revertedToVersion: targetVersion.versionNumber,
       });
-
       return revertedContent;
     } catch (error) {
       this.logger.error('Failed to revert content', error);
@@ -348,7 +306,6 @@ export class ContentVersioningService implements IContentVersioningService {
       });
     }
   }
-
   /**
    * Compares two versions and returns the differences
    *
@@ -359,31 +316,25 @@ export class ContentVersioningService implements IContentVersioningService {
   public async compareVersions(versionId1: string, versionId2: string): Promise<VersionDiff> {
     try {
       this.logger.debug('Comparing versions', { versionId1, versionId2 });
-
       // Get both versions
       const version1 = await this.getVersion(versionId1);
       const version2 = await this.getVersion(versionId2);
-
       // Ensure they belong to the same content
       if (version1.contentId !== version2.contentId) {
         throw new ServiceError('Versions belong to different content items', {
           context: { versionId1, versionId2 },
         });
       }
-
       // Reconstruct full content for both versions
       const content1 = await this.reconstructContent(version1.contentId, version1.versionNumber);
       const content2 = await this.reconstructContent(version2.contentId, version2.versionNumber);
-
       // Generate diff
       const diff = this.calculateDiff(content1, content2);
-
       this.logger.debug('Version comparison complete', {
         addedFields: diff.added.length,
         removedFields: diff.removed.length,
         modifiedFields: diff.modified.length,
       });
-
       return diff;
     } catch (error) {
       this.logger.error('Failed to compare versions', error);
@@ -393,7 +344,6 @@ export class ContentVersioningService implements IContentVersioningService {
       });
     }
   }
-
   /**
    * Merges two versions (simplified implementation)
    * In production, this would need conflict resolution logic
@@ -405,22 +355,18 @@ export class ContentVersioningService implements IContentVersioningService {
   public async mergeVersions(versionId1: string, versionId2: string): Promise<Content> {
     try {
       this.logger.info('Merging versions', { versionId1, versionId2 });
-
       // Get both versions
       const version1 = await this.getVersion(versionId1);
       const version2 = await this.getVersion(versionId2);
-
       // Ensure they belong to the same content
       if (version1.contentId !== version2.contentId) {
         throw new ServiceError('Cannot merge versions from different content', {
           context: { versionId1, versionId2 },
         });
       }
-
       // Reconstruct both versions
       const content1 = await this.reconstructContent(version1.contentId, version1.versionNumber);
       const content2 = await this.reconstructContent(version2.contentId, version2.versionNumber);
-
       // Simple merge: Take later version's title/summary, merge content
       const merged: Content = {
         ...content2,
@@ -431,18 +377,15 @@ export class ContentVersioningService implements IContentVersioningService {
           lastModified: new Date(),
         },
       };
-
       // Create new version with merged content
       await this.createVersion(
         merged,
         `Merged versions ${version1.versionNumber} and ${version2.versionNumber}`
       );
-
       this.logger.info('Versions merged successfully', {
         versionId1,
         versionId2,
       });
-
       return merged;
     } catch (error) {
       this.logger.error('Failed to merge versions', error);
@@ -452,7 +395,6 @@ export class ContentVersioningService implements IContentVersioningService {
       });
     }
   }
-
   /**
    * Prunes old versions keeping only the specified number of latest versions
    * Always preserves snapshot versions for efficient reconstruction
@@ -463,10 +405,8 @@ export class ContentVersioningService implements IContentVersioningService {
   public async pruneOldVersions(contentId: string, keepLast: number): Promise<void> {
     try {
       this.logger.info('Pruning old versions', { contentId, keepLast });
-
       // Get all versions
       const allVersions = await this.getVersions(contentId);
-
       if (allVersions.length <= keepLast) {
         this.logger.debug('No pruning needed', {
           currentCount: allVersions.length,
@@ -474,30 +414,25 @@ export class ContentVersioningService implements IContentVersioningService {
         });
         return;
       }
-
       // Identify versions to delete (excluding snapshots)
       const toDelete = allVersions
         .slice(keepLast)
         .filter((v) => v.versionNumber % this.snapshotInterval !== 0)
         .map((v) => v.id);
-
       if (toDelete.length === 0) {
         this.logger.debug('No versions to prune (all are snapshots or recent)');
         return;
       }
-
       // Delete old versions
       await this.db.query(
         `DELETE FROM content_versions
          WHERE id = ANY($1::uuid[])`,
         [toDelete]
       );
-
       // Clear cache for deleted versions
       for (const versionId of toDelete) {
         await this.cache.delete(`${this.cachePrefix}${versionId}`);
       }
-
       // Log the pruning
       await this.auditLog.log({
         action: 'content.versions.pruned',
@@ -509,7 +444,6 @@ export class ContentVersioningService implements IContentVersioningService {
         },
         timestamp: new Date(),
       });
-
       this.logger.info('Old versions pruned', {
         contentId,
         deletedCount: toDelete.length,
@@ -522,17 +456,14 @@ export class ContentVersioningService implements IContentVersioningService {
       });
     }
   }
-
   // ============================================================================
   // Private Helper Methods
   // ============================================================================
-
   /**
    * Generates a JSON Patch delta between two content versions
    */
   private generateDelta(oldContent: Content, newContent: Content): JsonPatchOperation[] {
     const operations: JsonPatchOperation[] = [];
-
     // Compare each field
     const fields: (keyof Content)[] = [
       'title',
@@ -544,11 +475,9 @@ export class ContentVersioningService implements IContentVersioningService {
       'visibility',
       'metadata',
     ];
-
     for (const field of fields) {
       const oldValue = oldContent[field];
       const newValue = newContent[field];
-
       if (JSON.stringify(oldValue) !== JSON.stringify(newValue)) {
         operations.push({
           op: 'replace',
@@ -557,19 +486,15 @@ export class ContentVersioningService implements IContentVersioningService {
         });
       }
     }
-
     return operations;
   }
-
   /**
    * Applies a JSON Patch delta to reconstruct content
    */
   private applyDelta(content: Content, delta: JsonPatchOperation[]): Content {
     const result = { ...content };
-
     for (const operation of delta) {
       const field = operation.path.substring(1) as keyof Content;
-
       switch (operation.op) {
         case 'replace':
         case 'add':
@@ -581,10 +506,8 @@ export class ContentVersioningService implements IContentVersioningService {
         // 'move', 'copy', 'test' operations not commonly needed for our use case
       }
     }
-
     return result;
   }
-
   /**
    * Reconstructs content at a specific version by applying deltas
    */
@@ -599,21 +522,17 @@ export class ContentVersioningService implements IContentVersioningService {
        LIMIT 1`,
       [contentId, targetVersion]
     );
-
     if (snapshotResult.rows.length === 0) {
       throw new ServiceError('No snapshot found for reconstruction', {
         context: { contentId, targetVersion },
       });
     }
-
     const snapshotVersion = this.mapRowToVersion(snapshotResult.rows[0]);
     let content = snapshotVersion.snapshot!;
-
     // If target is the snapshot, we're done
     if (snapshotVersion.versionNumber === targetVersion) {
       return content;
     }
-
     // Apply deltas from snapshot to target version
     const deltasResult = await this.db.query(
       `SELECT * FROM content_versions
@@ -623,24 +542,20 @@ export class ContentVersioningService implements IContentVersioningService {
        ORDER BY version_number ASC`,
       [contentId, snapshotVersion.versionNumber, targetVersion]
     );
-
     for (const row of deltasResult.rows) {
       const version = this.mapRowToVersion(row);
       if (version.delta) {
         content = this.applyDelta(content, version.delta);
       }
     }
-
     return content;
   }
-
   /**
    * Gets the previous version's content
    */
   private async getPreviousVersion(contentId: string, versionNumber: number): Promise<Content> {
     return this.reconstructContent(contentId, versionNumber);
   }
-
   /**
    * Calculates a detailed diff between two content versions
    */
@@ -648,13 +563,10 @@ export class ContentVersioningService implements IContentVersioningService {
     const added: string[] = [];
     const removed: string[] = [];
     const modified: Array<{ field: string; oldValue: any; newValue: any }> = [];
-
     const allFields = new Set([...Object.keys(content1), ...Object.keys(content2)]);
-
     for (const field of allFields) {
       const val1 = (content1 as any)[field];
       const val2 = (content2 as any)[field];
-
       if (val1 === undefined && val2 !== undefined) {
         added.push(field);
       } else if (val1 !== undefined && val2 === undefined) {
@@ -667,10 +579,8 @@ export class ContentVersioningService implements IContentVersioningService {
         });
       }
     }
-
     return { added, removed, modified };
   }
-
   /**
    * Simple content merge (in production, use a proper merge algorithm)
    */
@@ -679,21 +589,17 @@ export class ContentVersioningService implements IContentVersioningService {
     if (content1 === content2) {
       return content1;
     }
-
     return `${content1}\n\n--- Merged Content ---\n\n${content2}`;
   }
-
   /**
    * Automatically prunes versions if exceeding max limit
    */
   private async autoPruneVersions(contentId: string): Promise<void> {
     const versions = await this.getVersions(contentId);
-
     if (versions.length > this.maxVersionsToKeep) {
       await this.pruneOldVersions(contentId, this.maxVersionsToKeep);
     }
   }
-
   /**
    * Maps database row to ContentVersion object
    */

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 🌐 ELITE SERVICE: NIP-65 Relay List Metadata
  * US-319: NIP-65 Relay List Implementation
@@ -35,7 +34,6 @@
  * ]);
  * ```
  */
-
 import { finalizeEvent } from 'nostr-tools/pure';
 import type {
   NostrEvent,
@@ -49,7 +47,6 @@ import type {
 import { RelayConfig } from '@shared/config/relay-config';
 import { KeyManagementService } from './KeyManagementService';
 import { RelayPoolManager } from './RelayPoolManager';
-
 /**
  * Relay list cache entry
  */
@@ -57,7 +54,6 @@ interface RelayListCacheEntry {
   relayList: ParsedRelayList;
   timestamp: number;
 }
-
 /**
  * Relay list options
  */
@@ -69,13 +65,11 @@ export interface RelayListOptions {
   /** Timeout for fetching */
   timeout?: number;
 }
-
 /**
  * Get default relays from centralized configuration
  * @deprecated Use RelayConfig.getRelays() directly
  */
 const getDefaultRelays = (): RelayMetadata[] => RelayConfig.getRelays();
-
 /**
  * NIP-65 Relay List Metadata Service
  */
@@ -85,12 +79,10 @@ export class NIP65Service {
   private relayPool: RelayPoolManager;
   private cache: Map<string, RelayListCacheEntry> = new Map();
   private readonly DEFAULT_CACHE_DURATION = 3600000; // 1 hour
-
   private constructor() {
     this.keyManagement = KeyManagementService.getInstance();
     this.relayPool = RelayPoolManager.getInstance();
   }
-
   /**
    * Get singleton instance
    */
@@ -100,7 +92,6 @@ export class NIP65Service {
     }
     return NIP65Service.instance;
   }
-
   /**
    * Publish relay list to NOSTR network
    *
@@ -122,48 +113,38 @@ export class NIP65Service {
   ): Promise<RelayListEvent> {
     // Validate relays
     this.validateRelayList(relays);
-
     // Normalize relay URLs
     const normalizedRelays = relays.map((relay) => ({
       ...relay,
       url: this.normalizeRelayUrl(relay.url),
     }));
-
     // Build relay list tags
     const tags = this.buildRelayTags(normalizedRelays);
-
     // Create event template
     const eventTemplate: Omit<UnsignedNostrEvent, 'pubkey' | 'created_at'> = {
       kind: 10002,
       content: '',
       tags,
     };
-
     // Get private key
     const privKey = privateKey || (await this.keyManagement.getPrivateKey());
     if (!privKey) {
       throw new Error('No private key available');
     }
-
     // Sign and publish
     const unsignedEvent: UnsignedNostrEvent = {
       ...eventTemplate,
       pubkey: await this.keyManagement.getPublicKey(),
       created_at: Math.floor(Date.now() / 1000),
     };
-
     const signedEvent = finalizeEvent(unsignedEvent, privKey) as RelayListEvent;
-
     // Publish to network
     await this.relayPool.publishEvent(signedEvent);
-
     // Update cache
     const publicKey = signedEvent.pubkey;
     this.updateCache(publicKey, this.parseRelayList(signedEvent));
-
     return signedEvent;
   }
-
   /**
    * Fetch relay list for a public key
    *
@@ -190,24 +171,20 @@ export class NIP65Service {
       cacheDuration = this.DEFAULT_CACHE_DURATION,
       timeout = 10000,
     } = options;
-
     // Check cache
     const cached = this.getFromCache(publicKey, cacheDuration);
     if (cached) {
       return cached;
     }
-
     // Build filter for relay list events (kind 10002)
     const filter: NostrFilter = {
       kinds: [10002],
       authors: [publicKey],
       limit: 1,
     };
-
     // Query relays
     try {
       const events = await this.queryRelays(filter, timeout);
-
       if (events.length === 0) {
         // No relay list found
         if (includeDefaults) {
@@ -215,27 +192,22 @@ export class NIP65Service {
         }
         return null;
       }
-
       // Get most recent event
       const latestEvent = events.reduce((latest, event) =>
         event.created_at > latest.created_at ? event : latest
       );
-
       // Parse and cache
       const relayList = this.parseRelayList(latestEvent as RelayListEvent);
       this.updateCache(publicKey, relayList);
-
       return relayList;
     } catch (error) {
       console.error('Error fetching relay list:', error);
-
       if (includeDefaults) {
         return this.createDefaultRelayList();
       }
       return null;
     }
   }
-
   /**
    * Parse relay list event into structured data
    *
@@ -252,27 +224,21 @@ export class NIP65Service {
     const relays: RelayMetadata[] = [];
     const readRelays: string[] = [];
     const writeRelays: string[] = [];
-
     // Process relay tags
     for (const tag of event.tags) {
       if (tag[0] !== 'r' || tag.length < 2) {
         continue;
       }
-
       const url = this.normalizeRelayUrl(tag[1]);
       const marker = tag[2];
-
       let read = true;
       let write = true;
-
       if (marker === 'read') {
         write = false;
       } else if (marker === 'write') {
         read = false;
       }
-
       relays.push({ url, read, write });
-
       if (read) {
         readRelays.push(url);
       }
@@ -280,7 +246,6 @@ export class NIP65Service {
         writeRelays.push(url);
       }
     }
-
     return {
       relays,
       readRelays,
@@ -289,7 +254,6 @@ export class NIP65Service {
       eventId: event.id,
     };
   }
-
   /**
    * Update relay preferences
    *
@@ -314,21 +278,17 @@ export class NIP65Service {
     const currentList = await this.fetchRelayList(publicKey, {
       includeDefaults: false,
     });
-
     // Build updated relay list
     const relaysMap = new Map<string, RelayMetadata>();
-
     // Add current relays
     if (currentList) {
       for (const relay of currentList.relays) {
         relaysMap.set(relay.url, relay);
       }
     }
-
     // Apply changes
     for (const change of changes) {
       const url = this.normalizeRelayUrl(change.url);
-
       if (change.remove) {
         relaysMap.delete(url);
       } else {
@@ -344,12 +304,10 @@ export class NIP65Service {
         });
       }
     }
-
     // Publish updated list
     const updatedRelays = Array.from(relaysMap.values());
     return this.publishRelayList(updatedRelays, privateKey);
   }
-
   /**
    * Get read relays for a user
    *
@@ -360,7 +318,6 @@ export class NIP65Service {
     const relayList = await this.fetchRelayList(publicKey);
     return relayList?.readRelays || RelayConfig.getReadRelays();
   }
-
   /**
    * Get write relays for a user
    *
@@ -371,7 +328,6 @@ export class NIP65Service {
     const relayList = await this.fetchRelayList(publicKey);
     return relayList?.writeRelays || RelayConfig.getWriteRelays();
   }
-
   /**
    * Clear cache for a public key
    */
@@ -382,11 +338,9 @@ export class NIP65Service {
       this.cache.clear();
     }
   }
-
   // ========================================
   // Private Helper Methods
   // ========================================
-
   /**
    * Build relay tags from metadata
    */
@@ -403,22 +357,18 @@ export class NIP65Service {
       }
     });
   }
-
   /**
    * Normalize relay URL
    */
   private normalizeRelayUrl(url: string): string {
     // Remove trailing slash
     let normalized = url.trim().replace(/\/$/, '');
-
     // Ensure wss:// protocol
     if (!normalized.startsWith('wss://') && !normalized.startsWith('ws://')) {
       normalized = `wss://${normalized}`;
     }
-
     return normalized;
   }
-
   /**
    * Validate relay list
    */
@@ -426,26 +376,21 @@ export class NIP65Service {
     if (!Array.isArray(relays)) {
       throw new Error('Relays must be an array');
     }
-
     if (relays.length === 0) {
       throw new Error('Relay list cannot be empty');
     }
-
     for (const relay of relays) {
       if (!relay.url) {
         throw new Error('Relay URL is required');
       }
-
       if (typeof relay.read !== 'boolean' || typeof relay.write !== 'boolean') {
         throw new Error('Relay read and write must be boolean');
       }
-
       if (!relay.read && !relay.write) {
         throw new Error('Relay must support at least read or write');
       }
     }
   }
-
   /**
    * Query relays for events
    */
@@ -455,12 +400,10 @@ export class NIP65Service {
       const timer = setTimeout(() => {
         resolve(events);
       }, timeout);
-
       try {
         const subId = this.relayPool.subscribe([filter], (event) => {
           events.push(event);
         });
-
         // Cleanup after timeout
         setTimeout(() => {
           this.relayPool.unsubscribe(subId);
@@ -473,26 +416,21 @@ export class NIP65Service {
       }
     });
   }
-
   /**
    * Get from cache
    */
   private getFromCache(publicKey: string, maxAge: number): ParsedRelayList | null {
     const cached = this.cache.get(publicKey);
-
     if (!cached) {
       return null;
     }
-
     const age = Date.now() - cached.timestamp;
     if (age > maxAge) {
       this.cache.delete(publicKey);
       return null;
     }
-
     return cached.relayList;
   }
-
   /**
    * Update cache
    */
@@ -502,7 +440,6 @@ export class NIP65Service {
       timestamp: Date.now(),
     });
   }
-
   /**
    * Create default relay list from centralized configuration
    */
@@ -516,7 +453,6 @@ export class NIP65Service {
       eventId: '',
     };
   }
-
   /**
    * Get default relays from centralized configuration
    */
@@ -524,7 +460,6 @@ export class NIP65Service {
     return RelayConfig.getRelays();
   }
 }
-
 /**
  * Export singleton instance
  */

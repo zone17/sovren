@@ -1,4 +1,3 @@
-// @ts-nocheck
 import dns from 'dns';
 import { promisify } from 'util';
 import { z } from 'zod';
@@ -22,7 +21,7 @@ export interface NIP05VerificationRequest {
   domain: string;
   local_part: string;
   verification_method: 'http' | 'dns' | 'manual';
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface NIP05VerificationRecord {
@@ -34,13 +33,13 @@ export interface NIP05VerificationRecord {
   local_part: string;
   verification_status: 'pending' | 'verified' | 'failed' | 'expired' | 'revoked';
   verification_method: 'http' | 'dns' | 'manual';
-  verification_data: Record<string, any>;
+  verification_data: Record<string, unknown>;
   verified_at?: string;
   expires_at?: string;
   last_checked_at: string;
   check_count: number;
   failure_reason?: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }
@@ -52,14 +51,14 @@ export interface DomainVerificationConfig {
   verification_interval: number; // hours
   max_verifications_per_domain: number;
   trusted_domain: boolean;
-  custom_validation_rules?: Record<string, any>;
+  custom_validation_rules?: Record<string, unknown>;
 }
 
 export interface VerificationResult {
   success: boolean;
   verified: boolean;
   method: 'http' | 'dns' | 'manual';
-  verification_data?: Record<string, any>;
+  verification_data?: Record<string, unknown>;
   error?: string;
   expires_at?: string;
 }

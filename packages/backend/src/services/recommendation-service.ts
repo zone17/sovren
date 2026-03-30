@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 🤖 RECOMMENDATION SERVICE
  *
@@ -108,7 +107,7 @@ export class RecommendationService {
 
       // Score and rank recommendations
       const creatorScores = new Map<string, number>();
-      const creatorData = new Map<string, any>();
+      const creatorData = new Map<string, Record<string, unknown>>();
 
       recommendedCreators?.forEach((rec) => {
         const creatorId = rec.creator_id;
@@ -387,7 +386,7 @@ export class RecommendationService {
    * Helper: Calculate personalization score
    */
   private calculatePersonalizationScore(
-    content: any,
+    content: { category?: string; tags?: string[] },
     userCategories: string[],
     userTags: string[]
   ): number {

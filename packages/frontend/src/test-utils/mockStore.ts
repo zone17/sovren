@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 🧪 **MOCK STORE UTILITY**
  *
@@ -9,37 +8,38 @@
  * ✅ Action dispatch tracking
  */
 
-import type { DeepPartial } from '@reduxjs/toolkit';
+import type { DeepPartial, Action } from '@reduxjs/toolkit';
 import { configureStore } from '@reduxjs/toolkit';
+import { vi } from 'vitest';
 
 // Mock slice reducers
 const mockUnifiedCmsSlice = {
   name: 'unifiedCms',
-  reducer: (state: any = {}, action: any) => state,
+  reducer: (state: Record<string, unknown> = {}, _action: Action) => state,
   actions: {},
 };
 
 const mockUserSlice = {
   name: 'user',
-  reducer: (state: any = {}, action: any) => state,
+  reducer: (state: Record<string, unknown> = {}, _action: Action) => state,
   actions: {},
 };
 
 const mockPostSlice = {
   name: 'post',
-  reducer: (state: any = {}, action: any) => state,
+  reducer: (state: Record<string, unknown> = {}, _action: Action) => state,
   actions: {},
 };
 
 const mockPaymentSlice = {
   name: 'payment',
-  reducer: (state: any = {}, action: any) => state,
+  reducer: (state: Record<string, unknown> = {}, _action: Action) => state,
   actions: {},
 };
 
 const mockCmsSlice = {
   name: 'cms',
-  reducer: (state: any = {}, action: any) => state,
+  reducer: (state: Record<string, unknown> = {}, _action: Action) => state,
   actions: {},
 };
 
@@ -164,7 +164,7 @@ export function createMockStore(initialState: DeepPartial<MockStoreState> = {}) 
       payment: mockPaymentSlice.reducer,
       cms: mockCmsSlice.reducer,
     },
-    preloadedState: mergedState as any,
+    preloadedState: mergedState as Record<string, unknown>,
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware({
         serializableCheck: false,

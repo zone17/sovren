@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { randomBytes } from 'crypto';
 import { createObjectCsvWriter } from 'csv-writer';
 import { EventEmitter } from 'events';
@@ -11,7 +10,6 @@ import { supabase } from '../config/supabase';
 import { Logger } from '../utils/logger';
 import { TTLCache } from '../utils/ttl-cache';
 import { AnalyticsService } from './analytics-service';
-
 // Transaction History Types and Schemas
 const TransactionTypeSchema = z.enum([
   'subscription_payment',
@@ -23,11 +21,8 @@ const TransactionTypeSchema = z.enum([
   'bonus',
   'commission',
 ]);
-
 const TransactionStatusSchema = z.enum(['pending', 'completed', 'failed', 'cancelled', 'refunded']);
-
 const ExportFormatSchema = z.enum(['csv', 'json', 'xlsx', 'pdf']);
-
 // Interface Definitions
 interface Transaction {
   id: string;
@@ -47,7 +42,6 @@ interface Transaction {
   completed_at?: Date;
   metadata?: Record<string, any>;
 }
-
 interface PaymentHistoryFilter {
   user_id: string;
   start_date?: Date;
@@ -60,7 +54,6 @@ interface PaymentHistoryFilter {
   limit?: number;
   offset?: number;
 }
-
 interface RevenueAnalytics {
   total_revenue: number;
   revenue_by_period: Record<string, number>;
@@ -78,7 +71,6 @@ interface RevenueAnalytics {
     next_year: number;
   };
 }
-
 interface SpendingAnalytics {
   total_spending: number;
   spending_by_period: Record<string, number>;
@@ -92,7 +84,6 @@ interface SpendingAnalytics {
     transaction_count: number;
   }>;
 }
-
 interface ExportOptions {
   format: z.infer<typeof ExportFormatSchema>;
   date_range: {
@@ -103,7 +94,6 @@ interface ExportOptions {
   group_by?: 'day' | 'week' | 'month' | 'year';
   categories?: string[];
 }
-
 /**
  * Transaction History Service
  *
@@ -127,31 +117,26 @@ export class TransactionHistoryService extends EventEmitter {
   private redis: Redis;
   private analyticsService: AnalyticsService;
   private transactionCache: TTLCache<string, Transaction>;
-
   constructor() {
     super();
     this.logger = new Logger('TransactionHistoryService');
     this.redis = getRedisClient();
     this.analyticsService = new AnalyticsService();
     this.transactionCache = new TTLCache<string, Transaction>({ maxSize: 50_000, ttlMs: 600_000 });
-
     this.initializeService();
   }
-
   /**
    * Initialize Transaction History Service
    */
   private async initializeService(): Promise<void> {
     try {
       await this.setupAnalyticsAggregation();
-
       this.logger.info('Transaction History Service initialized successfully');
     } catch (error) {
       this.logger.error('Failed to initialize Transaction History Service', error);
       throw error;
     }
   }
-
   /**
    * US-059: Record Transaction
    * Records a new transaction in the system
@@ -169,7 +154,6 @@ export class TransactionHistoryService extends EventEmitter {
     metadata?: Record<string, any>;
   }): Promise<Transaction> {
     const startTime = Date.now();
-
     try {
       // Validate input parameters
       const validated = z
@@ -186,10 +170,8 @@ export class TransactionHistoryService extends EventEmitter {
           metadata: z.record(z.any()).optional(),
         })
         .parse(params);
-
       const fee_msats = validated.fee_msats || 0;
       const net_amount_msats = validated.amount_msats - fee_msats;
-
       // Create transaction record
       const transaction: Transaction = {
         id: `txn_${randomBytes(16).toString('hex')}`,
@@ -208,7 +190,6 @@ export class TransactionHistoryService extends EventEmitter {
         created_at: new Date(),
         metadata: validated.metadata,
       };
-
       // Store in database
       const { error } = await supabase.from('transactions').insert([
         {
@@ -229,9 +210,7 @@ export class TransactionHistoryService extends EventEmitter {
           metadata: transaction.metadata,
         },
       ]);
-
       if (error) throw error;
-
       // Cache transaction
       this.transactionCache.set(transaction.id, transaction);
       await this.redis.setex(
@@ -239,7 +218,6 @@ export class TransactionHistoryService extends EventEmitter {
         3600, // 1 hour
         JSON.stringify(transaction)
       );
-
       // Track analytics
       await this.analyticsService.track('transaction_recorded', {
         user_id: validated.user_id,
@@ -248,23 +226,19 @@ export class TransactionHistoryService extends EventEmitter {
         amount_msats: validated.amount_msats,
         processing_time_ms: Date.now() - startTime,
       });
-
       // Emit event
       this.emit('transaction_recorded', transaction);
-
       this.logger.info(`Transaction recorded: ${transaction.id}`, {
         user_id: validated.user_id,
         type: validated.type,
         amount_msats: validated.amount_msats,
       });
-
       return transaction;
     } catch (error) {
       this.logger.error('Failed to record transaction', error);
       throw new Error(`Transaction recording failed: ${error.message}`);
     }
   }
-
   /**
    * US-059: View Payment History
    * Retrieves comprehensive payment history with filtering and pagination
@@ -295,51 +269,39 @@ export class TransactionHistoryService extends EventEmitter {
           offset: z.number().nonnegative().optional(),
         })
         .parse(filter);
-
       // Build query
       let query = supabase
         .from('transactions')
         .select('*', { count: 'exact' })
         .eq('user_id', validated.user_id);
-
       // Apply filters
       if (validated.start_date) {
         query = query.gte('created_at', validated.start_date.toISOString());
       }
-
       if (validated.end_date) {
         query = query.lte('created_at', validated.end_date.toISOString());
       }
-
       if (validated.transaction_types && validated.transaction_types.length > 0) {
         query = query.in('type', validated.transaction_types);
       }
-
       if (validated.status && validated.status.length > 0) {
         query = query.in('status', validated.status);
       }
-
       if (validated.min_amount !== undefined) {
         query = query.gte('amount_msats', validated.min_amount);
       }
-
       if (validated.max_amount !== undefined) {
         query = query.lte('amount_msats', validated.max_amount);
       }
-
       if (validated.creator_id) {
         query = query.eq('creator_id', validated.creator_id);
       }
-
       // Apply pagination
       const limit = validated.limit || 50;
       const offset = validated.offset || 0;
-
       query = query.order('created_at', { ascending: false }).range(offset, offset + limit - 1);
-
       const { data, error, count } = await query;
       if (error) throw error;
-
       // Map to Transaction objects
       const transactions: Transaction[] = (data || []).map((item) => ({
         id: item.id,
@@ -359,10 +321,8 @@ export class TransactionHistoryService extends EventEmitter {
         completed_at: item.completed_at ? new Date(item.completed_at) : undefined,
         metadata: item.metadata,
       }));
-
       // Calculate summary
       const summary = this.calculateTransactionSummary(transactions);
-
       return {
         transactions,
         total_count: count || 0,
@@ -373,7 +333,6 @@ export class TransactionHistoryService extends EventEmitter {
       throw new Error(`Payment history retrieval failed: ${error.message}`);
     }
   }
-
   /**
    * US-060: Export Transaction Data
    * Exports transaction data in multiple formats for accounting purposes
@@ -385,7 +344,6 @@ export class TransactionHistoryService extends EventEmitter {
     expires_at: Date;
   }> {
     const startTime = Date.now();
-
     try {
       const validated = z
         .object({
@@ -402,7 +360,6 @@ export class TransactionHistoryService extends EventEmitter {
           }),
         })
         .parse(params);
-
       // Get transaction data
       const { transactions } = await this.getPaymentHistory({
         user_id: validated.user_id,
@@ -410,11 +367,9 @@ export class TransactionHistoryService extends EventEmitter {
         end_date: validated.options.date_range.end_date,
         limit: 500, // Bounded limit for export
       });
-
       // Generate file based on format
       const fileName = `transactions_${validated.user_id}_${Date.now()}.${validated.options.format}`;
       const filePath = join('/tmp', fileName);
-
       switch (validated.options.format) {
         case 'csv':
           await this.exportToCSV(transactions, filePath, validated.options);
@@ -429,11 +384,9 @@ export class TransactionHistoryService extends EventEmitter {
           await this.exportToPDF(transactions, filePath, validated.options);
           break;
       }
-
       // Generate download URL (would typically upload to cloud storage)
       const downloadUrl = `https://api.sovren.com/exports/${fileName}`;
       const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-
       // Store export record
       await supabase.from('transaction_exports').insert([
         {
@@ -448,7 +401,6 @@ export class TransactionHistoryService extends EventEmitter {
           created_at: new Date().toISOString(),
         },
       ]);
-
       // Track analytics
       await this.analyticsService.track('transaction_data_exported', {
         user_id: validated.user_id,
@@ -456,13 +408,11 @@ export class TransactionHistoryService extends EventEmitter {
         transaction_count: transactions.length,
         processing_time_ms: Date.now() - startTime,
       });
-
       this.logger.info(`Transaction data exported: ${fileName}`, {
         user_id: validated.user_id,
         format: validated.options.format,
         transaction_count: transactions.length,
       });
-
       return {
         file_path: filePath,
         file_name: fileName,
@@ -474,7 +424,6 @@ export class TransactionHistoryService extends EventEmitter {
       throw new Error(`Transaction data export failed: ${error.message}`);
     }
   }
-
   /**
    * US-061: Revenue Analytics
    * Provides comprehensive revenue analytics and forecasting for creators
@@ -498,19 +447,16 @@ export class TransactionHistoryService extends EventEmitter {
             .optional(),
         })
         .parse(params);
-
       // Default to last 12 months if no period specified
       const endDate = validated.period?.end_date || new Date();
       const startDate =
         validated.period?.start_date || new Date(endDate.getTime() - 365 * 24 * 60 * 60 * 1000);
-
       // Check cache first
       const cacheKey = `revenue_analytics:${validated.creator_id}:${startDate.getTime()}:${endDate.getTime()}`;
       const cached = await this.redis.get(cacheKey);
       if (cached) {
         return JSON.parse(cached);
       }
-
       // Get revenue transactions
       const { data: revenueData, error } = await supabase
         .from('transactions')
@@ -522,11 +468,8 @@ export class TransactionHistoryService extends EventEmitter {
         .lte('completed_at', endDate.toISOString())
         .order('completed_at', { ascending: true })
         .limit(500);
-
       if (error) throw error;
-
       const transactions = revenueData || [];
-
       // Calculate analytics
       const analytics: RevenueAnalytics = {
         total_revenue: this.calculateTotalRevenue(transactions),
@@ -536,17 +479,14 @@ export class TransactionHistoryService extends EventEmitter {
         growth_metrics: await this.calculateGrowthMetrics(validated.creator_id, transactions),
         forecasting: await this.calculateRevenueForecasting(validated.creator_id, transactions),
       };
-
       // Cache analytics for 1 hour
       await this.redis.setex(cacheKey, 3600, JSON.stringify(analytics));
-
       return analytics;
     } catch (error) {
       this.logger.error('Failed to get revenue analytics', error);
       throw new Error(`Revenue analytics failed: ${error.message}`);
     }
   }
-
   /**
    * US-062: Spending Tracking
    * Provides comprehensive spending analytics for supporters
@@ -570,19 +510,16 @@ export class TransactionHistoryService extends EventEmitter {
             .optional(),
         })
         .parse(params);
-
       // Default to last 12 months if no period specified
       const endDate = validated.period?.end_date || new Date();
       const startDate =
         validated.period?.start_date || new Date(endDate.getTime() - 365 * 24 * 60 * 60 * 1000);
-
       // Check cache first
       const cacheKey = `spending_analytics:${validated.user_id}:${startDate.getTime()}:${endDate.getTime()}`;
       const cached = await this.redis.get(cacheKey);
       if (cached) {
         return JSON.parse(cached);
       }
-
       // Get spending transactions
       const { data: spendingData, error } = await supabase
         .from('transactions')
@@ -601,11 +538,8 @@ export class TransactionHistoryService extends EventEmitter {
         .gte('completed_at', startDate.toISOString())
         .lte('completed_at', endDate.toISOString())
         .order('completed_at', { ascending: true });
-
       if (error) throw error;
-
       const transactions = spendingData || [];
-
       // Calculate spending analytics
       const analytics: SpendingAnalytics = {
         total_spending: this.calculateTotalSpending(transactions),
@@ -615,17 +549,14 @@ export class TransactionHistoryService extends EventEmitter {
         average_transaction_amount: this.calculateAverageTransactionAmount(transactions),
         most_supported_creators: this.calculateMostSupportedCreators(transactions),
       };
-
       // Cache analytics for 1 hour
       await this.redis.setex(cacheKey, 3600, JSON.stringify(analytics));
-
       return analytics;
     } catch (error) {
       this.logger.error('Failed to get spending analytics', error);
       throw new Error(`Spending analytics failed: ${error.message}`);
     }
   }
-
   /**
    * Update Transaction Status
    * Updates the status of an existing transaction
@@ -645,22 +576,18 @@ export class TransactionHistoryService extends EventEmitter {
           metadata: z.record(z.any()).optional(),
         })
         .parse(params);
-
       const updateData: any = {
         status: validated.status,
         updated_at: new Date().toISOString(),
       };
-
       if (validated.completed_at) {
         updateData.completed_at = validated.completed_at.toISOString();
       }
-
       if (validated.metadata) {
         updateData.metadata = supabase.raw(`metadata || ?::jsonb`, [
           JSON.stringify(validated.metadata),
         ]);
       }
-
       // Update database
       const { data, error } = await supabase
         .from('transactions')
@@ -668,14 +595,11 @@ export class TransactionHistoryService extends EventEmitter {
         .eq('id', validated.transaction_id)
         .select()
         .single();
-
       if (error) throw error;
       if (!data) throw new Error('Transaction not found');
-
       // Update cache
       await this.redis.del(`transaction:${validated.transaction_id}`);
       this.transactionCache.delete(validated.transaction_id);
-
       // Create updated transaction object
       const transaction: Transaction = {
         id: data.id,
@@ -695,19 +619,15 @@ export class TransactionHistoryService extends EventEmitter {
         completed_at: data.completed_at ? new Date(data.completed_at) : undefined,
         metadata: data.metadata,
       };
-
       // Emit event
       this.emit('transaction_status_updated', transaction);
-
       return transaction;
     } catch (error) {
       this.logger.error('Failed to update transaction status', error);
       throw new Error(`Transaction status update failed: ${error.message}`);
     }
   }
-
   // Private Helper Methods
-
   private calculateTransactionSummary(transactions: Transaction[]): {
     total_amount: number;
     total_fees: number;
@@ -716,15 +636,12 @@ export class TransactionHistoryService extends EventEmitter {
   } {
     const total_amount = transactions.reduce((sum, txn) => sum + txn.amount_msats, 0);
     const total_fees = transactions.reduce((sum, txn) => sum + txn.fee_msats, 0);
-
     const transaction_count_by_type: Record<string, number> = {};
     transactions.forEach((txn) => {
       transaction_count_by_type[txn.type] = (transaction_count_by_type[txn.type] || 0) + 1;
     });
-
     const average_transaction_amount =
       transactions.length > 0 ? total_amount / transactions.length : 0;
-
     return {
       total_amount,
       total_fees,
@@ -732,7 +649,6 @@ export class TransactionHistoryService extends EventEmitter {
       average_transaction_amount,
     };
   }
-
   private async exportToCSV(
     transactions: Transaction[],
     filePath: string,
@@ -749,16 +665,13 @@ export class TransactionHistoryService extends EventEmitter {
       { id: 'description', title: 'Description' },
       { id: 'creator_id', title: 'Creator ID' },
     ];
-
     if (options.include_metadata) {
       headers.push({ id: 'metadata', title: 'Metadata' });
     }
-
     const csvWriter = createObjectCsvWriter({
       path: filePath,
       header: headers,
     });
-
     const records = transactions.map((txn) => ({
       id: txn.id,
       created_at: txn.created_at.toISOString(),
@@ -771,10 +684,8 @@ export class TransactionHistoryService extends EventEmitter {
       creator_id: txn.creator_id,
       metadata: options.include_metadata ? JSON.stringify(txn.metadata) : undefined,
     }));
-
     await csvWriter.writeRecords(records);
   }
-
   private async exportToJSON(
     transactions: Transaction[],
     filePath: string,
@@ -789,10 +700,8 @@ export class TransactionHistoryService extends EventEmitter {
         metadata: options.include_metadata ? txn.metadata : undefined,
       })),
     };
-
     await writeFile(filePath, JSON.stringify(data, null, 2));
   }
-
   private async exportToXLSX(
     transactions: Transaction[],
     filePath: string,
@@ -802,7 +711,6 @@ export class TransactionHistoryService extends EventEmitter {
     // For now, fallback to CSV
     await this.exportToCSV(transactions, filePath.replace('.xlsx', '.csv'), options);
   }
-
   private async exportToPDF(
     transactions: Transaction[],
     filePath: string,
@@ -812,18 +720,14 @@ export class TransactionHistoryService extends EventEmitter {
     // For now, fallback to JSON
     await this.exportToJSON(transactions, filePath.replace('.pdf', '.json'), options);
   }
-
   private calculateTotalRevenue(transactions: any[]): number {
     return transactions.reduce((sum, txn) => sum + (txn.net_amount_msats || 0), 0);
   }
-
   private calculateRevenueByPeriod(transactions: any[], period: string): Record<string, number> {
     const revenue: Record<string, number> = {};
-
     transactions.forEach((txn) => {
       const date = new Date(txn.completed_at || txn.created_at);
       let key: string;
-
       switch (period) {
         case 'day':
           key = date.toISOString().split('T')[0];
@@ -842,23 +746,17 @@ export class TransactionHistoryService extends EventEmitter {
         default:
           key = date.toISOString().split('T')[0];
       }
-
       revenue[key] = (revenue[key] || 0) + (txn.net_amount_msats || 0);
     });
-
     return revenue;
   }
-
   private calculateRevenueByType(transactions: any[]): Record<string, number> {
     const revenue: Record<string, number> = {};
-
     transactions.forEach((txn) => {
       revenue[txn.type] = (revenue[txn.type] || 0) + (txn.net_amount_msats || 0);
     });
-
     return revenue;
   }
-
   private async calculateGrowthMetrics(
     creator_id: string,
     transactions: any[]
@@ -877,7 +775,6 @@ export class TransactionHistoryService extends EventEmitter {
       yearly_growth: 0.45,
     };
   }
-
   private async calculateRevenueForecasting(
     creator_id: string,
     transactions: any[]
@@ -889,49 +786,38 @@ export class TransactionHistoryService extends EventEmitter {
     // Simplified forecasting
     // Would implement machine learning-based forecasting
     const currentMonthRevenue = this.calculateTotalRevenue(transactions) / 12;
-
     return {
       next_month: currentMonthRevenue * 1.1,
       next_quarter: currentMonthRevenue * 3.2,
       next_year: currentMonthRevenue * 13.5,
     };
   }
-
   private calculateTotalSpending(transactions: any[]): number {
     return transactions.reduce((sum, txn) => sum + (txn.amount_msats || 0), 0);
   }
-
   private calculateSpendingByPeriod(transactions: any[], period: string): Record<string, number> {
     return this.calculateRevenueByPeriod(transactions, period);
   }
-
   private calculateSpendingByCreator(transactions: any[]): Record<string, number> {
     const spending: Record<string, number> = {};
-
     transactions.forEach((txn) => {
       if (txn.creator_id) {
         spending[txn.creator_id] = (spending[txn.creator_id] || 0) + (txn.amount_msats || 0);
       }
     });
-
     return spending;
   }
-
   private calculateSpendingByCategory(transactions: any[]): Record<string, number> {
     const categories: Record<string, number> = {};
-
     transactions.forEach((txn) => {
       categories[txn.type] = (categories[txn.type] || 0) + (txn.amount_msats || 0);
     });
-
     return categories;
   }
-
   private calculateAverageTransactionAmount(transactions: any[]): number {
     if (transactions.length === 0) return 0;
     return this.calculateTotalSpending(transactions) / transactions.length;
   }
-
   private calculateMostSupportedCreators(transactions: any[]): Array<{
     creator_id: string;
     creator_name: string;
@@ -942,7 +828,6 @@ export class TransactionHistoryService extends EventEmitter {
       string,
       { total_amount: number; transaction_count: number; name: string }
     > = {};
-
     transactions.forEach((txn) => {
       if (txn.creator_id) {
         if (!creators[txn.creator_id]) {
@@ -952,12 +837,10 @@ export class TransactionHistoryService extends EventEmitter {
             name: txn.creators?.display_name || 'Unknown Creator',
           };
         }
-
         creators[txn.creator_id].total_amount += txn.amount_msats || 0;
         creators[txn.creator_id].transaction_count += 1;
       }
     });
-
     return Object.entries(creators)
       .map(([creator_id, data]) => ({
         creator_id,
@@ -968,7 +851,6 @@ export class TransactionHistoryService extends EventEmitter {
       .sort((a, b) => b.total_amount - a.total_amount)
       .slice(0, 10); // Top 10 creators
   }
-
   private async setupAnalyticsAggregation(): Promise<void> {
     // Set up periodic analytics aggregation
     setInterval(async () => {
@@ -979,12 +861,10 @@ export class TransactionHistoryService extends EventEmitter {
       }
     }, 3600000); // Every hour
   }
-
   private async aggregateAnalytics(): Promise<void> {
     // Implement analytics aggregation for performance optimization
     this.logger.info('Running analytics aggregation');
   }
-
   /**
    * Health Check and Monitoring
    */
@@ -998,9 +878,7 @@ export class TransactionHistoryService extends EventEmitter {
         redis_connected: await this.redis.ping(),
         database_connected: true,
       };
-
       const status = metrics.redis_connected && metrics.database_connected ? 'healthy' : 'degraded';
-
       return { status, metrics };
     } catch (error) {
       this.logger.error('Health check failed', error);
@@ -1010,18 +888,14 @@ export class TransactionHistoryService extends EventEmitter {
       };
     }
   }
-
   /**
    * Cleanup and Shutdown
    */
   async shutdown(): Promise<void> {
     // Destroy TTLCache (clears entries + stops cleanup interval)
     this.transactionCache.destroy();
-
     // Shared Redis client — managed by lib/redis.ts disconnectRedis()
-
     this.logger.info('Transaction History Service shutdown completed');
   }
 }
-
 export default TransactionHistoryService;

@@ -1,22 +1,18 @@
-// @ts-nocheck
 /**
  * DmcaService
  * DMCA report generation (JSON format)
  * EPIC-008: Content Shield (US-E8-004c)
  */
-
 import type { DmcaReport } from '@shared/types/provenance';
 import type { IDmcaService } from '../../interfaces/provenance/IDmcaService';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { ILogger } from '../../interfaces/shared/ILogger';
 import { NotFoundError } from '../../utils/errors';
-
 export class DmcaService implements IDmcaService {
   constructor(
     private readonly db: ISupabaseClient,
     private readonly logger: ILogger
   ) {}
-
   async generateReport(creatorId: string, alertId: string): Promise<DmcaReport> {
     // Get the alert
     const { data: alert, error: alertError } = await this.db
@@ -25,24 +21,19 @@ export class DmcaService implements IDmcaService {
       .eq('id', alertId)
       .eq('creator_id', creatorId)
       .single();
-
     if (alertError || !alert) {
       throw new NotFoundError(`Alert ${alertId}`);
     }
-
     // Get provenance record for the original content
     const { data: provenance, error: provError } = await this.db
       .from('provenance_records')
       .select('*')
       .eq('content_id', alert.original_content_id)
       .single();
-
     if (provError || !provenance) {
       throw new NotFoundError(`Provenance record for content ${alert.original_content_id}`);
     }
-
     this.logger.info('DMCA report generated', { alertId, creatorId });
-
     return {
       title: 'DMCA Takedown Report',
       generated_at: new Date().toISOString(),

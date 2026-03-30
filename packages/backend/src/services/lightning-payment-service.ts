@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { createHash, randomBytes } from 'crypto';
 import { EventEmitter } from 'events';
 import { z } from 'zod';
@@ -10,7 +9,6 @@ import { TTLCache } from '../utils/ttl-cache';
 import { AnalyticsService } from './analytics-service';
 import { NotificationService } from './notification-stub';
 import { WebSocketService } from './websocket-service';
-
 // Lightning Network Types and Schemas
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const LightningInvoiceSchema = z.object({
@@ -22,7 +20,6 @@ const LightningInvoiceSchema = z.object({
   created_at: z.date(),
   metadata: z.record(z.any()).optional(),
 });
-
 const PaymentStatusSchema = z.enum([
   'pending',
   'processing',
@@ -31,7 +28,6 @@ const PaymentStatusSchema = z.enum([
   'expired',
   'cancelled',
 ]);
-
 const WalletProviderSchema = z.enum([
   'webln',
   'lnurl',
@@ -42,7 +38,6 @@ const WalletProviderSchema = z.enum([
   'c_lightning',
   'eclair',
 ]);
-
 const PaymentVerificationSchema = z.object({
   payment_hash: z.string().length(64),
   preimage: z.string().length(64),
@@ -51,7 +46,6 @@ const PaymentVerificationSchema = z.object({
   verified_at: z.date(),
   confirmation_count: z.number().nonnegative(),
 });
-
 // Interface Definitions
 interface LightningInvoice {
   id: string;
@@ -65,7 +59,6 @@ interface LightningInvoice {
   status: z.infer<typeof PaymentStatusSchema>;
   metadata?: Record<string, any>;
 }
-
 interface WalletProvider {
   id: string;
   name: string;
@@ -74,7 +67,6 @@ interface WalletProvider {
   is_active: boolean;
   priority: number;
 }
-
 interface PaymentVerification {
   payment_hash: string;
   preimage: string;
@@ -84,14 +76,12 @@ interface PaymentVerification {
   confirmation_count: number;
   provider_id: string;
 }
-
 interface PaymentStatusUpdate {
   payment_hash: string;
   status: z.infer<typeof PaymentStatusSchema>;
   updated_at: Date;
   metadata?: Record<string, any>;
 }
-
 /**
  * Lightning Payment Service
  *
@@ -123,7 +113,6 @@ export class LightningPaymentService extends EventEmitter {
   private cleanupIntervalId: NodeJS.Timeout | null = null;
   private initialized = false;
   private static readonly MAX_POLLING_DURATION_MS = 3_600_000; // 1 hour
-
   constructor() {
     super();
     this.logger = new Logger('LightningPaymentService');
@@ -135,7 +124,6 @@ export class LightningPaymentService extends EventEmitter {
     this.paymentMonitors = new Map();
     this.invoiceCache = new TTLCache({ maxSize: 10_000, ttlMs: 60 * 60 * 1000 }); // 60 min TTL, matches monitor timeout
   }
-
   /**
    * Initialize Lightning Payment Service.
    * Must be called after construction and awaited before using the service.
@@ -147,7 +135,6 @@ export class LightningPaymentService extends EventEmitter {
       await this.loadWalletProviders();
       await this.setupPaymentMonitoring();
       await this.startInvoiceCleanup();
-
       this.initialized = true;
       this.logger.info('Lightning Payment Service initialized successfully');
     } catch (error) {
@@ -155,7 +142,6 @@ export class LightningPaymentService extends EventEmitter {
       throw error;
     }
   }
-
   /**
    * US-051: Generate BOLT11 Invoice
    * Creates Lightning Network invoice with comprehensive validation and metadata
@@ -168,7 +154,6 @@ export class LightningPaymentService extends EventEmitter {
     metadata?: Record<string, any>;
   }): Promise<LightningInvoice> {
     const startTime = Date.now();
-
     try {
       // Validate input parameters
       const validated = z
@@ -180,15 +165,12 @@ export class LightningPaymentService extends EventEmitter {
           metadata: z.record(z.any()).optional(),
         })
         .parse(params);
-
       // Generate payment hash and preimage
       const preimage = randomBytes(32);
       const payment_hash = createHash('sha256').update(preimage).digest('hex');
-
       // Calculate expiry time
       const expires_in = validated.expires_in_seconds || 3600; // 1 hour default
       const expires_at = new Date(Date.now() + expires_in * 1000);
-
       // Generate BOLT11 payment request
       const payment_request = await this.generatePaymentRequest({
         payment_hash,
@@ -196,7 +178,6 @@ export class LightningPaymentService extends EventEmitter {
         description: validated.description,
         expires_at,
       });
-
       // Create invoice record
       const invoice: LightningInvoice = {
         id: `inv_${randomBytes(16).toString('hex')}`,
@@ -210,7 +191,6 @@ export class LightningPaymentService extends EventEmitter {
         status: 'pending',
         metadata: validated.metadata,
       };
-
       // Store in database
       const { error } = await supabase.from('lightning_invoices').insert([
         {
@@ -226,16 +206,12 @@ export class LightningPaymentService extends EventEmitter {
           metadata: invoice.metadata,
         },
       ]);
-
       if (error) throw error;
-
       // Cache invoice for quick access
       this.invoiceCache.set(payment_hash, invoice);
       await this.redis.setex(`invoice:${payment_hash}`, expires_in, JSON.stringify(invoice));
-
       // Start payment monitoring
       this.startPaymentMonitoring(payment_hash);
-
       // Track analytics
       await this.analyticsService.track('lightning_invoice_generated', {
         user_id: validated.user_id,
@@ -243,20 +219,17 @@ export class LightningPaymentService extends EventEmitter {
         expires_in_seconds: expires_in,
         processing_time_ms: Date.now() - startTime,
       });
-
       this.logger.info(`BOLT11 invoice generated: ${invoice.id}`, {
         user_id: validated.user_id,
         amount_msats: validated.amount_msats,
         payment_hash,
       });
-
       return invoice;
     } catch (error) {
       this.logger.error('Failed to generate BOLT11 invoice', error);
       throw new Error(`Invoice generation failed: ${error.message}`);
     }
   }
-
   /**
    * US-052: Multiple Wallet Provider Support
    * Manages integration with various Lightning wallet providers
@@ -270,12 +243,9 @@ export class LightningPaymentService extends EventEmitter {
         .eq('user_id', user_id)
         .eq('is_active', true)
         .order('priority', { ascending: true });
-
       if (error) throw error;
-
       // Get available providers
       const providers: WalletProvider[] = [];
-
       for (const userProvider of userProviders || []) {
         const provider = this.walletProviders.get(userProvider.provider_id);
         if (provider && provider.is_active) {
@@ -285,7 +255,6 @@ export class LightningPaymentService extends EventEmitter {
           });
         }
       }
-
       // Add default providers if none configured
       if (providers.length === 0) {
         providers.push(
@@ -295,14 +264,12 @@ export class LightningPaymentService extends EventEmitter {
             .slice(0, 3)
         ); // Top 3 default providers
       }
-
       return providers;
     } catch (error) {
       this.logger.error('Failed to get wallet providers', error);
       throw new Error(`Wallet provider retrieval failed: ${error.message}`);
     }
   }
-
   /**
    * US-052: Add Wallet Provider Configuration
    * Allows users to configure their preferred wallet providers
@@ -322,10 +289,8 @@ export class LightningPaymentService extends EventEmitter {
           is_default: z.boolean().optional(),
         })
         .parse(params);
-
       // Validate provider-specific configuration
       await this.validateProviderConfig(validated.provider_type, validated.config);
-
       // Get next priority
       const { data: maxPriority } = await supabase
         .from('user_wallet_providers')
@@ -334,9 +299,7 @@ export class LightningPaymentService extends EventEmitter {
         .order('priority', { ascending: false })
         .limit(1)
         .single();
-
       const priority = (maxPriority?.priority || 0) + 1;
-
       // Insert provider configuration
       const { error } = await supabase.from('user_wallet_providers').insert([
         {
@@ -349,9 +312,7 @@ export class LightningPaymentService extends EventEmitter {
           created_at: new Date().toISOString(),
         },
       ]);
-
       if (error) throw error;
-
       // Update priorities if this is default
       if (validated.is_default) {
         await supabase
@@ -360,7 +321,6 @@ export class LightningPaymentService extends EventEmitter {
           .eq('user_id', validated.user_id)
           .neq('provider_type', validated.provider_type);
       }
-
       this.logger.info(`Wallet provider added: ${validated.provider_type}`, {
         user_id: validated.user_id,
         is_default: validated.is_default,
@@ -370,7 +330,6 @@ export class LightningPaymentService extends EventEmitter {
       throw new Error(`Wallet provider configuration failed: ${error.message}`);
     }
   }
-
   /**
    * US-053: Payment Verification and Confirmation
    * Verifies Lightning payment completion with comprehensive validation
@@ -382,33 +341,27 @@ export class LightningPaymentService extends EventEmitter {
       if (cached) {
         return JSON.parse(cached);
       }
-
       // Get invoice details
       const invoice = await this.getInvoiceByHash(payment_hash);
       if (!invoice) {
         throw new Error('Invoice not found');
       }
-
       // Verify with multiple providers
       const verifications = await Promise.allSettled(
         Array.from(this.walletProviders.values())
           .filter((p) => p.is_active)
           .map((provider) => this.verifyWithProvider(provider, payment_hash))
       );
-
       // Find successful verification
       const successfulVerification = verifications.find(
         (result): result is PromiseFulfilledResult<PaymentVerification> =>
           result.status === 'fulfilled' && result.value !== null
       )?.value;
-
       if (!successfulVerification) {
         return null; // Payment not yet confirmed
       }
-
       // Validate verification data
       const verification = PaymentVerificationSchema.parse(successfulVerification);
-
       // Store verification
       const { error } = await supabase.from('payment_verifications').upsert([
         {
@@ -421,42 +374,35 @@ export class LightningPaymentService extends EventEmitter {
           provider_id: verification.provider_id,
         },
       ]);
-
       if (error) throw error;
-
       // Update invoice status
       await this.updatePaymentStatus(payment_hash, 'completed', {
         verified_at: verification.verified_at,
         amount_paid_msats: verification.amount_paid_msats,
         fee_paid_msats: verification.fee_paid_msats,
       });
-
       // Cache verification
       await this.redis.setex(
         `payment_verification:${payment_hash}`,
         86400, // 24 hours
         JSON.stringify(verification)
       );
-
       // Emit payment verified event
       this.emit('payment_verified', {
         payment_hash,
         verification,
         invoice,
       });
-
       this.logger.info(`Payment verified: ${payment_hash}`, {
         amount_paid_msats: verification.amount_paid_msats,
         fee_paid_msats: verification.fee_paid_msats,
       });
-
       return verification;
     } catch (error) {
       this.logger.error('Failed to verify payment', error);
       throw new Error(`Payment verification failed: ${error.message}`);
     }
   }
-
   /**
    * US-054: Payment Status Tracking System
    * Provides real-time payment status monitoring and updates
@@ -472,37 +418,31 @@ export class LightningPaymentService extends EventEmitter {
       if (cached) {
         return JSON.parse(cached);
       }
-
       // Get from database
       const { data, error } = await supabase
         .from('lightning_invoices')
         .select('status, updated_at, metadata')
         .eq('payment_hash', payment_hash)
         .single();
-
       if (error) throw error;
       if (!data) throw new Error('Payment not found');
-
       const statusInfo = {
         status: data.status as z.infer<typeof PaymentStatusSchema>,
         updated_at: new Date(data.updated_at),
         metadata: data.metadata,
       };
-
       // Cache status
       await this.redis.setex(
         `payment_status:${payment_hash}`,
         300, // 5 minutes
         JSON.stringify(statusInfo)
       );
-
       return statusInfo;
     } catch (error) {
       this.logger.error('Failed to get payment status', error);
       throw new Error(`Payment status retrieval failed: ${error.message}`);
     }
   }
-
   /**
    * US-054: Track Payment Status Updates
    * Monitors payment progression and provides real-time updates
@@ -524,9 +464,7 @@ export class LightningPaymentService extends EventEmitter {
         .eq('lightning_invoices.user_id', user_id)
         .order('updated_at', { ascending: false })
         .limit(50);
-
       if (error) throw error;
-
       return data.map((item) => ({
         payment_hash: item.payment_hash,
         status: item.status as z.infer<typeof PaymentStatusSchema>,
@@ -538,9 +476,7 @@ export class LightningPaymentService extends EventEmitter {
       throw new Error(`Payment status tracking failed: ${error.message}`);
     }
   }
-
   // Private Helper Methods
-
   private async loadWalletProviders(): Promise<void> {
     const providers: WalletProvider[] = [
       {
@@ -576,12 +512,10 @@ export class LightningPaymentService extends EventEmitter {
         priority: 4,
       },
     ];
-
     providers.forEach((provider) => {
       this.walletProviders.set(provider.id, provider);
     });
   }
-
   private async generatePaymentRequest(params: {
     payment_hash: string;
     amount_msats: number;
@@ -592,10 +526,8 @@ export class LightningPaymentService extends EventEmitter {
     // For now, return a mock BOLT11 invoice format
     const timestamp = Math.floor(Date.now() / 1000);
     const expiry = Math.floor((params.expires_at.getTime() - Date.now()) / 1000);
-
     return `lnbc${params.amount_msats}n1${timestamp}${expiry}${params.payment_hash}`;
   }
-
   private async validateProviderConfig(
     provider_type: z.infer<typeof WalletProviderSchema>,
     config: Record<string, any>
@@ -635,13 +567,11 @@ export class LightningPaymentService extends EventEmitter {
         api_password: z.string().min(1),
       }),
     };
-
     const schema = schemas[provider_type];
     if (schema) {
       schema.parse(config);
     }
   }
-
   private async verifyWithProvider(
     _provider: WalletProvider,
     _payment_hash: string
@@ -650,7 +580,6 @@ export class LightningPaymentService extends EventEmitter {
     // Mock implementation for now
     return null;
   }
-
   private async startPaymentMonitoring(payment_hash: string): Promise<void> {
     const interval = setInterval(async () => {
       try {
@@ -662,7 +591,6 @@ export class LightningPaymentService extends EventEmitter {
         this.logger.error(`Payment monitoring error for ${payment_hash}`, error);
       }
     }, 5000); // Check every 5 seconds
-
     // Set timeout to auto-stop polling after maxPollingDuration
     const timeout = setTimeout(() => {
       if (this.paymentMonitors.has(payment_hash)) {
@@ -670,10 +598,8 @@ export class LightningPaymentService extends EventEmitter {
         this.updatePaymentStatus(payment_hash, 'expired');
       }
     }, LightningPaymentService.MAX_POLLING_DURATION_MS);
-
     this.paymentMonitors.set(payment_hash, { interval, timeout });
   }
-
   private clearPaymentMonitor(payment_hash: string): void {
     const monitor = this.paymentMonitors.get(payment_hash);
     if (monitor) {
@@ -682,7 +608,6 @@ export class LightningPaymentService extends EventEmitter {
       this.paymentMonitors.delete(payment_hash);
     }
   }
-
   private async setupPaymentMonitoring(): Promise<void> {
     // Set up payment monitoring for existing pending invoices
     const { data: pendingInvoices } = await supabase
@@ -690,12 +615,10 @@ export class LightningPaymentService extends EventEmitter {
       .select('payment_hash')
       .in('status', ['pending', 'processing'])
       .lt('expires_at', new Date(Date.now() + 3600000).toISOString());
-
     for (const invoice of pendingInvoices || []) {
       this.startPaymentMonitoring(invoice.payment_hash);
     }
   }
-
   private async startInvoiceCleanup(): Promise<void> {
     // Clean up expired invoices every hour
     this.cleanupIntervalId = setInterval(async () => {
@@ -705,7 +628,6 @@ export class LightningPaymentService extends EventEmitter {
           .update({ status: 'expired' })
           .eq('status', 'pending')
           .lt('expires_at', new Date().toISOString());
-
         if (error) {
           this.logger.error('Invoice cleanup failed', error);
         } else {
@@ -716,14 +638,12 @@ export class LightningPaymentService extends EventEmitter {
       }
     }, 3600000); // Every hour
   }
-
   private async updatePaymentStatus(
     payment_hash: string,
     status: z.infer<typeof PaymentStatusSchema>,
     metadata?: Record<string, any>
   ): Promise<void> {
     const updated_at = new Date();
-
     // Update database
     const { error } = await supabase
       .from('lightning_invoices')
@@ -735,9 +655,7 @@ export class LightningPaymentService extends EventEmitter {
           : undefined,
       })
       .eq('payment_hash', payment_hash);
-
     if (error) throw error;
-
     // Record status history
     await supabase.from('payment_status_history').insert([
       {
@@ -747,11 +665,9 @@ export class LightningPaymentService extends EventEmitter {
         metadata,
       },
     ]);
-
     // Update cache
     await this.redis.del(`payment_status:${payment_hash}`);
     await this.redis.del(`invoice:${payment_hash}`);
-
     // Notify via WebSocket
     const invoice = await this.getInvoiceByHash(payment_hash);
     if (invoice) {
@@ -762,7 +678,6 @@ export class LightningPaymentService extends EventEmitter {
         metadata,
       });
     }
-
     // Emit event
     this.emit('payment_status_updated', {
       payment_hash,
@@ -771,21 +686,17 @@ export class LightningPaymentService extends EventEmitter {
       metadata,
     });
   }
-
   private async getInvoiceByHash(payment_hash: string): Promise<LightningInvoice | null> {
     // Check cache first
     const cached = this.invoiceCache.get(payment_hash);
     if (cached) return cached;
-
     // Get from database
     const { data, error } = await supabase
       .from('lightning_invoices')
       .select('*')
       .eq('payment_hash', payment_hash)
       .single();
-
     if (error || !data) return null;
-
     const invoice: LightningInvoice = {
       id: data.id,
       user_id: data.user_id,
@@ -798,12 +709,10 @@ export class LightningPaymentService extends EventEmitter {
       status: data.status,
       metadata: data.metadata,
     };
-
     // Cache for quick access
     this.invoiceCache.set(payment_hash, invoice);
     return invoice;
   }
-
   /**
    * Health Check and Monitoring
    */
@@ -819,9 +728,7 @@ export class LightningPaymentService extends EventEmitter {
         redis_connected: await this.redis.ping(),
         database_connected: true, // Would check actual DB connection
       };
-
       const status = metrics.redis_connected && metrics.database_connected ? 'healthy' : 'degraded';
-
       return { status, metrics };
     } catch (error) {
       this.logger.error('Health check failed', error);
@@ -831,7 +738,6 @@ export class LightningPaymentService extends EventEmitter {
       };
     }
   }
-
   /**
    * Cleanup and Shutdown
    */
@@ -841,14 +747,10 @@ export class LightningPaymentService extends EventEmitter {
       clearInterval(monitor);
     }
     this.paymentMonitors.clear();
-
     // Clear caches
     this.invoiceCache.destroy();
-
     // Shared Redis client — managed by lib/redis.ts disconnectRedis()
-
     this.logger.info('Lightning Payment Service shutdown completed');
   }
 }
-
 export default LightningPaymentService;

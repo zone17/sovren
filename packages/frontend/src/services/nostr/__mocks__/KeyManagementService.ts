@@ -1,7 +1,7 @@
-// @ts-nocheck
 /**
  * Mock for KeyManagementService
  */
+import { vi } from 'vitest';
 
 export const KeyManagementService = vi.fn().mockImplementation(() => ({
   getPrivateKey: vi.fn(),

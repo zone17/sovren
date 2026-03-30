@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Graceful Shutdown Handler
  * Manages clean disposal of all services and resources
@@ -189,7 +188,7 @@ async function performShutdown(
 
     for (const serviceName of group.services) {
       try {
-        const token = (TYPES as any)[serviceName];
+        const token = (TYPES as Record<string, unknown>)[serviceName];
         if (!token) continue;
 
         const service = container.resolveOptional(token);

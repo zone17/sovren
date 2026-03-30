@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 🔐 Database Session Manager (Backend)
  * US-311: Unified Session Management - Subtask 3
@@ -56,7 +55,7 @@ interface SessionActivityRow {
   action: string;
   ip_address?: string;
   user_agent?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   created_at: string;
 }
 
@@ -610,7 +609,7 @@ export class DatabaseSessionManager {
   private async logActivity(
     sessionId: string,
     action: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): Promise<void> {
     if (!this.config.enableActivityLogging) {
       return;

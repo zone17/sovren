@@ -1,7 +1,7 @@
-// @ts-nocheck
 /**
  * Mock for RelayPoolManager
  */
+import { vi } from 'vitest';
 
 export const RelayPoolManager = vi.fn().mockImplementation(() => ({
   publishEvent: vi.fn().mockResolvedValue([]),

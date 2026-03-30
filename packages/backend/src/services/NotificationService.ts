@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * NotificationService Implementation
  * User Story: US-E5-008
@@ -198,7 +197,7 @@ export class NotificationService implements INotificationService {
 
           results.push({
             success: false,
-            error: error.message,
+            error: error instanceof Error ? error.message : String(error),
             channels: [channel],
           });
         }
@@ -237,7 +236,7 @@ export class NotificationService implements INotificationService {
 
       return {
         success: false,
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
         channels: [],
       };
     }
@@ -640,9 +639,9 @@ export class NotificationService implements INotificationService {
     };
   }
 
-  private renderTemplate(template: string, data: Record<string, any>): string {
+  private renderTemplate(template: string, data: Record<string, unknown>): string {
     return template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
-      return data[key] || match;
+      return data[key] != null ? String(data[key]) : match;
     });
   }
 

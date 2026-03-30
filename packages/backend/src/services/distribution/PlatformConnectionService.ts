@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Platform Connection Service
  * EPIC-009: OAuth flows, token encryption, token refresh
@@ -8,7 +7,6 @@
  * - OAuth state parameter validated for CSRF protection
  * - No tokens in logs — only encrypted blobs stored
  */
-
 import { randomBytes } from 'crypto';
 import type { IPlatformConnectionService } from '../../interfaces/distribution/IPlatformConnectionService';
 import type { IPlatformAdapter } from './adapters/IPlatformAdapter';
@@ -21,12 +19,10 @@ import { BlueskyAdapter } from './adapters/BlueskyAdapter';
 import { TwitterAdapter } from './adapters/TwitterAdapter';
 import { YouTubeAdapter } from './adapters/YouTubeAdapter';
 import { TTLCache } from '../../utils/ttl-cache';
-
 export class PlatformConnectionService implements IPlatformConnectionService {
   private readonly adapters: Map<SupportedPlatform, IPlatformAdapter>;
   private readonly logger: ILogger;
   private readonly db: ISupabaseClient;
-
   // #348: TTLCache replaces unbounded Map — 10-minute TTL, 10k max entries, LRU eviction
   private readonly oauthStateStore = new TTLCache<
     string,
@@ -35,16 +31,12 @@ export class PlatformConnectionService implements IPlatformConnectionService {
     maxSize: 10_000,
     ttlMs: 10 * 60 * 1000, // 10 minutes
   });
-
   constructor(db: ISupabaseClient, logger: ILogger) {
     this.db = db;
     this.logger = logger;
-
     // Initialize platform adapters
     this.adapters = new Map();
-
     const callbackBase = process.env.API_BASE_URL || 'http://localhost:3001';
-
     if (process.env.MASTODON_CLIENT_ID) {
       this.adapters.set(
         'mastodon',
@@ -55,7 +47,6 @@ export class PlatformConnectionService implements IPlatformConnectionService {
         })
       );
     }
-
     if (process.env.BLUESKY_CLIENT_ID) {
       this.adapters.set(
         'bluesky',
@@ -66,7 +57,6 @@ export class PlatformConnectionService implements IPlatformConnectionService {
         })
       );
     }
-
     if (process.env.TWITTER_CLIENT_ID) {
       this.adapters.set(
         'twitter',
@@ -77,7 +67,6 @@ export class PlatformConnectionService implements IPlatformConnectionService {
         })
       );
     }
-
     if (process.env.YOUTUBE_CLIENT_ID) {
       this.adapters.set(
         'youtube',
@@ -89,14 +78,12 @@ export class PlatformConnectionService implements IPlatformConnectionService {
       );
     }
   }
-
   /**
    * Stop the periodic state cleanup timer. Call on shutdown for graceful cleanup.
    */
   stopStateCleanup(): void {
     this.oauthStateStore.destroy();
   }
-
   getAdapter(platform: SupportedPlatform): IPlatformAdapter {
     const adapter = this.adapters.get(platform);
     if (!adapter) {
@@ -104,30 +91,24 @@ export class PlatformConnectionService implements IPlatformConnectionService {
     }
     return adapter;
   }
-
   async initiateConnection(
     creatorId: string,
     platform: SupportedPlatform,
     options?: { instance_url?: string; scopes?: string[] }
   ): Promise<{ authorization_url: string }> {
     const adapter = this.getAdapter(platform);
-
     // Generate CSRF state token
     // #348: TTLCache handles TTL (10 min) and max size (10k) with LRU eviction
     const state = randomBytes(32).toString('hex');
     this.oauthStateStore.set(state, { creatorId, platform });
-
     const authorization_url = adapter.getAuthorizationUrl(state, options);
-
     this.logger.info('[PlatformConnectionService] OAuth flow initiated', {
       creatorId,
       platform,
       // SECURITY: Never log the state token value in production
     });
-
     return { authorization_url };
   }
-
   async handleCallback(
     platform: SupportedPlatform,
     code: string,
@@ -145,28 +126,21 @@ export class PlatformConnectionService implements IPlatformConnectionService {
       );
       throw new Error('Invalid or expired OAuth state parameter');
     }
-
     if (stateData.platform !== platform) {
       throw new Error('Platform mismatch in OAuth callback');
     }
-
     // Remove used state token (one-time use)
     this.oauthStateStore.delete(state);
-
     const adapter = this.getAdapter(platform);
     const tokens = await adapter.exchangeCodeForTokens(code);
-
     // Encrypt tokens before storage
     await this.storeEncryptedTokens(stateData.creatorId, platform, tokens);
-
     this.logger.info('[PlatformConnectionService] Platform connected successfully', {
       creatorId: stateData.creatorId,
       platform,
     });
-
     return { creator_id: stateData.creatorId, platform };
   }
-
   async disconnect(creatorId: string, platform: SupportedPlatform): Promise<void> {
     // Try to revoke tokens on the external platform
     try {
@@ -183,7 +157,6 @@ export class PlatformConnectionService implements IPlatformConnectionService {
         }
       );
     }
-
     // Cancel queued/scheduled cross-posts for this platform before removing the connection
     await this.db
       .from('cross_posts')
@@ -191,36 +164,29 @@ export class PlatformConnectionService implements IPlatformConnectionService {
       .eq('creator_id', creatorId)
       .eq('platform', platform)
       .in('status', ['queued', 'scheduled']);
-
     // Delete connection from database
     const { error } = await this.db
       .from('platform_connections')
       .delete()
       .eq('creator_id', creatorId)
       .eq('platform', platform);
-
     if (error) {
       throw error;
     }
-
     this.logger.info('[PlatformConnectionService] Platform disconnected', {
       creatorId,
       platform,
     });
   }
-
   async getStatus(creatorId: string): Promise<PlatformStatus[]> {
     const { data, error } = await this.db
       .from('platform_connections')
       .select('platform, platform_username, connected_at, expires_at, status, scopes')
       .eq('creator_id', creatorId);
-
     if (error) {
       throw error;
     }
-
     const allPlatforms: SupportedPlatform[] = ['mastodon', 'bluesky', 'twitter', 'youtube'];
-
     return allPlatforms.map((platform) => {
       const connection = (data || []).find(
         (c: {
@@ -254,7 +220,6 @@ export class PlatformConnectionService implements IPlatformConnectionService {
       };
     });
   }
-
   async getDecryptedToken(creatorId: string, platform: SupportedPlatform): Promise<string> {
     const { data, error } = await this.db
       .from('platform_connections')
@@ -262,11 +227,9 @@ export class PlatformConnectionService implements IPlatformConnectionService {
       .eq('creator_id', creatorId)
       .eq('platform', platform)
       .single();
-
     if (error || !data) {
       throw new Error(`No ${platform} connection found for creator`);
     }
-
     const key = getEncryptionKey();
     return decryptToken(
       Buffer.from(data.access_token_encrypted),
@@ -275,11 +238,9 @@ export class PlatformConnectionService implements IPlatformConnectionService {
       Buffer.from(data.token_auth_tag)
     );
   }
-
   async refreshExpiringTokens(): Promise<number> {
     // Find tokens expiring within the next hour
     const oneHourFromNow = new Date(Date.now() + 60 * 60 * 1000).toISOString();
-
     const { data, error } = await this.db
       .from('platform_connections')
       .select(
@@ -288,13 +249,10 @@ export class PlatformConnectionService implements IPlatformConnectionService {
       .eq('status', 'connected')
       .not('expires_at', 'is', null)
       .lt('expires_at', oneHourFromNow);
-
     if (error || !data || data.length === 0) {
       return 0;
     }
-
     let refreshedCount = 0;
-
     // Process tokens in parallel batches of 5 for controlled concurrency
     const batchSize = 5;
     for (let i = 0; i < data.length; i += batchSize) {
@@ -304,7 +262,6 @@ export class PlatformConnectionService implements IPlatformConnectionService {
           if (!connection.refresh_token_encrypted) {
             return;
           }
-
           try {
             const key = getEncryptionKey();
             const refreshToken = decryptToken(
@@ -313,17 +270,13 @@ export class PlatformConnectionService implements IPlatformConnectionService {
               Buffer.from(connection.refresh_token_iv),
               Buffer.from(connection.refresh_token_auth_tag)
             );
-
             const adapter = this.getAdapter(connection.platform);
             const newTokens = await adapter.refreshTokens(refreshToken);
-
             await this.storeEncryptedTokens(connection.creator_id, connection.platform, newTokens);
-
             this.logger.info('[PlatformConnectionService] Token refreshed', {
               creatorId: connection.creator_id,
               platform: connection.platform,
             });
-
             return true; // Signal success for counting
           } catch (err) {
             this.logger.error('[PlatformConnectionService] Token refresh failed', {
@@ -331,18 +284,15 @@ export class PlatformConnectionService implements IPlatformConnectionService {
               platform: connection.platform,
               error: (err as Error).message,
             });
-
             // Mark connection as expired
             await this.db
               .from('platform_connections')
               .update({ status: 'token_expired', error_message: 'Token refresh failed' })
               .eq('id', connection.id);
-
             return false;
           }
         })
       );
-
       // Count fulfilled results that returned true (successful refreshes)
       for (const result of results) {
         if (result.status === 'fulfilled' && result.value === true) {
@@ -350,26 +300,21 @@ export class PlatformConnectionService implements IPlatformConnectionService {
         }
       }
     }
-
     return refreshedCount;
   }
-
   private async storeEncryptedTokens(
     creatorId: string,
     platform: SupportedPlatform,
     tokens: OAuthTokens
   ): Promise<void> {
     const key = getEncryptionKey();
-
     // Encrypt access token
     const accessEncrypted = encryptToken(tokens.access_token, key);
-
     // Encrypt refresh token if available
     let refreshEncrypted = null;
     if (tokens.refresh_token) {
       refreshEncrypted = encryptToken(tokens.refresh_token, key);
     }
-
     const row: Record<string, unknown> = {
       creator_id: creatorId,
       platform,
@@ -385,12 +330,10 @@ export class PlatformConnectionService implements IPlatformConnectionService {
       last_refreshed_at: new Date().toISOString(),
       error_message: null,
     };
-
     // Upsert: update if same creator+platform already exists
     const { error } = await this.db
       .from('platform_connections')
       .upsert(row, { onConflict: 'creator_id,platform' });
-
     if (error) {
       throw error;
     }

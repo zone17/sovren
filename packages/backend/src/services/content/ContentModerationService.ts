@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Content Moderation Service Implementation
  * User Story: US-E5-013
@@ -18,7 +17,6 @@
  * @author Elite Backend Engineer
  * @date 2024-10-27
  */
-
 import type { IContentModerationService } from '../../interfaces/content/IContentModerationService';
 import type { IAuditLogService } from '../../interfaces/shared/IAuditLogService';
 import type { IEventBus } from '../../interfaces/shared/IEventBus';
@@ -52,14 +50,12 @@ import {
 import { DomainEventBuilder, DomainEventType } from '../../interfaces/shared/IEventBus';
 import { randomUUID } from 'crypto';
 import { performance } from 'perf_hooks';
-
 /**
  * AI Service Interface (injected dependency)
  */
 interface IAIService {
   analyzeContent(request: AIAnalysisRequest): Promise<AIAnalysisResponse>;
 }
-
 /**
  * Content Repository Interface (injected dependency)
  */
@@ -67,7 +63,6 @@ interface IContentRepository {
   getContent(contentId: string): Promise<{ authorId: string; content: string } | null>;
   updateContentStatus(contentId: string, status: string): Promise<void>;
 }
-
 /**
  * Metrics Service Interface (injected dependency)
  */
@@ -75,7 +70,6 @@ interface IMetricsService {
   recordHistogram(metric: string, value: number): void;
   incrementCounter(metric: string): void;
 }
-
 /**
  * Content Moderation Service Implementation
  */
@@ -87,7 +81,6 @@ export class ContentModerationService implements IContentModerationService {
   private readonly reputation: Map<string, UserReputation> = new Map();
   private readonly rules: Map<string, ModerationRule> = new Map();
   private readonly history: Map<string, ModerationHistory[]> = new Map();
-
   // Default moderation rules
   private readonly defaultRules: ModerationRule[] = [
     {
@@ -166,7 +159,6 @@ export class ContentModerationService implements IContentModerationService {
       threshold: 0.7,
     },
   ];
-
   constructor(
     private readonly auditLog: IAuditLogService,
     private readonly eventBus: IEventBus,
@@ -179,7 +171,6 @@ export class ContentModerationService implements IContentModerationService {
     this.initializeRules();
     this.logger.info('ContentModerationService initialized');
   }
-
   /**
    * Initialize default moderation rules
    */
@@ -189,7 +180,6 @@ export class ContentModerationService implements IContentModerationService {
     });
     this.logger.info(`Initialized ${this.rules.size} moderation rules`);
   }
-
   /**
    * Moderate content using AI and rule-based analysis
    */
@@ -201,17 +191,14 @@ export class ContentModerationService implements IContentModerationService {
   ): Promise<ModerationResult> {
     const startTime = performance.now();
     const moderationId = randomUUID();
-
     try {
       this.logger.info('Starting content moderation', { contentId, moderationId });
-
       // Check cache for recent moderation
       const cachedResult = await this.checkCache(contentId);
       if (cachedResult && !options?.requireHumanReview) {
         this.logger.debug('Using cached moderation result', { contentId });
         return cachedResult;
       }
-
       // Check user reputation for auto-moderation
       const authorId = metadata?.authorId;
       if (authorId) {
@@ -223,13 +210,11 @@ export class ContentModerationService implements IContentModerationService {
           return await this.autoReject(contentId, moderationId, reputation);
         }
       }
-
       // Run parallel analysis
       const [aiAnalysis, ruleAnalysis] = await Promise.all([
         options?.skipAI ? this.getEmptyAnalysis() : this.analyzeWithAI(content, metadata),
         options?.skipRules ? this.getEmptyAnalysis() : this.analyzeWithRules(content, metadata),
       ]);
-
       // Combine results
       const result = this.combineAnalysisResults(
         contentId,
@@ -238,7 +223,6 @@ export class ContentModerationService implements IContentModerationService {
         ruleAnalysis,
         options
       );
-
       // Store decision with audit trail
       const decision: ModerationDecision = {
         id: moderationId,
@@ -251,9 +235,7 @@ export class ContentModerationService implements IContentModerationService {
         reviewedBy: 'system',
         appealable: result.action !== ModerationAction.APPROVE,
       };
-
       this.decisions.set(moderationId, decision);
-
       // Add to history
       await this.addToHistory({
         id: randomUUID(),
@@ -264,14 +246,12 @@ export class ContentModerationService implements IContentModerationService {
         timestamp: new Date(),
         metadata: { moderationId },
       });
-
       // Cache result
       await this.cache.set(
         `moderation:${contentId}`,
         result,
         3600 // 1 hour TTL
       );
-
       // Audit log
       await this.auditLog.log({
         actor: {
@@ -292,7 +272,6 @@ export class ContentModerationService implements IContentModerationService {
           confidence: result.confidence,
         },
       });
-
       // Emit events
       await this.eventBus.publish(
         new DomainEventBuilder()
@@ -307,38 +286,31 @@ export class ContentModerationService implements IContentModerationService {
           .withSource('ContentModerationService')
           .build()
       );
-
       // Handle actions
       await this.handleModerationAction(result, contentId, options);
-
       // Update user reputation if applicable
       if (authorId) {
         await this.updateUserReputation(authorId, result.status === ModerationStatus.APPROVED);
       }
-
       // Record metrics
       const duration = performance.now() - startTime;
       this.metrics.recordHistogram('moderation.duration', duration);
       this.metrics.incrementCounter(`moderation.status.${result.status}`);
       this.metrics.incrementCounter(`moderation.action.${result.action}`);
-
       this.logger.info('Content moderation completed', {
         contentId,
         moderationId,
         status: result.status,
         duration: `${duration.toFixed(2)}ms`,
       });
-
       return result;
     } catch (error) {
       this.logger.error('Moderation failed', { contentId, error });
       this.metrics.incrementCounter('moderation.errors');
-
       // Default to manual review on error
       return this.createFailsafeResult(contentId, moderationId);
     }
   }
-
   /**
    * Manual review of flagged content by moderator
    */
@@ -349,13 +321,10 @@ export class ContentModerationService implements IContentModerationService {
     options?: ReviewOptions
   ): Promise<ModerationResult> {
     const originalDecision = this.decisions.get(moderationId);
-
     if (!originalDecision) {
       throw new Error(`Moderation decision ${moderationId} not found`);
     }
-
     this.logger.info('Manual review started', { moderationId, reviewerId, decision });
-
     // Create updated result
     const updatedResult: ModerationResult = {
       ...originalDecision.result,
@@ -367,12 +336,10 @@ export class ContentModerationService implements IContentModerationService {
       reviewedAt: new Date(),
       reviewerId,
     };
-
     // Update decision
     originalDecision.reviewedBy = reviewerId;
     originalDecision.reviewNotes = options?.notes;
     originalDecision.result = updatedResult;
-
     // Add to history
     await this.addToHistory({
       id: randomUUID(),
@@ -383,10 +350,8 @@ export class ContentModerationService implements IContentModerationService {
       timestamp: new Date(),
       reason: options?.notes,
     });
-
     // Remove from queue if present
     await this.removeFromQueue(moderationId);
-
     // Audit log
     await this.auditLog.log({
       actor: {
@@ -405,7 +370,6 @@ export class ContentModerationService implements IContentModerationService {
         notes: options?.notes,
       },
     });
-
     // Emit event
     await this.eventBus.publish(
       new DomainEventBuilder()
@@ -422,17 +386,13 @@ export class ContentModerationService implements IContentModerationService {
         .withSource('ContentModerationService')
         .build()
     );
-
     // Handle post-review actions
     if (options?.notifyAuthor) {
       await this.notifyContentAuthor(originalDecision.contentId, updatedResult);
     }
-
     this.logger.info('Manual review completed', { moderationId, decision });
-
     return updatedResult;
   }
-
   /**
    * Submit an appeal for a moderation decision
    */
@@ -443,17 +403,13 @@ export class ContentModerationService implements IContentModerationService {
     options?: AppealOptions
   ): Promise<ModerationAppeal> {
     const decision = this.decisions.get(moderationId);
-
     if (!decision) {
       throw new Error(`Moderation decision ${moderationId} not found`);
     }
-
     if (!decision.appealable) {
       throw new Error('This decision cannot be appealed');
     }
-
     this.logger.info('Appeal submitted', { moderationId, userId });
-
     const appeal: ModerationAppeal = {
       id: randomUUID(),
       moderationId,
@@ -463,12 +419,9 @@ export class ContentModerationService implements IContentModerationService {
       status: AppealStatus.PENDING,
       submittedAt: new Date(),
     };
-
     this.appeals.set(appeal.id, appeal);
-
     // Update moderation status
     decision.result.status = ModerationStatus.APPEALED;
-
     // Add to history
     await this.addToHistory({
       id: randomUUID(),
@@ -479,7 +432,6 @@ export class ContentModerationService implements IContentModerationService {
       timestamp: new Date(),
       reason: `Appeal submitted: ${reason}`,
     });
-
     // Audit log
     await this.auditLog.log({
       actor: {
@@ -498,7 +450,6 @@ export class ContentModerationService implements IContentModerationService {
         reason,
       },
     });
-
     // Emit event
     await this.eventBus.publish(
       new DomainEventBuilder()
@@ -515,7 +466,6 @@ export class ContentModerationService implements IContentModerationService {
         .withSource('ContentModerationService')
         .build()
     );
-
     // Add to review queue with high priority if auto-review not requested
     if (!options?.autoReview) {
       await this.addToQueue({
@@ -529,10 +479,8 @@ export class ContentModerationService implements IContentModerationService {
         reviewCount: 0,
       });
     }
-
     return appeal;
   }
-
   /**
    * Process an appeal (approve or reject)
    */
@@ -543,18 +491,14 @@ export class ContentModerationService implements IContentModerationService {
     notes?: string
   ): Promise<ModerationAppeal> {
     const appeal = this.appeals.get(appealId);
-
     if (!appeal) {
       throw new Error(`Appeal ${appealId} not found`);
     }
-
     this.logger.info('Processing appeal', { appealId, reviewerId, approved });
-
     appeal.status = approved ? AppealStatus.APPROVED : AppealStatus.REJECTED;
     appeal.reviewedBy = reviewerId;
     appeal.reviewedAt = new Date();
     appeal.reviewNotes = notes;
-
     if (approved) {
       // Reverse the original moderation decision
       const decision = this.decisions.get(appeal.moderationId);
@@ -564,7 +508,6 @@ export class ContentModerationService implements IContentModerationService {
         });
       }
     }
-
     // Add to history
     await this.addToHistory({
       id: randomUUID(),
@@ -575,7 +518,6 @@ export class ContentModerationService implements IContentModerationService {
       timestamp: new Date(),
       reason: notes,
     });
-
     // Audit log
     await this.auditLog.log({
       actor: {
@@ -594,7 +536,6 @@ export class ContentModerationService implements IContentModerationService {
         notes,
       },
     });
-
     // Emit event
     await this.eventBus.publish(
       new DomainEventBuilder()
@@ -611,7 +552,6 @@ export class ContentModerationService implements IContentModerationService {
         .withSource('ContentModerationService')
         .build()
     );
-
     // Update user reputation based on appeal outcome
     if (approved) {
       const reputation = await this.getUserReputation(appeal.userId);
@@ -622,104 +562,80 @@ export class ContentModerationService implements IContentModerationService {
       reputation.lastUpdated = new Date();
       this.reputation.set(appeal.userId, reputation);
     }
-
     return appeal;
   }
-
   /**
    * Get moderation history for content
    */
   async getModerationHistory(contentId: string): Promise<ModerationHistory[]> {
     return this.history.get(contentId) || [];
   }
-
   /**
    * Query moderation decisions
    */
   async queryModerations(query: ModerationQuery): Promise<ModerationDecision[]> {
     let results = Array.from(this.decisions.values());
-
     // Apply filters
     if (query.contentId) {
       results = results.filter((d) => d.contentId === query.contentId);
     }
-
     if (query.status && query.status.length > 0) {
       results = results.filter((d) => query.status!.includes(d.result.status));
     }
-
     if (query.categories && query.categories.length > 0) {
       results = results.filter((d) =>
         d.result.categories.some((c) => query.categories!.includes(c))
       );
     }
-
     if (query.severityMin !== undefined) {
       results = results.filter((d) => d.result.severity >= query.severityMin!);
     }
-
     if (query.severityMax !== undefined) {
       results = results.filter((d) => d.result.severity <= query.severityMax!);
     }
-
     if (query.startDate) {
       results = results.filter((d) => d.timestamp >= query.startDate!);
     }
-
     if (query.endDate) {
       results = results.filter((d) => d.timestamp <= query.endDate!);
     }
-
     if (query.reviewerId) {
       results = results.filter((d) => d.reviewedBy === query.reviewerId);
     }
-
     if (query.appealable !== undefined) {
       results = results.filter((d) => d.appealable === query.appealable);
     }
-
     // Sort by timestamp descending
     results.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-
     // Apply pagination
     const offset = query.offset || 0;
     const limit = query.limit || 100;
-
     return results.slice(offset, offset + limit);
   }
-
   /**
    * Query appeals
    */
   async queryAppeals(query: AppealQuery): Promise<ModerationAppeal[]> {
     let results = Array.from(this.appeals.values());
-
     if (query.userId) {
       results = results.filter((a) => a.userId === query.userId);
     }
-
     if (query.status && query.status.length > 0) {
       results = results.filter((a) => query.status!.includes(a.status));
     }
-
     if (query.startDate) {
       results = results.filter((a) => a.submittedAt >= query.startDate!);
     }
-
     if (query.endDate) {
       results = results.filter((a) => a.submittedAt <= query.endDate!);
     }
-
     // Sort by submission date descending
     results.sort((a, b) => b.submittedAt.getTime() - a.submittedAt.getTime());
-
     // Apply pagination
     const offset = query.offset || 0;
     const limit = query.limit || 100;
-
     return results.slice(offset, offset + limit);
   }
-
   /**
    * Get moderation queue for manual review
    */
@@ -728,11 +644,9 @@ export class ContentModerationService implements IContentModerationService {
     priority?: 'low' | 'medium' | 'high' | 'urgent'
   ): Promise<ModerationQueueItem[]> {
     let items = Array.from(this.queue.values());
-
     if (priority) {
       items = items.filter((item) => item.priority === priority);
     }
-
     // Sort by priority (urgent > high > medium > low) then by flagged date
     const priorityOrder = { urgent: 4, high: 3, medium: 2, low: 1 };
     items.sort((a, b) => {
@@ -740,10 +654,8 @@ export class ContentModerationService implements IContentModerationService {
       if (priorityDiff !== 0) return priorityDiff;
       return b.flaggedAt.getTime() - a.flaggedAt.getTime();
     });
-
     return items.slice(0, limit);
   }
-
   /**
    * Add item to moderation queue
    */
@@ -751,7 +663,6 @@ export class ContentModerationService implements IContentModerationService {
     this.queue.set(item.id, item);
     this.logger.debug('Added to moderation queue', { itemId: item.id, contentId: item.contentId });
   }
-
   /**
    * Remove item from moderation queue
    */
@@ -759,7 +670,6 @@ export class ContentModerationService implements IContentModerationService {
     this.queue.delete(itemId);
     this.logger.debug('Removed from moderation queue', { itemId });
   }
-
   /**
    * Get user reputation for auto-moderation
    */
@@ -768,7 +678,6 @@ export class ContentModerationService implements IContentModerationService {
     if (this.reputation.has(userId)) {
       return this.reputation.get(userId)!;
     }
-
     // Create new reputation entry
     const reputation: UserReputation = {
       userId,
@@ -779,17 +688,14 @@ export class ContentModerationService implements IContentModerationService {
       appealSuccessRate: 0,
       lastUpdated: new Date(),
     };
-
     this.reputation.set(userId, reputation);
     return reputation;
   }
-
   /**
    * Update user reputation based on moderation outcomes
    */
   async updateUserReputation(userId: string, approved: boolean): Promise<void> {
     const reputation = await this.getUserReputation(userId);
-
     if (approved) {
       reputation.approvalCount++;
       reputation.score = Math.min(100, reputation.score + 1);
@@ -798,7 +704,6 @@ export class ContentModerationService implements IContentModerationService {
       reputation.score = Math.max(0, reputation.score - 5);
       reputation.lastViolation = new Date();
     }
-
     // Update trust level based on score
     if (reputation.score >= 90) {
       reputation.trustLevel = 'verified';
@@ -811,23 +716,19 @@ export class ContentModerationService implements IContentModerationService {
     } else {
       reputation.trustLevel = 'new';
     }
-
     reputation.lastUpdated = new Date();
     this.reputation.set(userId, reputation);
-
     this.logger.debug('Updated user reputation', {
       userId,
       score: reputation.score,
       trustLevel: reputation.trustLevel,
     });
   }
-
   /**
    * Add custom moderation rule
    */
   async addRule(rule: ModerationRule): Promise<void> {
     this.rules.set(rule.id, rule);
-
     await this.auditLog.log({
       actor: { type: 'system', id: 'moderation-service' },
       action: 'moderation.rule.added',
@@ -835,33 +736,27 @@ export class ContentModerationService implements IContentModerationService {
       outcome: 'success',
       details: { rule },
     });
-
     this.logger.info('Moderation rule added', { ruleId: rule.id, ruleName: rule.name });
   }
-
   /**
    * Remove moderation rule
    */
   async removeRule(ruleId: string): Promise<void> {
     this.rules.delete(ruleId);
-
     await this.auditLog.log({
       actor: { type: 'system', id: 'moderation-service' },
       action: 'moderation.rule.removed',
       resource: { type: 'moderation-rule', id: ruleId },
       outcome: 'success',
     });
-
     this.logger.info('Moderation rule removed', { ruleId });
   }
-
   /**
    * Get all moderation rules
    */
   async getRules(): Promise<ModerationRule[]> {
     return Array.from(this.rules.values());
   }
-
   /**
    * Enable or disable a moderation rule
    */
@@ -870,9 +765,7 @@ export class ContentModerationService implements IContentModerationService {
     if (!rule) {
       throw new Error(`Rule ${ruleId} not found`);
     }
-
     rule.enabled = enabled;
-
     await this.auditLog.log({
       actor: { type: 'system', id: 'moderation-service' },
       action: 'moderation.rule.toggled',
@@ -880,10 +773,8 @@ export class ContentModerationService implements IContentModerationService {
       outcome: 'success',
       details: { enabled },
     });
-
     this.logger.info('Moderation rule toggled', { ruleId, enabled });
   }
-
   /**
    * Get moderation statistics
    */
@@ -891,7 +782,6 @@ export class ContentModerationService implements IContentModerationService {
     const decisions = Array.from(this.decisions.values()).filter(
       (d) => d.timestamp >= startDate && d.timestamp <= endDate
     );
-
     const stats: ModerationStats = {
       total: decisions.length,
       approved: 0,
@@ -904,10 +794,8 @@ export class ContentModerationService implements IContentModerationService {
       byCategory: {} as Record<ModerationCategory, number>,
       bySeverity: {} as Record<ModerationSeverity, number>,
     };
-
     let totalResponseTime = 0;
     let responseTimesCount = 0;
-
     for (const decision of decisions) {
       // Count by status
       switch (decision.result.status) {
@@ -924,16 +812,13 @@ export class ContentModerationService implements IContentModerationService {
           stats.flagged++;
           break;
       }
-
       // Count by category
       for (const category of decision.result.categories) {
         stats.byCategory[category] = (stats.byCategory[category] || 0) + 1;
       }
-
       // Count by severity
       const severity = decision.result.severity;
       stats.bySeverity[severity] = (stats.bySeverity[severity] || 0) + 1;
-
       // Calculate response time for reviewed decisions
       if (decision.result.reviewedAt) {
         const responseTime = decision.result.reviewedAt.getTime() - decision.timestamp.getTime();
@@ -941,38 +826,31 @@ export class ContentModerationService implements IContentModerationService {
         responseTimesCount++;
       }
     }
-
     // Count appeals
     const appeals = Array.from(this.appeals.values()).filter(
       (a) => a.submittedAt >= startDate && a.submittedAt <= endDate
     );
-
     stats.appeals = appeals.length;
     stats.appealsApproved = appeals.filter((a) => a.status === AppealStatus.APPROVED).length;
     stats.appealsRejected = appeals.filter((a) => a.status === AppealStatus.REJECTED).length;
-
     // Calculate average response time
     if (responseTimesCount > 0) {
       stats.averageResponseTime = totalResponseTime / responseTimesCount;
     }
-
     return stats;
   }
-
   /**
    * Get a specific moderation decision
    */
   async getDecision(moderationId: string): Promise<ModerationDecision | null> {
     return this.decisions.get(moderationId) || null;
   }
-
   /**
    * Get a specific appeal
    */
   async getAppeal(appealId: string): Promise<ModerationAppeal | null> {
     return this.appeals.get(appealId) || null;
   }
-
   /**
    * Cleanup on service shutdown
    */
@@ -983,14 +861,11 @@ export class ContentModerationService implements IContentModerationService {
     this.reputation.clear();
     this.rules.clear();
     this.history.clear();
-
     this.logger.info('ContentModerationService disposed');
   }
-
   // =========================================================================
   // Private Helper Methods
   // =========================================================================
-
   /**
    * Analyze content using AI service
    */
@@ -1012,7 +887,6 @@ export class ContentModerationService implements IContentModerationService {
           'harassment',
         ],
       });
-
       return {
         categories: this.mapAICategories(analysis.categories),
         confidence: analysis.confidence,
@@ -1024,7 +898,6 @@ export class ContentModerationService implements IContentModerationService {
       return this.getEmptyAnalysis();
     }
   }
-
   /**
    * Analyze content using rule-based system
    */
@@ -1036,17 +909,14 @@ export class ContentModerationService implements IContentModerationService {
       rule: ModerationRule;
       matches: RegExpMatchArray;
     }> = [];
-
     // Check each enabled rule
     for (const rule of this.rules.values()) {
       if (!rule.enabled || !rule.pattern) continue;
-
       const matches = content.match(rule.pattern);
       if (matches && matches.length > 0) {
         violations.push({ rule, matches });
       }
     }
-
     if (violations.length === 0) {
       return {
         categories: [],
@@ -1055,13 +925,11 @@ export class ContentModerationService implements IContentModerationService {
         details: { rulesChecked: this.rules.size, violations: 0 },
       };
     }
-
     // Determine highest severity
     const maxSeverity = violations.reduce(
       (max, v) => (v.rule.severity > max ? v.rule.severity : max),
       ModerationSeverity.LOW
     );
-
     return {
       categories: violations.map((v) => v.rule.category),
       confidence: 1.0, // Rule-based checks are deterministic
@@ -1076,7 +944,6 @@ export class ContentModerationService implements IContentModerationService {
       },
     };
   }
-
   /**
    * Combine AI and rule-based analysis results
    */
@@ -1089,17 +956,13 @@ export class ContentModerationService implements IContentModerationService {
   ): ModerationResult {
     // Use the highest severity from both analyses
     const severity = Math.max(aiAnalysis.severity, ruleAnalysis.severity) as ModerationSeverity;
-
     // Combine categories (unique)
     const categories = Array.from(new Set([...aiAnalysis.categories, ...ruleAnalysis.categories]));
-
     // Calculate weighted confidence (AI 60%, Rules 40%)
     const confidence = aiAnalysis.confidence * 0.6 + ruleAnalysis.confidence * 0.4;
-
     // Determine action based on severity and confidence
     let action: ModerationAction;
     let status: ModerationStatus;
-
     if (options?.requireHumanReview) {
       action = ModerationAction.FLAG_REVIEW;
       status = ModerationStatus.PENDING_REVIEW;
@@ -1116,7 +979,6 @@ export class ContentModerationService implements IContentModerationService {
       action = ModerationAction.WARNING;
       status = ModerationStatus.WARNED;
     }
-
     // Generate reasons
     const reasons: string[] = [];
     if (categories.length > 0) {
@@ -1128,7 +990,6 @@ export class ContentModerationService implements IContentModerationService {
     if (severity >= ModerationSeverity.HIGH) {
       reasons.push('High severity violation detected');
     }
-
     return {
       id: moderationId,
       contentId,
@@ -1141,7 +1002,6 @@ export class ContentModerationService implements IContentModerationService {
       timestamp: new Date(),
     };
   }
-
   /**
    * Handle moderation action (block, flag, warn, approve)
    */
@@ -1154,24 +1014,20 @@ export class ContentModerationService implements IContentModerationService {
       case ModerationAction.BLOCK:
         await this.blockContent(contentId, result);
         break;
-
       case ModerationAction.FLAG_REVIEW:
         await this.flagForReview(contentId, result);
         break;
-
       case ModerationAction.WARNING:
         await this.issueWarning(contentId, result);
         if (options?.notifyAuthor) {
           await this.notifyContentAuthor(contentId, result);
         }
         break;
-
       case ModerationAction.APPROVE:
         // No action needed for approved content
         break;
     }
   }
-
   /**
    * Block content
    */
@@ -1183,7 +1039,6 @@ export class ContentModerationService implements IContentModerationService {
       this.logger.error('Failed to block content', { contentId, error });
     }
   }
-
   /**
    * Flag content for manual review
    */
@@ -1200,17 +1055,14 @@ export class ContentModerationService implements IContentModerationService {
       aiScore: result.confidence,
       reviewCount: 0,
     });
-
     this.logger.info('Content flagged for review', { contentId, reasons: result.reasons });
   }
-
   /**
    * Issue warning for content
    */
   private async issueWarning(contentId: string, result: ModerationResult): Promise<void> {
     this.logger.info('Warning issued for content', { contentId, reasons: result.reasons });
   }
-
   /**
    * Notify content author of moderation decision
    */
@@ -1218,7 +1070,6 @@ export class ContentModerationService implements IContentModerationService {
     // Would integrate with notification service
     this.logger.debug('Notifying content author', { contentId, status: result.status });
   }
-
   /**
    * Check cache for recent moderation result
    */
@@ -1230,7 +1081,6 @@ export class ContentModerationService implements IContentModerationService {
       return null;
     }
   }
-
   /**
    * Add entry to moderation history
    */
@@ -1239,7 +1089,6 @@ export class ContentModerationService implements IContentModerationService {
     entries.push(entry);
     this.history.set(entry.contentId, entries);
   }
-
   /**
    * Check if user should be auto-approved
    */
@@ -1249,14 +1098,12 @@ export class ContentModerationService implements IContentModerationService {
       (reputation.score >= 85 && reputation.violationCount === 0)
     );
   }
-
   /**
    * Check if user should be auto-rejected
    */
   private shouldAutoReject(reputation: UserReputation): boolean {
     return reputation.score < 10 && reputation.violationCount > 5;
   }
-
   /**
    * Auto-approve content based on user reputation
    */
@@ -1270,7 +1117,6 @@ export class ContentModerationService implements IContentModerationService {
       userId: reputation.userId,
       score: reputation.score,
     });
-
     return {
       id: moderationId,
       contentId,
@@ -1287,7 +1133,6 @@ export class ContentModerationService implements IContentModerationService {
       },
     };
   }
-
   /**
    * Auto-reject content based on user reputation
    */
@@ -1301,7 +1146,6 @@ export class ContentModerationService implements IContentModerationService {
       userId: reputation.userId,
       score: reputation.score,
     });
-
     return {
       id: moderationId,
       contentId,
@@ -1318,7 +1162,6 @@ export class ContentModerationService implements IContentModerationService {
       },
     };
   }
-
   /**
    * Create failsafe result on error
    */
@@ -1335,7 +1178,6 @@ export class ContentModerationService implements IContentModerationService {
       timestamp: new Date(),
     };
   }
-
   /**
    * Get empty analysis result
    */
@@ -1347,7 +1189,6 @@ export class ContentModerationService implements IContentModerationService {
       details: {},
     };
   }
-
   /**
    * Map AI categories to moderation categories
    */
@@ -1361,23 +1202,19 @@ export class ContentModerationService implements IContentModerationService {
       violence: ModerationCategory.VIOLENCE,
       harassment: ModerationCategory.HARASSMENT,
     };
-
     return aiCategories.map((cat) => mapping[cat]).filter((cat) => cat !== undefined);
   }
-
   /**
    * Calculate severity from AI analysis
    */
   private calculateSeverity(analysis: AIAnalysisResponse): ModerationSeverity {
     const score = analysis.confidence * (analysis.severity || 0.5);
-
     if (score >= 0.8) return ModerationSeverity.CRITICAL;
     if (score >= 0.6) return ModerationSeverity.HIGH;
     if (score >= 0.4) return ModerationSeverity.MEDIUM;
     if (score >= 0.2) return ModerationSeverity.LOW;
     return ModerationSeverity.NONE;
   }
-
   /**
    * Convert action to status
    */
@@ -1386,22 +1223,17 @@ export class ContentModerationService implements IContentModerationService {
       case ModerationAction.APPROVE:
       case ModerationAction.AUTO_APPROVE:
         return ModerationStatus.APPROVED;
-
       case ModerationAction.BLOCK:
       case ModerationAction.AUTO_REJECT:
         return ModerationStatus.BLOCKED;
-
       case ModerationAction.FLAG_REVIEW:
         return ModerationStatus.PENDING_REVIEW;
-
       case ModerationAction.WARNING:
         return ModerationStatus.WARNED;
-
       default:
         return ModerationStatus.PENDING_REVIEW;
     }
   }
-
   /**
    * Convert severity to queue priority
    */

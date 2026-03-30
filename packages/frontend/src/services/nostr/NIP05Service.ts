@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 🔐 NIP-05 Service - Elite Implementation
  *
@@ -15,7 +14,6 @@
  *
  * @see https://github.com/nostr-protocol/nips/blob/master/05.md
  */
-
 import type {
   NIP05Identifier,
   NIP05VerificationResult,
@@ -34,20 +32,16 @@ import {
   NIP05CacheError,
   DEFAULT_NIP05_CACHE_CONFIG,
 } from '@shared/types/nip05';
-
 // ========================================
 // NIP05Service Implementation
 // ========================================
-
 export class NIP05Service implements INIP05Service {
   private cacheConfig: NIP05CacheConfig;
   private memoryCache: Map<string, NIP05CacheEntry>;
   private statistics: NIP05Statistics;
-
   // Default configuration
   private static readonly DEFAULT_TIMEOUT = 30000; // 30 seconds
   private static readonly WELL_KNOWN_PATH = '/.well-known/nostr.json';
-
   constructor(cacheConfig?: Partial<NIP05CacheConfig>) {
     this.cacheConfig = { ...DEFAULT_NIP05_CACHE_CONFIG, ...cacheConfig };
     this.memoryCache = new Map();
@@ -62,11 +56,9 @@ export class NIP05Service implements INIP05Service {
       cacheHitRate: 0,
     };
   }
-
   // ========================================
   // Public Methods
   // ========================================
-
   /**
    * Parse NIP-05 identifier
    * Format: localPart@domain
@@ -79,7 +71,6 @@ export class NIP05Service implements INIP05Service {
     try {
       // Normalize: lowercase and trim
       const normalized = identifier.toLowerCase().trim();
-
       // Basic validation
       if (!normalized.includes('@')) {
         return {
@@ -87,7 +78,6 @@ export class NIP05Service implements INIP05Service {
           error: 'Invalid NIP-05 format: missing @ symbol',
         };
       }
-
       const parts = normalized.split('@');
       if (parts.length !== 2) {
         return {
@@ -95,16 +85,13 @@ export class NIP05Service implements INIP05Service {
           error: 'Invalid NIP-05 format: multiple @ symbols',
         };
       }
-
       const [localPart, domain] = parts;
-
       // Create identifier object
       const parsedIdentifier: NIP05Identifier = {
         localPart,
         domain,
         full: normalized,
       };
-
       // Validate using Zod schema
       const validationResult = NIP05IdentifierSchema.safeParse(parsedIdentifier);
       if (!validationResult.success) {
@@ -114,7 +101,6 @@ export class NIP05Service implements INIP05Service {
           error: `Invalid NIP-05 format: ${firstError.message}`,
         };
       }
-
       return {
         success: true,
         parsed: parsedIdentifier,
@@ -126,7 +112,6 @@ export class NIP05Service implements INIP05Service {
       };
     }
   }
-
   /**
    * Verify NIP-05 identifier against expected pubkey
    */
@@ -137,7 +122,6 @@ export class NIP05Service implements INIP05Service {
   ): Promise<NIP05VerificationResult> {
     const startTime = Date.now();
     this.statistics.totalAttempts++;
-
     try {
       // Validate pubkey format
       if (!this.isValidPubkey(expectedPubkey)) {
@@ -148,7 +132,6 @@ export class NIP05Service implements INIP05Service {
           'VALIDATION_ERROR'
         );
       }
-
       // Parse identifier
       const parseResult = this.parseIdentifier(identifier);
       if (!parseResult.success || !parseResult.parsed) {
@@ -159,9 +142,7 @@ export class NIP05Service implements INIP05Service {
           'INVALID_FORMAT'
         );
       }
-
       const parsedIdentifier = parseResult.parsed;
-
       // Check cache unless forceRefresh
       if (options?.useCache !== false && !options?.forceRefresh) {
         const cached = await this.getCachedVerification(identifier, expectedPubkey);
@@ -172,15 +153,12 @@ export class NIP05Service implements INIP05Service {
         }
         this.statistics.cacheMisses++;
       }
-
       // Perform HTTP verification
       const result = await this.performHTTPVerification(parsedIdentifier, expectedPubkey, options);
-
       // Cache result
       if (this.cacheConfig.enabled) {
         await this.setCachedVerification(identifier, expectedPubkey, result);
       }
-
       this.updateStatistics(startTime, result.verified);
       return result;
     } catch (error) {
@@ -193,7 +171,6 @@ export class NIP05Service implements INIP05Service {
       );
     }
   }
-
   /**
    * Get cached verification result
    */
@@ -203,7 +180,6 @@ export class NIP05Service implements INIP05Service {
   ): Promise<NIP05VerificationResult | null> {
     try {
       const key = this.getCacheKey(identifier, expectedPubkey);
-
       // Check memory cache first
       if (this.cacheConfig.storage === 'memory' || this.cacheConfig.storage === 'indexeddb') {
         const cached = this.memoryCache.get(key);
@@ -218,17 +194,14 @@ export class NIP05Service implements INIP05Service {
           }
         }
       }
-
       // TODO: Implement IndexedDB cache layer
       // For now, only memory cache is implemented
-
       return null;
     } catch (error) {
       console.error('Cache read error:', error);
       return null;
     }
   }
-
   /**
    * Clear cached verification(s)
    */
@@ -254,7 +227,6 @@ export class NIP05Service implements INIP05Service {
       );
     }
   }
-
   /**
    * Check if verification result is expired
    */
@@ -264,18 +236,15 @@ export class NIP05Service implements INIP05Service {
     }
     return Date.now() > result.expiresAt;
   }
-
   /**
    * Get service statistics
    */
   public getStatistics(): NIP05Statistics {
     return { ...this.statistics };
   }
-
   // ========================================
   // Private Methods
   // ========================================
-
   /**
    * Perform HTTP verification via .well-known/nostr.json
    */
@@ -286,15 +255,12 @@ export class NIP05Service implements INIP05Service {
   ): Promise<NIP05VerificationResult> {
     const timeout = options?.timeout || NIP05Service.DEFAULT_TIMEOUT;
     const fetchFn = options?.fetchFn || fetch;
-
     try {
       // Construct .well-known URL
       const url = `https://${identifier.domain}${NIP05Service.WELL_KNOWN_PATH}?name=${encodeURIComponent(identifier.localPart)}`;
-
       // Create abort controller for timeout
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeout);
-
       try {
         // Fetch .well-known/nostr.json
         const response = await fetchFn(url, {
@@ -305,9 +271,7 @@ export class NIP05Service implements INIP05Service {
           },
           signal: controller.signal,
         });
-
         clearTimeout(timeoutId);
-
         // Check HTTP status
         if (!response.ok) {
           return this.createFailedResult(
@@ -318,7 +282,6 @@ export class NIP05Service implements INIP05Service {
             identifier
           );
         }
-
         // Validate content-type
         const contentType = response.headers.get('content-type');
         if (!contentType?.includes('application/json')) {
@@ -330,7 +293,6 @@ export class NIP05Service implements INIP05Service {
             identifier
           );
         }
-
         // Parse JSON
         let wellKnownData: unknown;
         try {
@@ -344,7 +306,6 @@ export class NIP05Service implements INIP05Service {
             identifier
           );
         }
-
         // Basic structure check
         if (!wellKnownData || typeof wellKnownData !== 'object' || !('names' in wellKnownData)) {
           return this.createFailedResult(
@@ -355,12 +316,10 @@ export class NIP05Service implements INIP05Service {
             identifier
           );
         }
-
         const data = wellKnownData as {
           names: Record<string, unknown>;
           relays?: Record<string, unknown>;
         };
-
         // Check if local part exists in names
         const actualPubkey = data.names[identifier.localPart];
         if (!actualPubkey) {
@@ -372,7 +331,6 @@ export class NIP05Service implements INIP05Service {
             identifier
           );
         }
-
         // Validate pubkey format (check before schema validation)
         if (typeof actualPubkey !== 'string' || !this.isValidPubkey(actualPubkey)) {
           return this.createFailedResult(
@@ -383,7 +341,6 @@ export class NIP05Service implements INIP05Service {
             identifier
           );
         }
-
         // Validate full response structure with schema
         const validationResult = NIP05WellKnownResponseSchema.safeParse(wellKnownData);
         if (!validationResult.success) {
@@ -395,9 +352,7 @@ export class NIP05Service implements INIP05Service {
             identifier
           );
         }
-
         const validatedData: NIP05WellKnownResponse = validationResult.data;
-
         // Check pubkey match
         if (actualPubkey !== expectedPubkey) {
           return {
@@ -412,10 +367,8 @@ export class NIP05Service implements INIP05Service {
             method: 'http',
           };
         }
-
         // Get optional relays
         const relays = validatedData.relays?.[expectedPubkey];
-
         // Success!
         const now = Date.now();
         return {
@@ -445,7 +398,6 @@ export class NIP05Service implements INIP05Service {
             identifier
           );
         }
-
         if (error.message.includes('Failed to fetch') || error instanceof TypeError) {
           return this.createFailedResult(
             identifier.full,
@@ -455,7 +407,6 @@ export class NIP05Service implements INIP05Service {
             identifier
           );
         }
-
         return this.createFailedResult(
           identifier.full,
           expectedPubkey,
@@ -464,7 +415,6 @@ export class NIP05Service implements INIP05Service {
           identifier
         );
       }
-
       return this.createFailedResult(
         identifier.full,
         expectedPubkey,
@@ -474,7 +424,6 @@ export class NIP05Service implements INIP05Service {
       );
     }
   }
-
   /**
    * Set cached verification result
    */
@@ -486,17 +435,14 @@ export class NIP05Service implements INIP05Service {
     try {
       const key = this.getCacheKey(identifier, expectedPubkey);
       const ttl = result.verified ? this.cacheConfig.successTTL : this.cacheConfig.failureTTL;
-
       const cacheEntry: NIP05CacheEntry = {
         result,
         cachedAt: Date.now(),
         ttl,
         key,
       };
-
       // Store in memory cache
       this.memoryCache.set(key, cacheEntry);
-
       // Enforce max cache size
       if (this.memoryCache.size > this.cacheConfig.maxSize) {
         // Remove oldest entry
@@ -505,28 +451,24 @@ export class NIP05Service implements INIP05Service {
           this.memoryCache.delete(firstKey);
         }
       }
-
       // TODO: Implement IndexedDB persistence
     } catch (error) {
       console.error('Cache write error:', error);
       // Don't throw, caching is optional
     }
   }
-
   /**
    * Get cache key for identifier and pubkey pair
    */
   private getCacheKey(identifier: string, pubkey: string): string {
     return `${identifier.toLowerCase()}:${pubkey.toLowerCase()}`;
   }
-
   /**
    * Validate pubkey format (64 hex characters)
    */
   private isValidPubkey(pubkey: string): boolean {
     return /^[a-f0-9]{64}$/.test(pubkey);
   }
-
   /**
    * Get HTTP error code from status
    */
@@ -535,7 +477,6 @@ export class NIP05Service implements INIP05Service {
     if (status >= 500) return 'HTTP_500';
     return 'HTTP_ERROR';
   }
-
   /**
    * Create failed verification result
    */
@@ -560,7 +501,6 @@ export class NIP05Service implements INIP05Service {
         };
       }
     }
-
     return {
       success: false,
       verified: false,
@@ -572,24 +512,20 @@ export class NIP05Service implements INIP05Service {
       method: 'http',
     };
   }
-
   /**
    * Update service statistics
    */
   private updateStatistics(startTime: number, success: boolean): void {
     const duration = Date.now() - startTime;
-
     if (success) {
       this.statistics.successCount++;
     } else {
       this.statistics.failureCount++;
     }
-
     // Update average verification time (running average)
     const totalTime = this.statistics.averageVerificationTime * (this.statistics.totalAttempts - 1);
     this.statistics.averageVerificationTime =
       (totalTime + duration) / this.statistics.totalAttempts;
-
     // Update rates
     this.statistics.successRate =
       (this.statistics.successCount / this.statistics.totalAttempts) * 100;
@@ -598,23 +534,19 @@ export class NIP05Service implements INIP05Service {
       totalCacheAttempts > 0 ? (this.statistics.cacheHits / totalCacheAttempts) * 100 : 0;
   }
 }
-
 // ========================================
 // Factory Function
 // ========================================
-
 /**
  * Create NIP05Service instance
  */
 export function createNIP05Service(config?: Partial<NIP05CacheConfig>): NIP05Service {
   return new NIP05Service(config);
 }
-
 /**
  * Singleton instance (default configuration)
  */
 let defaultInstance: NIP05Service | null = null;
-
 /**
  * Get default NIP05Service instance
  */
@@ -624,7 +556,6 @@ export function getNIP05Service(): NIP05Service {
   }
   return defaultInstance;
 }
-
 // Export types for convenience
 export type {
   NIP05Identifier,

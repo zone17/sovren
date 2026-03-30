@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   IContentCreationService,
   ContentDraft,
@@ -21,7 +20,6 @@ import { v4 as uuidv4 } from 'uuid';
 import sharp from 'sharp';
 import { uploadMedia } from '../storage/StorageService';
 import path from 'path';
-
 /**
  * ContentCreationService handles all content creation operations including
  * draft management, media uploads, validation, and auto-save functionality.
@@ -40,7 +38,6 @@ export class ContentCreationService implements IContentCreationService {
   };
   private readonly allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
   private readonly allowedVideoTypes = ['video/mp4', 'video/webm', 'video/ogg'];
-
   // Validation schema for content
   private readonly contentSchema = Joi.object({
     title: Joi.string().max(200).required(),
@@ -54,7 +51,6 @@ export class ContentCreationService implements IContentCreationService {
     allowComments: Joi.boolean().optional(),
     featured: Joi.boolean().optional(),
   });
-
   constructor(
     private readonly db: IDatabase,
     private readonly cache: ICacheService,
@@ -64,7 +60,6 @@ export class ContentCreationService implements IContentCreationService {
   ) {
     this.logger = new Logger(ContentCreationService.name);
   }
-
   /**
    * Creates a new content item from a draft
    * @param draft - The content draft to create
@@ -73,7 +68,6 @@ export class ContentCreationService implements IContentCreationService {
   public async create(draft: ContentDraft): Promise<Content> {
     try {
       this.logger.info('Creating new content', { title: draft.title });
-
       // Validate the draft
       const validation = await this.validateContent(draft);
       if (!validation.isValid) {
@@ -81,13 +75,10 @@ export class ContentCreationService implements IContentCreationService {
           details: { errors: validation.errors },
         });
       }
-
       // Generate unique slug
       const slug = await this.generateSlug(draft.title);
-
       // Extract metadata
       const metadata = await this.extractMetadata(draft);
-
       // Create content record
       const content: Content = {
         id: uuidv4(),
@@ -101,7 +92,6 @@ export class ContentCreationService implements IContentCreationService {
         version: 1,
         authorId: draft.authorId,
       };
-
       // Save to database
       await this.db.query(
         `INSERT INTO content (
@@ -124,14 +114,12 @@ export class ContentCreationService implements IContentCreationService {
           content.updatedAt,
         ]
       );
-
       // Cache the content
       await this.cache.set(
         `content:${content.id}`,
         content,
         300 // 5 minutes
       );
-
       // Log the creation
       await this.auditLog.log({
         action: 'content.created',
@@ -144,7 +132,6 @@ export class ContentCreationService implements IContentCreationService {
         },
         timestamp: new Date(),
       });
-
       // Emit event
       await this.eventBus.emit('content.created', {
         contentId: content.id,
@@ -152,17 +139,14 @@ export class ContentCreationService implements IContentCreationService {
         title: content.title,
         timestamp: Date.now(),
       });
-
       // Notify collaborators if any
       if (draft.collaborators && draft.collaborators.length > 0) {
         await this.notifyCollaborators(content, draft.collaborators);
       }
-
       this.logger.info('Content created successfully', {
         contentId: content.id,
         slug: content.slug,
       });
-
       return content;
     } catch (error) {
       this.logger.error('Failed to create content', error);
@@ -172,7 +156,6 @@ export class ContentCreationService implements IContentCreationService {
       });
     }
   }
-
   /**
    * Uploads and processes media files
    * @param file - The media file to upload
@@ -184,31 +167,24 @@ export class ContentCreationService implements IContentCreationService {
         filename: file.filename,
         mimetype: file.mimetype,
       });
-
       // Validate file type and size
       this.validateMediaFile(file);
-
       // Generate unique filename
       const assetId = uuidv4();
       const fileExt = path.extname(file.filename);
       let storagePath = `/uploads/${assetId}${fileExt}`;
-
       // Process image if applicable
       let processedFile: Buffer = file.buffer;
       let thumbnailPath: string | undefined;
-
       if (this.allowedImageTypes.includes(file.mimetype)) {
         // Optimize image
         processedFile = await this.optimizeImage(file.buffer);
-
         // Generate thumbnail
         thumbnailPath = await this.generateThumbnail(file.buffer, assetId);
       }
-
       // Save to object storage (Supabase Storage in prod, local fallback in dev)
       const uploadResult = await uploadMedia(storagePath, processedFile, file.mimetype);
       storagePath = uploadResult.url;
-
       // Create media asset record
       const mediaAsset: MediaAsset = {
         id: assetId,
@@ -223,7 +199,6 @@ export class ContentCreationService implements IContentCreationService {
           optimized: true,
         },
       };
-
       // Save to database
       await this.db.query(
         `INSERT INTO media_assets (
@@ -240,7 +215,6 @@ export class ContentCreationService implements IContentCreationService {
           mediaAsset.uploadedAt,
         ]
       );
-
       // Log the upload
       await this.auditLog.log({
         action: 'media.uploaded',
@@ -253,18 +227,15 @@ export class ContentCreationService implements IContentCreationService {
         },
         timestamp: new Date(),
       });
-
       // Emit event
       await this.eventBus.emit('media.uploaded', {
         assetId: mediaAsset.id,
         filename: mediaAsset.filename,
         timestamp: Date.now(),
       });
-
       this.logger.info('Media uploaded successfully', {
         assetId: mediaAsset.id,
       });
-
       return mediaAsset;
     } catch (error) {
       this.logger.error('Failed to upload media', error);
@@ -274,7 +245,6 @@ export class ContentCreationService implements IContentCreationService {
       });
     }
   }
-
   /**
    * Validates content against business rules
    * @param draft - The content draft to validate
@@ -285,7 +255,6 @@ export class ContentCreationService implements IContentCreationService {
       const validation = this.contentSchema.validate(draft, {
         abortEarly: false,
       });
-
       if (validation.error) {
         return {
           isValid: false,
@@ -296,10 +265,8 @@ export class ContentCreationService implements IContentCreationService {
           })),
         };
       }
-
       // Additional business rule validations
       const errors = [];
-
       // Check for duplicate slug if title changed
       if (draft.title) {
         const slug = slugify(draft.title, { lower: true, strict: true });
@@ -315,7 +282,6 @@ export class ContentCreationService implements IContentCreationService {
           });
         }
       }
-
       // Validate publish date if scheduled
       if (draft.status === 'scheduled' && !draft.publishAt) {
         errors.push({
@@ -324,7 +290,6 @@ export class ContentCreationService implements IContentCreationService {
           type: 'required',
         });
       }
-
       if (draft.publishAt && new Date(draft.publishAt) <= new Date()) {
         errors.push({
           field: 'publishAt',
@@ -332,7 +297,6 @@ export class ContentCreationService implements IContentCreationService {
           type: 'invalid',
         });
       }
-
       return {
         isValid: errors.length === 0,
         errors: errors.length > 0 ? errors : undefined,
@@ -344,7 +308,6 @@ export class ContentCreationService implements IContentCreationService {
       });
     }
   }
-
   /**
    * Auto-saves content draft
    * @param contentId - The content ID to auto-save
@@ -353,28 +316,24 @@ export class ContentCreationService implements IContentCreationService {
   public async autosave(contentId: string, draft: Partial<ContentDraft>): Promise<void> {
     try {
       const cacheKey = `autosave:${contentId}`;
-
       // Get existing autosave or content
       let existing = await this.cache.get<Partial<ContentDraft>>(cacheKey);
       if (!existing) {
         const content = await this.getContent(contentId);
         existing = content;
       }
-
       // Merge updates
       const updated = {
         ...existing,
         ...draft,
         lastAutosave: new Date(),
       };
-
       // Save to cache with extended TTL
       await this.cache.set(
         cacheKey,
         updated,
         600 // 10 minutes
       );
-
       // Save to database (autosave table)
       await this.db.query(
         `INSERT INTO content_autosaves (content_id, draft_data, saved_at)
@@ -383,20 +342,17 @@ export class ContentCreationService implements IContentCreationService {
          DO UPDATE SET draft_data = $2, saved_at = $3`,
         [contentId, JSON.stringify(updated), new Date()]
       );
-
       // Emit autosave event
       await this.eventBus.emit('content.autosaved', {
         contentId,
         timestamp: Date.now(),
       });
-
       this.logger.debug('Content auto-saved', { contentId });
     } catch (error) {
       // Don't throw on autosave failure, just log
       this.logger.error('Autosave failed', error);
     }
   }
-
   /**
    * Generates a unique URL slug from title
    * @param title - The title to generate slug from
@@ -408,37 +364,29 @@ export class ContentCreationService implements IContentCreationService {
       strict: true,
       trim: true,
     });
-
     // Ensure minimum length
     if (baseSlug.length < 3) {
       baseSlug = `content-${baseSlug}`;
     }
-
     // Check for uniqueness and append number if needed
     let slug = baseSlug;
     let counter = 1;
-
     // eslint-disable-next-line no-constant-condition
     while (true) {
       const existing = await this.db.query('SELECT id FROM content WHERE slug = $1', [slug]);
-
       if (existing.rows.length === 0) {
         break;
       }
-
       slug = `${baseSlug}-${counter}`;
       counter++;
-
       if (counter > 100) {
         // Failsafe to prevent infinite loop
         slug = `${baseSlug}-${uuidv4().slice(0, 8)}`;
         break;
       }
     }
-
     return slug;
   }
-
   /**
    * Extracts metadata from content
    * @param draft - The content draft to analyze
@@ -447,20 +395,16 @@ export class ContentCreationService implements IContentCreationService {
   public async extractMetadata(draft: ContentDraft): Promise<ContentMetadata> {
     const wordCount = draft.content.split(/\s+/).length;
     const readingTime = Math.ceil(wordCount / 200); // 200 words per minute
-
     // Extract first paragraph as excerpt if no summary
     let excerpt = draft.summary;
     if (!excerpt) {
       const firstParagraph = draft.content.split('\n\n')[0];
       excerpt = firstParagraph.slice(0, 200) + '...';
     }
-
     // Extract hashtags from content
     const hashtags = draft.content.match(/#\w+/g) || [];
-
     // Detect language (simplified - in production use a library)
     const language = this.detectLanguage(draft.content);
-
     return {
       wordCount,
       readingTime,
@@ -471,7 +415,6 @@ export class ContentCreationService implements IContentCreationService {
       lastModified: new Date(),
     };
   }
-
   /**
    * Get content by ID
    * @param contentId - The content ID to retrieve
@@ -483,20 +426,16 @@ export class ContentCreationService implements IContentCreationService {
     if (cached) {
       return cached;
     }
-
     const result = await this.db.query('SELECT * FROM content WHERE id = $1', [contentId]);
-
     if (result.rows.length === 0) {
       throw new ServiceError('Content not found', {
         context: { contentId },
       });
     }
-
     const content = result.rows[0];
     await this.cache.set(`content:${contentId}`, content, 300);
     return content;
   }
-
   /**
    * Update an existing content item
    * @param contentId - The content ID to update
@@ -505,11 +444,9 @@ export class ContentCreationService implements IContentCreationService {
    */
   public async updateContent(contentId: string, updates: Partial<ContentDraft>): Promise<Content> {
     await this.getContent(contentId);
-
     const fields: string[] = [];
     const values: any[] = [];
     let paramIndex = 1;
-
     if (updates.title !== undefined) {
       fields.push(`title = $${paramIndex++}`);
       values.push(updates.title);
@@ -534,59 +471,47 @@ export class ContentCreationService implements IContentCreationService {
       fields.push(`status = $${paramIndex++}`);
       values.push(updates.status);
     }
-
     fields.push(`updated_at = $${paramIndex++}`);
     values.push(new Date());
     values.push(contentId);
-
     if (fields.length > 1) {
       await this.db.query(
         `UPDATE content SET ${fields.join(', ')} WHERE id = $${paramIndex}`,
         values
       );
     }
-
     // Invalidate cache
     await this.cache.delete(`content:${contentId}`);
-
     // Emit event
     await this.eventBus.emit('content.updated', {
       contentId,
       updatedFields: Object.keys(updates),
       timestamp: Date.now(),
     });
-
     return this.getContent(contentId);
   }
-
   /**
    * Delete a content item
    * @param contentId - The content ID to delete
    */
   public async deleteContent(contentId: string): Promise<void> {
     await this.getContent(contentId); // Verify exists
-
     await this.db.query('DELETE FROM content WHERE id = $1', [contentId]);
-
     // Invalidate cache
     await this.cache.delete(`content:${contentId}`);
-
     // Emit event
     await this.eventBus.emit('content.deleted', {
       contentId,
       timestamp: Date.now(),
     });
-
     this.logger.info('Content deleted', { contentId });
   }
-
   /**
    * Validates media file type and size
    */
   private validateMediaFile(file: MediaFile): void {
     const isImage = this.allowedImageTypes.includes(file.mimetype);
     const isVideo = this.allowedVideoTypes.includes(file.mimetype);
-
     if (!isImage && !isVideo) {
       throw new ServiceError('Invalid file type', {
         context: {
@@ -595,7 +520,6 @@ export class ContentCreationService implements IContentCreationService {
         },
       });
     }
-
     const maxSize = isImage ? this.maxFileSize.image : this.maxFileSize.video;
     if (file.size > maxSize) {
       throw new ServiceError('File too large', {
@@ -606,7 +530,6 @@ export class ContentCreationService implements IContentCreationService {
       });
     }
   }
-
   /**
    * Optimizes image for web delivery
    */
@@ -619,7 +542,6 @@ export class ContentCreationService implements IContentCreationService {
       .jpeg({ quality: 85, progressive: true })
       .toBuffer();
   }
-
   /**
    * Generates thumbnail for image
    */
@@ -630,13 +552,10 @@ export class ContentCreationService implements IContentCreationService {
       })
       .jpeg({ quality: 75 })
       .toBuffer();
-
     const thumbnailStoragePath = `thumbnails/${assetId}.jpg`;
     const result = await uploadMedia(thumbnailStoragePath, thumbnail, 'image/jpeg');
-
     return result.url;
   }
-
   /**
    * Simple language detection
    */
@@ -646,7 +565,6 @@ export class ContentCreationService implements IContentCreationService {
     const hasNonAscii = /[^\x00-\x7F]/.test(text);
     return hasNonAscii ? 'unknown' : 'en';
   }
-
   /**
    * Notifies collaborators about new content
    */

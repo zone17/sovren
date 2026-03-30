@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Payment Service Factory
  * Factory implementation for payment-related services

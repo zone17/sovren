@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * EmailService Implementation
  * User Story: US-E5-007
@@ -171,10 +170,11 @@ export class EmailService implements IEmailService {
       };
     } catch (error) {
       this.metrics.failed++;
+      const errMsg = error instanceof Error ? error.message : String(error);
 
       // Log error
       this.logger.error('Failed to send email', {
-        error: error.message,
+        error: errMsg,
         to: message.to,
         subject: message.subject,
       });
@@ -183,7 +183,7 @@ export class EmailService implements IEmailService {
       await this.eventBus.emit('email.failed', {
         to: message.to,
         subject: message.subject,
-        error: error.message,
+        error: errMsg,
       });
 
       // Add to retry queue if retriable
@@ -192,7 +192,7 @@ export class EmailService implements IEmailService {
 
         return {
           success: false,
-          error: error.message,
+          error: errMsg,
           queued: true,
           queueId: this.getMessageHash(message),
         };
@@ -200,7 +200,7 @@ export class EmailService implements IEmailService {
 
       return {
         success: false,
-        error: error.message,
+        error: errMsg,
         queued: false,
       };
     }
@@ -258,7 +258,7 @@ export class EmailService implements IEmailService {
   async sendTemplate(
     templateName: string,
     to: string | string[],
-    data: Record<string, any>,
+    data: Record<string, unknown>,
     options?: Partial<EmailMessage>
   ): Promise<EmailSendResult> {
     const template: EmailTemplate = {
@@ -497,13 +497,14 @@ export class EmailService implements IEmailService {
     return false;
   }
 
-  private isRetriableError(error: any): boolean {
+  private isRetriableError(error: unknown): boolean {
     const retriableErrors = ['ECONNREFUSED', 'ETIMEDOUT', 'ENOTFOUND', 'ENETUNREACH'];
+    const err = error as { code?: string; message?: string };
 
     return (
-      retriableErrors.includes(error.code) ||
-      error.message?.includes('rate limit') ||
-      error.message?.includes('temporary')
+      retriableErrors.includes(err.code ?? '') ||
+      err.message?.includes('rate limit') === true ||
+      err.message?.includes('temporary') === true
     );
   }
 
@@ -558,7 +559,7 @@ export class EmailService implements IEmailService {
           }
         } catch (error) {
           item.retries++;
-          item.error = error.message;
+          item.error = error instanceof Error ? error.message : String(error);
 
           if (item.retries >= item.maxRetries) {
             // Max retries reached, remove from queue

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * NIP19Service - Bech32 Identifier Encoding/Decoding
  *
@@ -51,7 +50,6 @@
  * }
  * ```
  */
-
 import {
   npubEncode,
   nsecEncode,
@@ -72,7 +70,6 @@ import {
   type DecodedEvent,
   type DecodedAddress,
 } from '@shared/types/nostr/index';
-
 /**
  * Decoded nrelay type (temporary until added to shared types)
  */
@@ -80,11 +77,9 @@ export interface DecodedRelay {
   type: 'nrelay';
   data: string; // Relay URL
 }
-
 // ========================================
 // Error Classes
 // ========================================
-
 /**
  * Base error class for NIP-19 operations
  */
@@ -99,7 +94,6 @@ export class NIP19Error extends Error {
     Object.setPrototypeOf(this, NIP19Error.prototype);
   }
 }
-
 /**
  * Invalid prefix error - thrown when bech32 prefix is not recognized
  */
@@ -114,7 +108,6 @@ export class InvalidPrefixError extends NIP19Error {
     Object.setPrototypeOf(this, InvalidPrefixError.prototype);
   }
 }
-
 /**
  * Invalid encoding error - thrown when bech32 encoding is malformed
  */
@@ -127,7 +120,6 @@ export class InvalidEncodingError extends NIP19Error {
     Object.setPrototypeOf(this, InvalidEncodingError.prototype);
   }
 }
-
 /**
  * Malformed data error - thrown when decoded data doesn't match expected format
  */
@@ -138,7 +130,6 @@ export class MalformedDataError extends NIP19Error {
     Object.setPrototypeOf(this, MalformedDataError.prototype);
   }
 }
-
 /**
  * Invalid checksum error - thrown when bech32 checksum validation fails
  */
@@ -151,7 +142,6 @@ export class InvalidChecksumError extends NIP19Error {
     Object.setPrototypeOf(this, InvalidChecksumError.prototype);
   }
 }
-
 /**
  * Validation error - thrown when input validation fails
  */
@@ -166,11 +156,9 @@ export class ValidationError extends NIP19Error {
     Object.setPrototypeOf(this, ValidationError.prototype);
   }
 }
-
 // ========================================
 // Type Definitions
 // ========================================
-
 /**
  * Profile pointer for nprofile encoding
  */
@@ -178,7 +166,6 @@ export interface ProfilePointer {
   pubkey: string;
   relays?: string[];
 }
-
 /**
  * Event pointer for nevent encoding
  */
@@ -188,7 +175,6 @@ export interface EventPointer {
   author?: string;
   kind?: number;
 }
-
 /**
  * Address pointer for naddr encoding
  */
@@ -198,7 +184,6 @@ export interface AddressPointer {
   kind: number;
   relays?: string[];
 }
-
 /**
  * QR Code generation options
  */
@@ -206,11 +191,9 @@ export interface QRCodeOptions {
   size?: number;
   errorCorrectionLevel?: 'L' | 'M' | 'Q' | 'H';
 }
-
 // ========================================
 // NIP19Service Implementation
 // ========================================
-
 /**
  * NIP-19 Bech32 Identifier Service
  *
@@ -220,11 +203,9 @@ export interface QRCodeOptions {
 export class NIP19Service {
   private readonly HEX_REGEX = /^[a-fA-F0-9]{64}$/;
   private readonly WSS_REGEX = /^wss:\/\/.+/;
-
   // ========================================
   // Encoding Functions
   // ========================================
-
   /**
    * Encode hex public key to npub (bech32)
    *
@@ -235,14 +216,12 @@ export class NIP19Service {
   encodePubkey(hex: string): string {
     this.validateHexInput(hex, 'pubkey');
     const normalizedHex = hex.toLowerCase();
-
     try {
       return npubEncode(normalizedHex);
     } catch (error) {
       throw new Error(`Failed to encode pubkey: ${this.sanitizeErrorMessage(error)}`);
     }
   }
-
   /**
    * Encode hex private key to nsec (bech32)
    *
@@ -254,7 +233,6 @@ export class NIP19Service {
   encodePrivkey(hex: string): string {
     this.validateHexInput(hex, 'privkey');
     const normalizedHex = hex.toLowerCase();
-
     try {
       // nsecEncode requires Uint8Array, not hex string
       const bytes = hexToBytes(normalizedHex);
@@ -264,7 +242,6 @@ export class NIP19Service {
       throw new Error('Failed to encode private key: Invalid format');
     }
   }
-
   /**
    * Encode event ID to note (bech32)
    *
@@ -275,14 +252,12 @@ export class NIP19Service {
   encodeNote(eventId: string): string {
     this.validateHexInput(eventId, 'event id');
     const normalizedId = eventId.toLowerCase();
-
     try {
       return noteEncode(normalizedId);
     } catch (error) {
       throw new Error(`Failed to encode note: ${this.sanitizeErrorMessage(error)}`);
     }
   }
-
   /**
    * Encode profile reference to nprofile (bech32)
    *
@@ -298,11 +273,9 @@ export class NIP19Service {
         data.pubkey
       );
     }
-
     if (data.relays && data.relays.length > 0) {
       this.validateRelays(data.relays);
     }
-
     try {
       return nprofileEncode({
         pubkey: data.pubkey.toLowerCase(),
@@ -312,7 +285,6 @@ export class NIP19Service {
       throw new MalformedDataError('nprofile', this.sanitizeErrorMessage(error), data);
     }
   }
-
   /**
    * Encode event reference to nevent (bech32)
    *
@@ -328,11 +300,9 @@ export class NIP19Service {
         data.id
       );
     }
-
     if (data.relays && data.relays.length > 0) {
       this.validateRelays(data.relays);
     }
-
     // Validate author if provided
     if (data.author && !this.validateHex(data.author)) {
       throw new ValidationError(
@@ -341,7 +311,6 @@ export class NIP19Service {
         data.author
       );
     }
-
     try {
       return neventEncode({
         id: data.id.toLowerCase(),
@@ -353,7 +322,6 @@ export class NIP19Service {
       throw new MalformedDataError('nevent', this.sanitizeErrorMessage(error), data);
     }
   }
-
   /**
    * Encode relay URL to nrelay (bech32)
    *
@@ -365,7 +333,6 @@ export class NIP19Service {
     if (!url || typeof url !== 'string') {
       throw new ValidationError('relay URL', 'Input must be a non-empty string', url);
     }
-
     if (!this.validateRelayUrl(url)) {
       throw new ValidationError(
         'relay URL',
@@ -373,7 +340,6 @@ export class NIP19Service {
         url
       );
     }
-
     try {
       // Encode relay URL as bytes with 'nrelay' prefix
       // Use TextEncoder (available in browsers and Node.js with util polyfill)
@@ -381,17 +347,13 @@ export class NIP19Service {
         typeof TextEncoder !== 'undefined'
           ? TextEncoder
           : (globalThis as any).TextEncoder || (global as any).TextEncoder;
-
       if (!TextEncoderConstructor) {
         throw new MalformedDataError('nrelay', 'TextEncoder is not available in this environment');
       }
-
       const encoder = new TextEncoderConstructor();
       const urlBytes = encoder.encode(url);
-
       // Ensure we have a Uint8Array (convert if necessary)
       const bytes = urlBytes instanceof Uint8Array ? urlBytes : new Uint8Array(urlBytes);
-
       return encodeBytes('nrelay', bytes);
     } catch (error) {
       if (error instanceof NIP19Error) {
@@ -400,7 +362,6 @@ export class NIP19Service {
       throw new MalformedDataError('nrelay', this.sanitizeErrorMessage(error), url);
     }
   }
-
   /**
    * Encode address reference to naddr (bech32)
    *
@@ -417,7 +378,6 @@ export class NIP19Service {
         String(data.kind)
       );
     }
-
     if (!data.pubkey || !this.validateHex(data.pubkey)) {
       throw new ValidationError(
         'pubkey',
@@ -425,7 +385,6 @@ export class NIP19Service {
         data.pubkey
       );
     }
-
     if (!data.identifier || data.identifier.trim() === '') {
       throw new ValidationError(
         'identifier',
@@ -433,11 +392,9 @@ export class NIP19Service {
         data.identifier
       );
     }
-
     if (data.relays && data.relays.length > 0) {
       this.validateRelays(data.relays);
     }
-
     try {
       return naddrEncode({
         kind: data.kind,
@@ -452,11 +409,9 @@ export class NIP19Service {
       throw new MalformedDataError('naddr', this.sanitizeErrorMessage(error), data);
     }
   }
-
   // ========================================
   // Decoding Functions
   // ========================================
-
   /**
    * Decode NIP-19 bech32 identifier
    *
@@ -468,19 +423,15 @@ export class NIP19Service {
     if (!nip19 || typeof nip19 !== 'string') {
       throw new ValidationError('identifier', 'Input must be a non-empty string', nip19);
     }
-
     if (!this.isValidBech32(nip19)) {
       throw new InvalidEncodingError(nip19, 'Not a valid bech32 format');
     }
-
     // Extract prefix for better error messages
     const prefixMatch = nip19.match(/^([a-z]+)1/);
     const prefix = prefixMatch ? prefixMatch[1] : 'unknown';
     const validPrefixes = ['npub', 'nsec', 'note', 'nprofile', 'nevent', 'nrelay', 'naddr'];
-
     try {
       const decoded = nip19Decode(nip19);
-
       // Map nostr-tools decoded type to our type system
       // Note: decoded.data can be Uint8Array for some types
       switch (decoded.type) {
@@ -490,7 +441,6 @@ export class NIP19Service {
             type: 'npub' as const,
             data: decoded.data as string,
           } as DecodedKey;
-
         case 'nsec':
           // nsec returns Uint8Array, convert to hex
           const nsecData = decoded.data;
@@ -498,14 +448,12 @@ export class NIP19Service {
             type: 'nsec' as const,
             data: nsecData instanceof Uint8Array ? bytesToHex(nsecData) : (nsecData as string),
           } as DecodedKey;
-
         case 'note':
           // note returns string (hex)
           return {
             type: 'note' as const,
             data: decoded.data as string,
           } as DecodedNote;
-
         case 'nprofile':
           return {
             type: 'nprofile' as const,
@@ -514,7 +462,6 @@ export class NIP19Service {
               relays: (decoded.data as any).relays,
             },
           } as DecodedProfile;
-
         case 'nevent':
           return {
             type: 'nevent' as const,
@@ -525,7 +472,6 @@ export class NIP19Service {
               kind: (decoded.data as any).kind,
             },
           } as DecodedEvent;
-
         case 'naddr':
           return {
             type: 'naddr' as const,
@@ -536,7 +482,6 @@ export class NIP19Service {
               relays: (decoded.data as any).relays,
             },
           } as DecodedAddress;
-
         case 'nrelay':
           // nrelay returns Uint8Array, decode to string
           const relayData = decoded.data;
@@ -548,7 +493,6 @@ export class NIP19Service {
             type: 'nrelay' as const,
             data: relayUrl,
           } as DecodedRelay;
-
         default:
           throw new InvalidPrefixError(prefix, validPrefixes);
       }
@@ -557,26 +501,21 @@ export class NIP19Service {
       if (error instanceof NIP19Error) {
         throw error;
       }
-
       // Check for checksum errors
       if (error instanceof Error && error.message.toLowerCase().includes('checksum')) {
         throw new InvalidChecksumError(nip19);
       }
-
       // Check for unknown prefix
       if (error instanceof Error && error.message.toLowerCase().includes('unknown')) {
         throw new InvalidPrefixError(prefix, validPrefixes);
       }
-
       // Generic decoding error
       throw new InvalidEncodingError(nip19, this.sanitizeErrorMessage(error));
     }
   }
-
   // ========================================
   // Batch Operations
   // ========================================
-
   /**
    * Batch encoding for multiple entities
    *
@@ -609,18 +548,14 @@ export class NIP19Service {
     if (!Array.isArray(items)) {
       throw new Error('Batch encoding requires an array of items');
     }
-
     if (items.length === 0) {
       return [];
     }
-
     const results: string[] = [];
     const errors: Array<{ index: number; type: string; error: string }> = [];
-
     items.forEach((item, index) => {
       try {
         let encoded: string;
-
         switch (item.type) {
           case 'npub':
             encoded = this.encodePubkey(item.data);
@@ -646,7 +581,6 @@ export class NIP19Service {
           default:
             throw new Error(`Unknown entity type: ${(item as any).type}`);
         }
-
         results.push(encoded);
       } catch (error) {
         errors.push({
@@ -656,15 +590,12 @@ export class NIP19Service {
         });
       }
     });
-
     if (errors.length > 0) {
       const errorDetails = errors.map((e) => `[${e.index}] ${e.type}: ${e.error}`).join(', ');
       throw new Error(`Batch encoding failed for ${errors.length} item(s): ${errorDetails}`);
     }
-
     return results;
   }
-
   /**
    * Batch decoding for multiple NIP-19 identifiers
    *
@@ -687,14 +618,11 @@ export class NIP19Service {
     if (!Array.isArray(nip19s)) {
       throw new Error('Batch decoding requires an array of NIP-19 identifiers');
     }
-
     if (nip19s.length === 0) {
       return [];
     }
-
     const results: Array<DecodedNIP19 | DecodedRelay> = [];
     const errors: Array<{ index: number; identifier: string; error: string }> = [];
-
     nip19s.forEach((nip19, index) => {
       try {
         const decoded = this.decode(nip19);
@@ -707,19 +635,15 @@ export class NIP19Service {
         });
       }
     });
-
     if (errors.length > 0) {
       const errorDetails = errors.map((e) => `[${e.index}] ${e.identifier}: ${e.error}`).join(', ');
       throw new Error(`Batch decoding failed for ${errors.length} identifier(s): ${errorDetails}`);
     }
-
     return results;
   }
-
   // ========================================
   // Validation Functions
   // ========================================
-
   /**
    * Validate bech32 format
    *
@@ -730,10 +654,8 @@ export class NIP19Service {
     if (!str || typeof str !== 'string') {
       return false;
     }
-
     return BECH32_REGEX.test(str);
   }
-
   /**
    * Validate NIP-19 identifier
    *
@@ -744,11 +666,9 @@ export class NIP19Service {
     if (!this.isValidBech32(str)) {
       return false;
     }
-
     const validPrefixes = ['npub1', 'nsec1', 'note1', 'nprofile1', 'nevent1', 'nrelay1', 'naddr1'];
     return validPrefixes.some((prefix) => str.startsWith(prefix));
   }
-
   /**
    * Validate 64-character hex string
    *
@@ -759,10 +679,8 @@ export class NIP19Service {
     if (!hex || typeof hex !== 'string') {
       return false;
     }
-
     return this.HEX_REGEX.test(hex);
   }
-
   /**
    * Validate relay URL
    *
@@ -773,7 +691,6 @@ export class NIP19Service {
     if (!url || typeof url !== 'string') {
       return false;
     }
-
     try {
       const urlObj = new URL(url);
       return urlObj.protocol === 'wss:';
@@ -781,11 +698,9 @@ export class NIP19Service {
       return false;
     }
   }
-
   // ========================================
   // Integration Helpers
   // ========================================
-
   /**
    * Auto-detect NIP-19 entity type
    *
@@ -796,7 +711,6 @@ export class NIP19Service {
     if (!this.isValidNIP19(identifier)) {
       return null;
     }
-
     if (identifier.startsWith('npub1')) return 'npub';
     if (identifier.startsWith('nsec1')) return 'nsec';
     if (identifier.startsWith('note1')) return 'note';
@@ -804,10 +718,8 @@ export class NIP19Service {
     if (identifier.startsWith('nevent1')) return 'nevent';
     if (identifier.startsWith('nrelay1')) return 'nrelay';
     if (identifier.startsWith('naddr1')) return 'naddr';
-
     return null;
   }
-
   /**
    * Format identifier for display (truncate with ellipsis)
    *
@@ -819,20 +731,16 @@ export class NIP19Service {
     if (identifier.length <= maxLength) {
       return identifier;
     }
-
     // Get the prefix (e.g., "npub1", "note1")
     const prefixMatch = identifier.match(/^(npub1|nsec1|note1|nprofile1|nevent1|nrelay1|naddr1)/);
     const prefix = prefixMatch ? prefixMatch[1] : '';
     const prefixLength = prefix.length;
-
     // Show prefix + some chars + ... + suffix
     const charsToShow = Math.max(4, maxLength - prefixLength - 3);
     const suffixLength = Math.floor(charsToShow / 2);
     const midLength = charsToShow - suffixLength;
-
     return `${identifier.slice(0, prefixLength + midLength)}...${identifier.slice(-suffixLength)}`;
   }
-
   /**
    * Copy identifier to clipboard
    *
@@ -843,14 +751,12 @@ export class NIP19Service {
     if (!navigator.clipboard) {
       throw new Error('Clipboard API unavailable in this environment');
     }
-
     try {
       await navigator.clipboard.writeText(identifier);
     } catch (error) {
       throw new Error(`Failed to copy to clipboard: ${this.sanitizeErrorMessage(error)}`);
     }
   }
-
   /**
    * Generate QR code data URL for identifier
    *
@@ -860,25 +766,20 @@ export class NIP19Service {
    */
   generateQRCode(identifier: string, options: QRCodeOptions = {}): string {
     const { size = 256, errorCorrectionLevel = 'M' } = options;
-
     // Check if we're in a browser environment
     if (typeof document === 'undefined') {
       // In Node/test environment, return a mock data URL
       return `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==`;
     }
-
     // Simple QR code generation using canvas
     // In production, use a library like qrcode.js
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-
     if (!ctx) {
       throw new Error('Failed to create canvas context for QR code');
     }
-
     canvas.width = size;
     canvas.height = size;
-
     // Simple placeholder (in production, use proper QR library)
     ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, size, size);
@@ -886,14 +787,11 @@ export class NIP19Service {
     ctx.font = '12px monospace';
     ctx.fillText('QR Code', 10, 20);
     ctx.fillText(this.formatForDisplay(identifier, 20), 10, 40);
-
     return canvas.toDataURL('image/png');
   }
-
   // ========================================
   // Private Helper Methods
   // ========================================
-
   /**
    * Validate hex input and throw descriptive error
    */
@@ -901,7 +799,6 @@ export class NIP19Service {
     if (!hex || typeof hex !== 'string') {
       throw new ValidationError(fieldName, 'Input must be a non-empty string', hex);
     }
-
     if (!this.validateHex(hex)) {
       throw new ValidationError(
         fieldName,
@@ -910,13 +807,11 @@ export class NIP19Service {
       );
     }
   }
-
   /**
    * Validate array of relay URLs
    */
   private validateRelays(relays: string[]): void {
     const invalidRelays = relays.filter((url) => !this.validateRelayUrl(url));
-
     if (invalidRelays.length > 0) {
       throw new ValidationError(
         'relays',
@@ -925,7 +820,6 @@ export class NIP19Service {
       );
     }
   }
-
   /**
    * Sanitize error messages (remove sensitive data)
    */
@@ -936,16 +830,13 @@ export class NIP19Service {
     return 'Unknown error';
   }
 }
-
 // ========================================
 // Singleton Export
 // ========================================
-
 /**
  * Singleton instance of NIP19Service
  */
 export const nip19Service = new NIP19Service();
-
 /**
  * Default export
  */

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Invoice Expiration Service
  *
@@ -12,11 +11,9 @@
  * @category Services
  * @see Story #003: Add Invoice Expiration Handling to State Machine
  */
-
 import { SupabaseClient } from '@supabase/supabase-js';
 import { PaymentStateMachine } from './PaymentStateMachine';
 import { PaymentState, Payment } from '@shared/types';
-
 /**
  * Email Service Interface for sending expiration notifications
  */
@@ -40,7 +37,6 @@ export interface EmailService {
     }
   ): Promise<void>;
 }
-
 /**
  * Analytics Service Interface for tracking invoice expiration events
  */
@@ -54,7 +50,6 @@ export interface AnalyticsService {
    */
   track(event: string, properties: Record<string, unknown>): Promise<void>;
 }
-
 /**
  * Lightning Node Service Interface for managing Lightning Network resources
  */
@@ -67,7 +62,6 @@ export interface LightningNodeService {
    */
   cancelInvoice(paymentHash: string): Promise<void>;
 }
-
 /**
  * Logger interface for structured logging
  */
@@ -77,68 +71,51 @@ export interface Logger {
   error(message: string, meta?: Record<string, unknown>): void;
   debug(message: string, meta?: Record<string, unknown>): void;
 }
-
 /**
  * Configuration for Invoice Expiration Service
  */
 export interface InvoiceExpirationConfig {
   /** Supabase client for database queries */
   supabase: SupabaseClient;
-
   /** Payment state machine for state transitions */
   stateMachine: PaymentStateMachine;
-
   /** Email service for sending notifications */
   emailService: EmailService;
-
   /** Analytics service for tracking expiration events */
   analyticsService?: AnalyticsService;
-
   /** Lightning node service for cleaning up expired invoices */
   lightningNodeService?: LightningNodeService;
-
   /** Logger for debugging and monitoring */
   logger?: Logger;
-
   /** Check interval in milliseconds (default: 5 minutes) */
   checkIntervalMs?: number;
-
   /** Batch size for processing expired invoices (default: 100) */
   batchSize?: number;
-
   /** Enable automatic scheduling (default: true) */
   autoSchedule?: boolean;
-
   /** Expiration window in seconds (default: 24 hours) */
   expirationWindowSeconds?: number;
 }
-
 /**
  * Result of expiration check operation
  */
 export interface ExpirationCheckResult {
   /** Timestamp when check was performed */
   timestamp: Date;
-
   /** Number of expired invoices found */
   foundCount: number;
-
   /** Number successfully expired */
   expiredCount: number;
-
   /** Number that failed to expire */
   failedCount: number;
-
   /** Duration of check in milliseconds */
   durationMs: number;
-
   /** Errors encountered during processing */
   errors: Array<{
     paymentId: string;
     error: string;
   }>;
 }
-
 /**
  * Invoice Expiration Service
  *
@@ -177,13 +154,10 @@ export class InvoiceExpirationService {
   private batchSize: number;
   private autoSchedule: boolean;
   private expirationWindowSeconds: number;
-
   /** Timer ID for scheduled checks */
   private intervalId?: NodeJS.Timeout;
-
   /** Flag to prevent concurrent checks */
   private isChecking = false;
-
   /** Metrics for monitoring */
   private metrics = {
     totalChecks: 0,
@@ -193,7 +167,6 @@ export class InvoiceExpirationService {
     lastCheckAt: null as Date | null,
     lastCheckDuration: 0,
   };
-
   /**
    * Create a new Invoice Expiration Service
    *
@@ -210,7 +183,6 @@ export class InvoiceExpirationService {
     this.batchSize = config.batchSize ?? 100;
     this.autoSchedule = config.autoSchedule ?? true;
     this.expirationWindowSeconds = config.expirationWindowSeconds ?? 24 * 60 * 60; // Default: 24 hours
-
     this.logger?.info('Invoice Expiration Service initialized', {
       checkIntervalMs: this.checkIntervalMs,
       batchSize: this.batchSize,
@@ -218,13 +190,11 @@ export class InvoiceExpirationService {
       expirationWindowSeconds: this.expirationWindowSeconds,
       lightningNodeCleanup: !!this.lightningNodeService,
     });
-
     // Auto-start if configured
     if (this.autoSchedule) {
       this.start();
     }
   }
-
   /**
    * Start automatic expiration checks
    *
@@ -236,16 +206,13 @@ export class InvoiceExpirationService {
       this.logger?.warn('Invoice expiration scheduler already running');
       return;
     }
-
     this.logger?.info('Starting invoice expiration scheduler', {
       intervalMs: this.checkIntervalMs,
     });
-
     // Run initial check immediately
     this.checkExpiredInvoices().catch((error) => {
       this.logger?.error('Initial expiration check failed', { error });
     });
-
     // Schedule periodic checks
     this.intervalId = setInterval(() => {
       this.checkExpiredInvoices().catch((error) => {
@@ -253,7 +220,6 @@ export class InvoiceExpirationService {
       });
     }, this.checkIntervalMs);
   }
-
   /**
    * Stop automatic expiration checks
    *
@@ -266,7 +232,6 @@ export class InvoiceExpirationService {
       this.logger?.info('Invoice expiration scheduler stopped');
     }
   }
-
   /**
    * Check and expire all pending invoices past their expiration time
    *
@@ -292,31 +257,24 @@ export class InvoiceExpirationService {
         errors: [],
       };
     }
-
     this.isChecking = true;
     const startTime = Date.now();
     const timestamp = new Date();
-
     this.logger?.info('Starting invoice expiration check', { timestamp });
-
     try {
       // Find all expired pending payments
       const expiredPayments = await this.findExpiredPayments();
-
       this.logger?.info('Found expired payments', {
         count: expiredPayments.length,
       });
-
       // Process in batches to avoid overwhelming the system
       const results = await this.processExpiredPayments(expiredPayments);
-
       // Update metrics
       this.metrics.totalChecks++;
       this.metrics.totalExpired += results.expiredCount;
       this.metrics.totalFailed += results.failedCount;
       this.metrics.lastCheckAt = timestamp;
       this.metrics.lastCheckDuration = Date.now() - startTime;
-
       const result: ExpirationCheckResult = {
         timestamp,
         foundCount: expiredPayments.length,
@@ -325,15 +283,12 @@ export class InvoiceExpirationService {
         durationMs: this.metrics.lastCheckDuration,
         errors: results.errors,
       };
-
       this.logger?.info('Invoice expiration check complete', result);
-
       return result;
     } catch (error) {
       this.logger?.error('Invoice expiration check failed', {
         error: error instanceof Error ? error.message : String(error),
       });
-
       return {
         timestamp,
         foundCount: 0,
@@ -351,7 +306,6 @@ export class InvoiceExpirationService {
       this.isChecking = false;
     }
   }
-
   /**
    * Find all payments that have expired
    *
@@ -360,24 +314,20 @@ export class InvoiceExpirationService {
    */
   private async findExpiredPayments(): Promise<Payment[]> {
     const now = Math.floor(Date.now() / 1000); // Unix timestamp in seconds
-
     const { data, error } = await this.supabase
       .from('payments')
       .select('*')
       .eq('state', PaymentState.PENDING)
       .lt('expires_at', now)
       .limit(this.batchSize);
-
     if (error) {
       this.logger?.error('Database query failed', {
         error: error.message,
       });
       throw new Error(`Failed to query expired payments: ${error.message}`);
     }
-
     return (data || []) as Payment[];
   }
-
   /**
    * Process expired payments: transition state and notify users
    *
@@ -393,7 +343,6 @@ export class InvoiceExpirationService {
     let expiredCount = 0;
     let failedCount = 0;
     const errors: Array<{ paymentId: string; error: string }> = [];
-
     // Process payments sequentially to maintain order and avoid race conditions
     for (const payment of payments) {
       try {
@@ -402,22 +351,18 @@ export class InvoiceExpirationService {
       } catch (error) {
         failedCount++;
         const errorMessage = error instanceof Error ? error.message : String(error);
-
         errors.push({
           paymentId: payment.id,
           error: errorMessage,
         });
-
         this.logger?.error('Failed to expire payment', {
           paymentId: payment.id,
           error: errorMessage,
         });
       }
     }
-
     return { expiredCount, failedCount, errors };
   }
-
   /**
    * Expire a single payment and notify the user
    *
@@ -428,19 +373,16 @@ export class InvoiceExpirationService {
   private async expirePayment(payment: Payment): Promise<void> {
     const now = Math.floor(Date.now() / 1000);
     const expiredDurationSeconds = now - payment.expires_at;
-
     // Step 1: Transition payment to EXPIRED state
     await this.stateMachine.transition(payment.id, PaymentState.EXPIRED, {
       reason: 'invoice_expired',
       expired_at: now,
       previous_expires_at: payment.expires_at,
     });
-
     this.logger?.debug('Payment transitioned to EXPIRED', {
       paymentId: payment.id,
       userId: payment.user_id,
     });
-
     // Step 2: Send email notification to user
     await this.emailService.sendInvoiceExpiredEmail(payment.user_id, payment.id, {
       amount: payment.amount,
@@ -448,13 +390,11 @@ export class InvoiceExpirationService {
       description: payment.description,
       expiresAt: new Date(payment.expires_at * 1000), // Convert to Date
     });
-
     // Step 3: Clean up Lightning node resources
     if (this.lightningNodeService && payment.payment_hash) {
       try {
         await this.lightningNodeService.cancelInvoice(payment.payment_hash);
         this.metrics.totalCleanedUp++;
-
         this.logger?.debug('Lightning node invoice cancelled', {
           paymentId: payment.id,
           paymentHash: payment.payment_hash,
@@ -468,7 +408,6 @@ export class InvoiceExpirationService {
         });
       }
     }
-
     // Step 4: Emit analytics event for invoice expiration
     if (this.analyticsService) {
       await this.analyticsService.track('invoice_expired', {
@@ -481,13 +420,11 @@ export class InvoiceExpirationService {
         expired_duration_seconds: expiredDurationSeconds,
         description: payment.description,
       });
-
       this.logger?.debug('Analytics event emitted for expired invoice', {
         paymentId: payment.id,
         expiredDurationSeconds,
       });
     }
-
     this.logger?.info('Invoice expired and user notified', {
       paymentId: payment.id,
       userId: payment.user_id,
@@ -496,7 +433,6 @@ export class InvoiceExpirationService {
       expiredDurationSeconds,
     });
   }
-
   /**
    * Get service metrics for monitoring
    *
@@ -518,7 +454,6 @@ export class InvoiceExpirationService {
       checkIntervalMs: this.checkIntervalMs,
     };
   }
-
   /**
    * Manually expire a specific payment
    *
@@ -529,26 +464,20 @@ export class InvoiceExpirationService {
    */
   async manuallyExpirePayment(paymentId: string): Promise<void> {
     this.logger?.info('Manually expiring payment', { paymentId });
-
     const { data: payment, error } = await this.supabase
       .from('payments')
       .select('*')
       .eq('id', paymentId)
       .single();
-
     if (error || !payment) {
       throw new Error(`Payment not found: ${paymentId}`);
     }
-
     if (payment.state !== PaymentState.PENDING) {
       throw new Error(`Payment is not in PENDING state: ${payment.state}`);
     }
-
     await this.expirePayment(payment as Payment);
-
     this.logger?.info('Payment manually expired', { paymentId });
   }
-
   /**
    * Cleanup method to be called on service shutdown
    *
@@ -559,7 +488,6 @@ export class InvoiceExpirationService {
     this.stop();
   }
 }
-
 /**
  * Factory function to create an Invoice Expiration Service
  *

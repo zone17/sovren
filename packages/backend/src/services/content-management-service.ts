@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 📝 **CONTENT MANAGEMENT SERVICE**
  *
@@ -11,7 +10,6 @@
  * - Performance optimized
  * - Security by design
  */
-
 import { createClient } from '@supabase/supabase-js';
 import type {
   ContentBlock,
@@ -25,7 +23,6 @@ import type {
 import { ValidationError, NotFoundError, ConflictError, ServiceError } from '../utils/errors';
 import { escapePostgrestFilter } from '../utils/escapePostgrestFilter';
 import { applyCursorFilter, buildCursorPageInfo } from '../utils/cursor-pagination';
-
 interface ContentManagementServiceConfig {
   supabaseUrl: string;
   supabaseKey: string;
@@ -33,18 +30,14 @@ interface ContentManagementServiceConfig {
   allowedMimeTypes: string[];
   cdnUrl?: string;
 }
-
 export class ContentManagementService {
   private supabase;
   private config: ContentManagementServiceConfig;
-
   constructor(config: ContentManagementServiceConfig) {
     this.config = config;
     this.supabase = createClient(config.supabaseUrl, config.supabaseKey);
   }
-
   // ==================== CONTENT ITEMS ====================
-
   /**
    * Create new content item with rich content blocks
    */
@@ -81,17 +74,14 @@ export class ContentManagementService {
       seo_description: data.excerpt,
       featured_image_id: null,
     };
-
     const { data: result, error } = await this.supabase
       .from('content_items')
       .insert(contentItem)
       .select()
       .single();
-
     if (error) throw new ServiceError(`Failed to create content: ${error.message}`);
     return result;
   }
-
   /**
    * Update content item with validation
    */
@@ -100,23 +90,19 @@ export class ContentManagementService {
       ...updates,
       updated_at: new Date().toISOString(),
     };
-
     // Update slug if title changed
     if (updates.title) {
       updateData.slug = this.generateSlug(updates.title);
     }
-
     const { data, error } = await this.supabase
       .from('content_items')
       .update(updateData)
       .eq('id', id)
       .select()
       .single();
-
     if (error) throw new ServiceError(`Failed to update content: ${error.message}`);
     return data;
   }
-
   /**
    * Publish content item with validation
    */
@@ -126,12 +112,9 @@ export class ContentManagementService {
       .select('*')
       .eq('id', id)
       .single();
-
     if (fetchError) throw new NotFoundError(`Content (${id})`, { details: fetchError.message });
-
     // Validate content before publishing
     this.validateContentForPublishing(content);
-
     const { data, error } = await this.supabase
       .from('content_items')
       .update({
@@ -142,11 +125,9 @@ export class ContentManagementService {
       .eq('id', id)
       .select()
       .single();
-
     if (error) throw new ServiceError(`Failed to publish content: ${error.message}`);
     return data;
   }
-
   /**
    * Get content items with filtering and pagination.
    *
@@ -204,9 +185,7 @@ export class ContentManagementService {
       cursor,
       direction = 'next',
     } = params;
-
     let query = this.supabase.from('content_items').select('*', { count: 'exact' });
-
     // Apply shared filters
     if (content_type) query = query.eq('content_type', content_type);
     if (status) query = query.eq('status', status);
@@ -216,27 +195,22 @@ export class ContentManagementService {
       const escaped = escapePostgrestFilter(search);
       query = query.or(`title.ilike.%${escaped}%,excerpt.ilike.%${escaped}%`);
     }
-
     // ---- Cursor pagination (live feeds) ----
     // Activate when `cursor` key is explicitly passed (even as undefined for first page)
     // or when `direction` is provided without a page number.
     if ('cursor' in params) {
       query = applyCursorFilter(query, cursor, direction);
       query = query.limit(limit);
-
       const { data, error } = await query;
       if (error) throw new ServiceError(`Failed to fetch content: ${error.message}`);
-
       const items: ContentItem[] = data || [];
       const pageInfo = buildCursorPageInfo(
         items as Array<{ created_at: string; id: string }>,
         limit,
         direction
       );
-
       // When paginating backward the rows come back oldest-first; reverse to newest-first
       const orderedItems = direction === 'prev' ? [...items].reverse() : items;
-
       return {
         items: orderedItems,
         pagination: {
@@ -247,15 +221,12 @@ export class ContentManagementService {
         limit,
       };
     }
-
     // ---- Offset pagination (admin / analytics — absolute positioning) ----
     query = query.order(sort_by, { ascending: sort_order === 'asc' });
     const offset = (page - 1) * limit;
     query = query.range(offset, offset + limit - 1);
-
     const { data, error, count } = await query;
     if (error) throw new ServiceError(`Failed to fetch content: ${error.message}`);
-
     return {
       items: data || [],
       total: count || 0,
@@ -263,9 +234,7 @@ export class ContentManagementService {
       limit,
     };
   }
-
   // ==================== MEDIA ASSETS ====================
-
   /**
    * Upload media file with optimization
    */
@@ -279,12 +248,10 @@ export class ContentManagementService {
   ): Promise<MediaAsset> {
     // Validate file
     this.validateMediaFile(file);
-
     // Generate unique filename
     const fileExtension = file.name.split('.').pop();
     const filename = `${crypto.randomUUID()}.${fileExtension}`;
     const filePath = `media/${new Date().getFullYear()}/${new Date().getMonth() + 1}/${filename}`;
-
     // Upload to Supabase Storage
     const { error: uploadError } = await this.supabase.storage
       .from('media')
@@ -292,12 +259,9 @@ export class ContentManagementService {
         cacheControl: '3600',
         upsert: false,
       });
-
     if (uploadError) throw new ServiceError(`Upload failed: ${uploadError.message}`);
-
     // Get public URL
     const { data: urlData } = this.supabase.storage.from('media').getPublicUrl(filePath);
-
     // Create media asset record
     const mediaAsset: MediaAsset = {
       id: crypto.randomUUID(),
@@ -315,7 +279,6 @@ export class ContentManagementService {
       height: null,
       duration: null,
     };
-
     // Extract media dimensions/duration if applicable
     if (file.type.startsWith('image/')) {
       const dimensions = await this.getImageDimensions(file);
@@ -325,17 +288,14 @@ export class ContentManagementService {
       const duration = await this.getMediaDuration(file);
       mediaAsset.duration = duration;
     }
-
     const { data, error } = await this.supabase
       .from('media_assets')
       .insert(mediaAsset)
       .select()
       .single();
-
     if (error) throw new ServiceError(`Failed to save media asset: ${error.message}`);
     return data;
   }
-
   /**
    * Get media assets with filtering
    */
@@ -349,9 +309,7 @@ export class ContentManagementService {
     } = {}
   ): Promise<{ assets: MediaAsset[]; total: number }> {
     const { page = 1, limit = 20, file_type, author_id, search } = params;
-
     let query = this.supabase.from('media_assets').select('*', { count: 'exact' });
-
     if (file_type) {
       query = query.like('file_type', `${file_type}%`);
     }
@@ -362,22 +320,17 @@ export class ContentManagementService {
         `filename.ilike.%${escaped}%,alt_text.ilike.%${escaped}%,caption.ilike.%${escaped}%`
       );
     }
-
     query = query.order('created_at', { ascending: false });
     const offset = (page - 1) * limit;
     query = query.range(offset, offset + limit - 1);
-
     const { data, error, count } = await query;
     if (error) throw new ServiceError(`Failed to fetch media assets: ${error.message}`);
-
     return {
       assets: data || [],
       total: count || 0,
     };
   }
-
   // ==================== CONTENT COLLECTIONS ====================
-
   /**
    * Create content collection
    */
@@ -401,17 +354,14 @@ export class ContentManagementService {
       updated_at: new Date().toISOString(),
       featured_image_id: null,
     };
-
     const { data: result, error } = await this.supabase
       .from('content_collections')
       .insert(collection)
       .select()
       .single();
-
     if (error) throw new ServiceError(`Failed to create collection: ${error.message}`);
     return result;
   }
-
   /**
    * Add content to collection
    */
@@ -422,25 +372,20 @@ export class ContentManagementService {
       .select('content_items')
       .eq('id', collectionId)
       .single();
-
     if (fetchError)
       throw new NotFoundError(`Collection (${collectionId})`, { details: fetchError.message });
-
     // Check if content already exists
     const existingItems = collection.content_items || [];
     if (existingItems.some((item: any) => item.content_id === contentId)) {
       throw new ConflictError('Content already exists in collection');
     }
-
     // Add new content item
     const newItem = {
       content_id: contentId,
       order_index: existingItems.length,
       added_at: new Date().toISOString(),
     };
-
     const updatedItems = [...existingItems, newItem];
-
     const { error } = await this.supabase
       .from('content_collections')
       .update({
@@ -448,10 +393,8 @@ export class ContentManagementService {
         updated_at: new Date().toISOString(),
       })
       .eq('id', collectionId);
-
     if (error) throw new ServiceError(`Failed to add content to collection: ${error.message}`);
   }
-
   /**
    * Reorder collection items
    */
@@ -465,20 +408,16 @@ export class ContentManagementService {
       .select('content_items')
       .eq('id', collectionId)
       .single();
-
     if (fetchError)
       throw new NotFoundError(`Collection (${collectionId})`, { details: fetchError.message });
-
     const items = [...(collection.content_items || [])];
     const [movedItem] = items.splice(sourceIndex, 1);
     items.splice(destinationIndex, 0, movedItem);
-
     // Update order indices
     const updatedItems = items.map((item, index) => ({
       ...item,
       order_index: index,
     }));
-
     const { error } = await this.supabase
       .from('content_collections')
       .update({
@@ -486,12 +425,9 @@ export class ContentManagementService {
         updated_at: new Date().toISOString(),
       })
       .eq('id', collectionId);
-
     if (error) throw new ServiceError(`Failed to reorder collection items: ${error.message}`);
   }
-
   // ==================== CONTENT SERIES ====================
-
   /**
    * Create content series
    */
@@ -521,17 +457,14 @@ export class ContentManagementService {
       enrollment_count: 0,
       completion_rate: 0,
     };
-
     const { data: result, error } = await this.supabase
       .from('content_series')
       .insert(series)
       .select()
       .single();
-
     if (error) throw new ServiceError(`Failed to create series: ${error.message}`);
     return result;
   }
-
   /**
    * Add episode to series
    */
@@ -550,10 +483,8 @@ export class ContentManagementService {
       .select('episodes')
       .eq('id', seriesId)
       .single();
-
     if (fetchError)
       throw new NotFoundError(`Series (${seriesId})`, { details: fetchError.message });
-
     const episode: SeriesEpisode = {
       id: crypto.randomUUID(),
       content_id: contentId,
@@ -565,9 +496,7 @@ export class ContentManagementService {
       completed_at: null,
       progress_percentage: 0,
     };
-
     const updatedEpisodes = [...(series.episodes || []), episode];
-
     const { error } = await this.supabase
       .from('content_series')
       .update({
@@ -575,12 +504,9 @@ export class ContentManagementService {
         updated_at: new Date().toISOString(),
       })
       .eq('id', seriesId);
-
     if (error) throw new ServiceError(`Failed to add episode to series: ${error.message}`);
   }
-
   // ==================== PREMIUM CONTENT ====================
-
   /**
    * Create premium content access
    */
@@ -601,17 +527,14 @@ export class ContentManagementService {
       expires_at: data.expires_at,
       is_active: true,
     };
-
     const { data: result, error } = await this.supabase
       .from('premium_content_access')
       .insert(premiumAccess)
       .select()
       .single();
-
     if (error) throw new ServiceError(`Failed to create premium access: ${error.message}`);
     return result;
   }
-
   /**
    * Check premium content access
    */
@@ -623,11 +546,8 @@ export class ContentManagementService {
       .eq('user_id', userId)
       .eq('is_active', true)
       .maybeSingle();
-
     if (error) throw new ServiceError(`Failed to check premium access: ${error.message}`);
-
     if (!data) return false;
-
     // Check if access has expired
     if (data.expires_at && new Date(data.expires_at) < new Date()) {
       // Deactivate expired access
@@ -637,12 +557,9 @@ export class ContentManagementService {
         .eq('id', data.id);
       return false;
     }
-
     return true;
   }
-
   // ==================== ANALYTICS ====================
-
   /**
    * Track content view
    */
@@ -655,11 +572,9 @@ export class ContentManagementService {
         updated_at: new Date().toISOString(),
       })
       .eq('id', contentId);
-
     if (updateError) {
       console.error('Failed to update view count:', updateError.message);
     }
-
     // Track view event
     const viewEvent = {
       id: crypto.randomUUID(),
@@ -669,14 +584,11 @@ export class ContentManagementService {
       timestamp: new Date().toISOString(),
       metadata: {},
     };
-
     const { error: eventError } = await this.supabase.from('content_analytics').insert(viewEvent);
-
     if (eventError) {
       console.error('Failed to track view event:', eventError.message);
     }
   }
-
   /**
    * Get content analytics
    */
@@ -698,19 +610,15 @@ export class ContentManagementService {
       .eq('content_id', contentId)
       .gte('timestamp', timeRange.start_date)
       .lte('timestamp', timeRange.end_date);
-
     if (error) throw new ServiceError(`Failed to fetch analytics: ${error.message}`);
-
     const views = data?.length || 0;
     const uniqueViewers = new Set(data?.map((event) => event.user_id).filter(Boolean)).size;
     const engagementRate = views > 0 ? (uniqueViewers / views) * 100 : 0;
-
     // Calculate average read time (mock calculation)
     const averageReadTime =
       data?.reduce((sum, event) => {
         return sum + (event.metadata?.read_time || 0);
       }, 0) / Math.max(views, 1);
-
     return {
       views,
       unique_viewers: uniqueViewers,
@@ -718,9 +626,7 @@ export class ContentManagementService {
       average_read_time: Math.round(averageReadTime),
     };
   }
-
   // ==================== UTILITY METHODS ====================
-
   /**
    * Generate URL-friendly slug
    */
@@ -731,7 +637,6 @@ export class ContentManagementService {
       .replace(/[\s_-]+/g, '-')
       .replace(/^-+|-+$/g, '');
   }
-
   /**
    * Validate content for publishing
    */
@@ -739,16 +644,13 @@ export class ContentManagementService {
     if (!content.title?.trim()) {
       throw new ValidationError('Content must have a title');
     }
-
     if (!content.content_blocks || content.content_blocks.length === 0) {
       throw new ValidationError('Content must have at least one content block');
     }
-
     if (content.is_premium && (!content.price || content.price <= 0)) {
       throw new ValidationError('Premium content must have a valid price');
     }
   }
-
   /**
    * Validate media file
    */
@@ -758,12 +660,10 @@ export class ContentManagementService {
         `File size exceeds limit of ${this.config.maxFileSize / 1024 / 1024}MB`
       );
     }
-
     if (!this.config.allowedMimeTypes.includes(file.type)) {
       throw new ValidationError(`File type ${file.type} is not allowed`);
     }
   }
-
   /**
    * Get image dimensions
    */
@@ -777,7 +677,6 @@ export class ContentManagementService {
       img.src = URL.createObjectURL(file);
     });
   }
-
   /**
    * Get media duration
    */
@@ -786,7 +685,6 @@ export class ContentManagementService {
       const media = file.type.startsWith('video/')
         ? document.createElement('video')
         : document.createElement('audio');
-
       media.onloadedmetadata = () => {
         resolve(Math.round(media.duration));
       };
@@ -794,9 +692,7 @@ export class ContentManagementService {
       media.src = URL.createObjectURL(file);
     });
   }
-
   // ==================== SEARCH AND INDEXING ====================
-
   /**
    * Full-text search across content
    */
@@ -810,13 +706,11 @@ export class ContentManagementService {
     } = {}
   ): Promise<ContentItem[]> {
     let searchQuery = this.supabase.from('content_items').select('*').eq('status', 'published');
-
     // Full-text search
     const escapedQuery = escapePostgrestFilter(query);
     searchQuery = searchQuery.or(
       `title.ilike.%${escapedQuery}%,excerpt.ilike.%${escapedQuery}%,tags.cs.{${escapedQuery}}`
     );
-
     // Apply filters
     if (filters.content_type) {
       searchQuery = searchQuery.eq('content_type', filters.content_type);
@@ -830,17 +724,12 @@ export class ContentManagementService {
     if (filters.is_premium !== undefined) {
       searchQuery = searchQuery.eq('is_premium', filters.is_premium);
     }
-
     searchQuery = searchQuery.order('view_count', { ascending: false }).limit(50);
-
     const { data, error } = await searchQuery;
     if (error) throw new ServiceError(`Search failed: ${error.message}`);
-
     return data || [];
   }
-
   // ==================== CONTENT VERSIONING ====================
-
   /**
    * Create content version
    */
@@ -863,12 +752,9 @@ export class ContentManagementService {
       author_id: versionData.author_id,
       created_at: new Date().toISOString(),
     };
-
     const { error } = await this.supabase.from('content_versions').insert(version);
-
     if (error) throw new ServiceError(`Failed to create version: ${error.message}`);
   }
-
   /**
    * Get next version number
    */
@@ -879,13 +765,10 @@ export class ContentManagementService {
       .eq('content_id', contentId)
       .order('version_number', { ascending: false })
       .limit(1);
-
     if (error) throw new ServiceError(`Failed to get version number: ${error.message}`);
-
     return (data?.[0]?.version_number || 0) + 1;
   }
 }
-
 // Export default configuration
 export const createContentManagementService = (
   config: Partial<ContentManagementServiceConfig> = {}
@@ -914,6 +797,5 @@ export const createContentManagementService = (
     cdnUrl: process.env.CDN_URL,
     ...config,
   };
-
   return new ContentManagementService(defaultConfig);
 };

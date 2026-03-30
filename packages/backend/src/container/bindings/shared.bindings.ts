@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Shared Services Binding Module
  * Registers all Phase 2 shared services in the DI container

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Refactored Content Query Hook
  * Server data in React Query, UI state in Redux
@@ -30,7 +29,7 @@ const fetchContent = async ({
   limit: number;
   sortBy?: string;
   sortDirection?: 'asc' | 'desc';
-  filters?: Record<string, any>;
+  filters?: Record<string, unknown>;
 }): Promise<ContentResponse> => {
   const params = new URLSearchParams();
   params.append('page', page.toString());

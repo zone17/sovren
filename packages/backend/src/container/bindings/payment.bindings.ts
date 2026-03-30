@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Payment Services Binding Module
  * Registers all Phase 5 payment services in the DI container

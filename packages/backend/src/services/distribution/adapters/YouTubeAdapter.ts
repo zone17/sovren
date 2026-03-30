@@ -1,9 +1,7 @@
-// @ts-nocheck
 /**
  * YouTube Platform Adapter
  * EPIC-009: YouTube Data API v3 integration
  */
-
 import type {
   SupportedPlatform,
   OAuthTokens,
@@ -13,7 +11,6 @@ import type {
 } from '@shared/types/distribution';
 import type { PlatformAdapterConfig } from './IPlatformAdapter';
 import { BasePlatformAdapter } from './BasePlatformAdapter';
-
 export class YouTubeAdapter extends BasePlatformAdapter {
   readonly platform: SupportedPlatform = 'youtube';
   readonly constraints: ContentConstraints = {
@@ -25,11 +22,9 @@ export class YouTubeAdapter extends BasePlatformAdapter {
     supports_video: true,
     max_video_length_seconds: 43200, // 12 hours
   };
-
   constructor(config: PlatformAdapterConfig) {
     super(config);
   }
-
   getAuthorizationUrl(state: string): string {
     const params = new URLSearchParams({
       client_id: this.config.clientId,
@@ -43,7 +38,6 @@ export class YouTubeAdapter extends BasePlatformAdapter {
     });
     return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
   }
-
   async exchangeCodeForTokens(code: string): Promise<OAuthTokens> {
     const response = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
@@ -56,11 +50,9 @@ export class YouTubeAdapter extends BasePlatformAdapter {
         code,
       }).toString(),
     });
-
     if (!response.ok) {
       throw new Error(`YouTube token exchange failed: ${response.status}`);
     }
-
     const data = await response.json();
     return {
       access_token: data.access_token,
@@ -71,7 +63,6 @@ export class YouTubeAdapter extends BasePlatformAdapter {
       scopes: (data.scope || '').split(' '),
     };
   }
-
   async refreshTokens(refreshToken: string): Promise<OAuthTokens> {
     const response = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
@@ -83,11 +74,9 @@ export class YouTubeAdapter extends BasePlatformAdapter {
         refresh_token: refreshToken,
       }).toString(),
     });
-
     if (!response.ok) {
       throw new Error(`YouTube token refresh failed: ${response.status}`);
     }
-
     const data = await response.json();
     return {
       access_token: data.access_token,
@@ -98,13 +87,11 @@ export class YouTubeAdapter extends BasePlatformAdapter {
       scopes: (data.scope || '').split(' '),
     };
   }
-
   async revokeTokens(accessToken: string): Promise<void> {
     await fetch(`https://oauth2.googleapis.com/revoke?token=${accessToken}`, {
       method: 'POST',
     });
   }
-
   async publish(_tokens: OAuthTokens, _content: FormattedContent): Promise<PublishResult> {
     const postId = `youtube_${Date.now()}`;
     return {

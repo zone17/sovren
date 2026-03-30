@@ -1,6 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
-// TODO(SOV-TS-002): Full TS cleanup needed (timestamp nullability, storage interface types)
 /**
  * AuditLogService Implementation
  * User Story: US-E5-009
