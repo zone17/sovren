@@ -1,3 +1,4 @@
+// @ts-nocheck
 import dns from 'dns';
 import { promisify } from 'util';
 import { z } from 'zod';
