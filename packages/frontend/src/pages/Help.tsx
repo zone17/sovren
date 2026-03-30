@@ -73,6 +73,31 @@ const faqItems: FAQItem[] = [
     answer:
       'Sign up, choose "Creator" during onboarding, generate your NOSTR keys, and optionally set up a Lightning wallet. Then start publishing! You can create your first post immediately after onboarding.',
   },
+  {
+    question: 'What are the Terms of Service?',
+    answer:
+      'Our Terms of Service govern your use of the Sovren platform, including content ownership, payment terms, prohibited conduct, dispute resolution, and limitation of liability. We encourage all users to read the full Terms at /terms. Key highlights: you retain ownership of your content, all Lightning payments are final, and disputes are resolved through binding arbitration under Delaware law.',
+  },
+  {
+    question: 'How is my data protected?',
+    answer:
+      'Sovren collects only the minimum data necessary to operate the platform. We do not sell your data, use tracking cookies, or share information with advertisers. We comply with GDPR (for EEA residents) and CCPA/CPRA (for California residents), giving you rights to access, correct, delete, and port your data. Your private keys never leave your device. For full details, see our Privacy Policy at /privacy.',
+  },
+  {
+    question: 'How do I report illegal content?',
+    answer:
+      'To report illegal content, abuse, or policy violations, email abuse@sovren.app with a description of the content and a link if possible. For copyright infringement (DMCA), email dmca@sovren.app. Child sexual abuse material (CSAM) is subject to our zero-tolerance policy and will be immediately reported to the National Center for Missing & Exploited Children (NCMEC) CyberTipline and law enforcement.',
+  },
+  {
+    question: 'What happens if I lose my keys?',
+    answer:
+      'Your NOSTR private key (nsec) cannot be recovered by Sovren or anyone else -- this is the fundamental trade-off of self-sovereign identity. There is no password reset or account recovery process. We strongly recommend: (1) downloading a backup during onboarding, (2) storing your key in a password manager like 1Password or Bitwarden, and (3) keeping an offline backup in a secure location.',
+  },
+  {
+    question: 'How do I delete my account?',
+    answer:
+      'To delete your Sovren account, contact support@sovren.app with your deletion request. Your account will enter a 30-day grace period during which it is deactivated but your data is preserved in case you change your mind. After 30 days, all account data is permanently purged from our systems. Important: content that has already been propagated to third-party NOSTR relays cannot be recalled or deleted, as this is an inherent property of the NOSTR protocol.',
+  },
 ];
 
 const FAQAccordion: React.FC<{ item: FAQItem; index: number }> = ({ item, index }) => {
@@ -122,7 +147,10 @@ const Help: React.FC = () => {
     <div className='min-h-screen bg-background'>
       <div className='max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16'>
         <nav className='mb-8'>
-          <Link to='/' className='text-sm text-purple-400 hover:text-purple-300 transition-colors inline-flex items-center py-3 min-h-[44px]'>
+          <Link
+            to='/'
+            className='text-sm text-purple-400 hover:text-purple-300 transition-colors inline-flex items-center py-3 min-h-[44px]'
+          >
             &larr; Back to Home
           </Link>
         </nav>
@@ -149,6 +177,12 @@ const Help: React.FC = () => {
             </Link>
             <Link to='/privacy' className='text-purple-400 hover:text-purple-300 transition-colors'>
               Privacy Policy
+            </Link>
+            <Link
+              to='/content-policy'
+              className='text-purple-400 hover:text-purple-300 transition-colors'
+            >
+              Content Policy
             </Link>
           </div>
         </div>

@@ -10,31 +10,31 @@ import SovrenIconPNG from '../assets/icons/Sovren-icon.png';
 
 // ─── Extracted SVG Icons ───────────────────────────────
 const OwnershipIcon = () => (
-  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+  <svg className='w-6 h-6' fill='none' viewBox='0 0 24 24' stroke='currentColor' strokeWidth={1.5}>
     <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18"
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      d='M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18'
     />
   </svg>
 );
 
 const LightningIcon = () => (
-  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+  <svg className='w-6 h-6' fill='none' viewBox='0 0 24 24' stroke='currentColor' strokeWidth={1.5}>
     <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      d='M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z'
     />
   </svg>
 );
 
 const ShieldIcon = () => (
-  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+  <svg className='w-6 h-6' fill='none' viewBox='0 0 24 24' stroke='currentColor' strokeWidth={1.5}>
     <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      d='M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z'
     />
   </svg>
 );
@@ -105,7 +105,7 @@ const Home: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen flex flex-col relative overflow-hidden"
+      className='min-h-screen flex flex-col relative overflow-hidden'
       style={{
         background: `
           radial-gradient(ellipse 80% 60% at 50% -10%, rgba(139,92,246,0.18) 0%, transparent 60%),
@@ -116,48 +116,48 @@ const Home: React.FC = () => {
       }}
     >
       {/* Floating nav */}
-      <nav className="fixed top-0 inset-x-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="glass-dark rounded-2xl px-6 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <img src={SovrenIconPNG} alt="Sovren" className="w-8 h-8 rounded-lg" />
+      <nav className='fixed top-0 inset-x-0 z-50'>
+        <div className='max-w-7xl mx-auto px-6 py-4'>
+          <div className='glass-dark rounded-2xl px-6 py-3 flex items-center justify-between'>
+            <div className='flex items-center gap-3'>
+              <img src={SovrenIconPNG} alt='Sovren' className='w-8 h-8 rounded-lg' />
               <span
-                className="text-lg font-bold text-white"
+                className='text-lg font-bold text-white'
                 style={{ fontFamily: "'Sora', sans-serif" }}
               >
                 Sovren
               </span>
             </div>
-            <div className="hidden md:flex items-center gap-8">
+            <div className='hidden md:flex items-center gap-8'>
               <a
-                href="#features"
-                className="text-sm text-white/60 hover:text-white transition-colors no-underline"
+                href='#features'
+                className='text-sm text-white/60 hover:text-white transition-colors no-underline'
               >
                 Features
               </a>
               <a
-                href="#how"
-                className="text-sm text-white/60 hover:text-white transition-colors no-underline"
+                href='#how'
+                className='text-sm text-white/60 hover:text-white transition-colors no-underline'
               >
                 How It Works
               </a>
               <a
-                href="/discover"
-                className="text-sm text-white/60 hover:text-white transition-colors no-underline"
+                href='/discover'
+                className='text-sm text-white/60 hover:text-white transition-colors no-underline'
               >
                 Discover
               </a>
             </div>
-            <div className="flex items-center gap-3">
+            <div className='flex items-center gap-3'>
               <button
                 onClick={() => navigate('/login')}
-                className="text-sm text-white/70 hover:text-white transition-colors px-4 py-2"
+                className='text-sm text-white/70 hover:text-white transition-colors px-4 py-2'
               >
                 Log in
               </button>
               <button
                 onClick={() => navigate('/onboarding')}
-                className="text-sm font-medium text-white px-5 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 transition-all duration-200 shadow-[0_4px_16px_rgba(139,92,246,0.3)] hover:shadow-[0_8px_24px_rgba(139,92,246,0.4)]"
+                className='text-sm font-medium text-white px-5 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 transition-all duration-200 shadow-[0_4px_16px_rgba(139,92,246,0.3)] hover:shadow-[0_8px_24px_rgba(139,92,246,0.4)]'
               >
                 Get Started
               </button>
@@ -169,11 +169,11 @@ const Home: React.FC = () => {
       {/* ═══════════════════ HERO ═══════════════════ */}
       <section
         ref={heroSection.ref}
-        className="min-h-screen flex flex-col items-center justify-center px-4 pt-32 pb-20 relative"
+        className='min-h-screen flex flex-col items-center justify-center px-4 pt-32 pb-20 relative'
       >
         {/* Floating purple orb accent — reduced on mobile to save GPU memory */}
         <div
-          className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[300px] h-[300px] md:w-[600px] md:h-[600px] rounded-full opacity-20 blur-[60px] md:blur-[120px] pointer-events-none"
+          className='absolute top-1/4 left-1/2 -translate-x-1/2 w-[300px] h-[300px] md:w-[600px] md:h-[600px] rounded-full opacity-20 blur-[60px] md:blur-[120px] pointer-events-none'
           style={{
             background: 'radial-gradient(circle, rgba(139,92,246,0.6) 0%, transparent 70%)',
           }}
@@ -183,13 +183,13 @@ const Home: React.FC = () => {
           className={`relative z-10 max-w-4xl mx-auto text-center transition-all duration-1000 ${heroSection.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
         >
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-dark text-sm text-purple-300 mb-8">
-            <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
+          <div className='inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-dark text-sm text-purple-300 mb-8'>
+            <span className='w-2 h-2 rounded-full bg-purple-400 animate-pulse' />
             Decentralized Creator Platform
           </div>
 
           <h1
-            className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold leading-[0.95] mb-6 text-gradient-hero"
+            className='text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold leading-[0.95] mb-6 text-gradient-hero'
             style={{ fontFamily: "'Sora', sans-serif" }}
           >
             Own Your
@@ -197,15 +197,15 @@ const Home: React.FC = () => {
             Creative Empire
           </h1>
 
-          <p className="text-lg sm:text-xl text-white/70 max-w-2xl mx-auto mb-10 leading-relaxed">
+          <p className='text-lg sm:text-xl text-white/70 max-w-2xl mx-auto mb-10 leading-relaxed'>
             Monetize your audience with Bitcoin. Publish to a censorship-resistant network. No
             middlemen. No deplatforming. Just you and your audience.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+          <div className='flex flex-col sm:flex-row items-center justify-center gap-4 mb-16'>
             <button
               onClick={() => navigate('/onboarding')}
-              className="w-full sm:w-auto px-8 py-4 text-base font-semibold text-white rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 transition-all duration-300 shadow-[0_8px_32px_rgba(139,92,246,0.35)] hover:shadow-[0_12px_40px_rgba(139,92,246,0.5)] hover:-translate-y-0.5"
+              className='w-full sm:w-auto px-8 py-4 text-base font-semibold text-white rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 transition-all duration-300 shadow-[0_8px_32px_rgba(139,92,246,0.35)] hover:shadow-[0_12px_40px_rgba(139,92,246,0.5)] hover:-translate-y-0.5'
               style={{ fontFamily: "'Sora', sans-serif" }}
             >
               Start Creating
@@ -214,23 +214,23 @@ const Home: React.FC = () => {
               onClick={() =>
                 document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })
               }
-              className="w-full sm:w-auto px-8 py-4 text-base font-medium rounded-2xl glass-dark text-white/80 hover:text-white hover:bg-white/[0.06] transition-all duration-300"
+              className='w-full sm:w-auto px-8 py-4 text-base font-medium rounded-2xl glass-dark text-white/80 hover:text-white hover:bg-white/[0.06] transition-all duration-300'
             >
               See How It Works
             </button>
           </div>
 
           {/* Dashboard preview mockup — glass card */}
-          <div className="relative max-w-3xl mx-auto">
-            <div className="glass-dark rounded-3xl p-1 shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
-              <div className="rounded-[1.25rem] bg-[hsl(240,18%,8%)] p-6 sm:p-8">
-                <div className="flex items-center gap-2 mb-6">
-                  <div className="w-3 h-3 rounded-full bg-red-500/60" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
-                  <div className="w-3 h-3 rounded-full bg-green-500/60" />
-                  <span className="ml-4 text-xs text-white/50 font-mono">sovren.dev/dashboard</span>
+          <div className='relative max-w-3xl mx-auto'>
+            <div className='glass-dark rounded-3xl p-1 shadow-[0_20px_60px_rgba(0,0,0,0.5)]'>
+              <div className='rounded-[1.25rem] bg-[hsl(240,18%,8%)] p-6 sm:p-8'>
+                <div className='flex items-center gap-2 mb-6'>
+                  <div className='w-3 h-3 rounded-full bg-red-500/60' />
+                  <div className='w-3 h-3 rounded-full bg-yellow-500/60' />
+                  <div className='w-3 h-3 rounded-full bg-green-500/60' />
+                  <span className='ml-4 text-xs text-white/50 font-mono'>sovren.dev/dashboard</span>
                 </div>
-                <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className='grid grid-cols-3 gap-4 mb-6'>
                   {[
                     {
                       label: 'Earnings',
@@ -250,18 +250,18 @@ const Home: React.FC = () => {
                       unit: '',
                       color: 'from-blue-500/20 to-blue-500/5',
                     },
-                  ].map((stat) => (
+                  ].map(stat => (
                     <div
                       key={stat.label}
                       className={`rounded-xl bg-gradient-to-b ${stat.color} border border-white/5 p-4`}
                     >
-                      <p className="text-xs text-white/60 mb-1">{stat.label}</p>
-                      <p className="text-xl font-bold text-white">{stat.value}</p>
-                      {stat.unit && <p className="text-xs text-amber-400/60">{stat.unit}</p>}
+                      <p className='text-xs text-white/60 mb-1'>{stat.label}</p>
+                      <p className='text-xl font-bold text-white'>{stat.value}</p>
+                      {stat.unit && <p className='text-xs text-amber-400/60'>{stat.unit}</p>}
                     </div>
                   ))}
                 </div>
-                <div className="space-y-3">
+                <div className='space-y-3'>
                   {[
                     'How I Built My First App',
                     'The Future of Creator Economy',
@@ -269,13 +269,13 @@ const Home: React.FC = () => {
                   ].map((title, i) => (
                     <div
                       key={title}
-                      className="flex items-center gap-4 rounded-xl bg-white/[0.02] border border-white/5 px-4 py-3"
+                      className='flex items-center gap-4 rounded-xl bg-white/[0.02] border border-white/5 px-4 py-3'
                     >
                       <div
                         className={`w-2 h-2 rounded-full ${i === 0 ? 'bg-green-400' : i === 1 ? 'bg-purple-400' : 'bg-amber-400'}`}
                       />
-                      <span className="text-sm text-white/70 flex-1">{title}</span>
-                      <span className="text-xs text-white/50">
+                      <span className='text-sm text-white/70 flex-1'>{title}</span>
+                      <span className='text-xs text-white/50'>
                         {i === 0 ? '2.4K views' : i === 1 ? '1.8K views' : 'Draft'}
                       </span>
                     </div>
@@ -284,24 +284,24 @@ const Home: React.FC = () => {
               </div>
             </div>
             {/* Glow under dashboard */}
-            <div className="absolute -bottom-8 inset-x-8 h-16 bg-purple-500/10 blur-3xl rounded-full" />
+            <div className='absolute -bottom-8 inset-x-8 h-16 bg-purple-500/10 blur-3xl rounded-full' />
           </div>
         </div>
       </section>
 
       {/* ═══════════════════ FEATURES ═══════════════════ */}
-      <section id="features" ref={featuresSection.ref} className="py-24 sm:py-32 relative">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+      <section id='features' ref={featuresSection.ref} className='py-24 sm:py-32 relative'>
+        <div className='max-w-6xl mx-auto px-4 sm:px-6'>
           <div
             className={`text-center mb-16 transition-all duration-700 ${featuresSection.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
           >
             <h2
-              className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4"
+              className='text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4'
               style={{ fontFamily: "'Sora', sans-serif" }}
             >
-              Built for <span className="text-gradient-sovereign">sovereign creators</span>
+              Built for <span className='text-gradient-sovereign'>sovereign creators</span>
             </h2>
-            <p className="text-lg text-white/60 max-w-2xl mx-auto">
+            <p className='text-lg text-white/60 max-w-2xl mx-auto'>
               Everything you need to build, grow, and monetize — without giving up control.
             </p>
           </div>
@@ -331,7 +331,7 @@ const Home: React.FC = () => {
                   'No algorithms deciding who sees your work. No terms of service surprises. Publish freely, forever.',
                 gradient: 'from-emerald-500/20 to-green-500/5',
               },
-            ].map((feature) => (
+            ].map(feature => (
               <div
                 key={feature.title}
                 className={`glass-dark-hover rounded-2xl p-8 group cursor-default`}
@@ -342,12 +342,12 @@ const Home: React.FC = () => {
                   {feature.icon}
                 </div>
                 <h3
-                  className="text-xl font-semibold text-white mb-3"
+                  className='text-xl font-semibold text-white mb-3'
                   style={{ fontFamily: "'Sora', sans-serif" }}
                 >
                   {feature.title}
                 </h3>
-                <p className="text-white/60 leading-relaxed">{feature.description}</p>
+                <p className='text-white/60 leading-relaxed'>{feature.description}</p>
               </div>
             ))}
           </div>
@@ -355,16 +355,16 @@ const Home: React.FC = () => {
       </section>
 
       {/* ═══════════════════ HOW IT WORKS ═══════════════════ */}
-      <section id="how" ref={howSection.ref} className="py-24 sm:py-32 relative">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+      <section id='how' ref={howSection.ref} className='py-24 sm:py-32 relative'>
+        <div className='max-w-5xl mx-auto px-4 sm:px-6'>
           <div
             className={`text-center mb-16 transition-all duration-700 ${howSection.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
           >
             <h2
-              className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4"
+              className='text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4'
               style={{ fontFamily: "'Sora', sans-serif" }}
             >
-              Three steps to <span className="text-gradient-lightning">freedom</span>
+              Three steps to <span className='text-gradient-lightning'>freedom</span>
             </h2>
           </div>
 
@@ -394,7 +394,7 @@ const Home: React.FC = () => {
                 accent: 'text-amber-400',
                 border: 'border-amber-500/20',
               },
-            ].map((item) => (
+            ].map(item => (
               <div
                 key={item.step}
                 className={`glass-dark rounded-2xl p-8 flex items-start gap-6 border ${item.border}`}
@@ -407,12 +407,12 @@ const Home: React.FC = () => {
                 </span>
                 <div>
                   <h3
-                    className="text-xl font-semibold text-white mb-2"
+                    className='text-xl font-semibold text-white mb-2'
                     style={{ fontFamily: "'Sora', sans-serif" }}
                   >
                     {item.title}
                   </h3>
-                  <p className="text-white/60 leading-relaxed">{item.description}</p>
+                  <p className='text-white/60 leading-relaxed'>{item.description}</p>
                 </div>
               </div>
             ))}
@@ -421,8 +421,8 @@ const Home: React.FC = () => {
       </section>
 
       {/* ═══════════════════ STATS ═══════════════════ */}
-      <section ref={statsSection.ref} className="py-24 relative">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+      <section ref={statsSection.ref} className='py-24 relative'>
+        <div className='max-w-5xl mx-auto px-4 sm:px-6'>
           <div
             className={`grid grid-cols-2 md:grid-cols-4 gap-6 ${statsSection.inView ? 'reveal-stagger' : ''}`}
           >
@@ -431,15 +431,15 @@ const Home: React.FC = () => {
               { value: 2100000, suffix: '', label: 'Sats Earned' },
               { value: 99, suffix: '%', label: 'Uptime' },
               { value: 0, suffix: '', label: 'Platform Fees', display: '0%' },
-            ].map((stat) => (
-              <div key={stat.label} className="glass-dark rounded-2xl p-6 text-center">
+            ].map(stat => (
+              <div key={stat.label} className='glass-dark rounded-2xl p-6 text-center'>
                 <p
-                  className="text-3xl sm:text-4xl font-bold text-white mb-1"
+                  className='text-3xl sm:text-4xl font-bold text-white mb-1'
                   style={{ fontFamily: "'Sora', sans-serif" }}
                 >
                   {stat.display ?? <AnimatedNumber value={stat.value} suffix={stat.suffix} />}
                 </p>
-                <p className="text-sm text-white/60">{stat.label}</p>
+                <p className='text-sm text-white/60'>{stat.label}</p>
               </div>
             ))}
           </div>
@@ -447,25 +447,25 @@ const Home: React.FC = () => {
       </section>
 
       {/* ═══════════════════ CTA ═══════════════════ */}
-      <section ref={ctaSection.ref} className="py-24 sm:py-32 relative">
+      <section ref={ctaSection.ref} className='py-24 sm:py-32 relative'>
         <div
           className={`max-w-3xl mx-auto px-4 sm:px-6 text-center transition-all duration-700 ${ctaSection.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
         >
           {/* Purple glow — reduced on mobile to save GPU memory */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200px] h-[200px] md:w-[400px] md:h-[400px] rounded-full bg-purple-500/10 blur-[50px] md:blur-[100px] pointer-events-none" />
+          <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200px] h-[200px] md:w-[400px] md:h-[400px] rounded-full bg-purple-500/10 blur-[50px] md:blur-[100px] pointer-events-none' />
 
           <h2
-            className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-6 relative"
+            className='text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-6 relative'
             style={{ fontFamily: "'Sora', sans-serif" }}
           >
             Ready to own your future?
           </h2>
-          <p className="text-lg text-white/60 mb-10 max-w-xl mx-auto relative">
+          <p className='text-lg text-white/60 mb-10 max-w-xl mx-auto relative'>
             Join thousands of creators building on a platform that can never be taken away.
           </p>
           <button
             onClick={() => navigate('/onboarding')}
-            className="relative px-10 py-5 text-lg font-semibold text-white rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 transition-all duration-300 shadow-[0_8px_32px_rgba(139,92,246,0.35)] hover:shadow-[0_16px_48px_rgba(139,92,246,0.5)] hover:-translate-y-1"
+            className='relative px-10 py-5 text-lg font-semibold text-white rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 transition-all duration-300 shadow-[0_8px_32px_rgba(139,92,246,0.35)] hover:shadow-[0_16px_48px_rgba(139,92,246,0.5)] hover:-translate-y-1'
             style={{ fontFamily: "'Sora', sans-serif" }}
           >
             Start Your Sovren Journey
@@ -474,22 +474,31 @@ const Home: React.FC = () => {
       </section>
 
       {/* ═══════════════════ FOOTER ═══════════════════ */}
-      <footer className="border-t border-white/5 pt-16 pb-8">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+      <footer className='border-t border-white/5 pt-16 pb-8'>
+        <div className='max-w-6xl mx-auto px-6'>
+          <div className='grid grid-cols-2 md:grid-cols-4 gap-8 mb-12'>
             {/* Product */}
             <div>
-              <h4 className="text-sm font-semibold text-white mb-4" style={{ fontFamily: "'Sora', sans-serif" }}>
+              <h4
+                className='text-sm font-semibold text-white mb-4'
+                style={{ fontFamily: "'Sora', sans-serif" }}
+              >
                 Product
               </h4>
-              <ul className="space-y-3">
+              <ul className='space-y-3'>
                 <li>
-                  <a href="#features" className="text-sm text-white/40 hover:text-white/70 transition-colors no-underline">
+                  <a
+                    href='#features'
+                    className='text-sm text-white/40 hover:text-white/70 transition-colors no-underline'
+                  >
                     Features
                   </a>
                 </li>
                 <li>
-                  <a href="/discover" className="text-sm text-white/40 hover:text-white/70 transition-colors no-underline">
+                  <a
+                    href='/discover'
+                    className='text-sm text-white/40 hover:text-white/70 transition-colors no-underline'
+                  >
                     Discover
                   </a>
                 </li>
@@ -498,17 +507,26 @@ const Home: React.FC = () => {
 
             {/* Resources */}
             <div>
-              <h4 className="text-sm font-semibold text-white mb-4" style={{ fontFamily: "'Sora', sans-serif" }}>
+              <h4
+                className='text-sm font-semibold text-white mb-4'
+                style={{ fontFamily: "'Sora', sans-serif" }}
+              >
                 Resources
               </h4>
-              <ul className="space-y-3">
+              <ul className='space-y-3'>
                 <li>
-                  <a href="/help" className="text-sm text-white/40 hover:text-white/70 transition-colors no-underline inline-flex items-center min-h-[44px]">
+                  <a
+                    href='/help'
+                    className='text-sm text-white/40 hover:text-white/70 transition-colors no-underline inline-flex items-center min-h-[44px]'
+                  >
                     Help
                   </a>
                 </li>
                 <li>
-                  <a href="/faq" className="text-sm text-white/40 hover:text-white/70 transition-colors no-underline inline-flex items-center min-h-[44px]">
+                  <a
+                    href='/faq'
+                    className='text-sm text-white/40 hover:text-white/70 transition-colors no-underline inline-flex items-center min-h-[44px]'
+                  >
                     FAQ
                   </a>
                 </li>
@@ -517,18 +535,35 @@ const Home: React.FC = () => {
 
             {/* Legal */}
             <div>
-              <h4 className="text-sm font-semibold text-white mb-4" style={{ fontFamily: "'Sora', sans-serif" }}>
+              <h4
+                className='text-sm font-semibold text-white mb-4'
+                style={{ fontFamily: "'Sora', sans-serif" }}
+              >
                 Legal
               </h4>
-              <ul className="space-y-3">
+              <ul className='space-y-3'>
                 <li>
-                  <a href="/terms" className="text-sm text-white/40 hover:text-white/70 transition-colors no-underline inline-flex items-center min-h-[44px]">
+                  <a
+                    href='/terms'
+                    className='text-sm text-white/40 hover:text-white/70 transition-colors no-underline inline-flex items-center min-h-[44px]'
+                  >
                     Terms of Service
                   </a>
                 </li>
                 <li>
-                  <a href="/privacy" className="text-sm text-white/40 hover:text-white/70 transition-colors no-underline inline-flex items-center min-h-[44px]">
+                  <a
+                    href='/privacy'
+                    className='text-sm text-white/40 hover:text-white/70 transition-colors no-underline inline-flex items-center min-h-[44px]'
+                  >
                     Privacy Policy
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href='/content-policy'
+                    className='text-sm text-white/40 hover:text-white/70 transition-colors no-underline inline-flex items-center min-h-[44px]'
+                  >
+                    Content Policy
                   </a>
                 </li>
               </ul>
@@ -536,24 +571,32 @@ const Home: React.FC = () => {
 
             {/* Brand */}
             <div>
-              <div className="flex items-center gap-2 mb-4">
-                <img src={SovrenIconPNG} alt="" className="w-6 h-6 rounded opacity-80" loading="lazy" />
-                <span className="text-sm font-semibold text-white" style={{ fontFamily: "'Sora', sans-serif" }}>
+              <div className='flex items-center gap-2 mb-4'>
+                <img
+                  src={SovrenIconPNG}
+                  alt=''
+                  className='w-6 h-6 rounded opacity-80'
+                  loading='lazy'
+                />
+                <span
+                  className='text-sm font-semibold text-white'
+                  style={{ fontFamily: "'Sora', sans-serif" }}
+                >
                   Sovren
                 </span>
               </div>
-              <p className="text-sm text-white/40 leading-relaxed">
+              <p className='text-sm text-white/40 leading-relaxed'>
                 Decentralized creator platform built on NOSTR and Lightning Network.
               </p>
             </div>
           </div>
 
           {/* Bottom bar */}
-          <div className="border-t border-white/5 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <span className="text-xs text-white/40">
+          <div className='border-t border-white/5 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4'>
+            <span className='text-xs text-white/40'>
               &copy; {new Date().getFullYear()} Sovren. All rights reserved.
             </span>
-            <div className="flex items-center gap-6 text-xs text-white/40">
+            <div className='flex items-center gap-6 text-xs text-white/40'>
               <span>NOSTR Protocol</span>
               <span>Lightning Network</span>
               <span>Self-Sovereign</span>

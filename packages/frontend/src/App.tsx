@@ -119,6 +119,9 @@ const Privacy = React.lazy(() =>
   import('./pages/Privacy').then(module => ({ default: module.default }))
 );
 const Help = React.lazy(() => import('./pages/Help').then(module => ({ default: module.default })));
+const ContentPolicy = React.lazy(() =>
+  import('./pages/ContentPolicy').then(module => ({ default: module.default }))
+);
 
 // Phase 7: Creator Safety Net
 const WellnessDashboard = React.lazy(() =>
@@ -492,6 +495,18 @@ function App(): React.ReactElement {
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>
                   <Help />
+                </Suspense>
+              </Layout>
+            }
+          />
+
+          {/* Content Policy (Public) */}
+          <Route
+            path='/content-policy'
+            element={
+              <Layout>
+                <Suspense fallback={<LoadingSpinner />}>
+                  <ContentPolicy />
                 </Suspense>
               </Layout>
             }
