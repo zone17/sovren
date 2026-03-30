@@ -61,7 +61,6 @@ function useInView(threshold = 0.15) {
   return { ref, inView };
 }
 
-
 const Home: React.FC = () => {
   const navigate = useNavigate();
   const heroSection = useInView(0.1);
@@ -408,7 +407,7 @@ const Home: React.FC = () => {
           <div
             className={`transition-all duration-700 delay-200 ${comparisonSection.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
           >
-            <div className='glass-dark rounded-2xl border border-white/5 overflow-hidden'>
+            <div className='glass-dark rounded-2xl border border-white/5 overflow-x-auto'>
               {/* Desktop table */}
               <div className='hidden md:block overflow-x-auto'>
                 <table className='w-full text-sm'>
