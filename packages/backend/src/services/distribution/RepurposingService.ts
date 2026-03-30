@@ -141,10 +141,12 @@ export class RepurposingService implements IRepurposingService {
       throw error;
     }
 
-    return ((data || []) as Array<RepurposedContent & { platform: string }>).map(row => ({
-      ...row,
-      character_limit: PLATFORM_CHAR_LIMITS[row.platform as SupportedPlatform] || 500,
-    }));
+    return ((data || []) as unknown as Array<RepurposedContent & { platform: string }>).map(
+      row => ({
+        ...row,
+        character_limit: PLATFORM_CHAR_LIMITS[row.platform as SupportedPlatform] || 500,
+      })
+    );
   }
 
   async approve(creatorId: string, repurposedId: string): Promise<RepurposedContent> {
@@ -162,9 +164,10 @@ export class RepurposingService implements IRepurposingService {
       throw new Error('Repurposed content not found or access denied');
     }
 
+    const row = data as unknown as RepurposedContent;
     return {
-      ...data,
-      character_limit: PLATFORM_CHAR_LIMITS[data.platform as SupportedPlatform] || 500,
+      ...row,
+      character_limit: PLATFORM_CHAR_LIMITS[data.platform as string as SupportedPlatform] || 500,
     };
   }
 

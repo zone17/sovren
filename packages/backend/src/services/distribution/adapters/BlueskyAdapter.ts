@@ -103,10 +103,10 @@ export class BlueskyAdapter extends BasePlatformAdapter {
 
     const data = (await response.json()) as Record<string, unknown>;
     return {
-      access_token: data.access_token,
-      refresh_token: data.refresh_token || refreshToken,
+      access_token: data.access_token as string,
+      refresh_token: (data.refresh_token as string) || refreshToken,
       expires_at: data.expires_in
-        ? new Date(Date.now() + data.expires_in * 1000).toISOString()
+        ? new Date(Date.now() + (data.expires_in as number) * 1000).toISOString()
         : null,
       scopes: ['atproto', 'transition:generic'],
     };

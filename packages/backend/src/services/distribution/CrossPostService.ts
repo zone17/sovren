@@ -11,7 +11,11 @@ import type {
 import type { IQueueService } from '../../interfaces/queue/IQueueService';
 import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
-import type { CrossPostEntry, SupportedPlatform } from '@shared/types/distribution';
+import type {
+  CrossPostEntry,
+  CrossPostStatus,
+  SupportedPlatform,
+} from '@shared/types/distribution';
 import type { IPlatformConnectionService } from '../../interfaces/distribution/IPlatformConnectionService';
 import { ValidationError, AuthorizationError } from '../../utils/errors';
 
@@ -191,7 +195,7 @@ export class CrossPostService implements ICrossPostService {
       id: row.id,
       content_id: request.content_id,
       platform: row.platform,
-      status: row.status,
+      status: row.status as CrossPostStatus,
       platform_post_id: null,
       platform_url: null,
       scheduled_at: row.scheduled_at,
@@ -223,7 +227,7 @@ export class CrossPostService implements ICrossPostService {
       throw error;
     }
 
-    return (data || []) as CrossPostEntry[];
+    return (data || []) as unknown as CrossPostEntry[];
   }
 
   async cancel(creatorId: string, crossPostId: string): Promise<void> {
