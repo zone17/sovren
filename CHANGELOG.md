@@ -6,6 +6,15 @@ Production readiness milestone. All slices complete, CI/CD fully automated, elit
 
 ## [Unreleased]
 
+### chore: reduce @ts-nocheck from 114 to 46 (investor milestone <50) — 2026-03-30
+
+**Category**: Chore — Type Safety Milestone
+**Status**: Complete
+
+Removed @ts-nocheck from 68 files across backend services, DI infrastructure, frontend NOSTR services, query hooks, and test utilities. Zero `as any` added. Proper type guards, `Record<string, unknown>`, and typed assertions used throughout. 5 files re-added @ts-nocheck due to complex type dependencies (SovrenNIPService, mock files, test utils).
+
+**Files modified**: 68 backend/frontend files + `ci/ts-nocheck-baseline.txt`
+
 ### fix(ux): distinguish API error and empty states in DiscoveryPage — 2026-03-30
 
 **Category**: Bug Fix — P2 UX

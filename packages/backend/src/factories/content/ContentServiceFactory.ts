@@ -404,7 +404,7 @@ export class ContentModerationServiceFactory extends SafeServiceFactory<IContent
     };
 
     const aiService: any = {
-      analyzeContent: async (request: any) => {
+      analyzeContent: async (_request: any) => {
         // Mock AI service - would integrate with real AI service
         return {
           categories: [],

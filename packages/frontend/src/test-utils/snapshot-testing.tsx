@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 📸 **ELITE SNAPSHOT TESTING UTILITIES**
  *

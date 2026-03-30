@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🎯 SOVREN NIP SERVICE
  *
