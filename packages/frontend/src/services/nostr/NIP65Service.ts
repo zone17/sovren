@@ -74,6 +74,7 @@ export interface RelayListOptions {
  * Get default relays from centralized configuration
  * @deprecated Use RelayConfig.getRelays() directly
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const getDefaultRelays = (): RelayMetadata[] => RelayConfig.getRelays();
 
 /**

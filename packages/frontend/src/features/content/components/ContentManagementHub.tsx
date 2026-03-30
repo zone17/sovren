@@ -109,7 +109,6 @@ export const ContentManagementHub: React.FC<ContentManagementHubProps> = ({
     content,
     collections,
     series,
-    analytics,
   } = useAppSelector((state) => (state as any).unifiedCms);
 
   // Local state

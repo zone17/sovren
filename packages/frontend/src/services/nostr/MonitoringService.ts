@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 📊 ELITE SERVICE: NOSTR Monitoring Service
  *
@@ -337,16 +336,18 @@ export class MonitoringService extends EventEmitter {
       metrics.successRate = (metrics.successfulPublishes / metrics.totalPublishes) * 100;
 
       // Track latency
-      metrics.recentLatencies.push(latency);
-      if (metrics.recentLatencies.length > this.config.maxLatencySamples) {
-        metrics.recentLatencies.shift();
+      if (latency !== undefined) {
+        metrics.recentLatencies.push(latency);
+        if (metrics.recentLatencies.length > this.config.maxLatencySamples) {
+          metrics.recentLatencies.shift();
+        }
+
+        // Update latency metrics
+        this.updateLatencyMetrics(metrics);
+
+        // Track global latency
+        this.latencySamples.push(latency);
       }
-
-      // Update latency metrics
-      this.updateLatencyMetrics(metrics);
-
-      // Track global latency
-      this.latencySamples.push(latency);
       if (this.latencySamples.length > this.config.maxLatencySamples) {
         this.latencySamples.shift();
       }
@@ -447,7 +448,7 @@ export class MonitoringService extends EventEmitter {
   /**
    * Track subscription event
    */
-  private trackSubscriptionEvent(subId: string, event: NostrEvent): void {
+  private trackSubscriptionEvent(subId: string, _event: NostrEvent): void {
     let metrics = this.subscriptionMetrics.get(subId);
     if (!metrics) {
       const subInfo = this.subscriptionManager.getSubscription(subId);
@@ -522,7 +523,7 @@ export class MonitoringService extends EventEmitter {
   private getSubscriptionSummary(): SubscriptionSummary {
     const allSubs = this.subscriptionManager.getSubscriptions();
     const activeSubs = allSubs.filter((s) => s.state === 'active');
-    const pausedSubs = allSubs.filter((s) => s.state === 'paused');
+    const pausedSubs = allSubs.filter((s) => (s.state as string) === 'paused');
 
     const metrics = Array.from(this.subscriptionMetrics.values());
 

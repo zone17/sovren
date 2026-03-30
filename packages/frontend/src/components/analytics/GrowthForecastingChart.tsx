@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 📈 **GROWTH FORECASTING CHART - ELITE ENGINEERING**
  *
@@ -57,11 +56,7 @@ const format = (date: Date, formatStr: string): string => {
   return date.toLocaleDateString();
 };
 
-const addMonths = (date: Date, months: number): Date => {
-  const result = new Date(date);
-  result.setMonth(result.getMonth() + months);
-  return result;
-};
+/* addMonths utility removed — not currently used */
 
 const addDays = (date: Date, days: number): Date => {
   const result = new Date(date);
@@ -99,15 +94,6 @@ interface GrowthScenario {
   projected_value: number;
   confidence_score: number;
   color: string;
-}
-
-interface GrowthGoal {
-  goal_id: string;
-  target_value: number;
-  target_date: string;
-  current_progress: number;
-  likelihood: number;
-  status: 'on_track' | 'at_risk' | 'behind' | 'achieved';
 }
 
 // =====================================================
@@ -148,9 +134,8 @@ const TIMEFRAME_LABELS = {
 // MOCK DATA HOOKS (TO BE REPLACED WITH REAL API)
 // =====================================================
 
-const useGrowthForecasting = (filters: any) => {
+const useGrowthForecasting = (_filters: any) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const mockData = {
     forecasts: [
@@ -226,7 +211,7 @@ const useGrowthForecasting = (filters: any) => {
   return {
     ...mockData,
     isLoading,
-    error,
+    error: null as string | null,
     refetch,
   };
 };
@@ -302,7 +287,7 @@ export const GrowthForecastingChart: React.FC = () => {
     return goals.map((goal: any) => ({
       ...goal,
       progress_percentage: goal.current_progress * 100,
-      status_color: GOAL_STATUS_COLORS[goal.status],
+      status_color: GOAL_STATUS_COLORS[goal.status as keyof typeof GOAL_STATUS_COLORS],
       estimated_completion: new Date(goal.target_date),
       days_remaining: Math.ceil(
         (new Date(goal.target_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
@@ -621,7 +606,7 @@ export const GrowthForecastingChart: React.FC = () => {
                     <Tooltip formatter={(value: any) => [value?.toLocaleString(), '']} />
                     <Legend />
 
-                    {forecasts?.map((forecast: any, index: number) => (
+                    {forecasts?.map((forecast: any, _index: number) => (
                       <Line
                         key={forecast.scenario}
                         type="monotone"
@@ -636,7 +621,7 @@ export const GrowthForecastingChart: React.FC = () => {
 
                     {/* Goal reference lines */}
                     {filters.includeGoals &&
-                      goalProgress?.map((goal: any, index: number) => (
+                      goalProgress?.map((goal: any, _index: number) => (
                         <ReferenceLine
                           key={goal.goal_id}
                           y={goal.target_value}
@@ -644,7 +629,7 @@ export const GrowthForecastingChart: React.FC = () => {
                           strokeDasharray="5 5"
                           label={{
                             value: `Goal: ${goal.target_value.toLocaleString()}`,
-                            position: 'topRight',
+                            position: 'right' as const,
                           }}
                         />
                       ))}

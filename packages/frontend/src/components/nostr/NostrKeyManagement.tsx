@@ -18,7 +18,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 // Local type stubs for key management
 type NostrEnhancedKeyPair = any;
 type NostrEntropySource = any;
-type NostrKeyBackupMethod = any;
+// NostrKeyBackupMethod removed - unused
 type NostrKeyManagementConfig = any;
 type NostrKeySecurityLevel = any;
 const NostrKeyManagementService: any = null;
@@ -59,7 +59,6 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
   const [keyManagementService, setKeyManagementService] =
     useState<NostrKeyManagementService | null>(null);
   const [keys, setKeys] = useState<NostrEnhancedKeyPair[]>([]);
-  const [selectedKey, setSelectedKey] = useState<NostrEnhancedKeyPair | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);

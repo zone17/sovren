@@ -447,14 +447,14 @@ const RecommendationCard: React.FC<{
 
 // Main PersonalizedRecommendations component
 export const PersonalizedRecommendations: React.FC<PersonalizedRecommendationsProps> = ({
-  userId,
+  userId: _userId,
   maxRecommendations = 10,
-  enableFeedback = true,
+  enableFeedback: _enableFeedback = true,
   enableExplanations = true,
-  enableDiversification = true,
-  enableBehavioralLearning = true,
+  enableDiversification: _enableDiversification = true,
+  enableBehavioralLearning: _enableBehavioralLearning = true,
   className,
-  onRecommendationClick,
+  onRecommendationClick: _onRecommendationClick,
   onFeedback,
 }) => {
   const [recommendations, setRecommendations] = useState<ContentRecommendation[]>([]);

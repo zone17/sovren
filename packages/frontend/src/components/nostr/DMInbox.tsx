@@ -152,7 +152,7 @@ export const DMInbox: React.FC<DMInboxProps> = ({ className = '', onError }) => 
   // ========================================
 
   const handleIncomingEvent = useCallback(
-    async (event: NostrEvent, relay: string) => {
+    async (event: NostrEvent, _relay: string) => {
       try {
         // Deduplicate events
         if (seenEventIdsRef.current.has(event.id)) {

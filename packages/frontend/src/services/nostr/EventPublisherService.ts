@@ -154,7 +154,8 @@ export class EventPublisherService extends EventEmitter {
       throw new Error('KeyManagementService must be initialized first');
     }
 
-    if (!this.relayPool.isInitialized()) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (!(this.relayPool as any).isInitialized) {
       console.warn(
         '[EventPublisher] RelayPoolManager not initialized, some features may be limited'
       );
@@ -364,10 +365,11 @@ export class EventPublisherService extends EventEmitter {
           relayResults = await this.relayPool.publishEvent(event, options.relays);
           break;
 
-        case 'smart':
+        case 'smart': {
           const relayCount = options.relayCount || 3;
           relayResults = await this.relayPool.publishEventToFastest(event, relayCount);
           break;
+        }
 
         case 'batch':
           // Batch is handled separately
@@ -551,6 +553,7 @@ export class EventPublisherService extends EventEmitter {
       successfulPublishes: 0,
       failedPublishes: 0,
       totalRetries: 0,
+      rateLimited: 0,
     };
   }
 
