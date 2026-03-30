@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 /**
  * 📡 ELITE SERVICE: Event Publisher Service
@@ -343,7 +344,7 @@ export class EventPublisherService extends EventEmitter {
       const validation = await this.validateEvent(event);
       if (!validation.valid) {
         throw new Error(
-          `Event validation failed: ${validation.errors.map((e) => e.message).join(', ')}`
+          `Event validation failed: ${validation.errors.map(e => e.message).join(', ')}`
         );
       }
     }
@@ -381,8 +382,8 @@ export class EventPublisherService extends EventEmitter {
       }
 
       // Analyze results
-      const publishedTo = relayResults.filter((r) => r.success).map((r) => r.relay);
-      const failedRelays = relayResults.filter((r) => !r.success).map((r) => r.relay);
+      const publishedTo = relayResults.filter(r => r.success).map(r => r.relay);
+      const failedRelays = relayResults.filter(r => !r.success).map(r => r.relay);
       const totalLatency = Date.now() - startTime;
 
       // Check minimum relay requirement
@@ -485,7 +486,7 @@ export class EventPublisherService extends EventEmitter {
     const results: PublishResultComplete[] = [];
 
     // Publish events in parallel with proper error handling
-    const publishPromises = events.map(async (event) => {
+    const publishPromises = events.map(async event => {
       try {
         const result = await this.publish(event, options);
         return result;
@@ -508,7 +509,7 @@ export class EventPublisherService extends EventEmitter {
     results.push(...batchResults);
 
     // Calculate metrics
-    const successCount = results.filter((r) => r.success).length;
+    const successCount = results.filter(r => r.success).length;
     const failureCount = results.length - successCount;
     const duration = Date.now() - startTime;
     const averageLatency =
@@ -572,7 +573,7 @@ export class EventPublisherService extends EventEmitter {
    * Sleep helper for retry backoff
    */
   private sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
 
