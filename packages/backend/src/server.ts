@@ -1,4 +1,8 @@
-import dotenv from 'dotenv';
+// Side-effect import: loads .env BEFORE any other module is evaluated.
+// Module-level singletons (e.g. NostrAuthService) read process.env at import time,
+// so dotenv must run first.
+import 'dotenv/config';
+
 import { AppConfig, createApp, mountBullBoard } from './app';
 import { lightningService } from './services/lightning-service';
 import { lightningReceiptService } from './services/lightning/receipt-service';
@@ -8,9 +12,6 @@ import { TYPES } from './container/types';
 import type { QueueService } from './services/queue/QueueService';
 import logger from './lib/logger';
 import { Sentry } from './lib/sentry';
-
-// Load environment variables
-dotenv.config();
 
 /**
  * 🚀 Sovren API Server
@@ -76,8 +77,11 @@ async function startServer(): Promise<void> {
     const app = createApp();
 
     // Mount Bull Board admin UI if QueueService is available in the DI container.
-    // Cast to concrete QueueService because mountBullBoard needs getQueue() (an implementation detail).
-    const queueService = container.resolveOptional(TYPES.QueueService) as QueueService | null;
+    // Guard: container proxy returns undefined for resolveOptional when DI init failed.
+    const queueService =
+      typeof container.resolveOptional === 'function'
+        ? (container.resolveOptional(TYPES.QueueService) as QueueService | null)
+        : null;
     if (queueService) {
       mountBullBoard(app, queueService);
     }
@@ -112,7 +116,9 @@ async function startServer(): Promise<void> {
       socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
     });
   } catch (error) {
-    logger.error('Failed to start server', { error });
+    logger.error('Failed to start server', {
+      error: error instanceof Error ? { message: error.message, stack: error.stack } : error,
+    });
     process.exit(1);
   }
 }
@@ -206,15 +212,15 @@ async function initializeReceiptService(): Promise<void> {
  * WHY: Real-time receipt processing and notifications
  */
 function setupReceiptEventHandlers(): void {
-  lightningReceiptService.on('receipt:generated', (receipt) => {
+  lightningReceiptService.on('receipt:generated', receipt => {
     logger.info('Payment receipt generated', { receiptNumber: receipt.receiptNumber });
   });
 
-  lightningReceiptService.on('receipt:email:sent', (data) => {
+  lightningReceiptService.on('receipt:email:sent', data => {
     logger.info('Receipt emailed', { email: data.email });
   });
 
-  lightningReceiptService.on('error', (error) => {
+  lightningReceiptService.on('error', error => {
     logger.error('Receipt service error', { error: error.message });
   });
 }
@@ -224,7 +230,7 @@ function setupReceiptEventHandlers(): void {
  * WHY: Real-time payment processing and notifications
  */
 function setupLightningEventHandlers(): void {
-  lightningService.on('payment:completed', async (payment) => {
+  lightningService.on('payment:completed', async payment => {
     logger.info('Lightning payment completed', {
       amount: payment.amount,
       creatorId: payment.creator_id,
@@ -242,22 +248,22 @@ function setupLightningEventHandlers(): void {
     }
   });
 
-  lightningService.on('invoice:expired', (invoice) => {
+  lightningService.on('invoice:expired', invoice => {
     logger.info('Lightning invoice expired', { invoiceId: invoice.id });
   });
 
-  lightningService.on('invoice:created', (invoice) => {
+  lightningService.on('invoice:created', invoice => {
     logger.info('Lightning invoice created', {
       amount: invoice.amount,
       description: invoice.description,
     });
   });
 
-  lightningService.on('webhook:received', (data) => {
+  lightningService.on('webhook:received', data => {
     logger.info('Lightning webhook received', { type: data.type });
   });
 
-  lightningService.on('error', (error) => {
+  lightningService.on('error', error => {
     logger.error('Lightning service error', { error: error.message });
   });
 }
@@ -299,7 +305,10 @@ async function gracefulShutdown(signal: string): Promise<void> {
     }
 
     // Close BullMQ queues and workers via the DI-managed instance
-    const qs = container.resolveOptional(TYPES.QueueService);
+    const qs =
+      typeof container.resolveOptional === 'function'
+        ? container.resolveOptional(TYPES.QueueService)
+        : null;
     if (qs) {
       try {
         await qs.closeAll();
@@ -311,7 +320,7 @@ async function gracefulShutdown(signal: string): Promise<void> {
 
     // Dispose DI container (cleanup all registered services)
     try {
-      await container.dispose();
+      if (typeof container.dispose === 'function') await container.dispose();
       logger.info('DI container disposed');
     } catch (err) {
       logger.warn('DI container disposal failed', { error: (err as Error).message });
@@ -372,7 +381,7 @@ if (process.platform === 'win32') {
  * WHY: Entry point for the server process
  */
 if (require.main === module) {
-  startServer().catch((error) => {
+  startServer().catch(error => {
     logger.error('Failed to start application', { error });
     process.exit(1);
   });

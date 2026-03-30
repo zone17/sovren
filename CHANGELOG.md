@@ -6,6 +6,24 @@ Production readiness milestone. All slices complete, CI/CD fully automated, elit
 
 ## [Unreleased]
 
+### fix(ux): prevent comparison table clipping at 375px mobile width — 2026-03-30
+
+**Category**: Bug Fix — P2 UX
+**Status**: Complete
+
+Replace `overflow-hidden` with `overflow-x-auto` on the "Why Sovren" comparison table container so the rightmost column scrolls instead of clipping on narrow viewports (375px).
+
+**Files modified**: `Home.tsx`
+
+### fix(backend): fix dotenv load order and DI container crash on startup — 2026-03-30
+
+**Category**: Bug Fix — P1 Backend
+**Status**: Complete
+
+Move `dotenv.config()` before all other imports via `import 'dotenv/config'` so module-level singletons (NostrAuthService) read JWT_SECRET at import time. Guard `container.resolveOptional` and `container.dispose` calls against the DI proxy returning undefined when initialization fails. Add `scripts/setup-backend.sh` for generating secrets and creating `.env` from the template.
+
+**Files modified**: `server.ts`, `scripts/setup-backend.sh`
+
 ### fix(ux): distinguish API error and empty states in DiscoveryPage — 2026-03-30
 
 **Category**: Bug Fix — P2 UX
