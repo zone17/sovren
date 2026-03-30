@@ -81,18 +81,10 @@ const SovereignOnboarding: React.FC = () => {
   const [showPrivateKey, setShowPrivateKey] = useState(false);
   const [backupConfirmed, setBackupConfirmed] = useState(false);
   const [understandsSecurity, setUnderstandsSecurity] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [walletSetupComplete, setWalletSetupComplete] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [username, setUsername] = useState('');
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [displayName, setDisplayName] = useState('');
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [bio, setBio] = useState('');
 
   // Lightning wallet recommendations
   const walletOptions: LightningWallet[] = [
@@ -373,20 +365,6 @@ const SovereignOnboarding: React.FC = () => {
     return walletOptions.find(w => w.name === 'Wallet of Satoshi') || walletOptions[0];
   };
 
-  // Add handler functions above the renderStep or main return
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleProfileSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!nostrKeys) return; // Guard: identity must be created before advancing
-    // Save username, displayName, bio to Sovren profile and publish as NOSTR profile event (future implementation)
-    setCurrentStep(currentStep + 1);
-  };
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const skipProfileStep = () => {
-    if (!nostrKeys) return; // Guard: identity must be created before skipping
-    setCurrentStep(currentStep + 1);
-  };
-
   // Render current step
   const renderStep = () => {
     switch (currentStep) {
@@ -526,7 +504,12 @@ const SovereignOnboarding: React.FC = () => {
                 role='button'
                 tabIndex={0}
                 onClick={() => setUserType('creator')}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setUserType('creator'); } }}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setUserType('creator');
+                  }
+                }}
                 aria-pressed={userType === 'creator'}
               >
                 {userType === 'creator' && (
@@ -578,7 +561,12 @@ const SovereignOnboarding: React.FC = () => {
                 role='button'
                 tabIndex={0}
                 onClick={() => setUserType('supporter')}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setUserType('supporter'); } }}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setUserType('supporter');
+                  }
+                }}
                 aria-pressed={userType === 'supporter'}
               >
                 {userType === 'supporter' && (
