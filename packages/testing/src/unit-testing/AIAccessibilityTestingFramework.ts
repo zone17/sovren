@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * @file AIAccessibilityTestingFramework.ts
  * @description AI-powered accessibility testing framework with WCAG compliance validation
@@ -349,7 +348,7 @@ export class AIAccessibilityTestingFramework extends EventEmitter {
       const optimizedTests = await this.optimizeTestStrategy(testCases);
 
       // Store test cases
-      optimizedTests.forEach((testCase) => {
+      optimizedTests.forEach(testCase => {
         this.testCases.set(testCase.id, testCase);
       });
 
@@ -388,7 +387,7 @@ export class AIAccessibilityTestingFramework extends EventEmitter {
       const validatedViolations = await this.validateViolations(violations);
 
       // Store violations
-      validatedViolations.forEach((violation) => {
+      validatedViolations.forEach(violation => {
         this.violations.set(violation.id, violation);
       });
 
@@ -427,7 +426,7 @@ export class AIAccessibilityTestingFramework extends EventEmitter {
       const optimizedTests = await this.optimizeTestDiversity(testCases);
 
       // Store generated tests
-      optimizedTests.forEach((testCase) => {
+      optimizedTests.forEach(testCase => {
         this.testCases.set(testCase.id, testCase);
       });
 
@@ -607,13 +606,13 @@ export class AIAccessibilityTestingFramework extends EventEmitter {
     // Load accessibility knowledge base
   }
 
-  private async analyzeComponentLibrary(codeStructure: CodeStructure): Promise<any[]> {
+  private async analyzeComponentLibrary(_codeStructure: CodeStructure): Promise<any[]> {
     // Analyze component library structure
     return [];
   }
 
   private async generateComponentAccessibilityTests(
-    component: any
+    _component: any
   ): Promise<AccessibilityTestCase[]> {
     // Generate accessibility tests for component
     return [];
@@ -626,17 +625,17 @@ export class AIAccessibilityTestingFramework extends EventEmitter {
     return testCases;
   }
 
-  private async runWCAGComplianceChecks(element: any): Promise<AccessibilityViolation[]> {
+  private async runWCAGComplianceChecks(_element: any): Promise<AccessibilityViolation[]> {
     // Run WCAG compliance checks
     return [];
   }
 
-  private async runAIAccessibilityAnalysis(element: any): Promise<AccessibilityViolation[]> {
+  private async runAIAccessibilityAnalysis(_element: any): Promise<AccessibilityViolation[]> {
     // AI-powered accessibility analysis
     return [];
   }
 
-  private async runPatternRecognition(element: any): Promise<AccessibilityViolation[]> {
+  private async runPatternRecognition(_element: any): Promise<AccessibilityViolation[]> {
     // Pattern recognition for common issues
     return [];
   }
@@ -648,36 +647,36 @@ export class AIAccessibilityTestingFramework extends EventEmitter {
     return violations;
   }
 
-  private async analyzeComponent(componentPath: string): Promise<any> {
+  private async analyzeComponent(_componentPath: string): Promise<any> {
     // Analyze component structure
     return {};
   }
 
-  private async generateKeyboardNavigationTests(analysis: any): Promise<AccessibilityTestCase[]> {
+  private async generateKeyboardNavigationTests(_analysis: any): Promise<AccessibilityTestCase[]> {
     return [];
   }
 
-  private async generateScreenReaderTests(analysis: any): Promise<AccessibilityTestCase[]> {
+  private async generateScreenReaderTests(_analysis: any): Promise<AccessibilityTestCase[]> {
     return [];
   }
 
-  private async generateColorContrastTests(analysis: any): Promise<AccessibilityTestCase[]> {
+  private async generateColorContrastTests(_analysis: any): Promise<AccessibilityTestCase[]> {
     return [];
   }
 
-  private async generateFocusManagementTests(analysis: any): Promise<AccessibilityTestCase[]> {
+  private async generateFocusManagementTests(_analysis: any): Promise<AccessibilityTestCase[]> {
     return [];
   }
 
-  private async generateARIATests(analysis: any): Promise<AccessibilityTestCase[]> {
+  private async generateARIATests(_analysis: any): Promise<AccessibilityTestCase[]> {
     return [];
   }
 
-  private async generateSemanticHTMLTests(analysis: any): Promise<AccessibilityTestCase[]> {
+  private async generateSemanticHTMLTests(_analysis: any): Promise<AccessibilityTestCase[]> {
     return [];
   }
 
-  private async generateFormAccessibilityTests(analysis: any): Promise<AccessibilityTestCase[]> {
+  private async generateFormAccessibilityTests(_analysis: any): Promise<AccessibilityTestCase[]> {
     return [];
   }
 
@@ -772,7 +771,7 @@ export class AIAccessibilityTestingFramework extends EventEmitter {
     return [];
   }
 
-  private async generateAdditionalTests(gaps: string[]): Promise<void> {
+  private async generateAdditionalTests(_gaps: string[]): Promise<void> {
     // Generate additional tests for coverage gaps
   }
 }

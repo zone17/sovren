@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * @file AISecurityTestingFramework.ts
  * @description Autonomous security testing strategy with threat modeling and AI-driven penetration testing
@@ -1283,7 +1282,9 @@ export class AISecurityTestingFramework {
     // Implementation for continuous monitoring setup
   }
 
-  private async executePenetrationTestingPhase(phase: TestingPhase): Promise<SecurityTestResult[]> {
+  private async executePenetrationTestingPhase(
+    _phase: TestingPhase
+  ): Promise<SecurityTestResult[]> {
     // Implementation for penetration testing phase execution
     return [];
   }
@@ -1348,8 +1349,8 @@ export class AISecurityTestingFramework {
   }
 
   private async generateExecutiveSummary(
-    testResults: SecurityTestResult[],
-    findings: VulnerabilityFinding[]
+    _testResults: SecurityTestResult[],
+    _findings: VulnerabilityFinding[]
   ): Promise<ExecutiveSummary> {
     // Implementation for executive summary generation
     return {
@@ -1367,7 +1368,7 @@ export class AISecurityTestingFramework {
     };
   }
 
-  private async performRiskAssessment(findings: VulnerabilityFinding[]): Promise<RiskAssessment> {
+  private async performRiskAssessment(_findings: VulnerabilityFinding[]): Promise<RiskAssessment> {
     // Implementation for risk assessment
     return {
       methodology: 'NIST',
@@ -1388,7 +1389,7 @@ export class AISecurityTestingFramework {
   }
 
   private async createRemediationRoadmap(
-    findings: VulnerabilityFinding[]
+    _findings: VulnerabilityFinding[]
   ): Promise<RemediationRoadmap> {
     // Implementation for remediation roadmap creation
     return {
@@ -1410,8 +1411,8 @@ export class AISecurityTestingFramework {
   }
 
   private async generateReportAppendices(
-    testResults: SecurityTestResult[],
-    findings: VulnerabilityFinding[]
+    _testResults: SecurityTestResult[],
+    _findings: VulnerabilityFinding[]
   ): Promise<ReportAppendix[]> {
     // Implementation for report appendices generation
     return [];
@@ -1433,7 +1434,7 @@ export class AISecurityTestingFramework {
     // Implementation for workflow monitoring setup
   }
 
-  private generateSecurityOverview(report: SecurityReport): any {
+  private generateSecurityOverview(_report: SecurityReport): any {
     // Implementation for security overview generation
     return {};
   }
@@ -1443,12 +1444,12 @@ export class AISecurityTestingFramework {
     return {};
   }
 
-  private generateComplianceMapping(report: SecurityReport): any {
+  private generateComplianceMapping(_report: SecurityReport): any {
     // Implementation for compliance mapping generation
     return {};
   }
 
-  private generateRemediationGuidance(report: SecurityReport): any {
+  private generateRemediationGuidance(_report: SecurityReport): any {
     // Implementation for remediation guidance generation
     return {};
   }
@@ -1458,7 +1459,7 @@ export class AISecurityTestingFramework {
     return {};
   }
 
-  private formatSecurityDocumentationAsMarkdown(documentation: any): string {
+  private formatSecurityDocumentationAsMarkdown(_documentation: any): string {
     // Implementation for markdown formatting
     return '# Security Testing Documentation\n\nGenerated automatically by AI security framework.';
   }
@@ -1484,7 +1485,7 @@ export class AISecurityTestingFramework {
   }
 
   private async wait(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   /**

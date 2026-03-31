@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * WebhookService Implementation
  * User Story: US-E5-029
@@ -88,13 +87,13 @@ class InMemoryWebhookRepository implements IWebhookRepository {
   }
 
   async listEndpoints(userId: string, limit = 100, offset = 0): Promise<WebhookEndpoint[]> {
-    const endpoints = Array.from(this.endpoints.values()).filter((e) => e.userId === userId);
+    const endpoints = Array.from(this.endpoints.values()).filter(e => e.userId === userId);
     return endpoints.slice(offset, offset + limit);
   }
 
   async getEndpointsByEventType(eventType: WebhookEventType): Promise<WebhookEndpoint[]> {
     return Array.from(this.endpoints.values()).filter(
-      (e) => e.enabled && e.events.includes(eventType)
+      e => e.enabled && e.events.includes(eventType)
     );
   }
 
@@ -114,19 +113,19 @@ class InMemoryWebhookRepository implements IWebhookRepository {
     let deliveries = Array.from(this.deliveries.values());
 
     if (query.endpointId) {
-      deliveries = deliveries.filter((d) => d.endpointId === query.endpointId);
+      deliveries = deliveries.filter(d => d.endpointId === query.endpointId);
     }
     if (query.eventType) {
-      deliveries = deliveries.filter((d) => d.eventType === query.eventType);
+      deliveries = deliveries.filter(d => d.eventType === query.eventType);
     }
     if (query.status) {
-      deliveries = deliveries.filter((d) => d.status === query.status);
+      deliveries = deliveries.filter(d => d.status === query.status);
     }
     if (query.startDate) {
-      deliveries = deliveries.filter((d) => d.createdAt >= query.startDate!);
+      deliveries = deliveries.filter(d => d.createdAt >= query.startDate!);
     }
     if (query.endDate) {
-      deliveries = deliveries.filter((d) => d.createdAt <= query.endDate!);
+      deliveries = deliveries.filter(d => d.createdAt <= query.endDate!);
     }
 
     const sortBy = query.sortBy || 'createdAt';
@@ -173,7 +172,7 @@ class WebhookRateLimiter {
     const timestamps = this.deliveries.get(endpointId) || [];
 
     // Remove expired timestamps
-    const validTimestamps = timestamps.filter((t) => now - t < this.config.windowMs);
+    const validTimestamps = timestamps.filter(t => now - t < this.config.windowMs);
     this.deliveries.set(endpointId, validTimestamps);
 
     return validTimestamps.length >= this.config.maxDeliveries;
@@ -190,7 +189,7 @@ class WebhookRateLimiter {
   ): Promise<{ limited: boolean; remaining: number; resetAt: Date }> {
     const now = Date.now();
     const timestamps = this.deliveries.get(endpointId) || [];
-    const validTimestamps = timestamps.filter((t) => now - t < this.config.windowMs);
+    const validTimestamps = timestamps.filter(t => now - t < this.config.windowMs);
 
     const limited = validTimestamps.length >= this.config.maxDeliveries;
     const remaining = Math.max(0, this.config.maxDeliveries - validTimestamps.length);
@@ -407,8 +406,8 @@ export class WebhookService implements IWebhookService {
     await this.auditLog.log({
       action: 'webhook.endpoint.created',
       userId: params.userId,
-      resourceType: 'webhook_endpoint',
-      resourceId: endpoint.id,
+      entityType: 'webhook_endpoint',
+      entityId: endpoint.id,
       metadata: { url: params.url, events: params.events },
     });
 
@@ -454,9 +453,9 @@ export class WebhookService implements IWebhookService {
     await this.auditLog.log({
       action: 'webhook.endpoint.updated',
       userId: endpoint.userId,
-      resourceType: 'webhook_endpoint',
-      resourceId: endpoint.id,
-      metadata: params,
+      entityType: 'webhook_endpoint',
+      entityId: endpoint.id,
+      metadata: params as unknown as Record<string, any>,
     });
 
     return endpoint;
@@ -474,8 +473,8 @@ export class WebhookService implements IWebhookService {
     await this.auditLog.log({
       action: 'webhook.endpoint.deleted',
       userId: endpoint.userId,
-      resourceType: 'webhook_endpoint',
-      resourceId: endpointId,
+      entityType: 'webhook_endpoint',
+      entityId: endpointId,
     });
 
     this.logger.info('Webhook endpoint deleted', { endpointId });
@@ -525,7 +524,7 @@ export class WebhookService implements IWebhookService {
       throw new Error(`Webhook endpoint ${endpointId} not found`);
     }
 
-    const newEvents = endpoint.events.filter((e) => !eventTypes.includes(e));
+    const newEvents = endpoint.events.filter(e => !eventTypes.includes(e));
     await this.updateEndpoint(endpointId, { events: newEvents });
   }
 
@@ -666,7 +665,7 @@ export class WebhookService implements IWebhookService {
         endpoint.url,
         payloadString,
         headers,
-        endpoint.timeout
+        endpoint.timeout ?? 30000
       );
 
       const duration = performance.now() - startTime;
@@ -928,8 +927,8 @@ export class WebhookService implements IWebhookService {
 
     await this.auditLog.log({
       action: 'webhook.moved_to_dlq',
-      resourceType: 'webhook_delivery',
-      resourceId: deliveryId,
+      entityType: 'webhook_delivery',
+      entityId: deliveryId,
       metadata: { endpointId: delivery.endpointId, attempts: delivery.attempt },
     });
 
@@ -1104,8 +1103,8 @@ export class WebhookService implements IWebhookService {
     await this.auditLog.log({
       action: 'webhook.secret.rotated',
       userId: endpoint.userId,
-      resourceType: 'webhook_endpoint',
-      resourceId: endpoint.id,
+      entityType: 'webhook_endpoint',
+      entityId: endpoint.id,
     });
 
     return endpoint;
@@ -1134,7 +1133,7 @@ export class WebhookService implements IWebhookService {
    */
 
   async getCircuitState(endpointId: string): Promise<'open' | 'closed' | 'half_open'> {
-    return this.circuitBreaker.getState(endpointId);
+    return this.circuitBreaker.getState(endpointId) as 'open' | 'closed' | 'half_open';
   }
 
   async openCircuit(endpointId: string): Promise<void> {
@@ -1228,7 +1227,7 @@ export class WebhookService implements IWebhookService {
       failedDeliveries: 0,
       successRate: 0,
       averageResponseTime: 0,
-      circuitState: await this.getCircuitState(endpointId),
+      circuitState: (await this.getCircuitState(endpointId)) as CircuitBreakerState,
       deliveriesByStatus: {} as Record<WebhookDeliveryStatus, number>,
       deliveriesByEventType: {} as Record<WebhookEventType, number>,
     };
@@ -1315,7 +1314,7 @@ export class WebhookService implements IWebhookService {
 
       // Calculate deliveries per minute (last hour)
       const oneHourAgo = new Date(Date.now() - 3600000);
-      const recentDeliveries = allDeliveries.filter((d) => d.createdAt >= oneHourAgo);
+      const recentDeliveries = allDeliveries.filter(d => d.createdAt >= oneHourAgo);
       stats.deliveriesPerMinute = recentDeliveries.length / 60;
     }
 
@@ -1503,10 +1502,10 @@ export class WebhookService implements IWebhookService {
   }
 
   private async makeHttpRequest(
-    url: string,
-    body: string,
-    headers: Record<string, string>,
-    timeout: number
+    _url: string,
+    _body: string,
+    _headers: Record<string, string>,
+    _timeout: number
   ): Promise<{ status: number; body: string; headers: Record<string, string> }> {
     // Simplified HTTP request - in production would use a proper HTTP client
     // For testing, simulate success
@@ -1572,16 +1571,9 @@ export class WebhookService implements IWebhookService {
 
   private subscribeToPaymentEvents(): void {
     // Subscribe to payment events from EventBus
-    const paymentEvents = [
-      'PAYMENT_RECEIVED',
-      'PAYMENT_FAILED',
-      'INVOICE_CREATED',
-      'SUBSCRIPTION_CREATED',
-      'SUBSCRIPTION_RENEWED',
-      'SUBSCRIPTION_CANCELLED',
-    ];
-
-    // This would be implemented when EventBus is integrated
+    // Payment event types that would trigger webhooks when EventBus is integrated:
+    // PAYMENT_RECEIVED, PAYMENT_FAILED, INVOICE_CREATED,
+    // SUBSCRIPTION_CREATED, SUBSCRIPTION_RENEWED, SUBSCRIPTION_CANCELLED
     this.logger.info('Subscribed to payment events for webhook delivery');
   }
 }

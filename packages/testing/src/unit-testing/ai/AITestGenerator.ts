@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * @file AITestGenerator.ts
  * @description AI-powered test generation system using advanced ML models
@@ -116,7 +115,7 @@ export class AITestGenerator {
 
     // Extract methods from component
     const methods = this.extractMethods(component);
-    methods.forEach((method) => {
+    methods.forEach(method => {
       testableElements.push({
         type: 'method',
         name: method.name,
@@ -131,7 +130,7 @@ export class AITestGenerator {
 
     // Extract properties
     const properties = this.extractProperties(component);
-    properties.forEach((prop) => {
+    properties.forEach(prop => {
       testableElements.push({
         type: 'property',
         name: prop.name,
@@ -143,7 +142,7 @@ export class AITestGenerator {
 
     // Extract constructors
     const constructors = this.extractConstructors(component);
-    constructors.forEach((constructor) => {
+    constructors.forEach(constructor => {
       testableElements.push({
         type: 'constructor',
         name: constructor.name,
@@ -406,14 +405,14 @@ describe('${component.name}', () => {
     return component.methods || [];
   }
 
-  private extractProperties(component: TestableComponent): any[] {
+  private extractProperties(_component: TestableComponent): any[] {
     // Implementation to extract properties from component - derived from methods
     return [];
   }
 
   private extractConstructors(component: TestableComponent): any[] {
     // Implementation to extract constructors from component - derived from methods
-    const constructors = component.methods?.filter((method) => method.name === 'constructor') || [];
+    const constructors = component.methods?.filter(method => method.name === 'constructor') || [];
     return constructors;
   }
 
@@ -434,7 +433,7 @@ describe('${component.name}', () => {
   });`;
   }
 
-  private generateTeardown(component: TestableComponent): string {
+  private generateTeardown(_component: TestableComponent): string {
     return `afterEach(() => {
     // Cleanup
   });`;
@@ -458,11 +457,11 @@ describe('${component.name}', () => {
   }
 
   private generateMethodParameters(parameters: ParameterInfo[]): string {
-    return parameters.map((p) => this.generateTestValue(p.type)).join(', ');
+    return parameters.map(p => this.generateTestValue(p.type)).join(', ');
   }
 
   private generateConstructorParameters(parameters: ParameterInfo[]): string {
-    return parameters.map((p) => this.generateTestValue(p.type)).join(', ');
+    return parameters.map(p => this.generateTestValue(p.type)).join(', ');
   }
 
   private generateTestValue(dataType: string): string {
@@ -511,7 +510,7 @@ describe('${component.name}', () => {
   private generateParameterValidationTests(method: MethodElement): string {
     return method.parameters
       .map(
-        (param) =>
+        param =>
           `expect(() => instance.${method.name}(${this.generateInvalidValue(param.type)})).toThrow();`
       )
       .join('\n      ');
@@ -523,10 +522,10 @@ describe('${component.name}', () => {
 
   private generateConstructorAssertions(
     constructor: ConstructorElement,
-    component: TestableComponent
+    _component: TestableComponent
   ): string {
     return constructor.parameters
-      .map((param) => `expect(instance.${param.name}).toBeDefined();`)
+      .map(param => `expect(instance.${param.name}).toBeDefined();`)
       .join('\n      ');
   }
 
@@ -547,30 +546,30 @@ describe('${component.name}', () => {
     }
   }
 
-  private analyzeUncoveredPaths(component: TestableComponent): string[] {
+  private analyzeUncoveredPaths(_component: TestableComponent): string[] {
     // Implementation to analyze uncovered code paths
     return [];
   }
 
   private async generateTargetedTests(
-    component: TestableComponent,
-    uncoveredPaths: string[]
+    _component: TestableComponent,
+    _uncoveredPaths: string[]
   ): Promise<string> {
     // Implementation to generate targeted tests for uncovered paths
     return '';
   }
 
-  private async generateEdgeCaseTests(component: TestableComponent): Promise<string> {
+  private async generateEdgeCaseTests(_component: TestableComponent): Promise<string> {
     // Implementation to generate edge case tests
     return '';
   }
 
-  private async generateErrorHandlingTests(component: TestableComponent): Promise<string> {
+  private async generateErrorHandlingTests(_component: TestableComponent): Promise<string> {
     // Implementation to generate error handling tests
     return '';
   }
 
-  private async generatePerformanceTests(component: TestableComponent): Promise<string> {
+  private async generatePerformanceTests(_component: TestableComponent): Promise<string> {
     // Implementation to generate performance tests
     return '';
   }
@@ -599,29 +598,6 @@ interface PropertyElement extends TestableElement {
 }
 
 interface ConstructorElement extends TestableElement {
-  parameters: ParameterInfo[];
-  complexity: number;
-}
-
-interface MethodInfo {
-  name: string;
-  signature: string;
-  complexity: number;
-  dependencies: string[];
-  isAsync: boolean;
-  returnType: string;
-  parameters: ParameterInfo[];
-}
-
-interface PropertyInfo {
-  name: string;
-  dataType: string;
-  isReadonly: boolean;
-  defaultValue: any;
-}
-
-interface ConstructorInfo {
-  name: string;
   parameters: ParameterInfo[];
   complexity: number;
 }

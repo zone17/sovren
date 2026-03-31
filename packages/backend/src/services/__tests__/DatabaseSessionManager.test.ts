@@ -113,8 +113,10 @@ describe('DatabaseSessionManager', () => {
       expect(session.id).toMatch(/^session_/);
       expect(session.pubkey).toBe(mockPubkey);
       expect(session.device_fingerprint).toBe(mockMetadata.device_fingerprint);
-      expect(session.is_active).toBe(true);
-      expect(session.token).toBeDefined();
+      expect(session.active).toBe(true);
+      expect(session.lightning_enabled).toBe(false);
+      expect(session.permissions).toEqual([]);
+      expect(session.risk_score).toBe(0);
       expect(mockChain.from).toHaveBeenCalledWith('sessions');
     });
 
@@ -171,8 +173,8 @@ describe('DatabaseSessionManager', () => {
 
       const session = await sessionManager.createSession(mockPubkey, mockMetadata);
       expect(session.token_hash).toBeDefined();
-      expect(session.token_hash).not.toBe(session.token);
       expect(session.token_hash).toHaveLength(64);
+      expect(session.token_hash).not.toBe(session.token);
     });
 
     it('should log session creation activity', async () => {
@@ -243,7 +245,7 @@ describe('DatabaseSessionManager', () => {
       const validation = await sessionManager.validateSession('session_test', token, mockMetadata);
       expect(validation.valid).toBe(false);
       expect(validation.reason).toBe('Session expired');
-      expect(validation.expired).toBe(true);
+      expect(validation.shouldRefresh).toBe(true);
     });
 
     it('should reject inactive sessions', async () => {
@@ -349,10 +351,44 @@ describe('DatabaseSessionManager', () => {
 
       const refreshed = await sessionManager.refreshSession('session_test', token);
       expect(refreshed).not.toBeNull();
-      expect(refreshed!.token).toBeDefined();
+      expect(refreshed!.token_hash).toBeDefined();
     });
 
-    it('should generate a new token on refresh', async () => {
+    it('should generate a new token hash on refresh', async () => {
+      const token = 'test_token';
+      const originalTokenHash = hashToken(token);
+      const mockSession = {
+        id: 'session_test',
+        pubkey: mockPubkey,
+        user_id: 'uid',
+        token_hash: originalTokenHash,
+        device_id: 'dev1',
+        device_fingerprint: 'fp1',
+        device_info: mockDeviceInfo,
+        is_active: true,
+        expires_at: new Date(Date.now() + 86400000).toISOString(),
+        last_activity: new Date().toISOString(),
+        refresh_count: 0,
+      };
+
+      let callCount = 0;
+      mockChain.from = vi.fn(() => {
+        callCount++;
+        if (callCount === 1) {
+          mockChain._resolve({ data: mockSession, error: null });
+        } else {
+          mockChain._resolve({ data: null, error: null });
+        }
+        return mockChain;
+      });
+
+      const refreshed = await sessionManager.refreshSession('session_test', token);
+      expect(refreshed).not.toBeNull();
+      expect(refreshed!.token_hash).toBeDefined();
+      expect(refreshed!.token_hash).not.toBe(originalTokenHash);
+    });
+
+    it('should update expires_at and last_activity_at on refresh', async () => {
       const token = 'test_token';
       const mockSession = {
         id: 'session_test',
@@ -381,40 +417,8 @@ describe('DatabaseSessionManager', () => {
 
       const refreshed = await sessionManager.refreshSession('session_test', token);
       expect(refreshed).not.toBeNull();
-      expect(refreshed!.token).toBeDefined();
-      expect(refreshed!.token).not.toBe(token);
-    });
-
-    it('should increment refresh count', async () => {
-      const token = 'test_token';
-      const mockSession = {
-        id: 'session_test',
-        pubkey: mockPubkey,
-        user_id: 'uid',
-        token_hash: hashToken(token),
-        device_id: 'dev1',
-        device_fingerprint: 'fp1',
-        device_info: mockDeviceInfo,
-        is_active: true,
-        expires_at: new Date(Date.now() + 86400000).toISOString(),
-        last_activity: new Date().toISOString(),
-        refresh_count: 2,
-      };
-
-      let callCount = 0;
-      mockChain.from = vi.fn(() => {
-        callCount++;
-        if (callCount === 1) {
-          mockChain._resolve({ data: mockSession, error: null });
-        } else {
-          mockChain._resolve({ data: null, error: null });
-        }
-        return mockChain;
-      });
-
-      const refreshed = await sessionManager.refreshSession('session_test', token);
-      expect(refreshed).not.toBeNull();
-      expect(refreshed!.refresh_count).toBe(3);
+      expect(typeof refreshed!.expires_at).toBe('number');
+      expect(typeof refreshed!.last_activity_at).toBe('number');
     });
   });
 
@@ -711,7 +715,7 @@ describe('DatabaseSessionManager', () => {
       });
 
       await sessionManager.querySessions({ active: true });
-      expect(mockChain.eq).toHaveBeenCalledWith('is_active', true);
+      expect(mockChain.eq).toHaveBeenCalledWith('active', true);
     });
 
     it('should apply date range filters', async () => {

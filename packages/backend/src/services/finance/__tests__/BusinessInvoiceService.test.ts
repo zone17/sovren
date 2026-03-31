@@ -300,21 +300,71 @@ describe('BusinessInvoiceService', () => {
 
   describe('getInvoices', () => {
     it('returns all invoices for a creator ordered by created_at desc', async () => {
-      const invoices = [
-        { id: 'inv-1', creator_id: 'creator-1', status: 'draft' },
-        { id: 'inv-2', creator_id: 'creator-1', status: 'sent' },
+      const dbRows = [
+        {
+          id: 'inv-1',
+          creator_id: 'creator-1',
+          client_name: 'A',
+          line_items: [],
+          total_sats: 100,
+          status: 'draft',
+          due_date: null,
+          recurring_interval: null,
+          recurrence_end_date: null,
+          lnurl_pay: null,
+          lightning_payment_link: null,
+          created_at: '2026-01-01',
+          paid_at: null,
+        },
+        {
+          id: 'inv-2',
+          creator_id: 'creator-1',
+          client_name: 'B',
+          line_items: [],
+          total_sats: 200,
+          status: 'sent',
+          due_date: null,
+          recurring_interval: null,
+          recurrence_end_date: null,
+          lnurl_pay: null,
+          lightning_payment_link: null,
+          created_at: '2026-01-02',
+          paid_at: null,
+        },
       ];
-      mockDb._orderResult = { data: invoices, error: null };
+      mockDb._orderResult = { data: dbRows, error: null };
 
       const result = await service.getInvoices('creator-1');
 
       expect(mockDb.from).toHaveBeenCalledWith('business_invoices');
       expect(mockDb.eq).toHaveBeenCalledWith('creator_id', 'creator-1');
-      expect(result).toEqual(invoices);
+      expect(result).toHaveLength(2);
+      expect(result[0]).toHaveProperty('creatorId', 'creator-1');
+      expect(result[0]).toHaveProperty('status', 'draft');
+      expect(result[1]).toHaveProperty('status', 'sent');
     });
 
     it('applies status filter when filters.status is provided', async () => {
-      mockDb._orderResult = { data: [{ id: 'inv-1', status: 'paid' }], error: null };
+      mockDb._orderResult = {
+        data: [
+          {
+            id: 'inv-1',
+            creator_id: 'creator-1',
+            client_name: 'A',
+            line_items: [],
+            total_sats: 100,
+            status: 'paid',
+            due_date: null,
+            recurring_interval: null,
+            recurrence_end_date: null,
+            lnurl_pay: null,
+            lightning_payment_link: null,
+            created_at: '2026-01-01',
+            paid_at: '2026-01-02',
+          },
+        ],
+        error: null,
+      };
 
       await service.getInvoices('creator-1', { status: 'paid' });
 
@@ -353,15 +403,40 @@ describe('BusinessInvoiceService', () => {
   // =========================================================================
 
   describe('getInvoice', () => {
-    it('returns the invoice when found', async () => {
-      const invoice = { id: 'inv-1', creator_id: 'creator-1', total_sats: 10000 };
-      mockDb._singleResult = { data: invoice, error: null };
+    it('returns the invoice when found (camelCase domain type)', async () => {
+      const dbRow = {
+        id: 'inv-1',
+        creator_id: 'creator-1',
+        client_name: 'Acme',
+        line_items: [],
+        total_sats: 10000,
+        status: 'draft',
+        due_date: null,
+        recurring_interval: null,
+        recurrence_end_date: null,
+        lnurl_pay: null,
+        lightning_payment_link: null,
+        created_at: '2026-01-01',
+        paid_at: null,
+      };
+      mockDb._singleResult = { data: dbRow, error: null };
 
       const result = await service.getInvoice('inv-1', 'creator-1');
 
       expect(mockDb.eq).toHaveBeenCalledWith('id', 'inv-1');
       expect(mockDb.eq).toHaveBeenCalledWith('creator_id', 'creator-1');
-      expect(result).toEqual(invoice);
+      expect(result).toHaveProperty('creatorId', 'creator-1');
+      expect(result).toHaveProperty('clientName', 'Acme');
+      expect(result).toHaveProperty('totalSats', 10000);
+      expect(result).toHaveProperty('status', 'draft');
+      expect(result).toHaveProperty('createdAt', '2026-01-01');
+      expect(result.lineItems).toEqual(expect.any(Array));
+      expect(result.dueDate).toBeUndefined(); // null → undefined
+      expect(result.recurringInterval).toBeUndefined();
+      expect(result.recurrenceEndDate).toBeUndefined();
+      expect(result.lnurlPay).toBeUndefined();
+      expect(result.lightningPaymentLink).toBeUndefined();
+      expect(result.paidAt).toBeUndefined();
     });
 
     it('throws "Invoice not found" when data is null and error is null', async () => {
@@ -382,8 +457,22 @@ describe('BusinessInvoiceService', () => {
     });
 
     it('enforces creator ownership by filtering on creator_id', async () => {
-      const invoice = { id: 'inv-1', creator_id: 'creator-1', total_sats: 5000 };
-      mockDb._singleResult = { data: invoice, error: null };
+      const dbRow = {
+        id: 'inv-1',
+        creator_id: 'creator-1',
+        client_name: 'X',
+        line_items: [],
+        total_sats: 5000,
+        status: 'draft',
+        due_date: null,
+        recurring_interval: null,
+        recurrence_end_date: null,
+        lnurl_pay: null,
+        lightning_payment_link: null,
+        created_at: '2026-01-01',
+        paid_at: null,
+      };
+      mockDb._singleResult = { data: dbRow, error: null };
 
       await service.getInvoice('inv-1', 'creator-1');
 
@@ -431,7 +520,7 @@ describe('BusinessInvoiceService', () => {
 
     it.each(['draft', 'sent', 'viewed', 'paid', 'overdue', 'cancelled'])(
       'accepts "%s" as a valid status transition',
-      async (status) => {
+      async status => {
         const chain = makeUpdateTerminalChain({ data: null, error: null });
         mockDb.from.mockReturnValue(chain);
 
@@ -458,8 +547,22 @@ describe('BusinessInvoiceService', () => {
 
   describe('generatePaymentLink', () => {
     it('returns a lnurlPay link for a found invoice', async () => {
-      const invoice = { id: 'inv-1', creator_id: 'creator-1', total_sats: 50000 };
-      mockDb._singleResult = { data: invoice, error: null };
+      const dbRow = {
+        id: 'inv-1',
+        creator_id: 'creator-1',
+        client_name: 'X',
+        line_items: [],
+        total_sats: 50000,
+        status: 'draft',
+        due_date: null,
+        recurring_interval: null,
+        recurrence_end_date: null,
+        lnurl_pay: null,
+        lightning_payment_link: null,
+        created_at: '2026-01-01',
+        paid_at: null,
+      };
+      mockDb._singleResult = { data: dbRow, error: null };
 
       const result = await service.generatePaymentLink('inv-1', 'creator-1');
 
@@ -469,8 +572,22 @@ describe('BusinessInvoiceService', () => {
     });
 
     it('persists both lnurl_pay and lightning_payment_link fields', async () => {
-      const invoice = { id: 'inv-1', creator_id: 'creator-1', total_sats: 10000 };
-      mockDb._singleResult = { data: invoice, error: null };
+      const dbRow = {
+        id: 'inv-1',
+        creator_id: 'creator-1',
+        client_name: 'X',
+        line_items: [],
+        total_sats: 10000,
+        status: 'draft',
+        due_date: null,
+        recurring_interval: null,
+        recurrence_end_date: null,
+        lnurl_pay: null,
+        lightning_payment_link: null,
+        created_at: '2026-01-01',
+        paid_at: null,
+      };
+      mockDb._singleResult = { data: dbRow, error: null };
 
       await service.generatePaymentLink('inv-1', 'creator-1');
 

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * @file AIUsabilityTestingFramework.ts
  * @description AI-driven usability testing framework with user behavior simulation
@@ -397,7 +396,7 @@ export class AIUsabilityTestingFramework extends EventEmitter {
       const optimizedScenarios = await this.optimizeTestScenarios(scenarios);
 
       // Store scenarios
-      optimizedScenarios.forEach((scenario) => {
+      optimizedScenarios.forEach(scenario => {
         this.testScenarios.set(scenario.id, scenario);
       });
 
@@ -436,7 +435,7 @@ export class AIUsabilityTestingFramework extends EventEmitter {
       const diversifiedScenarios = await this.diversifyScenarios(scenarios);
 
       // Store generated scenarios
-      diversifiedScenarios.forEach((scenario) => {
+      diversifiedScenarios.forEach(scenario => {
         this.testScenarios.set(scenario.id, scenario);
       });
 
@@ -538,7 +537,7 @@ export class AIUsabilityTestingFramework extends EventEmitter {
       const validatedIssues = await this.validateUsabilityIssues(issues);
 
       // Store issues
-      validatedIssues.forEach((issue) => {
+      validatedIssues.forEach(issue => {
         this.usabilityIssues.set(issue.id, issue);
       });
 
@@ -678,14 +677,14 @@ export class AIUsabilityTestingFramework extends EventEmitter {
     return [];
   }
 
-  private async analyzeApplicationStructure(codeStructure: CodeStructure): Promise<any[]> {
+  private async analyzeApplicationStructure(_codeStructure: CodeStructure): Promise<any[]> {
     // Analyze application structure for testing points
     return [];
   }
 
   private async generateUsabilityScenario(
-    profile: UserBehaviorProfile,
-    point: any
+    _profile: UserBehaviorProfile,
+    _point: any
   ): Promise<UsabilityTestScenario> {
     // Generate usability scenario
     return {} as UsabilityTestScenario;
@@ -698,15 +697,15 @@ export class AIUsabilityTestingFramework extends EventEmitter {
   }
 
   private async generatePersonaSpecificScenarios(
-    persona: UserPersona,
-    context: any
+    _persona: UserPersona,
+    _context: any
   ): Promise<UsabilityTestScenario[]> {
     return [];
   }
 
   private async generateDeviceSpecificScenarios(
-    device: DeviceType,
-    context: any
+    _device: DeviceType,
+    _context: any
   ): Promise<UsabilityTestScenario[]> {
     return [];
   }
@@ -717,105 +716,107 @@ export class AIUsabilityTestingFramework extends EventEmitter {
     return scenarios;
   }
 
-  private async calculateTaskCompletionRate(testResult: any): Promise<number> {
+  private async calculateTaskCompletionRate(_testResult: any): Promise<number> {
     return 85;
   }
 
-  private async calculateTimeOnTask(testResult: any): Promise<number> {
+  private async calculateTimeOnTask(_testResult: any): Promise<number> {
     return 120;
   }
 
-  private async calculateErrorRate(testResult: any): Promise<number> {
+  private async calculateErrorRate(_testResult: any): Promise<number> {
     return 0.05;
   }
 
-  private async calculateSatisfactionScore(testResult: any): Promise<number> {
+  private async calculateSatisfactionScore(_testResult: any): Promise<number> {
     return 8.5;
   }
 
-  private async calculateLearnability(testResult: any): Promise<number> {
+  private async calculateLearnability(_testResult: any): Promise<number> {
     return 7.5;
   }
 
-  private async calculateEfficiency(testResult: any): Promise<number> {
+  private async calculateEfficiency(_testResult: any): Promise<number> {
     return 8.0;
   }
 
-  private async calculateMemorability(testResult: any): Promise<number> {
+  private async calculateMemorability(_testResult: any): Promise<number> {
     return 7.8;
   }
 
-  private async calculateCognitiveLoad(testResult: any): Promise<number> {
+  private async calculateCognitiveLoad(_testResult: any): Promise<number> {
     return 6.5;
   }
 
-  private async calculateNavigationEfficiency(testResult: any): Promise<number> {
+  private async calculateNavigationEfficiency(_testResult: any): Promise<number> {
     return 8.2;
   }
 
-  private async calculateUserConfidence(testResult: any): Promise<number> {
+  private async calculateUserConfidence(_testResult: any): Promise<number> {
     return 7.9;
   }
 
-  private async identifyFrustrations(testResult: any): Promise<string[]> {
+  private async identifyFrustrations(_testResult: any): Promise<string[]> {
     return [];
   }
 
-  private async identifyPositiveExperiences(testResult: any): Promise<string[]> {
+  private async identifyPositiveExperiences(_testResult: any): Promise<string[]> {
     return [];
   }
 
-  private async calculateOverallSatisfaction(testResult: UsabilityTestResult): Promise<number> {
+  private async calculateOverallSatisfaction(_testResult: UsabilityTestResult): Promise<number> {
     return 80;
   }
 
   private async determineEmotionalResponse(
-    testResult: UsabilityTestResult
+    _testResult: UsabilityTestResult
   ): Promise<SyntheticUserFeedback['emotionalResponse']> {
     return 'satisfied';
   }
 
-  private async generateVerbalFeedback(testResult: UsabilityTestResult): Promise<string[]> {
+  private async generateVerbalFeedback(_testResult: UsabilityTestResult): Promise<string[]> {
     return [];
   }
 
-  private async identifyPainPoints(testResult: UsabilityTestResult): Promise<string[]> {
+  private async identifyPainPoints(_testResult: UsabilityTestResult): Promise<string[]> {
     return [];
   }
 
-  private async identifyPositiveAspects(testResult: UsabilityTestResult): Promise<string[]> {
+  private async identifyPositiveAspects(_testResult: UsabilityTestResult): Promise<string[]> {
     return [];
   }
 
-  private async generateUserSuggestions(testResult: UsabilityTestResult): Promise<string[]> {
+  private async generateUserSuggestions(_testResult: UsabilityTestResult): Promise<string[]> {
     return [];
   }
 
   private async determineRecommendationLikelihood(
-    testResult: UsabilityTestResult
+    _testResult: UsabilityTestResult
   ): Promise<boolean> {
     return true;
   }
 
-  private async calculateReturnLikelihood(testResult: UsabilityTestResult): Promise<number> {
+  private async calculateReturnLikelihood(_testResult: UsabilityTestResult): Promise<number> {
     return 85;
   }
 
-  private async identifyContextualFactors(testResult: UsabilityTestResult): Promise<string[]> {
+  private async identifyContextualFactors(_testResult: UsabilityTestResult): Promise<string[]> {
     return [];
   }
 
   private async runHeuristicEvaluation(
-    testResults: UsabilityTestResult[]
+    _testResults: UsabilityTestResult[]
   ): Promise<UsabilityIssue[]> {
     return [];
   }
 
-  private async runPatternAnalysis(testResults: UsabilityTestResult[]): Promise<UsabilityIssue[]> {
+  private async runPatternAnalysis(_testResults: UsabilityTestResult[]): Promise<UsabilityIssue[]> {
     return [];
   }
 
-  private async runMLIssueDetection(testResults: UsabilityTestResult[]): Promise<UsabilityIssue[]> {
+  private async runMLIssueDetection(
+    _testResults: UsabilityTestResult[]
+  ): Promise<UsabilityIssue[]> {
     return [];
   }
 
@@ -856,16 +857,16 @@ export class AIUsabilityTestingFramework extends EventEmitter {
   }
 
   private async trackMetricImprovement(
-    metric: UsabilityMetric
+    _metric: UsabilityMetric
   ): Promise<UsabilityImprovementTracking> {
     return {} as UsabilityImprovementTracking;
   }
 
-  private async validateImprovements(improvements: UsabilityImprovementTracking[]): Promise<void> {
+  private async validateImprovements(_improvements: UsabilityImprovementTracking[]): Promise<void> {
     // Validate improvement effectiveness
   }
 
-  private async generateNextSteps(improvements: UsabilityImprovementTracking[]): Promise<void> {
+  private async generateNextSteps(_improvements: UsabilityImprovementTracking[]): Promise<void> {
     // Generate next steps
   }
 
@@ -877,11 +878,11 @@ export class AIUsabilityTestingFramework extends EventEmitter {
     return {};
   }
 
-  private generateEffectivenessRecommendations(effectiveness: any): string[] {
+  private generateEffectivenessRecommendations(_effectiveness: any): string[] {
     return [];
   }
 
-  private optimizeTestingStrategies(effectiveness: any, patterns: any): void {
+  private optimizeTestingStrategies(_effectiveness: any, _patterns: any): void {
     // Optimize testing strategies
   }
 }

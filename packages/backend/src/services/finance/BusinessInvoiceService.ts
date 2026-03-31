@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Business Invoice Service
  * EPIC-011: Business Manager — Invoicing with LNURL-pay payment links
@@ -40,6 +39,26 @@ interface BusinessInvoiceRow {
   lightning_payment_link: string | null;
   created_at: string;
   paid_at: string | null;
+}
+
+/** Map a snake_case DB row to the camelCase BusinessInvoice domain type */
+function toBusinessInvoice(row: BusinessInvoiceRow): BusinessInvoice {
+  return {
+    id: row.id,
+    creatorId: row.creator_id,
+    clientName: row.client_name,
+    lineItems: row.line_items,
+    totalSats: row.total_sats,
+    status: row.status as BusinessInvoice['status'],
+    dueDate: row.due_date ?? undefined,
+    recurringInterval:
+      (row.recurring_interval as BusinessInvoice['recurringInterval']) ?? undefined,
+    recurrenceEndDate: row.recurrence_end_date ?? undefined,
+    lnurlPay: row.lnurl_pay ?? undefined,
+    lightningPaymentLink: row.lightning_payment_link ?? undefined,
+    createdAt: row.created_at,
+    paidAt: row.paid_at ?? undefined,
+  };
 }
 
 export class BusinessInvoiceService implements IBusinessInvoiceService {
@@ -187,7 +206,7 @@ export class BusinessInvoiceService implements IBusinessInvoiceService {
       this.logger.error('Failed to fetch invoices', { error, creatorId });
       throw new Error('Failed to fetch invoices');
     }
-    return data ?? [];
+    return (data ?? []).map(toBusinessInvoice);
   }
 
   async getInvoice(invoiceId: string, creatorId: string): Promise<BusinessInvoice> {
@@ -207,7 +226,7 @@ export class BusinessInvoiceService implements IBusinessInvoiceService {
       throw new Error('Failed to fetch invoice');
     }
     if (!data) throw new Error(`Invoice not found: ${invoiceId}`);
-    return data;
+    return toBusinessInvoice(data);
   }
 
   async updateInvoiceStatus(invoiceId: string, creatorId: string, status: string): Promise<void> {
@@ -235,7 +254,7 @@ export class BusinessInvoiceService implements IBusinessInvoiceService {
     this.logger.info('BusinessInvoiceService.generatePaymentLink', { invoiceId, creatorId });
 
     const invoice = await this.getInvoice(invoiceId, creatorId);
-    const lnurlPay = await this.generateLnurlPayLink(invoiceId, creatorId, invoice.total_sats);
+    const lnurlPay = await this.generateLnurlPayLink(invoiceId, creatorId, invoice.totalSats);
 
     if (!lnurlPay) {
       throw new Error('LNURL-pay generation failed: Lightning service unavailable');

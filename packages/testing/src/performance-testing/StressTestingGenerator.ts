@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * @fileoverview Elite Stress Testing Generator - AI-generated stress testing scenarios
  * based on usage patterns, intelligent load modeling, and adaptive test strategies.
@@ -176,7 +175,7 @@ export class StressTestingGenerator extends EventEmitter {
 
   private async generateAIScenarios(
     patterns: UsagePattern[],
-    objectives: StressObjective[]
+    _objectives: StressObjective[]
   ): Promise<StressScenario[]> {
     const scenarios: StressScenario[] = [];
 
@@ -216,7 +215,7 @@ export class StressTestingGenerator extends EventEmitter {
 
   private generateBasicScenarios(
     target: StressTestTarget,
-    objectives: StressObjective[]
+    _objectives: StressObjective[]
   ): GeneratedStressTest {
     const basicScenarios: StressScenario[] = [
       {
@@ -241,7 +240,7 @@ export class StressTestingGenerator extends EventEmitter {
     };
   }
 
-  private createSpikePattern(pattern: UsagePattern): LoadPattern {
+  private createSpikePattern(_pattern: UsagePattern): LoadPattern {
     return {
       type: 'immediate_spike',
       sustainTime: 300,
@@ -250,7 +249,7 @@ export class StressTestingGenerator extends EventEmitter {
     };
   }
 
-  private createSustainedPattern(pattern: UsagePattern): LoadPattern {
+  private createSustainedPattern(_pattern: UsagePattern): LoadPattern {
     return {
       type: 'gradual_increase',
       sustainTime: 1500,
@@ -259,7 +258,7 @@ export class StressTestingGenerator extends EventEmitter {
     };
   }
 
-  private identifyStressTargets(pattern: UsagePattern): StressTarget[] {
+  private identifyStressTargets(_pattern: UsagePattern): StressTarget[] {
     return [
       { endpoint: '/api/auth/login', weight: 0.3 },
       { endpoint: '/api/products/search', weight: 0.4 },
@@ -282,7 +281,7 @@ export class StressTestingGenerator extends EventEmitter {
     target: StressTestTarget
   ): Promise<StressScenario[]> {
     // Optimize scenarios based on target characteristics and constraints
-    return scenarios.map((scenario) => ({
+    return scenarios.map(scenario => ({
       ...scenario,
       intensity: Math.min(scenario.intensity, target.maxSafeLoad || 10),
       duration: Math.min(scenario.duration, target.maxTestDuration || 3600),
@@ -308,32 +307,32 @@ export class StressTestingGenerator extends EventEmitter {
   }
 
   private assessRiskLevel(scenarios: StressScenario[]): 'low' | 'medium' | 'high' {
-    const maxIntensity = Math.max(...scenarios.map((s) => s.intensity));
+    const maxIntensity = Math.max(...scenarios.map(s => s.intensity));
     if (maxIntensity > 8) return 'high';
     if (maxIntensity > 4) return 'medium';
     return 'low';
   }
 
   // Placeholder methods for complex AI functionality
-  private async analyzeTrafficLogs(target: StressTestTarget): Promise<any> {
+  private async analyzeTrafficLogs(_target: StressTestTarget): Promise<any> {
     return {};
   }
-  private async analyzeUserBehavior(target: StressTestTarget): Promise<any> {
+  private async analyzeUserBehavior(_target: StressTestTarget): Promise<any> {
     return {};
   }
-  private async analyzeSeasonality(target: StressTestTarget): Promise<any> {
+  private async analyzeSeasonality(_target: StressTestTarget): Promise<any> {
     return {};
   }
-  private synthesizePatterns(traffic: any, behavior: any, seasonal: any): UsagePattern[] {
+  private synthesizePatterns(_traffic: any, _behavior: any, _seasonal: any): UsagePattern[] {
     return this.usagePatterns;
   }
   private async calculateScenarioAdaptation(
-    scenario: StressScenario,
-    metrics: RealTimeMetrics
+    _scenario: StressScenario,
+    _metrics: RealTimeMetrics
   ): Promise<any> {
     return { shouldAdapt: false };
   }
-  private applyScenarioAdaptation(scenario: StressScenario, adaptation: any): void {}
+  private applyScenarioAdaptation(_scenario: StressScenario, _adaptation: any): void {}
   private getDefaultPatterns(): UsagePattern[] {
     return this.usagePatterns;
   }

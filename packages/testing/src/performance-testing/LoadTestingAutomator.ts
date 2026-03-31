@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * @fileoverview Elite Load Testing Automator - Self-configuring load testing
  * with intelligent scaling, real-time adaptation, and autonomous optimization.
@@ -170,7 +169,7 @@ export class LoadTestingAutomator extends EventEmitter {
    * Monitors active load tests
    */
   public getActiveTests(): ActiveTestSummary[] {
-    return Array.from(this.activeTests.values()).map((test) => ({
+    return Array.from(this.activeTests.values()).map(test => ({
       id: test.id,
       status: test.status,
       currentLoad: test.currentLoad,
@@ -395,7 +394,7 @@ export class LoadTestingAutomator extends EventEmitter {
 
   private async checkAdaptationNeeds(test: LoadTest, metrics: LoadMetric[]): Promise<void> {
     // Check if adaptation is needed based on metrics
-    const criticalMetrics = metrics.filter((m) => m.status === 'critical');
+    const criticalMetrics = metrics.filter(m => m.status === 'critical');
 
     if (criticalMetrics.length > 0) {
       console.log('Critical metrics detected, may need adaptation');
@@ -407,7 +406,7 @@ export class LoadTestingAutomator extends EventEmitter {
     metrics: LoadMetric[]
   ): Promise<TestAdaptation | null> {
     // Perform real-time test adaptation based on metrics
-    const warningMetrics = metrics.filter((m) => m.status === 'warning');
+    const warningMetrics = metrics.filter(m => m.status === 'warning');
 
     if (warningMetrics.length > 2) {
       // Reduce load by 20%
@@ -420,7 +419,7 @@ export class LoadTestingAutomator extends EventEmitter {
         reason: 'Performance degradation detected',
         oldValue: test.currentLoad,
         newValue: newLoad,
-        metrics: warningMetrics.map((m) => m.name),
+        metrics: warningMetrics.map(m => m.name),
       };
     }
 
@@ -455,8 +454,8 @@ export class LoadTestingAutomator extends EventEmitter {
   }
 
   private determineTestStatus(metrics: LoadMetric[]): 'passed' | 'failed' | 'warning' {
-    const criticalCount = metrics.filter((m) => m.status === 'critical').length;
-    const warningCount = metrics.filter((m) => m.status === 'warning').length;
+    const criticalCount = metrics.filter(m => m.status === 'critical').length;
+    const warningCount = metrics.filter(m => m.status === 'warning').length;
 
     if (criticalCount > 0) return 'failed';
     if (warningCount > metrics.length * 0.1) return 'warning';
@@ -496,7 +495,7 @@ export class LoadTestingAutomator extends EventEmitter {
   }
 
   private calculateAverage(metrics: LoadMetric[], metricName: string): number {
-    const relevantMetrics = metrics.filter((m) => m.name === metricName);
+    const relevantMetrics = metrics.filter(m => m.name === metricName);
     if (relevantMetrics.length === 0) return 0;
 
     const sum = relevantMetrics.reduce((total, m) => total + m.value, 0);
@@ -504,38 +503,38 @@ export class LoadTestingAutomator extends EventEmitter {
   }
 
   private async sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   // Placeholder methods for complex functionality
-  private getHistoricalData(target: LoadTarget): any[] {
+  private getHistoricalData(_target: LoadTarget): any[] {
     return [];
   }
-  private async analyzeLoadPatterns(data: any[]): Promise<any> {
+  private async analyzeLoadPatterns(_data: any[]): Promise<any> {
     return {};
   }
-  private generateRecommendations(analysis: any, target: LoadTarget): LoadRecommendation[] {
+  private generateRecommendations(_analysis: any, _target: LoadTarget): LoadRecommendation[] {
     return [];
   }
-  private async discoverEndpoints(target: LoadTarget): Promise<any[]> {
+  private async discoverEndpoints(_target: LoadTarget): Promise<any[]> {
     return [];
   }
-  private async analyzeTrafficPatterns(target: LoadTarget): Promise<any> {
+  private async analyzeTrafficPatterns(_target: LoadTarget): Promise<any> {
     return {};
   }
-  private generateScenarios(endpoints: any[], patterns: any): LoadScenario[] {
+  private generateScenarios(_endpoints: any[], _patterns: any): LoadScenario[] {
     return [];
   }
-  private async analyzeTargetCapacity(target: LoadTarget): Promise<LoadConfiguration> {
+  private async analyzeTargetCapacity(_target: LoadTarget): Promise<LoadConfiguration> {
     return { users: 100, duration: 300, rampUp: 60, endpoints: [], scenarios: [] };
   }
   private async optimizeConfiguration(
     base: LoadConfiguration,
-    objectives?: LoadObjective[]
+    _objectives?: LoadObjective[]
   ): Promise<LoadConfiguration> {
     return base;
   }
-  private async updateOptimizations(learning: LearningData): Promise<void> {}
+  private async updateOptimizations(_learning: LearningData): Promise<void> {}
 }
 
 // Supporting interfaces
