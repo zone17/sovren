@@ -1520,9 +1520,11 @@ export class WebhookService implements IWebhookService {
         headers,
         body,
         signal: controller.signal,
+        redirect: 'error', // P1 SSRF fix: prevent redirect to private IPs
       });
 
-      const responseBody = await response.text();
+      // Cap response body to 1MB to prevent OOM from malicious endpoints
+      const responseBody = (await response.text()).slice(0, 1_048_576);
 
       const responseHeaders: Record<string, string> = {};
       response.headers.forEach((value, key) => {
@@ -1535,7 +1537,7 @@ export class WebhookService implements IWebhookService {
         headers: responseHeaders,
       };
     } catch (error: unknown) {
-      if (error instanceof DOMException && error.name === 'AbortError') {
+      if (error instanceof Error && error.name === 'AbortError') {
         throw new Error(`Webhook request timed out after ${timeout}ms`);
       }
       if (error instanceof Error) {
