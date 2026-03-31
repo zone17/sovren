@@ -53,7 +53,7 @@ function toBusinessInvoice(row: BusinessInvoiceRow): BusinessInvoice {
     dueDate: row.due_date ?? undefined,
     recurringInterval:
       (row.recurring_interval as BusinessInvoice['recurringInterval']) ?? undefined,
-    recurrenceEndDate: row.recurrence_end_date,
+    recurrenceEndDate: row.recurrence_end_date ?? undefined,
     lnurlPay: row.lnurl_pay ?? undefined,
     lightningPaymentLink: row.lightning_payment_link ?? undefined,
     createdAt: row.created_at,

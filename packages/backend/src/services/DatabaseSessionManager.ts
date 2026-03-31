@@ -171,14 +171,10 @@ export class DatabaseSessionManager {
       device_info: session.device_info,
       ip_address: session.ip_address,
       user_agent: session.user_agent,
-      created_at: session.created_at,
-      expires_at: session.expires_at,
-      last_activity_at: session.last_activity_at,
-      active: session.active,
-      lightning_enabled: session.lightning_enabled,
-      lightning_permissions: session.lightning_permissions,
-      permissions: session.permissions,
-      risk_score: session.risk_score,
+      created_at: new Date(session.created_at).toISOString(),
+      expires_at: new Date(session.expires_at).toISOString(),
+      last_activity: new Date(session.last_activity_at).toISOString(),
+      is_active: session.active,
       metadata,
     });
 
@@ -223,8 +219,8 @@ export class DatabaseSessionManager {
       .from(this.tableName)
       .select('*')
       .eq('pubkey', pubkey)
-      .eq('active', true)
-      .order('last_activity_at', { ascending: false });
+      .eq('is_active', true)
+      .order('last_activity', { ascending: false });
 
     if (error || !data) {
       return [];
@@ -325,8 +321,8 @@ export class DatabaseSessionManager {
       .from(this.tableName)
       .update({
         token_hash: newTokenHash,
-        expires_at: expiresAt.getTime(),
-        last_activity_at: now.getTime(),
+        expires_at: expiresAt.toISOString(),
+        last_activity: now.toISOString(),
       })
       .eq('id', sessionId);
 
@@ -355,8 +351,8 @@ export class DatabaseSessionManager {
     const { error } = await this.supabase
       .from(this.tableName)
       .update({
-        active: false,
-        last_activity_at: Date.now(),
+        is_active: false,
+        last_activity: new Date().toISOString(),
       })
       .eq('id', sessionId);
 
@@ -377,8 +373,8 @@ export class DatabaseSessionManager {
     let query = this.supabase
       .from(this.tableName)
       .update({
-        active: false,
-        last_activity_at: Date.now(),
+        is_active: false,
+        last_activity: new Date().toISOString(),
       })
       .eq('pubkey', pubkey);
 
@@ -408,7 +404,7 @@ export class DatabaseSessionManager {
     }
 
     if (options.active !== undefined) {
-      query = query.eq('active', options.active);
+      query = query.eq('is_active', options.active);
     }
 
     if (options.since) {
@@ -420,7 +416,7 @@ export class DatabaseSessionManager {
     }
 
     const { data, error } = await query
-      .order('last_activity_at', { ascending: false })
+      .order('last_activity', { ascending: false })
       .limit(options.limit || 100);
 
     if (error || !data) {
@@ -617,7 +613,7 @@ export class DatabaseSessionManager {
     const { error } = await this.supabase
       .from(this.tableName)
       .update({
-        last_activity_at: Date.now(),
+        last_activity: new Date().toISOString(),
       })
       .eq('id', sessionId);
 
