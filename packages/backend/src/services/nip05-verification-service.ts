@@ -1,4 +1,3 @@
-// @ts-nocheck
 import dns from 'dns';
 import { promisify } from 'util';
 import { z } from 'zod';
@@ -279,7 +278,10 @@ export class NIP05VerificationService {
           };
         }
 
-        const data = await response.json();
+        const data = (await response.json()) as {
+          names?: Record<string, string>;
+          relays?: Record<string, string[]>;
+        };
 
         // Validate response structure
         if (!data.names || typeof data.names !== 'object') {

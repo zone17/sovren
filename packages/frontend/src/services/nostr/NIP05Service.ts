@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 🔐 NIP-05 Service - Elite Implementation
  *
@@ -20,8 +19,6 @@ import type {
   NIP05Identifier,
   NIP05VerificationResult,
   NIP05VerificationOptions,
-  NIP05VerificationStatus,
-  NIP05ErrorCode,
   NIP05WellKnownResponse,
   NIP05CacheConfig,
   NIP05CacheEntry,
@@ -32,6 +29,8 @@ import {
   NIP05IdentifierSchema,
   NIP05WellKnownResponseSchema,
   NIP05CacheError,
+  NIP05VerificationStatus,
+  NIP05ErrorCode,
   DEFAULT_NIP05_CACHE_CONFIG,
 } from '@shared/types/nip05';
 
@@ -145,7 +144,7 @@ export class NIP05Service implements INIP05Service {
           identifier,
           expectedPubkey,
           'Invalid public key format',
-          'VALIDATION_ERROR'
+          NIP05ErrorCode.VALIDATION_ERROR
         );
       }
 
@@ -156,7 +155,7 @@ export class NIP05Service implements INIP05Service {
           identifier,
           expectedPubkey,
           parseResult.error || 'Failed to parse identifier',
-          'INVALID_FORMAT'
+          NIP05ErrorCode.INVALID_FORMAT
         );
       }
 
@@ -189,7 +188,7 @@ export class NIP05Service implements INIP05Service {
         identifier,
         expectedPubkey,
         error instanceof Error ? error.message : 'Unknown error',
-        'UNKNOWN_ERROR'
+        NIP05ErrorCode.UNKNOWN_ERROR
       );
     }
   }
@@ -242,7 +241,7 @@ export class NIP05Service implements INIP05Service {
             keysToDelete.push(key);
           }
         }
-        keysToDelete.forEach((key) => this.memoryCache.delete(key));
+        keysToDelete.forEach(key => this.memoryCache.delete(key));
       } else {
         // Clear all
         this.memoryCache.clear();
@@ -326,7 +325,7 @@ export class NIP05Service implements INIP05Service {
             identifier.full,
             expectedPubkey,
             'Invalid content type: expected application/json',
-            'INVALID_CONTENT_TYPE',
+            NIP05ErrorCode.INVALID_CONTENT_TYPE,
             identifier
           );
         }
@@ -340,7 +339,7 @@ export class NIP05Service implements INIP05Service {
             identifier.full,
             expectedPubkey,
             'Invalid JSON response',
-            'INVALID_JSON',
+            NIP05ErrorCode.INVALID_JSON,
             identifier
           );
         }
@@ -351,7 +350,7 @@ export class NIP05Service implements INIP05Service {
             identifier.full,
             expectedPubkey,
             'Invalid response: missing names object',
-            'MISSING_NAMES',
+            NIP05ErrorCode.MISSING_NAMES,
             identifier
           );
         }
@@ -368,7 +367,7 @@ export class NIP05Service implements INIP05Service {
             identifier.full,
             expectedPubkey,
             `Local part '${identifier.localPart}' not found in names`,
-            'NAME_NOT_FOUND',
+            NIP05ErrorCode.NAME_NOT_FOUND,
             identifier
           );
         }
@@ -379,7 +378,7 @@ export class NIP05Service implements INIP05Service {
             identifier.full,
             expectedPubkey,
             'Invalid public key format in response',
-            'INVALID_PUBKEY_FORMAT',
+            NIP05ErrorCode.INVALID_PUBKEY_FORMAT,
             identifier
           );
         }
@@ -391,7 +390,7 @@ export class NIP05Service implements INIP05Service {
             identifier.full,
             expectedPubkey,
             'Invalid response format',
-            'INVALID_RESPONSE',
+            NIP05ErrorCode.INVALID_RESPONSE,
             identifier
           );
         }
@@ -406,9 +405,9 @@ export class NIP05Service implements INIP05Service {
             identifier,
             expectedPubkey,
             actualPubkey,
-            status: 'failed' as NIP05VerificationStatus,
+            status: NIP05VerificationStatus.FAILED,
             error: 'Public key mismatch',
-            errorCode: 'PUBKEY_MISMATCH' as NIP05ErrorCode,
+            errorCode: NIP05ErrorCode.PUBKEY_MISMATCH,
             method: 'http',
           };
         }
@@ -424,7 +423,7 @@ export class NIP05Service implements INIP05Service {
           identifier,
           expectedPubkey,
           actualPubkey,
-          status: 'verified' as NIP05VerificationStatus,
+          status: NIP05VerificationStatus.VERIFIED,
           relays,
           verifiedAt: now,
           expiresAt: now + this.cacheConfig.successTTL,
@@ -441,7 +440,7 @@ export class NIP05Service implements INIP05Service {
             identifier.full,
             expectedPubkey,
             'Verification timeout',
-            'TIMEOUT_ERROR',
+            NIP05ErrorCode.TIMEOUT_ERROR,
             identifier
           );
         }
@@ -451,7 +450,7 @@ export class NIP05Service implements INIP05Service {
             identifier.full,
             expectedPubkey,
             'CORS or network error',
-            'CORS_ERROR',
+            NIP05ErrorCode.CORS_ERROR,
             identifier
           );
         }
@@ -460,7 +459,7 @@ export class NIP05Service implements INIP05Service {
           identifier.full,
           expectedPubkey,
           error.message,
-          'NETWORK_ERROR',
+          NIP05ErrorCode.NETWORK_ERROR,
           identifier
         );
       }
@@ -469,7 +468,7 @@ export class NIP05Service implements INIP05Service {
         identifier.full,
         expectedPubkey,
         'Unknown error during verification',
-        'UNKNOWN_ERROR',
+        NIP05ErrorCode.UNKNOWN_ERROR,
         identifier
       );
     }
@@ -531,9 +530,9 @@ export class NIP05Service implements INIP05Service {
    * Get HTTP error code from status
    */
   private getHTTPErrorCode(status: number): NIP05ErrorCode {
-    if (status === 404) return 'HTTP_404';
-    if (status >= 500) return 'HTTP_500';
-    return 'HTTP_ERROR';
+    if (status === 404) return NIP05ErrorCode.HTTP_404;
+    if (status >= 500) return NIP05ErrorCode.HTTP_500;
+    return NIP05ErrorCode.HTTP_ERROR;
   }
 
   /**
@@ -566,7 +565,7 @@ export class NIP05Service implements INIP05Service {
       verified: false,
       identifier,
       expectedPubkey,
-      status: 'failed' as NIP05VerificationStatus,
+      status: NIP05VerificationStatus.FAILED,
       error,
       errorCode,
       method: 'http',

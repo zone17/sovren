@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 🔐 Database Session Manager (Backend)
  * US-311: Unified Session Management - Subtask 3
@@ -20,11 +19,32 @@ import type {
   Session,
   SessionMetadata,
   DeviceInfo,
-  SessionActivity,
-  SessionValidation,
-  SessionQueryOptions,
-  SessionStats,
+  SessionValidationResult,
 } from '@shared/services/UnifiedSessionManager';
+
+/**
+ * Query options for listing sessions (not exported from shared)
+ */
+interface SessionQueryOptions {
+  pubkey?: string;
+  deviceId?: string;
+  active?: boolean;
+  since?: Date;
+  until?: Date;
+  limit?: number;
+}
+
+/**
+ * Local session stats shape used by this manager
+ */
+interface SessionStats {
+  total: number;
+  active: number;
+  expired: number;
+  revoked: number;
+  byDevice: Record<string, number>;
+  averageSessionLength: number;
+}
 
 /**
  * Database schema for sessions table
@@ -47,7 +67,18 @@ interface SessionRow {
   metadata?: SessionMetadata;
 }
 
-// SessionActivityRow schema documented in schema.sql — not referenced in code
+/**
+ * Database schema for session_activities table
+ */
+interface SessionActivityRow {
+  id: string;
+  session_id: string;
+  action: string;
+  created_at: string;
+  ip_address?: string;
+  user_agent?: string;
+  metadata?: Record<string, unknown>;
+}
 
 /**
  * Database Session Manager Configuration
@@ -115,12 +146,15 @@ export class DatabaseSessionManager {
       device_info: metadata.device_info,
       ip_address: metadata.ip_address,
       user_agent: metadata.user_agent,
-      created_at: now.toISOString(),
-      expires_at: expiresAt.toISOString(),
-      last_activity: now.toISOString(),
-      is_active: true,
-      refresh_count: 0,
-      metadata,
+      created_at: now.getTime(),
+      expires_at: expiresAt.getTime(),
+      last_activity_at: now.getTime(),
+      idle_timeout_at: expiresAt.getTime(),
+      active: true,
+      lightning_enabled: false,
+      lightning_permissions: {},
+      permissions: [],
+      risk_score: 0,
     };
 
     // Check session limit
@@ -139,10 +173,13 @@ export class DatabaseSessionManager {
       user_agent: session.user_agent,
       created_at: session.created_at,
       expires_at: session.expires_at,
-      last_activity: session.last_activity,
-      is_active: session.is_active,
-      refresh_count: session.refresh_count,
-      metadata: session.metadata,
+      last_activity_at: session.last_activity_at,
+      active: session.active,
+      lightning_enabled: session.lightning_enabled,
+      lightning_permissions: session.lightning_permissions,
+      permissions: session.permissions,
+      risk_score: session.risk_score,
+      metadata,
     });
 
     if (error) {
@@ -157,11 +194,8 @@ export class DatabaseSessionManager {
       });
     }
 
-    // Return session with token (only time token is returned in plain text)
-    return {
-      ...session,
-      token: token, // Include plain token for initial response
-    };
+    // Return session (token is stored hashed; plain token should be returned separately)
+    return session;
   }
 
   /**
@@ -189,14 +223,14 @@ export class DatabaseSessionManager {
       .from(this.tableName)
       .select('*')
       .eq('pubkey', pubkey)
-      .eq('is_active', true)
-      .order('last_activity', { ascending: false });
+      .eq('active', true)
+      .order('last_activity_at', { ascending: false });
 
     if (error || !data) {
       return [];
     }
 
-    return data.map(row => this.mapRowToSession(row));
+    return data.map((row: SessionRow) => this.mapRowToSession(row));
   }
 
   /**
@@ -206,7 +240,7 @@ export class DatabaseSessionManager {
     sessionId: string,
     token: string,
     metadata?: SessionMetadata
-  ): Promise<SessionValidation> {
+  ): Promise<SessionValidationResult> {
     const session = await this.getSession(sessionId);
 
     if (!session) {
@@ -226,17 +260,17 @@ export class DatabaseSessionManager {
     }
 
     // Check if expired
-    if (new Date(session.expires_at) < new Date()) {
+    if (session.expires_at < Date.now()) {
       await this.revokeSession(sessionId);
       return {
         valid: false,
         reason: 'Session expired',
-        expired: true,
+        shouldRefresh: true,
       };
     }
 
     // Check if active
-    if (!session.is_active) {
+    if (!session.active) {
       return {
         valid: false,
         reason: 'Session inactive',
@@ -291,9 +325,8 @@ export class DatabaseSessionManager {
       .from(this.tableName)
       .update({
         token_hash: newTokenHash,
-        expires_at: expiresAt.toISOString(),
-        last_activity: now.toISOString(),
-        refresh_count: session.refresh_count + 1,
+        expires_at: expiresAt.getTime(),
+        last_activity_at: now.getTime(),
       })
       .eq('id', sessionId);
 
@@ -303,19 +336,15 @@ export class DatabaseSessionManager {
 
     // Log activity
     if (this.config.enableActivityLogging) {
-      await this.logActivity(sessionId, 'session_refreshed', {
-        refresh_count: session.refresh_count + 1,
-      });
+      await this.logActivity(sessionId, 'session_refreshed');
     }
 
-    // Return updated session with new token
+    // Return updated session with new token hash
     return {
       ...session,
-      token: newToken,
       token_hash: newTokenHash,
-      expires_at: expiresAt.toISOString(),
-      last_activity: now.toISOString(),
-      refresh_count: session.refresh_count + 1,
+      expires_at: expiresAt.getTime(),
+      last_activity_at: now.getTime(),
     };
   }
 
@@ -326,8 +355,8 @@ export class DatabaseSessionManager {
     const { error } = await this.supabase
       .from(this.tableName)
       .update({
-        is_active: false,
-        last_activity: new Date().toISOString(),
+        active: false,
+        last_activity_at: Date.now(),
       })
       .eq('id', sessionId);
 
@@ -348,8 +377,8 @@ export class DatabaseSessionManager {
     let query = this.supabase
       .from(this.tableName)
       .update({
-        is_active: false,
-        last_activity: new Date().toISOString(),
+        active: false,
+        last_activity_at: Date.now(),
       })
       .eq('pubkey', pubkey);
 
@@ -379,7 +408,7 @@ export class DatabaseSessionManager {
     }
 
     if (options.active !== undefined) {
-      query = query.eq('is_active', options.active);
+      query = query.eq('active', options.active);
     }
 
     if (options.since) {
@@ -391,14 +420,14 @@ export class DatabaseSessionManager {
     }
 
     const { data, error } = await query
-      .order('last_activity', { ascending: false })
+      .order('last_activity_at', { ascending: false })
       .limit(options.limit || 100);
 
     if (error || !data) {
       return [];
     }
 
-    return data.map(row => this.mapRowToSession(row));
+    return data.map((row: SessionRow) => this.mapRowToSession(row));
   }
 
   /**
@@ -437,7 +466,7 @@ export class DatabaseSessionManager {
 
     let totalSessionLength = 0;
 
-    for (const row of data) {
+    for (const row of data as SessionRow[]) {
       if (row.is_active) {
         if (new Date(row.expires_at) > now) {
           stats.active++;
@@ -449,7 +478,8 @@ export class DatabaseSessionManager {
       }
 
       // Count by device type
-      const deviceType = row.device_info?.deviceType || 'unknown';
+      const deviceInfo = row.device_info as DeviceInfo | undefined;
+      const deviceType = deviceInfo?.deviceType || 'unknown';
       stats.byDevice[deviceType] = (stats.byDevice[deviceType] || 0) + 1;
 
       // Calculate session length
@@ -469,7 +499,7 @@ export class DatabaseSessionManager {
   public async getSessionActivities(
     sessionId: string,
     limit: number = 100
-  ): Promise<SessionActivity[]> {
+  ): Promise<SessionActivityRow[]> {
     const { data, error } = await this.supabase
       .from(this.activityTableName)
       .select('*')
@@ -481,14 +511,14 @@ export class DatabaseSessionManager {
       return [];
     }
 
-    return data.map(row => ({
-      id: row.id,
-      sessionId: row.session_id,
-      action: row.action,
-      timestamp: row.created_at,
-      ipAddress: row.ip_address,
-      userAgent: row.user_agent,
-      metadata: row.metadata,
+    return data.map((row: Record<string, unknown>) => ({
+      id: row.id as string,
+      session_id: row.session_id as string,
+      action: row.action as string,
+      created_at: row.created_at as string,
+      ip_address: row.ip_address as string | undefined,
+      user_agent: row.user_agent as string | undefined,
+      metadata: row.metadata as Record<string, unknown> | undefined,
     }));
   }
 
@@ -550,12 +580,15 @@ export class DatabaseSessionManager {
       device_info: row.device_info,
       ip_address: row.ip_address,
       user_agent: row.user_agent,
-      created_at: row.created_at,
-      expires_at: row.expires_at,
-      last_activity: row.last_activity,
-      is_active: row.is_active,
-      refresh_count: row.refresh_count,
-      metadata: row.metadata,
+      created_at: new Date(row.created_at).getTime(),
+      expires_at: new Date(row.expires_at).getTime(),
+      last_activity_at: new Date(row.last_activity).getTime(),
+      idle_timeout_at: new Date(row.expires_at).getTime(),
+      active: row.is_active,
+      lightning_enabled: false,
+      lightning_permissions: {},
+      permissions: [],
+      risk_score: 0,
     };
   }
 
@@ -568,7 +601,7 @@ export class DatabaseSessionManager {
     if (sessions.length >= this.config.maxSessionsPerUser!) {
       // Revoke oldest sessions
       const toRevoke = sessions
-        .sort((a, b) => new Date(a.last_activity).getTime() - new Date(b.last_activity).getTime())
+        .sort((a, b) => a.last_activity_at - b.last_activity_at)
         .slice(0, sessions.length - this.config.maxSessionsPerUser! + 1);
 
       for (const session of toRevoke) {
@@ -584,7 +617,7 @@ export class DatabaseSessionManager {
     const { error } = await this.supabase
       .from(this.tableName)
       .update({
-        last_activity: new Date().toISOString(),
+        last_activity_at: Date.now(),
       })
       .eq('id', sessionId);
 

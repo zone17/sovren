@@ -1,5 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
 /**
  * 📡 ELITE SERVICE: Event Publisher Service
  * US-303: Create Unified Event Publisher Service
@@ -45,6 +43,7 @@ import {
   type UnsignedNostrEvent,
   type EventTemplate,
   type PublishResult as BasePublishResult,
+  type RelayPublishResult,
   type BatchPublishResult,
   type EventValidationResult,
   NostrEventSchema,
@@ -401,11 +400,20 @@ export class EventPublisherService extends EventEmitter {
         this.stats.failedPublishes++;
       }
 
+      // Map local PublishResult[] to shared RelayPublishResult[] for type compatibility
+      const mappedRelayResults: RelayPublishResult[] = relayResults.map(r => ({
+        relay: r.relay,
+        success: r.success,
+        error: r.error?.message,
+        timestamp: Date.now(),
+        latency: r.latency,
+      }));
+
       const result: PublishResultComplete = {
         success: publishedTo.length > 0,
         event,
         eventId: event.id,
-        relayResults,
+        relayResults: mappedRelayResults,
         publishedTo,
         failedRelays,
         timestamp: Date.now(),

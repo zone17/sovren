@@ -1,5 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
 /**
  * NIP19Service - Bech32 Identifier Encoding/Decoding
  *
@@ -220,7 +218,6 @@ export interface QRCodeOptions {
  */
 export class NIP19Service {
   private readonly HEX_REGEX = /^[a-fA-F0-9]{64}$/;
-  private readonly WSS_REGEX = /^wss:\/\/.+/;
 
   // ========================================
   // Encoding Functions
@@ -465,7 +462,7 @@ export class NIP19Service {
    * @returns Decoded entity with type and data
    * @throws Error if identifier is invalid
    */
-  decode(nip19: string): DecodedNIP19 {
+  decode(nip19: string): DecodedNIP19 | DecodedRelay {
     if (!nip19 || typeof nip19 !== 'string') {
       throw new ValidationError('identifier', 'Input must be a non-empty string', nip19);
     }
@@ -539,21 +536,22 @@ export class NIP19Service {
             },
           } as DecodedAddress;
 
-        case 'nrelay': {
-          // nrelay returns Uint8Array, decode to string
-          const relayData = decoded.data;
-          const relayUrl =
-            relayData instanceof Uint8Array
-              ? new TextDecoder().decode(relayData)
-              : (relayData as string);
-          return {
-            type: 'nrelay' as const,
-            data: relayUrl,
-          } as DecodedRelay;
-        }
-
-        default:
+        default: {
+          // Handle nrelay (not in nostr-tools type union but valid NIP-19)
+          const decodedAny = decoded as unknown as { type: string; data: unknown };
+          if (decodedAny.type === 'nrelay') {
+            const relayData = decodedAny.data;
+            const relayUrl =
+              relayData instanceof Uint8Array
+                ? new TextDecoder().decode(relayData)
+                : (relayData as string);
+            return {
+              type: 'nrelay' as const,
+              data: relayUrl,
+            } as DecodedRelay;
+          }
           throw new InvalidPrefixError(prefix, validPrefixes);
+        }
       }
     } catch (error) {
       // Re-throw our custom errors as-is

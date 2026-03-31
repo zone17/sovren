@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * @file AIExploratoryTestingFramework.ts
  * @description AI-driven exploratory testing framework with ML-based path discovery
@@ -350,7 +349,7 @@ export class AIExploratoryTestingFramework extends EventEmitter {
       const diversifiedScenarios = this.optimizeScenarioDiversity(scenarios);
 
       // Store generated scenarios
-      diversifiedScenarios.forEach((scenario) => {
+      diversifiedScenarios.forEach(scenario => {
         this.generatedScenarios.set(scenario.id, scenario);
       });
 
@@ -378,7 +377,7 @@ export class AIExploratoryTestingFramework extends EventEmitter {
       const scheduledScenarios = this.scheduleTestExecution(scoredScenarios);
 
       // Update test case metadata
-      scheduledScenarios.forEach((scenario) => {
+      scheduledScenarios.forEach(scenario => {
         this.generatedScenarios.set(scenario.id, scenario);
       });
 
@@ -420,7 +419,7 @@ export class AIExploratoryTestingFramework extends EventEmitter {
       const validatedBugs = await this.validateBugs(bugs);
 
       // Store detected bugs
-      validatedBugs.forEach((bug) => {
+      validatedBugs.forEach(bug => {
         this.detectedBugs.set(bug.id, bug);
       });
 
@@ -561,7 +560,7 @@ export class AIExploratoryTestingFramework extends EventEmitter {
   private async initializeMLModels(): Promise<void> {
     // Initialize ML models based on configuration
     this.mlModel = {
-      predictPaths: async (codeStructure: CodeStructure) => {
+      predictPaths: async (_codeStructure: CodeStructure) => {
         // ML path prediction logic
         return [];
       },
@@ -605,8 +604,8 @@ export class AIExploratoryTestingFramework extends EventEmitter {
   }
 
   private async generateScenariosForPath(
-    path: TestPath,
-    userContext?: any
+    _path: TestPath,
+    _userContext?: any
   ): Promise<TestScenario[]> {
     // Generate scenarios for a specific path
     return [];
@@ -627,17 +626,17 @@ export class AIExploratoryTestingFramework extends EventEmitter {
     return scenarios;
   }
 
-  private async detectAnomalies(result: ExploratoryTestResult): Promise<DetectedBug[]> {
+  private async detectAnomalies(_result: ExploratoryTestResult): Promise<DetectedBug[]> {
     // ML-based anomaly detection
     return [];
   }
 
-  private async analyzeExecutionPatterns(result: ExploratoryTestResult): Promise<DetectedBug[]> {
+  private async analyzeExecutionPatterns(_result: ExploratoryTestResult): Promise<DetectedBug[]> {
     // Pattern analysis for bug detection
     return [];
   }
 
-  private async runStaticAnalysis(result: ExploratoryTestResult): Promise<DetectedBug[]> {
+  private async runStaticAnalysis(_result: ExploratoryTestResult): Promise<DetectedBug[]> {
     // Static analysis on discovered paths
     return [];
   }
@@ -651,12 +650,12 @@ export class AIExploratoryTestingFramework extends EventEmitter {
     return `Generated ${scenarios.length} test scenarios and detected ${bugs.length} potential bugs`;
   }
 
-  private documentTestScenarios(scenarios: TestScenario[]): string {
+  private documentTestScenarios(_scenarios: TestScenario[]): string {
     // Document test scenarios
     return '';
   }
 
-  private documentBugs(bugs: DetectedBug[]): string {
+  private documentBugs(_bugs: DetectedBug[]): string {
     // Document detected bugs
     return '';
   }
@@ -685,11 +684,11 @@ export class AIExploratoryTestingFramework extends EventEmitter {
     return {};
   }
 
-  private async optimizeTestingStrategies(trends: any): Promise<void> {
+  private async optimizeTestingStrategies(_trends: any): Promise<void> {
     // Optimize testing strategies
   }
 
-  private async updateKnowledgeBase(insights: string[]): Promise<void> {
+  private async updateKnowledgeBase(_insights: string[]): Promise<void> {
     // Update knowledge base
   }
 
@@ -698,7 +697,7 @@ export class AIExploratoryTestingFramework extends EventEmitter {
     return {};
   }
 
-  private async broadcastFindings(recommendations: any): Promise<void> {
+  private async broadcastFindings(_recommendations: any): Promise<void> {
     // Broadcast findings to team
   }
 
@@ -720,7 +719,7 @@ export class AIExploratoryTestingFramework extends EventEmitter {
     return [];
   }
 
-  private adaptStrategies(effectiveness: number, trend: any): void {
+  private adaptStrategies(_effectiveness: number, _trend: any): void {
     // Adapt testing strategies
   }
 }
