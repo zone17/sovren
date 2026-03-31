@@ -40,13 +40,17 @@ BEGIN
         AND column_name = 'creator_user_id'
     ) THEN
       ALTER TABLE platform_connections ADD COLUMN creator_user_id UUID;
-
-      UPDATE platform_connections pc
-      SET creator_user_id = u.id
-      FROM users u
-      WHERE u.nostr_pubkey = pc.creator_id
-        AND pc.creator_user_id IS NULL;
     END IF;
+
+    -- Always run UPDATE to catch partially-populated rows from prior failed runs
+    UPDATE platform_connections pc
+    SET creator_user_id = u.id
+    FROM users u
+    WHERE u.nostr_pubkey = pc.creator_id
+      AND pc.creator_user_id IS NULL;
+
+    -- Delete orphaned rows with no matching user (prevents NOT NULL failure)
+    DELETE FROM platform_connections WHERE creator_user_id IS NULL;
 
     ALTER TABLE platform_connections DROP COLUMN creator_id;
     ALTER TABLE platform_connections RENAME COLUMN creator_user_id TO creator_id;
@@ -70,6 +74,7 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM information_schema.table_constraints
     WHERE constraint_name = 'platform_connections_creator_id_fkey'
+      AND table_schema = 'public'
   ) THEN
     ALTER TABLE platform_connections
       ADD CONSTRAINT platform_connections_creator_id_fkey
@@ -80,6 +85,7 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM information_schema.table_constraints
     WHERE constraint_name = 'platform_connections_creator_id_platform_key'
+      AND table_schema = 'public'
   ) THEN
     ALTER TABLE platform_connections
       ADD CONSTRAINT platform_connections_creator_id_platform_key

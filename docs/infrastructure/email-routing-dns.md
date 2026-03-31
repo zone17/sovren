@@ -58,7 +58,7 @@ Sign up at https://improvmx.com, add `sovren.app`, configure forwarding rules.
 
 ## SPF Record
 
-Prevents email spoofing. Add to existing TXT record or create new one.
+Prevents email spoofing. **A domain can only have ONE SPF TXT record.** Multiple `v=spf1` records cause SPF PermError, breaking email authentication entirely. Merge all `include:` directives from your chosen email provider(s) into a single record.
 
 ```
 TXT  sovren.app   "v=spf1 include:_spf.google.com include:_spf.mx.cloudflare.net ~all"
@@ -80,11 +80,17 @@ The selector name (`default`) must match what your SMTP provider uses.
 
 Instructs receiving servers how to handle emails that fail SPF/DKIM checks.
 
+Start with `p=none` for monitoring, then move to `p=quarantine` or `p=reject` once DKIM/SPF are verified:
+
 ```
-TXT  _dmarc.sovren.app   "v=DMARC1; p=quarantine; rua=mailto:dmca@sovren.app; pct=100"
+# Phase 1: Monitoring only (start here)
+TXT  _dmarc.sovren.app   "v=DMARC1; p=none; rua=mailto:dmarc-reports@sovren.app; pct=100"
+
+# Phase 2: Quarantine (after verifying SPF/DKIM work correctly)
+TXT  _dmarc.sovren.app   "v=DMARC1; p=quarantine; rua=mailto:dmarc-reports@sovren.app; pct=100"
 ```
 
-Start with `p=none` for monitoring, then move to `p=quarantine` or `p=reject` once DKIM/SPF are verified.
+**Important:** Use a dedicated address for DMARC aggregate reports (e.g., `dmarc-reports@sovren.app`), NOT `dmca@` or other compliance addresses. ISPs send daily XML report files in bulk — they will overwhelm a legal inbox.
 
 ## Verification
 
