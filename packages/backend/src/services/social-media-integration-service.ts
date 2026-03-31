@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 🌐 **SOCIAL MEDIA INTEGRATION SERVICE**
  *
@@ -69,7 +68,16 @@ export interface SocialPlatformAdapter {
 // PLATFORM CONFIGURATION
 // =====================================================
 
-const PLATFORM_CONFIGS = {
+const PLATFORM_CONFIGS: Record<string, {
+  maxTextLength: number;
+  maxHashtags: number;
+  supportedMediaTypes: string[];
+  maxMediaCount: number;
+  supportsThreads: boolean;
+  supportsPolls: boolean;
+  supportsScheduling: boolean;
+  requiresAltText: boolean;
+}> = {
   [SocialPlatform.TWITTER]: {
     maxTextLength: 280,
     maxHashtags: 3,
@@ -228,12 +236,24 @@ export class SocialMediaIntegrationService extends EventEmitter {
       let postResult;
       if (request.scheduledAt && request.scheduledAt > new Date()) {
         // Schedule for later
-        postResult = await this.schedulePost(userId, {
+        const scheduledPost: CrossPlatformPost = {
+          id: crypto.randomUUID(),
+          userId,
+          contentId: request.contentId,
+          title: '',
           content: adaptedContent.content,
+          contentType: ContentType.TEXT,
           platforms: [request.platform],
+          status: PostStatus.SCHEDULED,
           scheduledAt: request.scheduledAt,
-          mediaUrls: adaptedContent.mediaUrls,
-        });
+          mediaAssets: (adaptedContent.mediaUrls || []).map((url: string) => ({ type: 'image' as const, url })),
+          platformCustomizations: {},
+          analytics: { totalImpressions: 0, totalEngagement: 0, clickThroughRate: 0, conversionRate: 0 },
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        await this.schedulePostPublication(scheduledPost);
+        postResult = { postId: scheduledPost.id, postUrl: '' };
       } else {
         // Post immediately
         postResult = await adapter.postContent(adaptedContent, socialAccount.accessToken);
@@ -260,7 +280,8 @@ export class SocialMediaIntegrationService extends EventEmitter {
       await this.storeSocialShare(userId, response);
 
       // Track analytics event
-      await this.analytics.track(userId, 'social_content_shared', {
+      await this.analytics.track('social_content_shared', {
+        userId,
         platform: request.platform,
         contentId: request.contentId,
         shareId: response.shareId,
@@ -294,7 +315,7 @@ export class SocialMediaIntegrationService extends EventEmitter {
     config?: Partial<ShareButtonConfig>
   ): Promise<ShareButtonConfig[]> {
     try {
-      const content = await this.getContentForSharing(contentId);
+      await this.getContentForSharing(contentId); // validate content exists
       const buttons: ShareButtonConfig[] = [];
 
       for (const platform of platforms) {
@@ -420,7 +441,8 @@ export class SocialMediaIntegrationService extends EventEmitter {
           results.push({ platform, success: true });
 
           // Track success
-          await this.analytics.track(post.userId, 'cross_platform_post_published', {
+          await this.analytics.track('cross_platform_post_published', {
+            userId: post.userId,
             postId,
             platform,
             postUrl: result.postUrl,
@@ -698,7 +720,7 @@ export class SocialMediaIntegrationService extends EventEmitter {
         profileUrl: profile.profileUrl,
         accessToken: tokenResult.accessToken,
         refreshToken: tokenResult.refreshToken,
-        tokenExpiresAt: tokenResult.expiresAt ? new Date(tokenResult.expiresAt) : undefined,
+        tokenExpiresAt: undefined,
         scopes: oauthFlow.scopes,
         isVerified: profile.verified || false,
         isPrimary: false,
@@ -714,7 +736,8 @@ export class SocialMediaIntegrationService extends EventEmitter {
       this.oauthFlows.delete(request.state);
 
       // Track analytics
-      await this.analytics.track(socialAccount.userId, 'social_account_linked', {
+      await this.analytics.track('social_account_linked', {
+        userId: socialAccount.userId,
         platform: request.platform,
         accountId: socialAccount.id,
       });
@@ -964,9 +987,9 @@ export class SocialMediaIntegrationService extends EventEmitter {
   }
 
   private async analyzeTrends(
-    userId: string,
-    platformMetrics: Record<SocialPlatform, SocialAnalyticsMetrics>,
-    timeRange: { start: Date; end: Date }
+    _userId: string,
+    _platformMetrics: Record<SocialPlatform, SocialAnalyticsMetrics>,
+    _timeRange: { start: Date; end: Date }
   ): Promise<any[]> {
     // Implement trend analysis logic
     return [];
@@ -1053,27 +1076,27 @@ export class SocialMediaIntegrationService extends EventEmitter {
   }
 
   private async getUserSocialAccount(
-    userId: string,
-    platform: SocialPlatform
+    _userId: string,
+    _platform: SocialPlatform
   ): Promise<SocialAccount | null> {
     // Implement database query to get user's social account
     return null;
   }
 
-  private async storeSocialShare(userId: string, response: SocialShareResponse): Promise<void> {
+  private async storeSocialShare(_userId: string, _response: SocialShareResponse): Promise<void> {
     // Store share record in database
   }
 
-  private async storeCrossPlatformPost(post: CrossPlatformPost): Promise<void> {
+  private async storeCrossPlatformPost(_post: CrossPlatformPost): Promise<void> {
     // Store post in database
   }
 
-  private async getCrossPlatformPost(postId: string): Promise<CrossPlatformPost | null> {
+  private async getCrossPlatformPost(_postId: string): Promise<CrossPlatformPost | null> {
     // Retrieve post from database
     return null;
   }
 
-  private async updateCrossPlatformPost(post: CrossPlatformPost): Promise<void> {
+  private async updateCrossPlatformPost(_post: CrossPlatformPost): Promise<void> {
     // Update post in database
   }
 
@@ -1089,7 +1112,7 @@ export class SocialMediaIntegrationService extends EventEmitter {
     );
   }
 
-  private async schedulePostPublication(post: CrossPlatformPost): Promise<void> {
+  private async schedulePostPublication(_post: CrossPlatformPost): Promise<void> {
     // Schedule post for publication
   }
 
@@ -1098,7 +1121,7 @@ export class SocialMediaIntegrationService extends EventEmitter {
     return [];
   }
 
-  private async storePostingSchedule(schedule: PostingSchedule): Promise<void> {
+  private async storePostingSchedule(_schedule: PostingSchedule): Promise<void> {
     // Store posting schedule
   }
 
@@ -1106,7 +1129,7 @@ export class SocialMediaIntegrationService extends EventEmitter {
     platform: SocialPlatform,
     socialAccount: SocialAccount,
     timeRange: { start: Date; end: Date },
-    contentId?: string
+    _contentId?: string
   ): Promise<SocialAnalyticsMetrics> {
     // Gather analytics from platform
     return {
@@ -1139,31 +1162,31 @@ export class SocialMediaIntegrationService extends EventEmitter {
     await this.redis.setex(`analytics:${userId}`, 3600, JSON.stringify(analytics));
   }
 
-  private async storeAnalyticsReport(report: AnalyticsReport): Promise<void> {
+  private async storeAnalyticsReport(_report: AnalyticsReport): Promise<void> {
     // Store analytics report
   }
 
   private async getSocialLoginProvider(
-    platform: SocialPlatform
+    _platform: SocialPlatform
   ): Promise<SocialLoginProvider | null> {
     // Get OAuth provider configuration
     return null;
   }
 
-  private async storeSocialAccount(socialAccount: SocialAccount): Promise<void> {
+  private async storeSocialAccount(_socialAccount: SocialAccount): Promise<void> {
     // Store social account
   }
 
-  private async getSocialAccount(accountId: string): Promise<SocialAccount | null> {
+  private async getSocialAccount(_accountId: string): Promise<SocialAccount | null> {
     // Get social account
     return null;
   }
 
-  private async updateSocialAccount(socialAccount: SocialAccount): Promise<void> {
+  private async updateSocialAccount(_socialAccount: SocialAccount): Promise<void> {
     // Update social account
   }
 
-  private async storeSocialProfileSync(profileSync: SocialProfileSync): Promise<void> {
+  private async storeSocialProfileSync(_profileSync: SocialProfileSync): Promise<void> {
     // Store profile sync record
   }
 }

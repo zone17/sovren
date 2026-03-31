@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ScheduleService
  * Sustainable cadence recommendations and content buffer depth
@@ -15,6 +14,17 @@ import type {
 import type { IScheduleService } from '../../interfaces/wellness/IScheduleService';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { ILogger } from '../../interfaces/shared/ILogger';
+
+/** Row shape returned from the creator_work_patterns Supabase table. */
+interface WorkPatternRow {
+  date: string;
+  post_count?: number;
+  content_time_mins?: number;
+  engagement_time_mins?: number;
+  management_time_mins?: number;
+  first_activity_at?: string;
+  last_activity_at?: string;
+}
 
 const DAY_NAMES: DayOfWeek[] = [
   'monday',
@@ -44,7 +54,7 @@ export class ScheduleService implements IScheduleService {
       .gte('date', fourWeeksAgo.toISOString().split('T')[0])
       .order('date', { ascending: true });
 
-    const rows = patterns || [];
+    const rows = (patterns || []) as unknown as WorkPatternRow[];
 
     // Calculate current posting rate
     const totalPosts = rows.reduce((s: number, r: { post_count?: number }) => s + (r.post_count || 0), 0);

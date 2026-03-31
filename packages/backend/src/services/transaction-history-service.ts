@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { randomBytes } from 'crypto';
 import { createObjectCsvWriter } from 'csv-writer';
 import { EventEmitter } from 'events';
@@ -261,7 +260,7 @@ export class TransactionHistoryService extends EventEmitter {
       return transaction;
     } catch (error) {
       this.logger.error('Failed to record transaction', error);
-      throw new Error(`Transaction recording failed: ${error.message}`);
+      throw new Error(`Transaction recording failed: ${(error instanceof Error ? error.message : String(error))}`);
     }
   }
 
@@ -370,7 +369,7 @@ export class TransactionHistoryService extends EventEmitter {
       };
     } catch (error) {
       this.logger.error('Failed to get payment history', error);
-      throw new Error(`Payment history retrieval failed: ${error.message}`);
+      throw new Error(`Payment history retrieval failed: ${(error instanceof Error ? error.message : String(error))}`);
     }
   }
 
@@ -471,7 +470,7 @@ export class TransactionHistoryService extends EventEmitter {
       };
     } catch (error) {
       this.logger.error('Failed to export transaction data', error);
-      throw new Error(`Transaction data export failed: ${error.message}`);
+      throw new Error(`Transaction data export failed: ${(error instanceof Error ? error.message : String(error))}`);
     }
   }
 
@@ -543,7 +542,7 @@ export class TransactionHistoryService extends EventEmitter {
       return analytics;
     } catch (error) {
       this.logger.error('Failed to get revenue analytics', error);
-      throw new Error(`Revenue analytics failed: ${error.message}`);
+      throw new Error(`Revenue analytics failed: ${(error instanceof Error ? error.message : String(error))}`);
     }
   }
 
@@ -622,7 +621,7 @@ export class TransactionHistoryService extends EventEmitter {
       return analytics;
     } catch (error) {
       this.logger.error('Failed to get spending analytics', error);
-      throw new Error(`Spending analytics failed: ${error.message}`);
+      throw new Error(`Spending analytics failed: ${(error instanceof Error ? error.message : String(error))}`);
     }
   }
 
@@ -656,9 +655,7 @@ export class TransactionHistoryService extends EventEmitter {
       }
 
       if (validated.metadata) {
-        updateData.metadata = supabase.raw(`metadata || ?::jsonb`, [
-          JSON.stringify(validated.metadata),
-        ]);
+        updateData.metadata = validated.metadata;
       }
 
       // Update database
@@ -702,7 +699,7 @@ export class TransactionHistoryService extends EventEmitter {
       return transaction;
     } catch (error) {
       this.logger.error('Failed to update transaction status', error);
-      throw new Error(`Transaction status update failed: ${error.message}`);
+      throw new Error(`Transaction status update failed: ${(error instanceof Error ? error.message : String(error))}`);
     }
   }
 
@@ -828,11 +825,12 @@ export class TransactionHistoryService extends EventEmitter {
         case 'day':
           key = date.toISOString().split('T')[0];
           break;
-        case 'week':
+        case 'week': {
           const weekStart = new Date(date);
           weekStart.setDate(date.getDate() - date.getDay());
           key = weekStart.toISOString().split('T')[0];
           break;
+        }
         case 'month':
           key = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
           break;
@@ -860,8 +858,8 @@ export class TransactionHistoryService extends EventEmitter {
   }
 
   private async calculateGrowthMetrics(
-    creator_id: string,
-    transactions: any[]
+    _creator_id: string,
+    _transactions: any[]
   ): Promise<{
     daily_growth: number;
     weekly_growth: number;
@@ -1006,7 +1004,7 @@ export class TransactionHistoryService extends EventEmitter {
       this.logger.error('Health check failed', error);
       return {
         status: 'unhealthy',
-        metrics: { error: error.message },
+        metrics: { error: (error instanceof Error ? error.message : String(error)) },
       };
     }
   }

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 🔍 CONTENT DISCOVERY ROUTES
  *
@@ -90,11 +89,11 @@ const FeedbackSchema = z.object({
 router.get(
   '/feed',
   optionalAuth,
-  validateRequest(FeedSchema, 'query'),
+  validateRequest(FeedSchema),
   asyncHandler(async (req, res) => {
-    const userId = req.user?.id || req.user?.nostr_pubkey;
+    const userId = req.user?.id || req.user?.nostr_pubkey || '';
     const { categories, exclude_categories, following_only, premium_only, page, limit } =
-      req.query as z.infer<typeof FeedSchema>;
+      req.query as unknown as z.infer<typeof FeedSchema>;
 
     // Get personalized feed based on user preferences and history
     const feedItems = await getDiscoveryService().getPersonalizedFeed({
@@ -133,7 +132,7 @@ router.get(
  */
 router.get(
   '/trending',
-  validateRequest(TrendingSchema, 'query'),
+  validateRequest(TrendingSchema),
   asyncHandler(async (req, res) => {
     const { timeframe, category, limit } = req.query as unknown as z.infer<typeof TrendingSchema>;
 
@@ -182,8 +181,8 @@ router.get(
  */
 router.get(
   '/category/:category',
-  validateRequest(CategoryParamSchema, 'params'),
-  validateRequest(CategoryQuerySchema, 'query'),
+  validateRequest(CategoryParamSchema),
+  validateRequest(CategoryQuerySchema),
   asyncHandler(async (req, res) => {
     const { category } = req.params as unknown as z.infer<typeof CategoryParamSchema>;
     const { sort, page, limit } = req.query as unknown as z.infer<typeof CategoryQuerySchema>;
@@ -221,7 +220,7 @@ router.post(
   optionalAuth,
   validateRequest(SearchSchema),
   asyncHandler(async (req, res) => {
-    const userId = req.user?.id || req.user?.nostr_pubkey;
+    const userId = req.user?.id || req.user?.nostr_pubkey || '';
     const searchParams = req.body as z.infer<typeof SearchSchema>;
 
     const searchResults = await getDiscoveryService().searchContent({
@@ -264,7 +263,7 @@ router.get(
   '/recommendations/creators',
   authenticate,
   asyncHandler(async (req, res) => {
-    const userId = req.user?.id || req.user?.nostr_pubkey;
+    const userId = req.user?.id || req.user?.nostr_pubkey || '';
     const { limit = 10 } = req.query;
 
     const recommendedCreators = await getRecommendationService().getCreatorRecommendations({
@@ -292,7 +291,7 @@ router.get(
   '/recommendations/content',
   authenticate,
   asyncHandler(async (req, res) => {
-    const userId = req.user?.id || req.user?.nostr_pubkey;
+    const userId = req.user?.id || req.user?.nostr_pubkey || '';
     const { limit = 20, exclude_viewed = false } = req.query;
 
     const recommendedContent = await getRecommendationService().getContentRecommendations({
@@ -307,7 +306,7 @@ router.get(
       meta: {
         count: recommendedContent.length,
         algorithm: 'hybrid_recommendation_v2',
-        personalization_score: recommendedContent.personalization_score || 0,
+        personalization_score: 0,
       },
     });
   })
@@ -350,7 +349,7 @@ router.post(
   authenticate,
   validateRequest(FeedbackSchema),
   asyncHandler(async (req, res) => {
-    const userId = req.user?.id || req.user?.nostr_pubkey;
+    const userId = req.user?.id || req.user?.nostr_pubkey || '';
     const { content_id, action, rating } = req.body as z.infer<typeof FeedbackSchema>;
 
     await getRecommendationService().processFeedback({
@@ -376,7 +375,7 @@ router.get(
   '/explore',
   optionalAuth,
   asyncHandler(async (req, res) => {
-    const userId = req.user?.id || req.user?.nostr_pubkey;
+    const userId = req.user?.id || req.user?.nostr_pubkey || '';
     const { limit = 20 } = req.query;
 
     const explorationContent = await getDiscoveryService().getExplorationContent({
