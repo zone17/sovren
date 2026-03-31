@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * @fileoverview Elite E2E Test Reporter - Automated reporting with failure pattern recognition
  * and comprehensive test analytics for continuous improvement.
@@ -449,9 +448,9 @@ export class E2ETestReporter extends EventEmitter {
    */
   private generateSummary(): TestSummary {
     const totalTests = this.executionData.length;
-    const passed = this.executionData.filter((t) => t.status === 'passed').length;
-    const failed = this.executionData.filter((t) => t.status === 'failed').length;
-    const skipped = this.executionData.filter((t) => t.status === 'skipped').length;
+    const passed = this.executionData.filter(t => t.status === 'passed').length;
+    const failed = this.executionData.filter(t => t.status === 'failed').length;
+    const skipped = this.executionData.filter(t => t.status === 'skipped').length;
     const duration = this.executionData.reduce((sum, t) => sum + t.duration, 0);
     const passRate = totalTests > 0 ? (passed / totalTests) * 100 : 0;
 
@@ -475,7 +474,7 @@ export class E2ETestReporter extends EventEmitter {
       byBrowser: this.groupByField('browser'),
       byDevice: this.groupByField('device'),
       bySuite: this.groupByField('suiteName'),
-      failures: this.executionData.filter((t) => t.status === 'failed'),
+      failures: this.executionData.filter(t => t.status === 'failed'),
     };
   }
 
@@ -485,7 +484,7 @@ export class E2ETestReporter extends EventEmitter {
   private groupByField(field: keyof TestExecutionData): Record<string, TestSummary> {
     const groups: Record<string, TestExecutionData[]> = {};
 
-    this.executionData.forEach((data) => {
+    this.executionData.forEach(data => {
       const key = String(data[field] || 'unknown');
       if (!groups[key]) {
         groups[key] = [];
@@ -496,9 +495,9 @@ export class E2ETestReporter extends EventEmitter {
     const result: Record<string, TestSummary> = {};
     Object.entries(groups).forEach(([key, data]) => {
       const totalTests = data.length;
-      const passed = data.filter((t) => t.status === 'passed').length;
-      const failed = data.filter((t) => t.status === 'failed').length;
-      const skipped = data.filter((t) => t.status === 'skipped').length;
+      const passed = data.filter(t => t.status === 'passed').length;
+      const failed = data.filter(t => t.status === 'failed').length;
+      const skipped = data.filter(t => t.status === 'skipped').length;
 
       result[key] = {
         totalTests,
@@ -519,20 +518,19 @@ export class E2ETestReporter extends EventEmitter {
    */
   private calculateTrends(): TrendData[] {
     // Implementation would calculate actual trends over time periods
-    const now = new Date();
     const periods = ['1d', '7d', '30d'];
 
-    return periods.map((period) => {
+    return periods.map(period => {
       const periodData = this.getDataForPeriod(period);
       const totalTests = periodData.length;
-      const passed = periodData.filter((t) => t.status === 'passed').length;
+      const passed = periodData.filter(t => t.status === 'passed').length;
 
       return {
         period,
         passRate: totalTests > 0 ? (passed / totalTests) * 100 : 0,
         averageDuration:
           totalTests > 0 ? periodData.reduce((sum, t) => sum + t.duration, 0) / totalTests : 0,
-        failureCount: periodData.filter((t) => t.status === 'failed').length,
+        failureCount: periodData.filter(t => t.status === 'failed').length,
       };
     });
   }
@@ -545,7 +543,7 @@ export class E2ETestReporter extends EventEmitter {
     const periodMs = this.parsePeriod(period);
     const cutoff = new Date(now.getTime() - periodMs);
 
-    return this.executionData.filter((data) => data.timestamp >= cutoff);
+    return this.executionData.filter(data => data.timestamp >= cutoff);
   }
 
   /**
@@ -581,10 +579,10 @@ export class E2ETestReporter extends EventEmitter {
     try {
       this.logger.debug('Detecting failure patterns...');
 
-      const failures = this.executionData.filter((t) => t.status === 'failed');
+      const failures = this.executionData.filter(t => t.status === 'failed');
       const patterns = this.analyzeFailures(failures);
 
-      patterns.forEach((pattern) => {
+      patterns.forEach(pattern => {
         this.patterns.set(pattern.id, pattern);
       });
 
@@ -610,9 +608,9 @@ export class E2ETestReporter extends EventEmitter {
           type: 'error-pattern',
           description: `Common error: ${group[0].errors[0]?.message.substring(0, 100)}...`,
           frequency: group.length,
-          firstSeen: new Date(Math.min(...group.map((f) => f.timestamp.getTime()))),
-          lastSeen: new Date(Math.max(...group.map((f) => f.timestamp.getTime()))),
-          affectedTests: group.map((f) => f.testId),
+          firstSeen: new Date(Math.min(...group.map(f => f.timestamp.getTime()))),
+          lastSeen: new Date(Math.max(...group.map(f => f.timestamp.getTime()))),
+          affectedTests: group.map(f => f.testId),
           commonElements: this.findCommonElements(group),
           suggestedFixes: this.generateSuggestedFixes(group),
           confidence: Math.min(0.9, group.length / failures.length + 0.1),
@@ -631,7 +629,7 @@ export class E2ETestReporter extends EventEmitter {
   private groupSimilarErrors(failures: TestExecutionData[]): TestExecutionData[][] {
     const groups: TestExecutionData[][] = [];
 
-    failures.forEach((failure) => {
+    failures.forEach(failure => {
       if (failure.errors.length === 0) return;
 
       const errorMessage = failure.errors[0].message;
@@ -698,8 +696,8 @@ export class E2ETestReporter extends EventEmitter {
   private findCommonElements(failures: TestExecutionData[]): string[] {
     const elementCounts: Record<string, number> = {};
 
-    failures.forEach((failure) => {
-      failure.errors.forEach((error) => {
+    failures.forEach(failure => {
+      failure.errors.forEach(error => {
         if (error.element) {
           elementCounts[error.element] = (elementCounts[error.element] || 0) + 1;
         }
@@ -719,14 +717,14 @@ export class E2ETestReporter extends EventEmitter {
     const fixes: string[] = [];
 
     // Analyze common error patterns and suggest fixes
-    const commonErrors = failures.flatMap((f) => f.errors);
+    const commonErrors = failures.flatMap(f => f.errors);
 
-    if (commonErrors.some((e) => e.message.includes('element not found'))) {
+    if (commonErrors.some(e => e.message.includes('element not found'))) {
       fixes.push('Update element selectors');
       fixes.push('Add explicit waits');
     }
 
-    if (commonErrors.some((e) => e.message.includes('timeout'))) {
+    if (commonErrors.some(e => e.message.includes('timeout'))) {
       fixes.push('Increase timeout values');
       fixes.push('Optimize page performance');
     }
@@ -822,7 +820,7 @@ export class E2ETestReporter extends EventEmitter {
     }
 
     const failureRate =
-      this.executionData.filter((t) => t.status === 'failed').length / this.executionData.length;
+      this.executionData.filter(t => t.status === 'failed').length / this.executionData.length;
     if (failureRate > 0.1) {
       recommendations.push('Investigate high failure rate (>10%)');
     }
@@ -837,8 +835,8 @@ export class E2ETestReporter extends EventEmitter {
     const attachments: ReportAttachment[] = [];
 
     // Collect screenshots and other artifacts
-    this.executionData.forEach((data) => {
-      data.screenshots.forEach((screenshot) => {
+    this.executionData.forEach(data => {
+      data.screenshots.forEach(screenshot => {
         attachments.push({
           type: 'screenshot',
           name: screenshot,

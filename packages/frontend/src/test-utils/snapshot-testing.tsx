@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 📸 **ELITE SNAPSHOT TESTING UTILITIES**
  *
@@ -157,7 +156,7 @@ export class SnapshotTestingManager {
    * Register a custom serializer for specific test cases
    */
   registerSerializer(name: string, options: SnapshotSerializerOptions): void {
-    this.serializers.set(name, createCustomSerializer(options));
+    this.serializers.set(name, createCustomSerializer(options) as any);
   }
 
   /**
@@ -406,11 +405,11 @@ export const setupSnapshotTesting = (): void => {
   });
 
   // Add default serializer to expect
-  expect.addSnapshotSerializer(snapshotManager.getSerializer('default'));
+  expect.addSnapshotSerializer(snapshotManager.getSerializer('default') as any);
 };
 
 // 🎯 **SNAPSHOT VALIDATION UTILITIES**
-export const validateSnapshotExists = (testName: string): boolean => {
+export const validateSnapshotExists = (_testName: string): boolean => {
   // This would typically check if snapshot file exists
   // For now, we'll return true as a placeholder
   return true;

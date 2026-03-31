@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * @fileoverview Elite Cross-Browser Tester - Automated cross-browser testing
  * with visual regression detection and compatibility validation.
@@ -209,7 +208,7 @@ export class CrossBrowserTester extends EventEmitter {
 
         for (const chunk of chunks) {
           const chunkResults = await Promise.all(
-            chunk.map((browser) => this.runBrowserTest(browser))
+            chunk.map(browser => this.runBrowserTest(browser))
           );
           results.push(...chunkResults);
         }
@@ -228,8 +227,8 @@ export class CrossBrowserTester extends EventEmitter {
 
       this.logger.info('Cross-browser tests completed', {
         totalBrowsers: results.length,
-        passed: results.filter((r) => r.status === 'passed').length,
-        failed: results.filter((r) => r.status === 'failed').length,
+        passed: results.filter(r => r.status === 'passed').length,
+        failed: results.filter(r => r.status === 'failed').length,
       });
 
       return results;
@@ -477,8 +476,8 @@ export class CrossBrowserTester extends EventEmitter {
       const report = {
         summary: {
           totalBrowsers: results.length,
-          passed: results.filter((r) => r.status === 'passed').length,
-          failed: results.filter((r) => r.status === 'failed').length,
+          passed: results.filter(r => r.status === 'passed').length,
+          failed: results.filter(r => r.status === 'failed').length,
         },
         browserResults: results,
         compatibilityMatrix: this.buildCompatibilityMatrix(results),
@@ -499,7 +498,7 @@ export class CrossBrowserTester extends EventEmitter {
   private buildCompatibilityMatrix(results: BrowserTestResult[]): Record<string, any> {
     const matrix: Record<string, any> = {};
 
-    results.forEach((result) => {
+    results.forEach(result => {
       matrix[result.browserId] = {
         status: result.status,
         issueCount: result.compatibilityIssues.length,
@@ -516,7 +515,7 @@ export class CrossBrowserTester extends EventEmitter {
   private generateRecommendations(results: BrowserTestResult[]): string[] {
     const recommendations: string[] = [];
 
-    const failedBrowsers = results.filter((r) => r.status === 'failed');
+    const failedBrowsers = results.filter(r => r.status === 'failed');
     if (failedBrowsers.length > 0) {
       recommendations.push(`Address failures in ${failedBrowsers.length} browser(s)`);
     }
@@ -544,7 +543,7 @@ export class CrossBrowserTester extends EventEmitter {
    * Utility method to sleep
    */
   private sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   /**

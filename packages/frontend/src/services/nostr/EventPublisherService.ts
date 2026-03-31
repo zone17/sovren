@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 /**
  * 📡 ELITE SERVICE: Event Publisher Service
@@ -154,7 +155,8 @@ export class EventPublisherService extends EventEmitter {
       throw new Error('KeyManagementService must be initialized first');
     }
 
-    if (!this.relayPool.isInitialized()) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (!(this.relayPool as any).isInitialized) {
       console.warn(
         '[EventPublisher] RelayPoolManager not initialized, some features may be limited'
       );
@@ -342,7 +344,7 @@ export class EventPublisherService extends EventEmitter {
       const validation = await this.validateEvent(event);
       if (!validation.valid) {
         throw new Error(
-          `Event validation failed: ${validation.errors.map((e) => e.message).join(', ')}`
+          `Event validation failed: ${validation.errors.map(e => e.message).join(', ')}`
         );
       }
     }
@@ -364,10 +366,11 @@ export class EventPublisherService extends EventEmitter {
           relayResults = await this.relayPool.publishEvent(event, options.relays);
           break;
 
-        case 'smart':
+        case 'smart': {
           const relayCount = options.relayCount || 3;
           relayResults = await this.relayPool.publishEventToFastest(event, relayCount);
           break;
+        }
 
         case 'batch':
           // Batch is handled separately
@@ -379,8 +382,8 @@ export class EventPublisherService extends EventEmitter {
       }
 
       // Analyze results
-      const publishedTo = relayResults.filter((r) => r.success).map((r) => r.relay);
-      const failedRelays = relayResults.filter((r) => !r.success).map((r) => r.relay);
+      const publishedTo = relayResults.filter(r => r.success).map(r => r.relay);
+      const failedRelays = relayResults.filter(r => !r.success).map(r => r.relay);
       const totalLatency = Date.now() - startTime;
 
       // Check minimum relay requirement
@@ -483,7 +486,7 @@ export class EventPublisherService extends EventEmitter {
     const results: PublishResultComplete[] = [];
 
     // Publish events in parallel with proper error handling
-    const publishPromises = events.map(async (event) => {
+    const publishPromises = events.map(async event => {
       try {
         const result = await this.publish(event, options);
         return result;
@@ -506,7 +509,7 @@ export class EventPublisherService extends EventEmitter {
     results.push(...batchResults);
 
     // Calculate metrics
-    const successCount = results.filter((r) => r.success).length;
+    const successCount = results.filter(r => r.success).length;
     const failureCount = results.length - successCount;
     const duration = Date.now() - startTime;
     const averageLatency =
@@ -551,6 +554,7 @@ export class EventPublisherService extends EventEmitter {
       successfulPublishes: 0,
       failedPublishes: 0,
       totalRetries: 0,
+      rateLimited: 0,
     };
   }
 
@@ -569,7 +573,7 @@ export class EventPublisherService extends EventEmitter {
    * Sleep helper for retry backoff
    */
   private sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
 

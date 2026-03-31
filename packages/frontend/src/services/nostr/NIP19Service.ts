@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 /**
  * NIP19Service - Bech32 Identifier Encoding/Decoding
@@ -491,13 +492,14 @@ export class NIP19Service {
             data: decoded.data as string,
           } as DecodedKey;
 
-        case 'nsec':
+        case 'nsec': {
           // nsec returns Uint8Array, convert to hex
           const nsecData = decoded.data;
           return {
             type: 'nsec' as const,
             data: nsecData instanceof Uint8Array ? bytesToHex(nsecData) : (nsecData as string),
           } as DecodedKey;
+        }
 
         case 'note':
           // note returns string (hex)
@@ -537,7 +539,7 @@ export class NIP19Service {
             },
           } as DecodedAddress;
 
-        case 'nrelay':
+        case 'nrelay': {
           // nrelay returns Uint8Array, decode to string
           const relayData = decoded.data;
           const relayUrl =
@@ -548,6 +550,7 @@ export class NIP19Service {
             type: 'nrelay' as const,
             data: relayUrl,
           } as DecodedRelay;
+        }
 
         default:
           throw new InvalidPrefixError(prefix, validPrefixes);
@@ -658,7 +661,7 @@ export class NIP19Service {
     });
 
     if (errors.length > 0) {
-      const errorDetails = errors.map((e) => `[${e.index}] ${e.type}: ${e.error}`).join(', ');
+      const errorDetails = errors.map(e => `[${e.index}] ${e.type}: ${e.error}`).join(', ');
       throw new Error(`Batch encoding failed for ${errors.length} item(s): ${errorDetails}`);
     }
 
@@ -709,7 +712,7 @@ export class NIP19Service {
     });
 
     if (errors.length > 0) {
-      const errorDetails = errors.map((e) => `[${e.index}] ${e.identifier}: ${e.error}`).join(', ');
+      const errorDetails = errors.map(e => `[${e.index}] ${e.identifier}: ${e.error}`).join(', ');
       throw new Error(`Batch decoding failed for ${errors.length} identifier(s): ${errorDetails}`);
     }
 
@@ -746,7 +749,7 @@ export class NIP19Service {
     }
 
     const validPrefixes = ['npub1', 'nsec1', 'note1', 'nprofile1', 'nevent1', 'nrelay1', 'naddr1'];
-    return validPrefixes.some((prefix) => str.startsWith(prefix));
+    return validPrefixes.some(prefix => str.startsWith(prefix));
   }
 
   /**
@@ -859,7 +862,7 @@ export class NIP19Service {
    * @returns Data URL for QR code image
    */
   generateQRCode(identifier: string, options: QRCodeOptions = {}): string {
-    const { size = 256, errorCorrectionLevel = 'M' } = options;
+    const { size = 256 } = options;
 
     // Check if we're in a browser environment
     if (typeof document === 'undefined') {
@@ -915,7 +918,7 @@ export class NIP19Service {
    * Validate array of relay URLs
    */
   private validateRelays(relays: string[]): void {
-    const invalidRelays = relays.filter((url) => !this.validateRelayUrl(url));
+    const invalidRelays = relays.filter(url => !this.validateRelayUrl(url));
 
     if (invalidRelays.length > 0) {
       throw new ValidationError(

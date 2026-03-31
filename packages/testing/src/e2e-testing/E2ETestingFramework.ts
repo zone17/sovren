@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * @fileoverview Elite E2E Testing Framework - Autonomous end-to-end testing orchestration
  * with AI-driven test case generation and comprehensive testing strategies.
@@ -481,8 +480,8 @@ export class E2ETestingFramework extends EventEmitter {
       this.logger.info('Test suite execution completed', {
         suiteId: suite.id,
         totalTests: results.length,
-        passed: results.filter((r) => r.status === 'passed').length,
-        failed: results.filter((r) => r.status === 'failed').length,
+        passed: results.filter(r => r.status === 'passed').length,
+        failed: results.filter(r => r.status === 'failed').length,
       });
 
       return results;
@@ -509,7 +508,7 @@ export class E2ETestingFramework extends EventEmitter {
       const generatedTests = await this.aiGenerator.generateTestCases(context);
 
       return generatedTests
-        .filter((test) => test.confidence >= this.config.aiTestGeneration.confidenceThreshold)
+        .filter(test => test.confidence >= this.config.aiTestGeneration.confidenceThreshold)
         .slice(0, this.config.aiTestGeneration.maxTestCases);
     } catch (error) {
       this.logger.error('Failed to generate additional test cases', { error });
@@ -540,7 +539,7 @@ export class E2ETestingFramework extends EventEmitter {
 
     for (const chunk of chunks) {
       const chunkResults = await Promise.all(
-        chunk.map((testCase) => this.executeTestCase(testCase, browser))
+        chunk.map(testCase => this.executeTestCase(testCase, browser))
       );
       results.push(...chunkResults);
     }
@@ -571,7 +570,7 @@ export class E2ETestingFramework extends EventEmitter {
 
     for (const chunk of chunks) {
       const chunkResults = await Promise.all(
-        chunk.map((testCase) => this.executeTestCase(testCase, device))
+        chunk.map(testCase => this.executeTestCase(testCase, device))
       );
       results.push(...chunkResults);
     }
@@ -770,7 +769,7 @@ export class E2ETestingFramework extends EventEmitter {
    */
   private async validateExpectation(
     expectation: TestExpectation,
-    result: TestExecutionResult
+    _result: TestExecutionResult
   ): Promise<void> {
     // Implementation would include actual expectation validation
     // This is a placeholder for the validation logic
@@ -846,7 +845,7 @@ export class E2ETestingFramework extends EventEmitter {
 
     try {
       // Analyze failure patterns
-      const failures = results.filter((r) => r.status === 'failed');
+      const failures = results.filter(r => r.status === 'failed');
       const patterns = await this.identifyFailurePatterns(failures);
 
       if (patterns.length > 0) {
@@ -867,7 +866,7 @@ export class E2ETestingFramework extends EventEmitter {
    * @param failures - Failed test results
    * @returns Promise that resolves to identified patterns
    */
-  private async identifyFailurePatterns(failures: TestExecutionResult[]): Promise<any[]> {
+  private async identifyFailurePatterns(_failures: TestExecutionResult[]): Promise<any[]> {
     // Implementation would include pattern recognition logic
     // This is a placeholder for the pattern analysis
 
@@ -924,11 +923,11 @@ export class E2ETestingFramework extends EventEmitter {
    * Sets up event listeners
    */
   private setupEventListeners(): void {
-    this.on('testFailed', (data) => {
+    this.on('testFailed', data => {
       this.logger.warn('Test failed', { testId: data.testId, error: data.error.message });
     });
 
-    this.on('patternsDetected', (data) => {
+    this.on('patternsDetected', data => {
       this.logger.info('Failure patterns detected', { patternCount: data.patterns.length });
     });
   }
@@ -955,7 +954,7 @@ export class E2ETestingFramework extends EventEmitter {
    * @returns Promise that resolves after the specified duration
    */
   private sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   /**

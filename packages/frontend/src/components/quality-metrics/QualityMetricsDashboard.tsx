@@ -1,11 +1,10 @@
-// @ts-nocheck
 import {
   Activity,
   AlertCircle,
   Brain,
   Download,
   Filter,
-  Refresh,
+  RefreshCw as Refresh,
   TrendingDown,
   TrendingUp,
   Zap,
@@ -66,9 +65,7 @@ export const QualityMetricsDashboard: React.FC<QualityMetricsDashboardProps> = (
   },
 }) => {
   const [activeTab, setActiveTab] = useState<string>('overview');
-  const [timeframe, setTimeframe] = useState<string>('day');
-  const [filters, setFilters] = useState<any>({});
-  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [, setSearchQuery] = useState<string>('');
 
   const {
     dashboard,
@@ -76,7 +73,7 @@ export const QualityMetricsDashboard: React.FC<QualityMetricsDashboardProps> = (
     error,
     refreshDashboard,
     exportReport,
-    updateConfiguration,
+    // updateConfiguration - available but not currently used
     isConnected,
   } = useQualityMetricsService(projectId, {
     realTimeUpdates,
@@ -173,13 +170,6 @@ export const QualityMetricsDashboard: React.FC<QualityMetricsDashboardProps> = (
               <Progress
                 value={coverage.coveragePercentage}
                 className="h-3"
-                indicatorClassName={
-                  coverage.coveragePercentage >= 80
-                    ? 'bg-green-500'
-                    : coverage.coveragePercentage >= 60
-                      ? 'bg-yellow-500'
-                      : 'bg-red-500'
-                }
               />
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>Min: {coverage.threshold.minimum}%</span>
@@ -378,14 +368,6 @@ export const QualityMetricsDashboard: React.FC<QualityMetricsDashboardProps> = (
                         : (metric.value / metric.max) * 100
                     }
                     className="h-2"
-                    indicatorClassName={
-                      getQualityColor(metric.value, metric.max, metric.inverse) === 'text-green-600'
-                        ? 'bg-green-500'
-                        : getQualityColor(metric.value, metric.max, metric.inverse) ===
-                            'text-yellow-600'
-                          ? 'bg-yellow-500'
-                          : 'bg-red-500'
-                    }
                   />
                 </div>
               ))}
@@ -513,12 +495,6 @@ export const QualityMetricsDashboard: React.FC<QualityMetricsDashboardProps> = (
       [bugs]
     );
 
-    const getBugTrendIcon = (current: number, previous: number) => {
-      if (current > previous) return <TrendingUp className="w-4 h-4 text-red-600" />;
-      if (current < previous) return <TrendingDown className="w-4 h-4 text-green-600" />;
-      return <Activity className="w-4 h-4 text-muted-foreground" />;
-    };
-
     return (
       <Card className="h-full">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -604,7 +580,6 @@ export const QualityMetricsDashboard: React.FC<QualityMetricsDashboardProps> = (
                 <Progress
                   value={bugs.performance.reopenRate}
                   className="h-2"
-                  indicatorClassName="bg-red-500"
                 />
               </div>
             </div>
@@ -894,9 +869,6 @@ export const QualityMetricsDashboard: React.FC<QualityMetricsDashboardProps> = (
                       <Progress
                         value={usage}
                         className="h-2"
-                        indicatorClassName={
-                          usage < 70 ? 'bg-green-500' : usage < 85 ? 'bg-yellow-500' : 'bg-red-500'
-                        }
                       />
                     </div>
                   );

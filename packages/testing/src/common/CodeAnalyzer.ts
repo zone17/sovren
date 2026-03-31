@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * @file CodeAnalyzer.ts
  * @description Analyzes source code to extract testable components and structure
@@ -151,7 +150,7 @@ export class CodeAnalyzer {
         // Skip excluded directories
         if (
           this.options.excludeDirs.some(
-            (dir) => entry.name === dir || entry.name.startsWith(dir + '/')
+            dir => entry.name === dir || entry.name.startsWith(dir + '/')
           )
         ) {
           this.logger.debug(`Skipping excluded directory: ${entryPath}`);
@@ -168,7 +167,7 @@ export class CodeAnalyzer {
         }
 
         // Skip excluded files
-        if (this.options.excludeFiles.some((pattern) => entry.name.includes(pattern))) {
+        if (this.options.excludeFiles.some(pattern => entry.name.includes(pattern))) {
           this.logger.debug(`Skipping excluded file: ${entryPath}`);
           continue;
         }
@@ -470,7 +469,7 @@ export class CodeAnalyzer {
    * @param name Component name
    * @returns Dependencies
    */
-  private extractDependencies(content: string, name: string): string[] {
+  private extractDependencies(content: string, _name: string): string[] {
     // This is a simplified implementation
     // In a real implementation, this would use a proper parser
 
@@ -484,7 +483,7 @@ export class CodeAnalyzer {
       // Extract imported names
       const namedImports = importMatch.match(/{([^}]*)}/);
       if (namedImports) {
-        const names = namedImports[1].split(',').map((n) => n.trim());
+        const names = namedImports[1].split(',').map(n => n.trim());
         dependencies.push(...names);
       }
 
@@ -578,7 +577,7 @@ export class CodeAnalyzer {
     }
 
     // Split parameters and extract information
-    const params = paramList.split(',').map((p) => p.trim());
+    const params = paramList.split(',').map(p => p.trim());
 
     for (const param of params) {
       const isOptional = param.includes('?:') || param.includes('=');
@@ -656,7 +655,7 @@ export class CodeAnalyzer {
       const propMatches = propsContent.match(/(\w+)(\?)?:\s*([^;]+);/g) || [];
 
       for (const propMatch of propMatches) {
-        const [_, name, optional, type] = propMatch.match(/(\w+)(\?)?:\s*([^;]+);/) || [];
+        const [, name, optional, type] = propMatch.match(/(\w+)(\?)?:\s*([^;]+);/) || [];
 
         if (name) {
           props.push({
@@ -674,15 +673,15 @@ export class CodeAnalyzer {
       new RegExp(`${componentName}\\s*=\\s*\\(\\{([^}]*)\\}`)
     );
     if (destructuringMatch) {
-      const destructuredProps = destructuringMatch[1].split(',').map((p) => p.trim());
+      const destructuredProps = destructuringMatch[1].split(',').map(p => p.trim());
 
       for (const prop of destructuredProps) {
         if (prop) {
           // Extract name and default value
-          const [name, defaultValue] = prop.split('=').map((p) => p.trim());
+          const [name, defaultValue] = prop.split('=').map(p => p.trim());
 
           // Skip if already found in props type
-          if (!props.some((p) => p.name === name)) {
+          if (!props.some(p => p.name === name)) {
             props.push({
               name,
               type: 'any',
@@ -750,7 +749,7 @@ export class CodeAnalyzer {
         if (depsMatch) {
           dependencies = depsMatch[1]
             .split(',')
-            .map((d) => d.trim())
+            .map(d => d.trim())
             .filter(Boolean);
         }
       }
@@ -782,7 +781,7 @@ export class CodeAnalyzer {
       content.match(/\b(?:router|app)\.(get|post|put|delete|patch)\s*\(\s*['"]([^'"]*)['"]/g) || [];
 
     for (const routeMatch of routeMatches) {
-      const [_, method, path] = routeMatch.match(
+      const [, method, path] = routeMatch.match(
         /\b(?:router|app)\.(get|post|put|delete|patch)\s*\(\s*['"]([^'"]*)['"]/
       );
 

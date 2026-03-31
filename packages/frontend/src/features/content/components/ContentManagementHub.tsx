@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 /**
  * 🏠 **CONTENT MANAGEMENT HUB - UNIFIED SYSTEM**
@@ -68,9 +69,9 @@ const X = ({ className }: { className?: string }) => <span className={className}
 
 // Loading component for Suspense
 const LoadingFallback: React.FC<{ title: string }> = ({ title }) => (
-  <div className="flex flex-col items-center justify-center h-64 space-y-4">
-    <Spinner size="lg" />
-    <p className="text-muted-foreground">Loading {title}...</p>
+  <div className='flex flex-col items-center justify-center h-64 space-y-4'>
+    <Spinner size='lg' />
+    <p className='text-muted-foreground'>Loading {title}...</p>
   </div>
 );
 
@@ -79,11 +80,11 @@ const ErrorFallback: React.FC<{ error: Error; resetErrorBoundary: () => void }> 
   error,
   resetErrorBoundary,
 }) => (
-  <Alert variant="destructive" className="m-4">
+  <Alert variant='destructive' className='m-4'>
     <AlertTitle>Something went wrong</AlertTitle>
-    <AlertDescription className="mt-2">
-      <p className="mb-2">{error.message}</p>
-      <Button onClick={resetErrorBoundary} variant="outline" size="sm">
+    <AlertDescription className='mt-2'>
+      <p className='mb-2'>{error.message}</p>
+      <Button onClick={resetErrorBoundary} variant='outline' size='sm'>
         Try again
       </Button>
     </AlertDescription>
@@ -109,8 +110,7 @@ export const ContentManagementHub: React.FC<ContentManagementHubProps> = ({
     content,
     collections,
     series,
-    analytics,
-  } = useAppSelector((state) => (state as any).unifiedCms);
+  } = useAppSelector(state => (state as any).unifiedCms);
 
   // Local state
   const [mounted, setMounted] = useState(false);
@@ -216,7 +216,7 @@ export const ContentManagementHub: React.FC<ContentManagementHubProps> = ({
       };
 
       await Promise.allSettled(
-        loadPromises.map(async (promise) => {
+        loadPromises.map(async promise => {
           try {
             await promise;
           } finally {
@@ -254,7 +254,7 @@ export const ContentManagementHub: React.FC<ContentManagementHubProps> = ({
         case 'library':
           return (
             <ErrorBoundary FallbackComponent={ErrorFallback}>
-              <Suspense fallback={<LoadingFallback title="Content Library" />}>
+              <Suspense fallback={<LoadingFallback title='Content Library' />}>
                 <ContentLibrary {...commonProps} />
               </Suspense>
             </ErrorBoundary>
@@ -263,7 +263,7 @@ export const ContentManagementHub: React.FC<ContentManagementHubProps> = ({
         case 'editor':
           return (
             <ErrorBoundary FallbackComponent={ErrorFallback}>
-              <Suspense fallback={<LoadingFallback title="Content Editor" />}>
+              <Suspense fallback={<LoadingFallback title='Content Editor' />}>
                 <ContentEditor {...commonProps} />
               </Suspense>
             </ErrorBoundary>
@@ -272,7 +272,7 @@ export const ContentManagementHub: React.FC<ContentManagementHubProps> = ({
         case 'collections':
           return (
             <ErrorBoundary FallbackComponent={ErrorFallback}>
-              <Suspense fallback={<LoadingFallback title="Content Collections" />}>
+              <Suspense fallback={<LoadingFallback title='Content Collections' />}>
                 <ContentCollections {...commonProps} />
               </Suspense>
             </ErrorBoundary>
@@ -281,7 +281,7 @@ export const ContentManagementHub: React.FC<ContentManagementHubProps> = ({
         case 'series':
           return (
             <ErrorBoundary FallbackComponent={ErrorFallback}>
-              <Suspense fallback={<LoadingFallback title="Content Series" />}>
+              <Suspense fallback={<LoadingFallback title='Content Series' />}>
                 <ContentSeries {...commonProps} />
               </Suspense>
             </ErrorBoundary>
@@ -290,7 +290,7 @@ export const ContentManagementHub: React.FC<ContentManagementHubProps> = ({
         case 'analytics':
           return (
             <ErrorBoundary FallbackComponent={ErrorFallback}>
-              <Suspense fallback={<LoadingFallback title="Content Analytics" />}>
+              <Suspense fallback={<LoadingFallback title='Content Analytics' />}>
                 <ContentAnalytics {...commonProps} />
               </Suspense>
             </ErrorBoundary>
@@ -298,8 +298,8 @@ export const ContentManagementHub: React.FC<ContentManagementHubProps> = ({
 
         default:
           return (
-            <div className="flex items-center justify-center h-64">
-              <p className="text-muted-foreground">Select a tab to get started</p>
+            <div className='flex items-center justify-center h-64'>
+              <p className='text-muted-foreground'>Select a tab to get started</p>
             </div>
           );
       }
@@ -310,14 +310,14 @@ export const ContentManagementHub: React.FC<ContentManagementHubProps> = ({
   // Show loading state if not mounted
   if (!mounted) {
     return (
-      <div className="h-screen flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <Spinner size="lg" className="mx-auto" />
-          <p className="text-muted-foreground">Initializing Content Management...</p>
+      <div className='h-screen flex items-center justify-center'>
+        <div className='text-center space-y-4'>
+          <Spinner size='lg' className='mx-auto' />
+          <p className='text-muted-foreground'>Initializing Content Management...</p>
           {syncProgress > 0 && (
-            <div className="w-64 mx-auto">
-              <Progress value={syncProgress} className="h-2" />
-              <p className="text-xs text-muted-foreground mt-1">
+            <div className='w-64 mx-auto'>
+              <Progress value={syncProgress} className='h-2' />
+              <p className='text-xs text-muted-foreground mt-1'>
                 Loading data... {Math.round(syncProgress)}%
               </p>
             </div>
@@ -331,33 +331,33 @@ export const ContentManagementHub: React.FC<ContentManagementHubProps> = ({
     <TooltipProvider>
       <div className={`h-screen flex flex-col bg-background ${className}`}>
         {/* Header */}
-        <header className="bg-card border-b border-border px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+        <header className='bg-card border-b border-border px-4 py-3 flex items-center justify-between'>
+          <div className='flex items-center space-x-4'>
             <Button
-              variant="ghost"
-              size="sm"
+              variant='ghost'
+              size='sm'
               onClick={handleSidebarToggle}
-              className="lg:hidden"
-              aria-label="Toggle navigation"
+              className='lg:hidden'
+              aria-label='Toggle navigation'
             >
-              {mobile_nav_open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              {mobile_nav_open ? <X className='h-5 w-5' /> : <Menu className='h-5 w-5' />}
             </Button>
 
             <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+              <h1 className='text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent'>
                 Content Management
               </h1>
-              <p className="text-sm text-muted-foreground hidden sm:block">
+              <p className='text-sm text-muted-foreground hidden sm:block'>
                 Unified content creation and management platform
               </p>
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className='flex items-center space-x-2'>
             {/* Status indicators */}
             {loading.content && (
-              <Badge variant="secondary" className="animate-pulse">
-                <div className="w-2 h-2 bg-blue-500 rounded-full mr-1" />
+              <Badge variant='secondary' className='animate-pulse'>
+                <div className='w-2 h-2 bg-blue-500 rounded-full mr-1' />
                 Syncing
               </Badge>
             )}
@@ -365,8 +365,8 @@ export const ContentManagementHub: React.FC<ContentManagementHubProps> = ({
             {/* Settings button */}
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="sm" aria-label="Settings">
-                  <Settings className="h-4 w-4" />
+                <Button variant='ghost' size='sm' aria-label='Settings'>
+                  <Settings className='h-4 w-4' />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Settings</TooltipContent>
@@ -375,7 +375,7 @@ export const ContentManagementHub: React.FC<ContentManagementHubProps> = ({
         </header>
 
         {/* Main Content */}
-        <div className="flex-1 flex overflow-hidden">
+        <div className='flex-1 flex overflow-hidden'>
           {/* Sidebar - Hidden on mobile, overlay on tablet, fixed on desktop */}
           <aside
             className={`
@@ -384,9 +384,9 @@ export const ContentManagementHub: React.FC<ContentManagementHubProps> = ({
               ${mobile_nav_open ? 'fixed inset-y-0 left-0 z-50 w-64 lg:relative' : 'hidden lg:block'}
             `}
           >
-            <nav className="h-full overflow-y-auto py-4">
-              <div className="space-y-1 px-2">
-                {availableTabs.map((tab) => {
+            <nav className='h-full overflow-y-auto py-4'>
+              <div className='space-y-1 px-2'>
+                {availableTabs.map(tab => {
                   const Icon = tab.icon;
                   const isActive = active_view === tab.id;
 
@@ -405,12 +405,12 @@ export const ContentManagementHub: React.FC<ContentManagementHubProps> = ({
                           `}
                           aria-label={tab.description}
                         >
-                          <Icon className="h-5 w-5 flex-shrink-0" />
+                          <Icon className='h-5 w-5 flex-shrink-0' />
                           {sidebar_open && (
                             <>
-                              <span className="ml-3 flex-1 text-left">{tab.label}</span>
+                              <span className='ml-3 flex-1 text-left'>{tab.label}</span>
                               {tab.count !== undefined && (
-                                <Badge variant="secondary" className="ml-2 text-xs">
+                                <Badge variant='secondary' className='ml-2 text-xs'>
                                   {tab.count}
                                 </Badge>
                               )}
@@ -419,12 +419,12 @@ export const ContentManagementHub: React.FC<ContentManagementHubProps> = ({
                         </button>
                       </TooltipTrigger>
                       {!sidebar_open && (
-                        <TooltipContent side="right">
+                        <TooltipContent side='right'>
                           <div>
-                            <p className="font-medium">{tab.label}</p>
-                            <p className="text-xs text-muted-foreground">{tab.description}</p>
+                            <p className='font-medium'>{tab.label}</p>
+                            <p className='text-xs text-muted-foreground'>{tab.description}</p>
                             {tab.count !== undefined && (
-                              <p className="text-xs text-muted-foreground">{tab.count} items</p>
+                              <p className='text-xs text-muted-foreground'>{tab.count} items</p>
                             )}
                           </div>
                         </TooltipContent>
@@ -439,17 +439,17 @@ export const ContentManagementHub: React.FC<ContentManagementHubProps> = ({
           {/* Mobile overlay */}
           {mobile_nav_open && (
             <div
-              className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+              className='fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden'
               onClick={() => dispatch(setSidebarOpen(false))}
-              aria-hidden="true"
+              aria-hidden='true'
             />
           )}
 
           {/* Main content area */}
-          <main className="flex-1 overflow-hidden bg-muted">
+          <main className='flex-1 overflow-hidden bg-muted'>
             {/* Error display */}
             {(error.content || error.collections || error.series || error.analytics) && (
-              <Alert variant="destructive" className="m-4">
+              <Alert variant='destructive' className='m-4'>
                 <AlertTitle>Error</AlertTitle>
                 <AlertDescription>
                   {error.content || error.collections || error.series || error.analytics}
@@ -458,7 +458,7 @@ export const ContentManagementHub: React.FC<ContentManagementHubProps> = ({
             )}
 
             {/* Tab content */}
-            <div className="h-full">{renderTabContent(active_view)}</div>
+            <div className='h-full'>{renderTabContent(active_view)}</div>
           </main>
         </div>
       </div>

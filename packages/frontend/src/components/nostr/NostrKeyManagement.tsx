@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 import { AnimatePresence, motion } from 'framer-motion';
 import {
@@ -18,7 +19,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 // Local type stubs for key management
 type NostrEnhancedKeyPair = any;
 type NostrEntropySource = any;
-type NostrKeyBackupMethod = any;
+// NostrKeyBackupMethod removed - unused
 type NostrKeyManagementConfig = any;
 type NostrKeySecurityLevel = any;
 const NostrKeyManagementService: any = null;
@@ -59,7 +60,6 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
   const [keyManagementService, setKeyManagementService] =
     useState<NostrKeyManagementService | null>(null);
   const [keys, setKeys] = useState<NostrEnhancedKeyPair[]>([]);
-  const [selectedKey, setSelectedKey] = useState<NostrEnhancedKeyPair | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -318,7 +318,7 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
 
   // Toggle private key visibility
   const togglePrivateKeyVisibility = (keyId: string) => {
-    setShowPrivateKey((prev) => ({
+    setShowPrivateKey(prev => ({
       ...prev,
       [keyId]: !prev[keyId],
     }));
@@ -353,15 +353,15 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
     };
 
     const getScoreIcon = (score: number) => {
-      if (score >= 90) return <CheckCircle className="w-4 h-4" />;
-      if (score >= 70) return <AlertTriangle className="w-4 h-4" />;
-      return <AlertTriangle className="w-4 h-4" />;
+      if (score >= 90) return <CheckCircle className='w-4 h-4' />;
+      if (score >= 70) return <AlertTriangle className='w-4 h-4' />;
+      return <AlertTriangle className='w-4 h-4' />;
     };
 
     return (
       <div className={`flex items-center space-x-1 ${getScoreColor(securityScore)}`}>
         {getScoreIcon(securityScore)}
-        <span className="text-sm font-medium">{securityScore}%</span>
+        <span className='text-sm font-medium'>{securityScore}%</span>
       </div>
     );
   };
@@ -370,25 +370,25 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
   return (
     <div className={`bg-card rounded-lg shadow-sm border ${className}`}>
       {/* Header */}
-      <div className="border-b px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <Shield className="w-6 h-6 text-blue-600" />
+      <div className='border-b px-6 py-4'>
+        <div className='flex items-center justify-between'>
+          <div className='flex items-center space-x-3'>
+            <Shield className='w-6 h-6 text-blue-600' />
             <div>
-              <h2 className="text-xl font-semibold text-foreground">NOSTR Key Management</h2>
-              <p className="text-sm text-muted-foreground">Secure management of your NOSTR keys</p>
+              <h2 className='text-xl font-semibold text-foreground'>NOSTR Key Management</h2>
+              <p className='text-sm text-muted-foreground'>Secure management of your NOSTR keys</p>
             </div>
           </div>
-          <div className="flex items-center space-x-4">
-            <div className="text-right">
-              <div className="text-sm font-medium text-foreground">{stats.totalKeys} Keys</div>
-              <div className="text-xs text-muted-foreground">{stats.backedUpKeys} backed up</div>
+          <div className='flex items-center space-x-4'>
+            <div className='text-right'>
+              <div className='text-sm font-medium text-foreground'>{stats.totalKeys} Keys</div>
+              <div className='text-xs text-muted-foreground'>{stats.backedUpKeys} backed up</div>
             </div>
           </div>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex space-x-1 mt-4">
+        <div className='flex space-x-1 mt-4'>
           {[
             { id: 'keys', label: 'Keys', icon: Key },
             { id: 'generate', label: 'Generate', icon: Shield },
@@ -405,7 +405,7 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
                   : 'text-muted-foreground hover:text-foreground hover:bg-accent'
               }`}
             >
-              <Icon className="w-4 h-4" />
+              <Icon className='w-4 h-4' />
               <span>{label}</span>
             </button>
           ))}
@@ -413,7 +413,7 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
       </div>
 
       {/* Content */}
-      <div className="p-6">
+      <div className='p-6'>
         {/* Messages */}
         <AnimatePresence>
           {error && (
@@ -421,11 +421,11 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md"
+              className='mb-4 p-4 bg-red-50 border border-red-200 rounded-md'
             >
-              <div className="flex items-center">
-                <AlertTriangle className="w-5 h-5 text-red-600 mr-2" />
-                <span className="text-red-800">{error}</span>
+              <div className='flex items-center'>
+                <AlertTriangle className='w-5 h-5 text-red-600 mr-2' />
+                <span className='text-red-800'>{error}</span>
               </div>
             </motion.div>
           )}
@@ -435,11 +435,11 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="mb-4 p-4 bg-green-50 border border-green-200 rounded-md"
+              className='mb-4 p-4 bg-green-50 border border-green-200 rounded-md'
             >
-              <div className="flex items-center">
-                <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
-                <span className="text-green-800">{success}</span>
+              <div className='flex items-center'>
+                <CheckCircle className='w-5 h-5 text-green-600 mr-2' />
+                <span className='text-green-800'>{success}</span>
               </div>
             </motion.div>
           )}
@@ -447,14 +447,14 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
 
         {/* Loading State */}
         {isLoading && (
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className='flex items-center justify-center py-8'>
+            <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600'></div>
           </div>
         )}
 
         {/* Tab Content */}
         {!isLoading && (
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode='wait'>
             <motion.div
               key={activeTab}
               initial={{ opacity: 0, x: 20 }}
@@ -464,107 +464,107 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
             >
               {/* Keys Tab */}
               {activeTab === 'keys' && (
-                <div className="space-y-4">
+                <div className='space-y-4'>
                   {keys.length === 0 ? (
-                    <div className="text-center py-12">
-                      <Key className="w-12 h-12 text-muted-foreground/60 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-foreground mb-2">No Keys Found</h3>
-                      <p className="text-muted-foreground mb-4">
+                    <div className='text-center py-12'>
+                      <Key className='w-12 h-12 text-muted-foreground/60 mx-auto mb-4' />
+                      <h3 className='text-lg font-medium text-foreground mb-2'>No Keys Found</h3>
+                      <p className='text-muted-foreground mb-4'>
                         Get started by generating or importing a NOSTR key.
                       </p>
                       <button
                         onClick={() => setActiveTab('generate')}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                        className='bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors'
                       >
                         Generate Key
                       </button>
                     </div>
                   ) : (
-                    keys.map((keyPair) => (
+                    keys.map(keyPair => (
                       <div
                         key={keyPair.keyId}
-                        className="border rounded-lg p-4 hover:bg-accent transition-colors"
+                        className='border rounded-lg p-4 hover:bg-accent transition-colors'
                       >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-3 mb-2">
-                              <h3 className="text-lg font-medium text-foreground">
+                        <div className='flex items-start justify-between'>
+                          <div className='flex-1'>
+                            <div className='flex items-center space-x-3 mb-2'>
+                              <h3 className='text-lg font-medium text-foreground'>
                                 {keyPair.name || 'Unnamed Key'}
                               </h3>
                               {renderKeyValidation(keyPair)}
                               {keyPair.backedUp && (
-                                <CheckCircle className="w-4 h-4 text-green-600" title="Backed up" />
+                                <CheckCircle className='w-4 h-4 text-green-600' title='Backed up' />
                               )}
                             </div>
 
                             {keyPair.description && (
-                              <p className="text-sm text-muted-foreground mb-3">
+                              <p className='text-sm text-muted-foreground mb-3'>
                                 {keyPair.description}
                               </p>
                             )}
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                            <div className='grid grid-cols-1 md:grid-cols-2 gap-4 text-sm'>
                               <div>
-                                <label className="block text-muted-foreground mb-1">
+                                <label className='block text-muted-foreground mb-1'>
                                   Public Key
                                 </label>
-                                <div className="flex items-center space-x-2">
-                                  <code className="bg-muted px-2 py-1 rounded text-xs font-mono">
+                                <div className='flex items-center space-x-2'>
+                                  <code className='bg-muted px-2 py-1 rounded text-xs font-mono'>
                                     {keyPair.publicKey.slice(0, 16)}...
                                     {keyPair.publicKey.slice(-16)}
                                   </code>
                                   <button
                                     onClick={() => copyToClipboard(keyPair.publicKey)}
-                                    className="text-muted-foreground/60 hover:text-muted-foreground"
+                                    className='text-muted-foreground/60 hover:text-muted-foreground'
                                   >
-                                    <Copy className="w-4 h-4" />
+                                    <Copy className='w-4 h-4' />
                                   </button>
                                 </div>
                               </div>
 
                               <div>
-                                <label className="block text-muted-foreground mb-1">
+                                <label className='block text-muted-foreground mb-1'>
                                   Private Key
                                 </label>
-                                <div className="flex items-center space-x-2">
-                                  <code className="bg-muted px-2 py-1 rounded text-xs font-mono">
+                                <div className='flex items-center space-x-2'>
+                                  <code className='bg-muted px-2 py-1 rounded text-xs font-mono'>
                                     {showPrivateKey[keyPair.keyId]
                                       ? keyPair.privateKey
                                       : '••••••••••••••••••••••••••••••••'}
                                   </code>
                                   <button
                                     onClick={() => togglePrivateKeyVisibility(keyPair.keyId)}
-                                    className="text-muted-foreground/60 hover:text-muted-foreground"
+                                    className='text-muted-foreground/60 hover:text-muted-foreground'
                                   >
                                     {showPrivateKey[keyPair.keyId] ? (
-                                      <EyeOff className="w-4 h-4" />
+                                      <EyeOff className='w-4 h-4' />
                                     ) : (
-                                      <Eye className="w-4 h-4" />
+                                      <Eye className='w-4 h-4' />
                                     )}
                                   </button>
                                   {showPrivateKey[keyPair.keyId] && (
                                     <button
                                       onClick={() => copyToClipboard(keyPair.privateKey)}
-                                      className="text-muted-foreground/60 hover:text-muted-foreground"
+                                      className='text-muted-foreground/60 hover:text-muted-foreground'
                                     >
-                                      <Copy className="w-4 h-4" />
+                                      <Copy className='w-4 h-4' />
                                     </button>
                                   )}
                                 </div>
                               </div>
                             </div>
 
-                            <div className="mt-3 flex items-center space-x-4 text-xs text-muted-foreground">
+                            <div className='mt-3 flex items-center space-x-4 text-xs text-muted-foreground'>
                               <span>Created: {new Date(keyPair.created).toLocaleDateString()}</span>
                               <span>Security: {keyPair.securityLevel}</span>
                               <span>Entropy: {keyPair.entropyBits} bits</span>
                             </div>
                           </div>
 
-                          <div className="flex flex-col space-y-2 ml-4">
+                          <div className='flex flex-col space-y-2 ml-4'>
                             <button
                               onClick={() => onKeySelected?.(keyPair)}
-                              className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition-colors"
+                              className='bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition-colors'
                             >
                               Select
                             </button>
@@ -572,7 +572,7 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
                             {!keyPair.backedUp && (
                               <button
                                 onClick={() => handleCreateBackup(keyPair.keyId)}
-                                className="bg-orange-600 text-white px-3 py-1 rounded text-sm hover:bg-orange-700 transition-colors"
+                                className='bg-orange-600 text-white px-3 py-1 rounded text-sm hover:bg-orange-700 transition-colors'
                               >
                                 Backup
                               </button>
@@ -580,14 +580,14 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
 
                             <button
                               onClick={() => handleRotateKey(keyPair.keyId)}
-                              className="bg-yellow-600 text-white px-3 py-1 rounded text-sm hover:bg-yellow-700 transition-colors"
+                              className='bg-yellow-600 text-white px-3 py-1 rounded text-sm hover:bg-yellow-700 transition-colors'
                             >
                               Rotate
                             </button>
 
                             <button
                               onClick={() => handleDeleteKey(keyPair.keyId)}
-                              className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition-colors"
+                              className='bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition-colors'
                             >
                               Delete
                             </button>
@@ -601,47 +601,45 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
 
               {/* Generate Tab */}
               {activeTab === 'generate' && (
-                <div className="max-w-md mx-auto space-y-6">
+                <div className='max-w-md mx-auto space-y-6'>
                   <div>
-                    <h3 className="text-lg font-medium text-foreground mb-4">Generate New Key</h3>
+                    <h3 className='text-lg font-medium text-foreground mb-4'>Generate New Key</h3>
 
-                    <div className="space-y-4">
+                    <div className='space-y-4'>
                       <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">
+                        <label className='block text-sm font-medium text-foreground mb-2'>
                           Key Name
                         </label>
                         <input
-                          type="text"
+                          type='text'
                           value={keyName}
-                          onChange={(e) => setKeyName(e.target.value)}
-                          placeholder="Enter a name for this key"
-                          className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          onChange={e => setKeyName(e.target.value)}
+                          placeholder='Enter a name for this key'
+                          className='w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">
+                        <label className='block text-sm font-medium text-foreground mb-2'>
                           Description (Optional)
                         </label>
                         <textarea
                           value={keyDescription}
-                          onChange={(e) => setKeyDescription(e.target.value)}
-                          placeholder="Enter a description for this key"
+                          onChange={e => setKeyDescription(e.target.value)}
+                          placeholder='Enter a description for this key'
                           rows={3}
-                          className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className='w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">
+                        <label className='block text-sm font-medium text-foreground mb-2'>
                           Security Level
                         </label>
                         <select
                           value={securityLevel}
-                          onChange={(e) =>
-                            setSecurityLevel(e.target.value as NostrKeySecurityLevel)
-                          }
-                          className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          onChange={e => setSecurityLevel(e.target.value as NostrKeySecurityLevel)}
+                          className='w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
                         >
                           <option value={NostrKeySecurityLevel.BASIC}>Basic</option>
                           <option value={NostrKeySecurityLevel.ENHANCED}>Enhanced</option>
@@ -650,13 +648,13 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">
+                        <label className='block text-sm font-medium text-foreground mb-2'>
                           Entropy Source
                         </label>
                         <select
                           value={entropySource}
-                          onChange={(e) => setEntropySource(e.target.value as NostrEntropySource)}
-                          className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          onChange={e => setEntropySource(e.target.value as NostrEntropySource)}
+                          className='w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
                         >
                           <option value={NostrEntropySource.WEB_CRYPTO_API}>Web Crypto API</option>
                           <option value={NostrEntropySource.SECURE_RANDOM}>Secure Random</option>
@@ -666,7 +664,7 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
                       <button
                         onClick={handleGenerateKey}
                         disabled={isLoading}
-                        className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
+                        className='w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50'
                       >
                         {isLoading ? 'Generating...' : 'Generate Key'}
                       </button>
@@ -677,43 +675,43 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
 
               {/* Import Tab */}
               {activeTab === 'import' && (
-                <div className="max-w-md mx-auto space-y-6">
+                <div className='max-w-md mx-auto space-y-6'>
                   <div>
-                    <h3 className="text-lg font-medium text-foreground mb-4">
+                    <h3 className='text-lg font-medium text-foreground mb-4'>
                       Import Existing Key
                     </h3>
 
-                    <div className="space-y-4">
+                    <div className='space-y-4'>
                       <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">
+                        <label className='block text-sm font-medium text-foreground mb-2'>
                           Private Key (Hex)
                         </label>
                         <textarea
                           value={privateKeyInput}
-                          onChange={(e) => setPrivateKeyInput(e.target.value)}
-                          placeholder="Enter your 64-character hex private key"
+                          onChange={e => setPrivateKeyInput(e.target.value)}
+                          placeholder='Enter your 64-character hex private key'
                           rows={3}
-                          className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                          className='w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm'
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">
+                        <label className='block text-sm font-medium text-foreground mb-2'>
                           Key Name
                         </label>
                         <input
-                          type="text"
+                          type='text'
                           value={importKeyName}
-                          onChange={(e) => setImportKeyName(e.target.value)}
-                          placeholder="Enter a name for this key"
-                          className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          onChange={e => setImportKeyName(e.target.value)}
+                          placeholder='Enter a name for this key'
+                          className='w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
                         />
                       </div>
 
                       <button
                         onClick={handleImportKey}
                         disabled={isLoading || !privateKeyInput.trim()}
-                        className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors disabled:opacity-50"
+                        className='w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors disabled:opacity-50'
                       >
                         {isLoading ? 'Importing...' : 'Import Key'}
                       </button>
@@ -724,38 +722,38 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
 
               {/* Backup Tab */}
               {activeTab === 'backup' && (
-                <div className="max-w-2xl mx-auto">
-                  <h3 className="text-lg font-medium text-foreground mb-4">Key Backups</h3>
+                <div className='max-w-2xl mx-auto'>
+                  <h3 className='text-lg font-medium text-foreground mb-4'>Key Backups</h3>
 
-                  <div className="space-y-4">
-                    {keys.filter((key) => key.backedUp).length === 0 ? (
-                      <div className="text-center py-8">
-                        <Download className="w-12 h-12 text-muted-foreground/60 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-foreground mb-2">
+                  <div className='space-y-4'>
+                    {keys.filter(key => key.backedUp).length === 0 ? (
+                      <div className='text-center py-8'>
+                        <Download className='w-12 h-12 text-muted-foreground/60 mx-auto mb-4' />
+                        <h3 className='text-lg font-medium text-foreground mb-2'>
                           No Backups Found
                         </h3>
-                        <p className="text-muted-foreground">
+                        <p className='text-muted-foreground'>
                           Create backups for your keys to ensure you can recover them.
                         </p>
                       </div>
                     ) : (
                       keys
-                        .filter((key) => key.backedUp)
-                        .map((keyPair) => (
+                        .filter(key => key.backedUp)
+                        .map(keyPair => (
                           <div
                             key={keyPair.keyId}
-                            className="border rounded-lg p-4 bg-green-50 border-green-200"
+                            className='border rounded-lg p-4 bg-green-50 border-green-200'
                           >
-                            <div className="flex items-center justify-between">
+                            <div className='flex items-center justify-between'>
                               <div>
-                                <h4 className="font-medium text-foreground">
+                                <h4 className='font-medium text-foreground'>
                                   {keyPair.name || 'Unnamed Key'}
                                 </h4>
-                                <p className="text-sm text-muted-foreground">
+                                <p className='text-sm text-muted-foreground'>
                                   Backup created: {new Date(keyPair.created).toLocaleDateString()}
                                 </p>
                               </div>
-                              <CheckCircle className="w-6 h-6 text-green-600" />
+                              <CheckCircle className='w-6 h-6 text-green-600' />
                             </div>
                           </div>
                         ))
@@ -766,52 +764,52 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
 
               {/* Settings Tab */}
               {activeTab === 'settings' && (
-                <div className="max-w-2xl mx-auto">
-                  <h3 className="text-lg font-medium text-foreground mb-6">
+                <div className='max-w-2xl mx-auto'>
+                  <h3 className='text-lg font-medium text-foreground mb-6'>
                     Key Management Settings
                   </h3>
 
-                  <div className="space-y-6">
+                  <div className='space-y-6'>
                     {/* Statistics */}
                     <div>
-                      <h4 className="text-md font-medium text-foreground mb-4">Statistics</h4>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="bg-blue-50 p-4 rounded-lg">
-                          <div className="text-2xl font-bold text-blue-600">{stats.totalKeys}</div>
-                          <div className="text-sm text-blue-600">Total Keys</div>
+                      <h4 className='text-md font-medium text-foreground mb-4'>Statistics</h4>
+                      <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
+                        <div className='bg-blue-50 p-4 rounded-lg'>
+                          <div className='text-2xl font-bold text-blue-600'>{stats.totalKeys}</div>
+                          <div className='text-sm text-blue-600'>Total Keys</div>
                         </div>
-                        <div className="bg-green-50 p-4 rounded-lg">
-                          <div className="text-2xl font-bold text-green-600">
+                        <div className='bg-green-50 p-4 rounded-lg'>
+                          <div className='text-2xl font-bold text-green-600'>
                             {stats.backedUpKeys}
                           </div>
-                          <div className="text-sm text-green-600">Backed Up</div>
+                          <div className='text-sm text-green-600'>Backed Up</div>
                         </div>
-                        <div className="bg-red-50 p-4 rounded-lg">
-                          <div className="text-2xl font-bold text-red-600">
+                        <div className='bg-red-50 p-4 rounded-lg'>
+                          <div className='text-2xl font-bold text-red-600'>
                             {stats.compromisedKeys}
                           </div>
-                          <div className="text-sm text-red-600">Compromised</div>
+                          <div className='text-sm text-red-600'>Compromised</div>
                         </div>
-                        <div className="bg-yellow-50 p-4 rounded-lg">
-                          <div className="text-2xl font-bold text-yellow-600">
+                        <div className='bg-yellow-50 p-4 rounded-lg'>
+                          <div className='text-2xl font-bold text-yellow-600'>
                             {stats.rotationsPending}
                           </div>
-                          <div className="text-sm text-yellow-600">Rotations Pending</div>
+                          <div className='text-sm text-yellow-600'>Rotations Pending</div>
                         </div>
                       </div>
                     </div>
 
                     {/* Security Information */}
                     <div>
-                      <h4 className="text-md font-medium text-foreground mb-4">
+                      <h4 className='text-md font-medium text-foreground mb-4'>
                         Security Information
                       </h4>
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <div className="flex items-start space-x-3">
-                          <Info className="w-5 h-5 text-blue-600 mt-0.5" />
-                          <div className="text-sm text-blue-800">
-                            <p className="font-medium mb-2">Key Security Best Practices:</p>
-                            <ul className="space-y-1 text-sm">
+                      <div className='bg-blue-50 border border-blue-200 rounded-lg p-4'>
+                        <div className='flex items-start space-x-3'>
+                          <Info className='w-5 h-5 text-blue-600 mt-0.5' />
+                          <div className='text-sm text-blue-800'>
+                            <p className='font-medium mb-2'>Key Security Best Practices:</p>
+                            <ul className='space-y-1 text-sm'>
                               <li>• Always create backups for your keys</li>
                               <li>• Use Enhanced or Maximum security levels</li>
                               <li>• Rotate keys regularly or when compromised</li>

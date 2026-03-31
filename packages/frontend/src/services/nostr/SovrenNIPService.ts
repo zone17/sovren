@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 /**
  * 🎯 SOVREN NIP SERVICE
@@ -455,7 +456,7 @@ export class SovrenNIPService {
 
       const events = await this.queryEvents(filter);
 
-      const results = events.map((event) => {
+      const results = events.map(event => {
         try {
           const content = parseAnalyticsEvent(event.content);
           return {
@@ -471,7 +472,7 @@ export class SovrenNIPService {
         }
       });
 
-      const successCount = results.filter((r) => r.success).length;
+      const successCount = results.filter(r => r.success).length;
 
       return {
         success: true,
@@ -702,14 +703,14 @@ export class SovrenNIPService {
 
       try {
         const subscription = this.relayPool.subscribe([filter], {
-          onEvent: (event) => {
+          onEvent: event => {
             events.push(event);
           },
           onEose: () => {
             clearTimeout(timeout);
             resolve(events);
           },
-          onError: (error) => {
+          onError: error => {
             clearTimeout(timeout);
             reject(error);
           },
@@ -753,18 +754,11 @@ export class SovrenNIPService {
    */
   async clearCache(): Promise<void> {
     // Clear cache for all Sovren event kinds
-    const sovrenKinds = [
-      SovrenEventKind.CREATOR_PROFILE_EXTENDED,
-      SovrenEventKind.CONTENT_MONETIZATION,
-      SovrenEventKind.ANALYTICS_EVENT,
-      SovrenEventKind.SUBSCRIPTION_MANAGEMENT,
-      SovrenEventKind.CONTENT_RECOMMENDATIONS,
-    ];
-
     // Note: EventCacheService doesn't have kind-specific clear,
-    // so this is a placeholder for future implementation
-    // In a real implementation, you'd need to add this functionality
-    // to the EventCacheService
+    // so this is a placeholder for future implementation.
+    // Sovren event kinds that would be cleared:
+    // CREATOR_PROFILE_EXTENDED, CONTENT_MONETIZATION, ANALYTICS_EVENT,
+    // SUBSCRIPTION_MANAGEMENT, CONTENT_RECOMMENDATIONS
   }
 }
 

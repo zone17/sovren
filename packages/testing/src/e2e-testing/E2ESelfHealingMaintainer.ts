@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * @fileoverview Elite E2E Self-Healing Maintainer - Autonomous test maintenance
  * with self-healing capabilities, adaptive test strategies, and failure analysis.
@@ -141,7 +140,7 @@ class SimpleTestMetrics implements TestMetrics {
 }
 
 class SimpleValidationUtils implements ValidationUtils {
-  async validateTestCase(testCase: TestCase): Promise<ValidationResult> {
+  async validateTestCase(_testCase: TestCase): Promise<ValidationResult> {
     return {
       isValid: true,
       errors: [],
@@ -150,7 +149,7 @@ class SimpleValidationUtils implements ValidationUtils {
     };
   }
 
-  async validateTestSuite(suite: TestSuite): Promise<ValidationResult> {
+  async validateTestSuite(_suite: TestSuite): Promise<ValidationResult> {
     return {
       isValid: true,
       errors: [],
@@ -159,7 +158,7 @@ class SimpleValidationUtils implements ValidationUtils {
     };
   }
 
-  validateMaintenanceConfig(config: MaintenanceConfig): ValidationResult {
+  validateMaintenanceConfig(_config: MaintenanceConfig): ValidationResult {
     return {
       isValid: true,
       errors: [],
@@ -647,7 +646,7 @@ export class E2ESelfHealingMaintainer extends EventEmitter {
 
       // Analyze test stability
       const stabilityPredictions = await Promise.all(
-        testSuite.tests.map((test) => this.aiAnalyzer.predictTestStability(test))
+        testSuite.tests.map(test => this.aiAnalyzer.predictTestStability(test))
       );
 
       // Optimize test sequence
@@ -920,7 +919,7 @@ export class E2ESelfHealingMaintainer extends EventEmitter {
    * Completes all active repairs
    */
   private async completeActiveRepairs(): Promise<void> {
-    const activeRepairPromises = Array.from(this.activeRepairs.values()).map((repair) =>
+    const activeRepairPromises = Array.from(this.activeRepairs.values()).map(repair =>
       this.waitForRepairCompletion(repair)
     );
 
@@ -931,7 +930,7 @@ export class E2ESelfHealingMaintainer extends EventEmitter {
    * Waits for repair completion
    */
   private async waitForRepairCompletion(repair: TestRepair): Promise<void> {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       const checkInterval = setInterval(() => {
         if (!this.activeRepairs.has(repair.id)) {
           clearInterval(checkInterval);
@@ -1043,7 +1042,7 @@ export class E2ESelfHealingMaintainer extends EventEmitter {
 
     // Implementation would perform actual validation
     // For now, simulate validation
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, 100));
   }
 
   /**
@@ -1054,7 +1053,7 @@ export class E2ESelfHealingMaintainer extends EventEmitter {
 
     // Implementation would apply actual changes to test cases
     // For now, simulate changes
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 500));
   }
 
   /**
@@ -1062,7 +1061,7 @@ export class E2ESelfHealingMaintainer extends EventEmitter {
    */
   private getRepairAttemptCount(patternId: string): number {
     return this.maintenanceHistory.filter(
-      (op) => op.testId === patternId && op.type === 'self_healing'
+      op => op.testId === patternId && op.type === 'self_healing'
     ).length;
   }
 
@@ -1104,7 +1103,7 @@ export class E2ESelfHealingMaintainer extends EventEmitter {
   ): Promise<TestSuite> {
     // Sort tests by stability score (most stable first)
     const stabilityMap = new Map(
-      stabilityPredictions.map((pred) => [pred.testId, pred.stabilityScore])
+      stabilityPredictions.map(pred => [pred.testId, pred.stabilityScore])
     );
 
     const optimizedTests = [...testSuite.tests].sort((a, b) => {
@@ -1149,9 +1148,9 @@ export class E2ESelfHealingMaintainer extends EventEmitter {
   private async cleanupMaintenanceHistory(): Promise<void> {
     const cutoffDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // 30 days ago
 
-    this.maintenanceHistory = this.maintenanceHistory.filter((op) => op.timestamp > cutoffDate);
+    this.maintenanceHistory = this.maintenanceHistory.filter(op => op.timestamp > cutoffDate);
 
-    this.failureHistory = this.failureHistory.filter((failure) => failure.timestamp > cutoffDate);
+    this.failureHistory = this.failureHistory.filter(failure => failure.timestamp > cutoffDate);
 
     this.logger.debug('Maintenance history cleanup complete');
   }

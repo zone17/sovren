@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * @file AIExploratoryTestingFramework.ts
  * @description Autonomous exploratory testing framework with ML-based path discovery
@@ -555,12 +554,12 @@ export class AIExploratoryTestingFramework {
     this.logger.info('Configuring path exploration parameters');
   }
 
-  private async analyzeCodeStructure(codeStructure: CodeStructure): Promise<any[]> {
+  private async analyzeCodeStructure(_codeStructure: CodeStructure): Promise<any[]> {
     // Implementation for code structure analysis
     return [];
   }
 
-  private async generateScenariosForOpportunity(opportunity: any): Promise<TestPath[]> {
+  private async generateScenariosForOpportunity(_opportunity: any): Promise<TestPath[]> {
     // Implementation for scenario generation
     return [];
   }
@@ -582,12 +581,12 @@ export class AIExploratoryTestingFramework {
     };
   }
 
-  private async detectAnomalies(testOutcome: TestOutcome): Promise<DiscoveredBug[]> {
+  private async detectAnomalies(_testOutcome: TestOutcome): Promise<DiscoveredBug[]> {
     // Implementation for anomaly detection
     return [];
   }
 
-  private async detectPatternBugs(testOutcome: TestOutcome): Promise<DiscoveredBug[]> {
+  private async detectPatternBugs(_testOutcome: TestOutcome): Promise<DiscoveredBug[]> {
     // Implementation for pattern-based bug detection
     return [];
   }
@@ -627,7 +626,7 @@ export class AIExploratoryTestingFramework {
     return {};
   }
 
-  private formatAsMarkdown(documentation: any): string {
+  private formatAsMarkdown(_documentation: any): string {
     // Implementation for markdown formatting
     return '# AI Exploratory Testing Report\n\nGenerated automatically by AI framework.';
   }
@@ -641,12 +640,12 @@ export class AIExploratoryTestingFramework {
     return {};
   }
 
-  private async identifyOptimizations(trends: any): Promise<any[]> {
+  private async identifyOptimizations(_trends: any): Promise<any[]> {
     // Implementation for optimization identification
     return [];
   }
 
-  private async applyOptimizations(optimizations: any[]): Promise<void> {
+  private async applyOptimizations(_optimizations: any[]): Promise<void> {
     // Implementation for optimization application
   }
 
@@ -671,11 +670,11 @@ export class AIExploratoryTestingFramework {
     return { score: 0.9 };
   }
 
-  private async adjustTestingStrategies(effectiveness: any): Promise<void> {
+  private async adjustTestingStrategies(_effectiveness: any): Promise<void> {
     // Implementation for strategy adjustment
   }
 
-  private async executeTestPath(path: TestPath): Promise<TestOutcome> {
+  private async executeTestPath(_path: TestPath): Promise<TestOutcome> {
     // Implementation for test path execution
     return {
       success: true,
@@ -695,7 +694,7 @@ export class AIExploratoryTestingFramework {
   }
 
   private async wait(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   /**

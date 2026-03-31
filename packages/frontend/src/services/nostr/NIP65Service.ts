@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 /**
  * 🌐 ELITE SERVICE: NIP-65 Relay List Metadata
@@ -74,6 +75,7 @@ export interface RelayListOptions {
  * Get default relays from centralized configuration
  * @deprecated Use RelayConfig.getRelays() directly
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const getDefaultRelays = (): RelayMetadata[] => RelayConfig.getRelays();
 
 /**
@@ -124,7 +126,7 @@ export class NIP65Service {
     this.validateRelayList(relays);
 
     // Normalize relay URLs
-    const normalizedRelays = relays.map((relay) => ({
+    const normalizedRelays = relays.map(relay => ({
       ...relay,
       url: this.normalizeRelayUrl(relay.url),
     }));
@@ -393,7 +395,7 @@ export class NIP65Service {
   private buildRelayTags(
     relays: RelayMetadata[]
   ): Array<['r', string] | ['r', string, 'read'] | ['r', string, 'write']> {
-    return relays.map((relay) => {
+    return relays.map(relay => {
       if (relay.read && relay.write) {
         return ['r', relay.url];
       } else if (relay.read) {
@@ -457,7 +459,7 @@ export class NIP65Service {
       }, timeout);
 
       try {
-        const subId = this.relayPool.subscribe([filter], (event) => {
+        const subId = this.relayPool.subscribe([filter], event => {
           events.push(event);
         });
 

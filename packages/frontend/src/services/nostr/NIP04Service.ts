@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 🔐 NIP-04 Encrypted Direct Messages Service
  * US-305: Implement NIP-04 Encrypted Direct Messages
@@ -635,7 +634,7 @@ export class NIP04Service {
   /**
    * Get all currently typing users in a conversation
    */
-  getTypingUsers(conversationWithPubkey: string): string[] {
+  getTypingUsers(_conversationWithPubkey: string): string[] {
     const typingUsers: string[] = [];
 
     for (const [pubkey, timestamp] of this.typingIndicators.entries()) {
@@ -734,7 +733,6 @@ export class NIP04Service {
     // Generate ephemeral key pair for this session
     const keyPair = await this.keyManagementService.generateKeyPair({
       name: `Session_${conversationWithPubkey}_${Date.now()}`,
-      temporary: true,
     });
 
     const sessionKey: SessionKeyInfo = {

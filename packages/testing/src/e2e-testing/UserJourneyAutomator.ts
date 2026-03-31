@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * @fileoverview Elite User Journey Automator - Self-maintaining user journey automation
  * with AI-driven optimization and adaptive test maintenance capabilities.
@@ -943,7 +942,7 @@ export class UserJourneyAutomator extends EventEmitter {
    */
   private async executeStepAction(
     step: JourneyStep,
-    context: ExecutionContext
+    _context: ExecutionContext
   ): Promise<Record<string, any>> {
     // Implementation would include actual browser automation
     // This is a placeholder for the actual action execution logic
@@ -985,8 +984,8 @@ export class UserJourneyAutomator extends EventEmitter {
    */
   private async validateRule(
     rule: ValidationRule,
-    result: Record<string, any>,
-    context: ExecutionContext
+    _result: Record<string, any>,
+    _context: ExecutionContext
   ): Promise<void> {
     // Implementation would include actual validation logic
     this.logger.debug('Validating rule', { ruleId: rule.id, type: rule.type });
@@ -1020,8 +1019,8 @@ export class UserJourneyAutomator extends EventEmitter {
    * @returns Promise that resolves to evaluation result
    */
   private async evaluateCondition(
-    condition: ExecutionCondition,
-    context: ExecutionContext
+    _condition: ExecutionCondition,
+    _context: ExecutionContext
   ): Promise<boolean> {
     // Implementation would include actual condition evaluation
     return true;
@@ -1058,7 +1057,7 @@ export class UserJourneyAutomator extends EventEmitter {
         actions: [],
         navigationPatterns: [],
         interactionTimings: [],
-        errors: result.errors.map((error) => ({
+        errors: result.errors.map(error => ({
           type: 'execution',
           message: error,
           stepId: 'unknown',
@@ -1118,7 +1117,7 @@ export class UserJourneyAutomator extends EventEmitter {
     const patterns: FailurePattern[] = [];
 
     // Analyze step failures
-    result.stepResults.forEach((stepResult) => {
+    result.stepResults.forEach(stepResult => {
       if (stepResult.status === 'failure' && stepResult.error) {
         patterns.push({
           id: `pattern_${stepResult.stepId}`,
@@ -1164,7 +1163,7 @@ export class UserJourneyAutomator extends EventEmitter {
    * @param pattern - Failure pattern
    */
   private async applyHealingStrategy(journey: UserJourney, pattern: FailurePattern): Promise<void> {
-    const step = journey.config.steps.find((s) => s.id === pattern.stepId);
+    const step = journey.config.steps.find(s => s.id === pattern.stepId);
     if (!step) {
       return;
     }
@@ -1353,11 +1352,11 @@ export class UserJourneyAutomator extends EventEmitter {
    * Sets up event listeners
    */
   private setupEventListeners(): void {
-    this.on('journeyHealthWarning', (data) => {
+    this.on('journeyHealthWarning', data => {
       this.logger.warn('Journey health warning', data);
     });
 
-    this.on('selfHealingAttempted', (data) => {
+    this.on('selfHealingAttempted', data => {
       this.logger.info('Self-healing attempted', data);
     });
   }
@@ -1369,7 +1368,7 @@ export class UserJourneyAutomator extends EventEmitter {
    * @returns Promise that resolves after the specified duration
    */
   private sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   /**

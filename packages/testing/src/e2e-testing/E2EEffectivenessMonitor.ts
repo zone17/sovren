@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * @fileoverview Elite E2E Effectiveness Monitor - Continuous testing effectiveness monitoring
  * with AI-powered analytics, predictive insights, and comprehensive reporting.
@@ -64,7 +63,7 @@ class SimpleLogger implements Logger {
 }
 
 class SimpleAIAnalyticsEngine implements AIAnalyticsEngine {
-  async analyzeTestEffectiveness(metrics: TestMetric[]): Promise<EffectivenessAnalysis> {
+  async analyzeTestEffectiveness(_metrics: TestMetric[]): Promise<EffectivenessAnalysis> {
     return {
       overall: {
         effectivenessScore: 0.85,
@@ -89,7 +88,7 @@ class SimpleAIAnalyticsEngine implements AIAnalyticsEngine {
   }
 
   async generatePredictiveInsights(
-    historicalData: HistoricalTestData[]
+    _historicalData: HistoricalTestData[]
   ): Promise<PredictiveInsight[]> {
     return [
       {
@@ -116,7 +115,7 @@ class SimpleAIAnalyticsEngine implements AIAnalyticsEngine {
   }
 
   async identifyOptimizationOpportunities(
-    testResults: TestResult[]
+    _testResults: TestResult[]
   ): Promise<OptimizationOpportunity[]> {
     return [
       {
@@ -140,7 +139,7 @@ class SimpleAIAnalyticsEngine implements AIAnalyticsEngine {
     ];
   }
 
-  async calculateROI(metrics: TestMetric[], costs: TestCost[]): Promise<ROIAnalysis> {
+  async calculateROI(_metrics: TestMetric[], _costs: TestCost[]): Promise<ROIAnalysis> {
     return {
       totalInvestment: 15000,
       totalBenefits: 45000,
@@ -263,7 +262,7 @@ class SimpleReportGenerator implements ReportGenerator {
       timestamp: new Date(),
       alerts,
       summary: `${alerts.length} alerts requiring attention`,
-      priority: alerts.filter((a) => a.severity === 'high').length > 0 ? 'high' : 'medium',
+      priority: alerts.filter(a => a.severity === 'high').length > 0 ? 'high' : 'medium',
     };
   }
 }
@@ -837,9 +836,9 @@ export class E2EEffectivenessMonitor extends EventEmitter {
 
       // Collect metrics from test run
       const metrics = await this.metricsCollector.collectTestMetrics(testRun);
-      const performanceMetrics = await this.metricsCollector.collectPerformanceMetrics(testRun);
-      const qualityMetrics = await this.metricsCollector.collectQualityMetrics(testRun);
-      const coverageMetrics = await this.metricsCollector.collectCoverageMetrics(testRun);
+      await this.metricsCollector.collectPerformanceMetrics(testRun);
+      await this.metricsCollector.collectQualityMetrics(testRun);
+      await this.metricsCollector.collectCoverageMetrics(testRun);
 
       // Add to current metrics
       this.currentMetrics.push(...metrics);
@@ -931,7 +930,7 @@ export class E2EEffectivenessMonitor extends EventEmitter {
     try {
       this.logger.info('Identifying optimization opportunities...');
 
-      const testResults = this.historicalData.flatMap((data) => data.results);
+      const testResults = this.historicalData.flatMap(data => data.results);
       const opportunities = await this.aiAnalytics.identifyOptimizationOpportunities(testResults);
 
       this.logger.info('Optimization opportunities identified', {
@@ -1238,13 +1237,13 @@ export class E2EEffectivenessMonitor extends EventEmitter {
     const cutoffDate = this.calculateCutoffDate(retentionPeriod);
 
     // Clean up historical data
-    this.historicalData = this.historicalData.filter((data) => data.date > cutoffDate);
+    this.historicalData = this.historicalData.filter(data => data.date > cutoffDate);
 
     // Clean up current metrics
-    this.currentMetrics = this.currentMetrics.filter((metric) => metric.timestamp > cutoffDate);
+    this.currentMetrics = this.currentMetrics.filter(metric => metric.timestamp > cutoffDate);
 
     // Clean up old alerts
-    this.alerts = this.alerts.filter((alert) => alert.timestamp > cutoffDate);
+    this.alerts = this.alerts.filter(alert => alert.timestamp > cutoffDate);
 
     this.logger.debug('Data cleanup complete', {
       historicalDataCount: this.historicalData.length,

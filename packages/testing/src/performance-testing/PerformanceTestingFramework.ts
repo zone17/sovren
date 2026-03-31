@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * @fileoverview Elite Performance Testing Framework - Autonomous performance testing
  * with baseline learning, comprehensive analysis, and intelligent optimization.
@@ -163,8 +162,6 @@ export class PerformanceTestingFramework extends EventEmitter {
   }
 
   private async executeScenario(scenario: PerformanceScenario): Promise<PerformanceResult> {
-    const startTime = Date.now();
-
     // Execute performance scenario
     const metrics = await this.collectMetrics(scenario);
     const baseline = this.compareToBaseline(scenario.id, metrics);
@@ -181,7 +178,7 @@ export class PerformanceTestingFramework extends EventEmitter {
     };
   }
 
-  private async collectMetrics(scenario: PerformanceScenario): Promise<PerformanceMetric[]> {
+  private async collectMetrics(_scenario: PerformanceScenario): Promise<PerformanceMetric[]> {
     // Collect performance metrics
     return [
       {
@@ -214,7 +211,7 @@ export class PerformanceTestingFramework extends EventEmitter {
     // Compare metrics to baseline
     return {
       hasBaseline: true,
-      deviations: metrics.map((metric) => ({
+      deviations: metrics.map(metric => ({
         metric: metric.name,
         baseline: baseline.metrics[metric.name] || 0,
         current: metric.value,
@@ -225,7 +222,7 @@ export class PerformanceTestingFramework extends EventEmitter {
     };
   }
 
-  private detectAnomalies(metrics: PerformanceMetric[], baseline: BaselineComparison): Anomaly[] {
+  private detectAnomalies(_metrics: PerformanceMetric[], _baseline: BaselineComparison): Anomaly[] {
     // Detect performance anomalies
     return [];
   }
@@ -241,18 +238,18 @@ export class PerformanceTestingFramework extends EventEmitter {
   }
 
   private generateScenarioRecommendations(
-    metrics: PerformanceMetric[],
-    anomalies: Anomaly[]
+    _metrics: PerformanceMetric[],
+    _anomalies: Anomaly[]
   ): string[] {
     return ['Optimize database queries', 'Implement caching layer'];
   }
 
-  private async updateBaseline(scenarioId: string, result: PerformanceResult): Promise<void> {
+  private async updateBaseline(scenarioId: string, _result: PerformanceResult): Promise<void> {
     // Update baseline with new performance data
     console.log(`Updating baseline for scenario: ${scenarioId}`);
   }
 
-  private async analyzeRegressions(results: PerformanceResult[]): Promise<void> {
+  private async analyzeRegressions(_results: PerformanceResult[]): Promise<void> {
     // Analyze for performance regressions
     console.log('Analyzing performance regressions...');
   }
