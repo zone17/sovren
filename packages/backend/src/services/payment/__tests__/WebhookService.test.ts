@@ -5,6 +5,12 @@
  * Part of Epic 005 - Backend Service Layer Refactoring
  */
 
+vi.mock('../../../utils/ssrf', () => ({
+  validateSsrfUrl: vi
+    .fn()
+    .mockResolvedValue({ resolvedIps: [{ address: '93.184.216.34', family: 4 }] }),
+}));
+
 import { WebhookService } from '../WebhookService';
 import type { IEventBus } from '../../../interfaces/shared/IEventBus';
 import type { ILogger } from '../../../interfaces/shared/ILogger';
@@ -17,6 +23,7 @@ import {
   type WebhookEventPayload,
   type CreateWebhookEndpointParams,
 } from '../../../types/webhook';
+import { validateSsrfUrl } from '../../../utils/ssrf';
 
 // Mock implementations
 class MockEventBus implements IEventBus {
@@ -76,7 +83,7 @@ class MockCacheService implements ICacheService {
   });
 
   mget = vi.fn(async <T>(keys: string[]): Promise<(T | null)[]> => {
-    return keys.map((key) => this.cache.get(key) || null);
+    return keys.map(key => this.cache.get(key) || null);
   });
 
   mset = vi.fn(async <T>(entries: Array<[string, T]>): Promise<void> => {
@@ -98,12 +105,40 @@ class MockAuditLogService implements IAuditLogService {
   dispose = vi.fn().mockResolvedValue(undefined);
 }
 
+// Helper to create a mock Response
+function createMockResponse(
+  status = 200,
+  body = '{"received":true}',
+  headers: Record<string, string> = { 'content-type': 'application/json' }
+): Response {
+  const headersObj = new Headers(headers);
+  return {
+    status,
+    ok: status >= 200 && status < 300,
+    statusText: status === 200 ? 'OK' : 'Error',
+    headers: headersObj,
+    text: vi.fn().mockResolvedValue(body),
+    json: vi.fn().mockImplementation(() => JSON.parse(body)),
+    body: null,
+    bodyUsed: false,
+    arrayBuffer: vi.fn(),
+    blob: vi.fn(),
+    clone: vi.fn(),
+    formData: vi.fn(),
+    redirected: false,
+    type: 'basic' as ResponseType,
+    url: '',
+    bytes: vi.fn(),
+  } as unknown as Response;
+}
+
 describe('WebhookService', () => {
   let service: WebhookService;
   let eventBus: MockEventBus;
   let logger: MockLogger;
   let cache: MockCacheService;
   let auditLog: MockAuditLogService;
+  let fetchMock: ReturnType<typeof vi.fn>;
 
   const createTestEndpointParams = (): CreateWebhookEndpointParams => ({
     userId: 'user-123',
@@ -132,6 +167,10 @@ describe('WebhookService', () => {
     cache = new MockCacheService();
     auditLog = new MockAuditLogService();
     service = new WebhookService(eventBus, logger, cache, auditLog);
+
+    // Mock global fetch for all tests that trigger HTTP delivery
+    fetchMock = vi.fn().mockResolvedValue(createMockResponse());
+    global.fetch = fetchMock;
   });
 
   afterEach(async () => {
@@ -305,7 +344,7 @@ describe('WebhookService', () => {
         const endpoints = await service.listEndpoints('user-123');
 
         expect(endpoints).toHaveLength(2);
-        expect(endpoints.every((e) => e.userId === 'user-123')).toBe(true);
+        expect(endpoints.every(e => e.userId === 'user-123')).toBe(true);
       });
 
       it('should support pagination', async () => {
@@ -367,9 +406,9 @@ describe('WebhookService', () => {
         await service.subscribeToEvents(endpoint.id, [WebhookEventType.PAYMENT_SUCCEEDED]);
 
         const updated = await service.getEndpoint(endpoint.id);
-        expect(
-          updated?.events.filter((e) => e === WebhookEventType.PAYMENT_SUCCEEDED)
-        ).toHaveLength(1);
+        expect(updated?.events.filter(e => e === WebhookEventType.PAYMENT_SUCCEEDED)).toHaveLength(
+          1
+        );
       });
     });
 
@@ -397,7 +436,7 @@ describe('WebhookService', () => {
         const endpoints = await service.getSubscribedEndpoints(WebhookEventType.PAYMENT_SUCCEEDED);
 
         expect(endpoints).toHaveLength(2);
-        expect(endpoints.every((e) => e.events.includes(WebhookEventType.PAYMENT_SUCCEEDED))).toBe(
+        expect(endpoints.every(e => e.events.includes(WebhookEventType.PAYMENT_SUCCEEDED))).toBe(
           true
         );
       });
@@ -434,7 +473,7 @@ describe('WebhookService', () => {
         const results = await service.sendWebhook(WebhookEventType.PAYMENT_SUCCEEDED, payload);
 
         expect(results).toHaveLength(2);
-        expect(results.every((r) => r.status === WebhookDeliveryStatus.QUEUED)).toBe(true);
+        expect(results.every(r => r.status === WebhookDeliveryStatus.QUEUED)).toBe(true);
       });
 
       it('should handle empty subscriptions', async () => {
@@ -473,7 +512,6 @@ describe('WebhookService', () => {
 
       it('should respect rate limits', async () => {
         const endpoint = await service.registerEndpoint(createTestEndpointParams());
-        const payload = createTestPayload();
 
         // Test rate limit status directly
         const initialStatus = await service.getRateLimitStatus(endpoint.id);
@@ -1740,11 +1778,7 @@ describe('WebhookService', () => {
       const endpoint = await service.registerEndpoint(createTestEndpointParams());
       const payload = createTestPayload();
 
-      const result = await service.sendWebhookToEndpoint(
-        endpoint.id,
-        WebhookEventType.PAYMENT_SUCCEEDED,
-        payload
-      );
+      await service.sendWebhookToEndpoint(endpoint.id, WebhookEventType.PAYMENT_SUCCEEDED, payload);
 
       // Test replay by event type
       const replays = await service.replayDeliveries({
@@ -1824,6 +1858,145 @@ describe('WebhookService', () => {
 
       const status = await service.getRateLimitStatus('nonexistent');
       expect(status.limited).toBe(false);
+    });
+  });
+
+  describe('HTTP Client (makeHttpRequest)', () => {
+    it('should deliver webhook with real status, body, and headers from fetch', async () => {
+      const responseHeaders = { 'x-request-id': 'abc-123', 'content-type': 'application/json' };
+      fetchMock.mockResolvedValueOnce(createMockResponse(202, '{"ok":true}', responseHeaders));
+
+      const endpoint = await service.registerEndpoint(createTestEndpointParams());
+      const payload = createTestPayload();
+      const queued = await service.sendWebhookToEndpoint(
+        endpoint.id,
+        WebhookEventType.PAYMENT_SUCCEEDED,
+        payload
+      );
+
+      const result = await service.deliverWebhook(queued.deliveryId);
+
+      expect(result.success).toBe(true);
+      expect(fetchMock).toHaveBeenCalledWith(
+        'https://example.com/webhook',
+        expect.objectContaining({
+          method: 'POST',
+          signal: expect.any(AbortSignal),
+        })
+      );
+
+      const delivery = await service.getDelivery(queued.deliveryId);
+      expect(delivery?.responseStatus).toBe(202);
+      expect(delivery?.responseBody).toBe('{"ok":true}');
+      expect(delivery?.responseHeaders).toEqual(
+        expect.objectContaining({ 'x-request-id': 'abc-123' })
+      );
+    });
+
+    it('should surface network errors from fetch', async () => {
+      fetchMock.mockRejectedValueOnce(new Error('ECONNREFUSED'));
+
+      const endpoint = await service.registerEndpoint(createTestEndpointParams());
+      const payload = createTestPayload();
+      const queued = await service.sendWebhookToEndpoint(
+        endpoint.id,
+        WebhookEventType.PAYMENT_SUCCEEDED,
+        payload
+      );
+
+      const result = await service.deliverWebhook(queued.deliveryId);
+
+      // Delivery should fail (not succeed with fake 200)
+      expect(result.success).toBe(false);
+    });
+
+    it('should handle timeout via AbortController', async () => {
+      // Simulate an abort error (as if the AbortController fired)
+      const abortError = new DOMException('The operation was aborted', 'AbortError');
+      fetchMock.mockRejectedValueOnce(abortError);
+
+      const endpoint = await service.registerEndpoint(createTestEndpointParams());
+      const payload = createTestPayload();
+      const queued = await service.sendWebhookToEndpoint(
+        endpoint.id,
+        WebhookEventType.PAYMENT_SUCCEEDED,
+        payload
+      );
+
+      const result = await service.deliverWebhook(queued.deliveryId);
+
+      expect(result.success).toBe(false);
+    });
+
+    it('should return actual non-2xx status instead of fake 200', async () => {
+      fetchMock.mockResolvedValueOnce(createMockResponse(503, 'Service Unavailable'));
+
+      const endpoint = await service.registerEndpoint(createTestEndpointParams());
+      const payload = createTestPayload();
+      const queued = await service.sendWebhookToEndpoint(
+        endpoint.id,
+        WebhookEventType.PAYMENT_SUCCEEDED,
+        payload
+      );
+
+      await service.deliverWebhook(queued.deliveryId);
+
+      const delivery = await service.getDelivery(queued.deliveryId);
+      expect(delivery?.responseStatus).toBe(503);
+    });
+
+    it('should call SSRF validation before making the request', async () => {
+      const mockedValidate = vi.mocked(validateSsrfUrl);
+      mockedValidate.mockClear();
+
+      const endpoint = await service.registerEndpoint(createTestEndpointParams());
+      const payload = createTestPayload();
+      const queued = await service.sendWebhookToEndpoint(
+        endpoint.id,
+        WebhookEventType.PAYMENT_SUCCEEDED,
+        payload
+      );
+
+      await service.deliverWebhook(queued.deliveryId);
+
+      expect(mockedValidate).toHaveBeenCalledWith('https://example.com/webhook');
+    });
+
+    it('should reject delivery when SSRF validation fails', async () => {
+      const mockedValidate = vi.mocked(validateSsrfUrl);
+      mockedValidate.mockRejectedValueOnce(new Error('URL cannot point to a private IP range'));
+
+      const endpoint = await service.registerEndpoint(createTestEndpointParams());
+      const payload = createTestPayload();
+      const queued = await service.sendWebhookToEndpoint(
+        endpoint.id,
+        WebhookEventType.PAYMENT_SUCCEEDED,
+        payload
+      );
+
+      const result = await service.deliverWebhook(queued.deliveryId);
+
+      expect(result.success).toBe(false);
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('should ping endpoint with real HTTP and return true for 2xx', async () => {
+      fetchMock.mockResolvedValueOnce(createMockResponse(200));
+
+      const endpoint = await service.registerEndpoint(createTestEndpointParams());
+      const result = await service.pingEndpoint(endpoint.id);
+
+      expect(result).toBe(true);
+      expect(fetchMock).toHaveBeenCalled();
+    });
+
+    it('should ping endpoint and return false for non-2xx', async () => {
+      fetchMock.mockResolvedValueOnce(createMockResponse(500, 'Internal Server Error'));
+
+      const endpoint = await service.registerEndpoint(createTestEndpointParams());
+      const result = await service.pingEndpoint(endpoint.id);
+
+      expect(result).toBe(false);
     });
   });
 });

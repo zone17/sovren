@@ -39,6 +39,7 @@ import {
 } from '../../types/webhook';
 import { createHmac, randomBytes } from 'crypto';
 import { performance } from 'perf_hooks';
+import { validateSsrfUrl } from '../../utils/ssrf';
 
 /**
  * Webhook repository interface
@@ -1502,18 +1503,50 @@ export class WebhookService implements IWebhookService {
   }
 
   private async makeHttpRequest(
-    _url: string,
-    _body: string,
-    _headers: Record<string, string>,
-    _timeout: number
+    url: string,
+    body: string,
+    headers: Record<string, string>,
+    timeout: number
   ): Promise<{ status: number; body: string; headers: Record<string, string> }> {
-    // Simplified HTTP request - in production would use a proper HTTP client
-    // For testing, simulate success
-    return {
-      status: 200,
-      body: JSON.stringify({ received: true }),
-      headers: { 'content-type': 'application/json' },
-    };
+    // SSRF validation: reject private IPs and non-HTTPS URLs
+    await validateSsrfUrl(url);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers,
+        body,
+        signal: controller.signal,
+        redirect: 'error', // P1 SSRF fix: prevent redirect to private IPs
+      });
+
+      // Cap response body to 1MB to prevent OOM from malicious endpoints
+      const responseBody = (await response.text()).slice(0, 1_048_576);
+
+      const responseHeaders: Record<string, string> = {};
+      response.headers.forEach((value, key) => {
+        responseHeaders[key] = value;
+      });
+
+      return {
+        status: response.status,
+        body: responseBody,
+        headers: responseHeaders,
+      };
+    } catch (error: unknown) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error(`Webhook request timed out after ${timeout}ms`);
+      }
+      if (error instanceof Error) {
+        throw new Error(`Webhook request failed: ${error.message}`);
+      }
+      throw new Error('Webhook request failed: unknown error');
+    } finally {
+      clearTimeout(timeoutId);
+    }
   }
 
   private isRetryableError(error: any): boolean {
