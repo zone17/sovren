@@ -1227,7 +1227,7 @@ export class WebhookService implements IWebhookService {
       failedDeliveries: 0,
       successRate: 0,
       averageResponseTime: 0,
-      circuitState: await this.getCircuitState(endpointId),
+      circuitState: (await this.getCircuitState(endpointId)) as CircuitBreakerState,
       deliveriesByStatus: {} as Record<WebhookDeliveryStatus, number>,
       deliveriesByEventType: {} as Record<WebhookEventType, number>,
     };
