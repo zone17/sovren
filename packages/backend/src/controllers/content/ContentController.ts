@@ -66,7 +66,7 @@ function mapDocumentToSearchResult(doc: ContentDocument): ContentSearchResultDTO
     excerpt: doc.metadata?.excerpt || doc.content.substring(0, 200),
     contentType: doc.category || 'article',
     authorId: doc.authorId,
-    authorName: doc.authorId,
+    authorName: (doc as ContentDocument & { authorName?: string }).authorName || 'Unknown',
     publishedAt: doc.publishedAt ? doc.publishedAt.toISOString() : new Date().toISOString(),
     tags: doc.tags || [],
     priceInSats: undefined,
@@ -225,7 +225,7 @@ export class ContentController {
       const startTime = Date.now();
       const requestData: PublishContentRequestDTO = req.body;
       // Publish content via service — publish() takes contentId + options
-      const contentId = requestData.title; // The content must already exist; caller provides its ID
+      const contentId = requestData.contentId;
       const result = await this.publishingService.publish(contentId, {
         distributeToNostr: requestData.publishToNostr,
       });
@@ -258,10 +258,13 @@ export class ContentController {
       const startTime = Date.now();
       const requestData: ModerateContentRequestDTO = req.body;
 
+      // Fetch actual content text — moderate() runs analysis on the string passed to it
+      const contentToModerate = await this.creationService.getContent(requestData.contentId);
+
       // moderate() takes contentId, content string, metadata, options
       const result: ModerationResult = await this.moderationService.moderate(
         requestData.contentId,
-        '', // content text is fetched internally by the service
+        contentToModerate.content,
         {
           moderatorId: requestData.moderatorId,
           reason: requestData.reason,
@@ -274,7 +277,7 @@ export class ContentController {
         success: true,
         data: {
           contentId: requestData.contentId,
-          previousStatus: 'pending',
+          previousStatus: (result.metadata?.previousStatus as string) || 'pending',
           newStatus: result.status,
           moderationAction: result.action,
           moderatedAt: result.timestamp.toISOString(),
@@ -368,7 +371,9 @@ export class ContentController {
             excerpt: c.metadata?.excerpt || c.content.substring(0, 200),
             contentType: c.category || 'article',
             authorId: c.authorId,
-            authorName: c.authorId,
+            authorName: (c as Content & { authorName?: string }).authorName || 'Unknown',
+            // TODO: Content[] from recommendationService lacks per-item relevance scores;
+            // integrate scoring when recommendation service returns scored results
             score: 0,
             reason: 'recommended',
             tags: c.tags || [],

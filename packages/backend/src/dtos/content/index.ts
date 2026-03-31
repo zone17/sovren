@@ -10,6 +10,7 @@
 // ============================================================================
 
 export interface PublishContentRequestDTO {
+  contentId: string;
   title: string;
   content: string;
   contentType: 'article' | 'video' | 'audio' | 'image' | 'nostr-event';
