@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * AlertService
  * Copy detection alert CRUD and status transitions
@@ -50,18 +49,18 @@ export class AlertService implements IAlertService {
     const totalCount = total || 0;
     const totalPages = Math.ceil(totalCount / limit);
 
-    const alerts: ContentAlert[] = (data || []).map((row: any) => ({
-      id: row.id,
-      original_content_id: row.original_content_id,
-      original_title: row.original_title || 'Untitled',
-      detected_copy_url: row.detected_copy_url,
-      detected_author_pubkey: row.detected_author_pubkey,
-      similarity_score: parseFloat(row.similarity_score),
-      match_level: row.match_level,
-      hash_type: row.hash_type,
-      status: row.status,
-      detected_at: row.detected_at,
-      relay: row.relay,
+    const alerts: ContentAlert[] = (data || []).map((row: Record<string, unknown>) => ({
+      id: row.id as string,
+      original_content_id: row.original_content_id as string,
+      original_title: (row.original_title as string) || 'Untitled',
+      detected_copy_url: row.detected_copy_url as string,
+      detected_author_pubkey: row.detected_author_pubkey as string,
+      similarity_score: parseFloat(row.similarity_score as string),
+      match_level: row.match_level as string,
+      hash_type: row.hash_type as string,
+      status: row.status as string,
+      detected_at: row.detected_at as string,
+      relay: row.relay as string,
     }));
 
     return {
@@ -115,12 +114,12 @@ export class AlertService implements IAlertService {
         published_at: alert.detected_at,
       },
       comparison: {
-        similarity_score: parseFloat(alert.similarity_score),
-        match_level: alert.match_level,
-        hash_type: alert.hash_type,
+        similarity_score: parseFloat(alert.similarity_score as string),
+        match_level: alert.match_level as string,
+        hash_type: alert.hash_type as string,
         highlighted_sections: [],
       },
-      status: alert.status,
+      status: alert.status as AlertStatus,
       detected_at: alert.detected_at,
     };
   }
@@ -134,7 +133,7 @@ export class AlertService implements IAlertService {
     // This avoids a separate read query — the database enforces atomicity.
     const validFromStatuses: AlertStatus[] = [];
     for (const [fromStatus, allowed] of Object.entries(ALERT_STATUS_TRANSITIONS)) {
-      if (allowed.includes(newStatus)) {
+      if ((allowed as AlertStatus[]).includes(newStatus)) {
         validFromStatuses.push(fromStatus as AlertStatus);
       }
     }

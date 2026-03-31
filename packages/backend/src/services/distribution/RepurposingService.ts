@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Content Repurposing Service
  * EPIC-009: Rule-based content adaptation for different platforms
@@ -60,12 +59,12 @@ export class RepurposingService implements IRepurposingService {
       throw new Error('Content not found or access denied');
     }
 
-    const sourceText = content.body || '';
-    const title = content.title || '';
+    const sourceText = (content.body as string) || '';
+    const title = (content.title as string) || '';
     const backlink = `${process.env.FRONTEND_URL || 'https://sovren.app'}/content/${contentId}`;
 
     // Build all rows (pure computation — no I/O)
-    const rows = targetPlatforms.map((platform) => {
+    const rows = targetPlatforms.map(platform => {
       const formatType = PLATFORM_FORMAT_MAP[platform];
       const charLimit = PLATFORM_CHAR_LIMITS[platform];
 
@@ -113,17 +112,19 @@ export class RepurposingService implements IRepurposingService {
       platforms: targetPlatforms,
     });
 
-    return rows.map((row) => ({
-      id: row.id,
-      source_content_id: contentId,
-      platform: row.platform,
-      format_type: row.format_type,
-      text: row.text,
-      character_count: row.character_count,
-      character_limit: PLATFORM_CHAR_LIMITS[row.platform as SupportedPlatform],
-      approved: false,
-      backlink_url: row.backlink_url,
-    }));
+    return rows.map(
+      (row): RepurposedContent => ({
+        id: row.id,
+        source_content_id: contentId,
+        platform: row.platform as SupportedPlatform,
+        format_type: row.format_type,
+        text: row.text,
+        character_count: row.character_count,
+        character_limit: PLATFORM_CHAR_LIMITS[row.platform as SupportedPlatform],
+        approved: false,
+        backlink_url: row.backlink_url,
+      })
+    );
   }
 
   async getRepurposed(creatorId: string, contentId: string): Promise<RepurposedContent[]> {
@@ -140,10 +141,12 @@ export class RepurposingService implements IRepurposingService {
       throw error;
     }
 
-    return (data || []).map((row: RepurposedContent & { platform: string }) => ({
-      ...row,
-      character_limit: PLATFORM_CHAR_LIMITS[row.platform as SupportedPlatform] || 500,
-    }));
+    return ((data || []) as unknown as Array<RepurposedContent & { platform: string }>).map(
+      row => ({
+        ...row,
+        character_limit: PLATFORM_CHAR_LIMITS[row.platform as SupportedPlatform] || 500,
+      })
+    );
   }
 
   async approve(creatorId: string, repurposedId: string): Promise<RepurposedContent> {
@@ -161,9 +164,10 @@ export class RepurposingService implements IRepurposingService {
       throw new Error('Repurposed content not found or access denied');
     }
 
+    const row = data as unknown as RepurposedContent;
     return {
-      ...data,
-      character_limit: PLATFORM_CHAR_LIMITS[data.platform as SupportedPlatform] || 500,
+      ...row,
+      character_limit: PLATFORM_CHAR_LIMITS[data.platform as string as SupportedPlatform] || 500,
     };
   }
 
@@ -174,8 +178,8 @@ export class RepurposingService implements IRepurposingService {
   private toThread(title: string, body: string, backlink: string, charLimit: number): string {
     const paragraphs = body
       .split(/\n\n+/)
-      .map((p) => p.trim())
-      .filter((p) => p.length > 0);
+      .map(p => p.trim())
+      .filter(p => p.length > 0);
 
     if (paragraphs.length <= 1) {
       return this.truncateWithBacklink(title ? `${title}\n\n${body}` : body, backlink, charLimit);
@@ -202,23 +206,23 @@ export class RepurposingService implements IRepurposingService {
   private toSummary(title: string, body: string, backlink: string, charLimit: number): string {
     const paragraphs = body
       .split(/\n\n+/)
-      .map((p) => p.trim())
-      .filter((p) => p.length > 0);
+      .map(p => p.trim())
+      .filter(p => p.length > 0);
 
     // Extract heading-like lines (lines that look like h2/h3)
     const headings = body
       .split('\n')
       .filter(
-        (line) =>
+        line =>
           line.match(/^#{2,3}\s/) || (line.length < 80 && line.length > 5 && !line.endsWith('.'))
       )
-      .map((h) => h.replace(/^#{2,3}\s/, '').trim())
+      .map(h => h.replace(/^#{2,3}\s/, '').trim())
       .slice(0, 5);
 
     let summary = title ? `${title}\n\n` : '';
 
     if (headings.length > 0) {
-      summary += headings.map((h) => `- ${h}`).join('\n');
+      summary += headings.map(h => `- ${h}`).join('\n');
     } else if (paragraphs.length > 0) {
       summary += paragraphs[0];
     }

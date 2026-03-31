@@ -343,7 +343,7 @@ export class PaymentRetryService {
     if (!this.isRetryAllowed()) {
       const error = new CircuitBreakerOpenError(
         this.circuitBreakerState.failureCount,
-        this.circuitBreakerState.openedAt!
+        this.circuitBreakerState.openedAt ?? new Date()
       );
       this.logger?.error('Retry blocked by circuit breaker', {
         paymentId,
@@ -379,7 +379,7 @@ export class PaymentRetryService {
     const isFinalAttempt = attemptNumber === this.config.maxAttempts;
 
     // Step 7: Create retry attempt record
-    const { data: retryAttempt, error: insertError } = await this.supabase
+    const { error: insertError } = await this.supabase
       .from('payment_retry_attempts')
       .insert({
         payment_id: paymentId,
@@ -862,7 +862,7 @@ export class PaymentRetryService {
    * @private
    * @returns Circuit breaker state
    */
-  private getCircuitBreakerState(): CircuitBreakerState {
+  private _getCircuitBreakerState(): CircuitBreakerState {
     return { ...this.circuitBreakerState };
   }
 
@@ -874,7 +874,7 @@ export class PaymentRetryService {
    * @private
    * @param state Partial circuit breaker state to merge
    */
-  private setCircuitBreakerState(state: Partial<CircuitBreakerState>): void {
+  private _setCircuitBreakerState(state: Partial<CircuitBreakerState>): void {
     this.circuitBreakerState = {
       ...this.circuitBreakerState,
       ...state,

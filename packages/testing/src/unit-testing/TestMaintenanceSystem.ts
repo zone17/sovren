@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * @file TestMaintenanceSystem.ts
  * @description Automated test maintenance system that keeps tests up-to-date
@@ -278,7 +277,7 @@ export class TestMaintenanceSystem {
    */
   private async simulateMaintenanceAnalysis(
     testFiles: string[],
-    sourceFiles: string[]
+    _sourceFiles: string[]
   ): Promise<TestMaintenanceMetrics> {
     // This is a simplified simulation
     // In a real implementation, this would analyze the actual test files
@@ -450,7 +449,7 @@ export class TestMaintenanceSystem {
     // 3. Run the updated test to verify it passes
 
     // Simulate some delay for the update process
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, 100));
   }
 
   /**
@@ -466,7 +465,7 @@ export class TestMaintenanceSystem {
     // 3. Run the updated test to verify it passes consistently
 
     // Simulate some delay for the fix process
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, 100));
   }
 
   /**
@@ -482,7 +481,7 @@ export class TestMaintenanceSystem {
     // 3. Run the updated test to verify it still provides the same coverage
 
     // Simulate some delay for the removal process
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, 100));
   }
 
   /**

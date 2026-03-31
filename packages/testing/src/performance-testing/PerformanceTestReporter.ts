@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Performance Test Reporter - US-154.6
  * Real-time performance test reporting with predictive analytics
@@ -450,7 +449,7 @@ export class PerformanceTestReporter extends EventEmitter {
   /**
    * Update real-time calculations
    */
-  private updateRealTimeCalculations(metric: PerformanceMetrics): void {
+  private updateRealTimeCalculations(_metric: PerformanceMetrics): void {
     // Calculate rolling averages
     const recentMetrics = this.getRecentMetrics(300000); // Last 5 minutes
 
@@ -487,8 +486,14 @@ export class PerformanceTestReporter extends EventEmitter {
   /**
    * Get nested object value by path
    */
-  private getNestedValue(obj: any, path: string): number | undefined {
-    return path.split('.').reduce((current, key) => current?.[key], obj);
+  private getNestedValue(obj: Record<string, unknown>, path: string): number | undefined {
+    const result = path.split('.').reduce<unknown>((current, key) => {
+      if (current && typeof current === 'object' && key in (current as Record<string, unknown>)) {
+        return (current as Record<string, unknown>)[key];
+      }
+      return undefined;
+    }, obj);
+    return typeof result === 'number' ? result : undefined;
   }
 
   /**
@@ -911,7 +916,7 @@ export class PerformanceTestReporter extends EventEmitter {
   /**
    * Send notification
    */
-  private sendNotification(type: string, data: any): void {
+  private sendNotification(type: string, data: Record<string, unknown>): void {
     const notification = {
       type,
       timestamp: Date.now(),
@@ -1012,7 +1017,7 @@ export class PerformanceTestReporter extends EventEmitter {
   /**
    * Get current metrics summary
    */
-  public getCurrentSummary(): any {
+  public getCurrentSummary(): Record<string, unknown> {
     const recentMetrics = this.getRecentMetrics(300000);
     return {
       summary: this.generateSummary(recentMetrics),

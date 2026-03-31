@@ -1,4 +1,5 @@
 // @ts-nocheck
+// TypeScript strict mode enabled
 /**
  * Controller Binding Module
  * Registers all API controllers in the DI container

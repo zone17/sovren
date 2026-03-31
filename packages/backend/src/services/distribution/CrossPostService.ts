@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Cross-Post Service
  * EPIC-009: Cross-platform publishing queue via BullMQ
@@ -12,7 +11,11 @@ import type {
 import type { IQueueService } from '../../interfaces/queue/IQueueService';
 import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
-import type { CrossPostEntry, SupportedPlatform } from '@shared/types/distribution';
+import type {
+  CrossPostEntry,
+  CrossPostStatus,
+  SupportedPlatform,
+} from '@shared/types/distribution';
 import type { IPlatformConnectionService } from '../../interfaces/distribution/IPlatformConnectionService';
 import { ValidationError, AuthorizationError } from '../../utils/errors';
 
@@ -30,7 +33,7 @@ const MAX_CROSS_POST_TARGETS = 10;
 export class CrossPostService implements ICrossPostService {
   private readonly db: ISupabaseClient;
   private readonly queueService: IQueueService;
-  private readonly platformService: IPlatformConnectionService;
+  private readonly _platformService: IPlatformConnectionService;
   private readonly logger: ILogger;
 
   constructor(
@@ -41,7 +44,7 @@ export class CrossPostService implements ICrossPostService {
   ) {
     this.db = db;
     this.queueService = queueService;
-    this.platformService = platformService;
+    this._platformService = platformService;
     this.logger = logger;
 
     // Ensure the queue exists
@@ -82,7 +85,7 @@ export class CrossPostService implements ICrossPostService {
     const batchJobId = uuidv4();
 
     // Build all cross_posts rows upfront
-    const crossPostRows = request.platforms.map((platform) => {
+    const crossPostRows = request.platforms.map(platform => {
       const scheduledAt = request.schedule?.[platform] || null;
       return {
         id: uuidv4(),
@@ -115,7 +118,12 @@ export class CrossPostService implements ICrossPostService {
     // stay permanently stuck in 'queued' status with no corresponding BullMQ job.
     const enqueuedIds: string[] = [];
     try {
-      for (const row of inserted || []) {
+      for (const row of (inserted || []) as Array<{
+        id: string;
+        platform: SupportedPlatform;
+        status: string;
+        scheduled_at: string | null;
+      }>) {
         let delay = 0;
         if (row.scheduled_at) {
           const scheduledTime = new Date(row.scheduled_at).getTime();
@@ -141,7 +149,9 @@ export class CrossPostService implements ICrossPostService {
       }
     } catch (err) {
       // Mark un-enqueued rows as 'failed' so they don't stay stuck in 'queued'
-      const failedIds = (inserted || []).map((r) => r.id).filter((id) => !enqueuedIds.includes(id));
+      const failedIds = ((inserted || []) as Array<{ id: string }>)
+        .map(r => r.id)
+        .filter(id => !enqueuedIds.includes(id));
 
       this.logger.error('[CrossPostService] Enqueue failed mid-loop; compensating', {
         enqueuedCount: enqueuedIds.length,
@@ -174,11 +184,18 @@ export class CrossPostService implements ICrossPostService {
       throw err;
     }
 
-    const entries: CrossPostEntry[] = (inserted || []).map((row) => ({
+    const entries: CrossPostEntry[] = (
+      (inserted || []) as Array<{
+        id: string;
+        platform: SupportedPlatform;
+        status: string;
+        scheduled_at: string | null;
+      }>
+    ).map(row => ({
       id: row.id,
       content_id: request.content_id,
       platform: row.platform,
-      status: row.status,
+      status: row.status as CrossPostStatus,
       platform_post_id: null,
       platform_url: null,
       scheduled_at: row.scheduled_at,
@@ -210,7 +227,7 @@ export class CrossPostService implements ICrossPostService {
       throw error;
     }
 
-    return data || [];
+    return (data || []) as unknown as CrossPostEntry[];
   }
 
   async cancel(creatorId: string, crossPostId: string): Promise<void> {

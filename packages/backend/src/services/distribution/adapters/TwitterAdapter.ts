@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Twitter/X Platform Adapter
  * EPIC-009: Twitter API v2 integration
@@ -76,14 +75,14 @@ export class TwitterAdapter extends BasePlatformAdapter {
       throw new Error(`Twitter token exchange failed: ${response.status}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as Record<string, unknown>;
     return {
-      access_token: data.access_token,
-      refresh_token: data.refresh_token || null,
+      access_token: data.access_token as string,
+      refresh_token: (data.refresh_token as string) || null,
       expires_at: data.expires_in
-        ? new Date(Date.now() + data.expires_in * 1000).toISOString()
+        ? new Date(Date.now() + (data.expires_in as number) * 1000).toISOString()
         : null,
-      scopes: (data.scope || '').split(' '),
+      scopes: ((data.scope as string) || '').split(' '),
     };
   }
 
@@ -104,14 +103,14 @@ export class TwitterAdapter extends BasePlatformAdapter {
       throw new Error(`Twitter token refresh failed: ${response.status}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as Record<string, unknown>;
     return {
-      access_token: data.access_token,
-      refresh_token: data.refresh_token || refreshToken,
+      access_token: data.access_token as string,
+      refresh_token: (data.refresh_token as string) || refreshToken,
       expires_at: data.expires_in
-        ? new Date(Date.now() + data.expires_in * 1000).toISOString()
+        ? new Date(Date.now() + (data.expires_in as number) * 1000).toISOString()
         : null,
-      scopes: (data.scope || '').split(' '),
+      scopes: ((data.scope as string) || '').split(' '),
     };
   }
 

@@ -76,7 +76,7 @@ interface Subscription {
   cancel_at_period_end: boolean;
   cancelled_at?: Date;
   trial_end?: Date;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 interface RecurringPayment {
@@ -322,7 +322,7 @@ export class SubscriptionManagementService extends EventEmitter {
     trial_days?: number;
   }): Promise<{
     subscription: Subscription;
-    initial_invoice?: any;
+    initial_invoice?: Record<string, unknown>;
   }> {
     const startTime = Date.now();
 
@@ -781,7 +781,7 @@ export class SubscriptionManagementService extends EventEmitter {
     return recurringPayment;
   }
 
-  private async processRecurringPayment(payment: any): Promise<void> {
+  private async processRecurringPayment(payment: Record<string, unknown>): Promise<void> {
     try {
       const subscription = payment.subscriptions;
       const tier = subscription.subscription_tiers;

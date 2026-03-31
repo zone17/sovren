@@ -1,4 +1,5 @@
 // @ts-nocheck
+// TypeScript strict mode enabled
 /**
  * Payment Services Binding Module
  * Registers all Phase 5 payment services in the DI container

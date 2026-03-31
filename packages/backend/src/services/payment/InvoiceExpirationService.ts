@@ -242,13 +242,13 @@ export class InvoiceExpirationService {
     });
 
     // Run initial check immediately
-    this.checkExpiredInvoices().catch((error) => {
+    this.checkExpiredInvoices().catch(error => {
       this.logger?.error('Initial expiration check failed', { error });
     });
 
     // Schedule periodic checks
     this.intervalId = setInterval(() => {
-      this.checkExpiredInvoices().catch((error) => {
+      this.checkExpiredInvoices().catch(error => {
         this.logger?.error('Scheduled expiration check failed', { error });
       });
     }, this.checkIntervalMs);
@@ -326,7 +326,10 @@ export class InvoiceExpirationService {
         errors: results.errors,
       };
 
-      this.logger?.info('Invoice expiration check complete', result);
+      this.logger?.info(
+        'Invoice expiration check complete',
+        result as unknown as Record<string, unknown>
+      );
 
       return result;
     } catch (error) {

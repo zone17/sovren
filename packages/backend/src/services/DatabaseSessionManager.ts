@@ -47,18 +47,7 @@ interface SessionRow {
   metadata?: SessionMetadata;
 }
 
-/**
- * Database schema for session_activities table
- */
-interface SessionActivityRow {
-  id: string;
-  session_id: string;
-  action: string;
-  ip_address?: string;
-  user_agent?: string;
-  metadata?: Record<string, any>;
-  created_at: string;
-}
+// SessionActivityRow schema documented in schema.sql — not referenced in code
 
 /**
  * Database Session Manager Configuration
@@ -207,7 +196,7 @@ export class DatabaseSessionManager {
       return [];
     }
 
-    return data.map((row) => this.mapRowToSession(row));
+    return data.map(row => this.mapRowToSession(row));
   }
 
   /**
@@ -409,7 +398,7 @@ export class DatabaseSessionManager {
       return [];
     }
 
-    return data.map((row) => this.mapRowToSession(row));
+    return data.map(row => this.mapRowToSession(row));
   }
 
   /**
@@ -492,7 +481,7 @@ export class DatabaseSessionManager {
       return [];
     }
 
-    return data.map((row) => ({
+    return data.map(row => ({
       id: row.id,
       sessionId: row.session_id,
       action: row.action,

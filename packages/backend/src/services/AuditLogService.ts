@@ -1,4 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 // TODO(SOV-TS-002): Full TS cleanup needed (timestamp nullability, storage interface types)
 /**
@@ -68,11 +67,13 @@ class InMemoryAuditStorage implements IAuditStorage {
     }
 
     if (query.startDate) {
-      results = results.filter(e => e.timestamp >= query.startDate!);
+      const startDate = query.startDate;
+      results = results.filter(e => e.timestamp >= startDate);
     }
 
     if (query.endDate) {
-      results = results.filter(e => e.timestamp <= query.endDate!);
+      const endDate = query.endDate;
+      results = results.filter(e => e.timestamp <= endDate);
     }
 
     if (query.outcome) {

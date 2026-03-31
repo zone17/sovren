@@ -1,4 +1,3 @@
-// @ts-nocheck — DI framework generics (readonly tuples, string literal unions) require full refactor
 /**
  * Service Type Identifiers
  * Central registry of all service tokens for dependency injection
@@ -695,7 +694,8 @@ export const SERVICE_DEPENDENCIES = {
  * Get dependencies for a given service name
  */
 export function getServiceDependencies(serviceName: string): string[] {
-  return SERVICE_DEPENDENCIES[serviceName as keyof typeof SERVICE_DEPENDENCIES] || [];
+  const deps = SERVICE_DEPENDENCIES[serviceName as keyof typeof SERVICE_DEPENDENCIES];
+  return deps ? [...deps] : [];
 }
 
 /**
@@ -766,7 +766,7 @@ export const SERVICE_TAGS = {
  * Get service lifetime for a given service name
  */
 export function getServiceLifetime(serviceName: string): 'singleton' | 'transient' {
-  if (SERVICE_LIFETIMES.singleton.includes(serviceName)) {
+  if ((SERVICE_LIFETIMES.singleton as readonly string[]).includes(serviceName)) {
     return 'singleton';
   }
   return 'transient';
@@ -776,7 +776,7 @@ export function getServiceLifetime(serviceName: string): 'singleton' | 'transien
  * Get all services with a specific tag
  */
 export function getServicesByTag(tag: keyof typeof SERVICE_TAGS): string[] {
-  return SERVICE_TAGS[tag] || [];
+  return [...(SERVICE_TAGS[tag] || [])];
 }
 
 /**

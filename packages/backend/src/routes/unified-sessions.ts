@@ -1,4 +1,4 @@
-// @ts-nocheck — TODO(SOV-TS-001): Full TS cleanup needed (asyncHandler return types, Session type mismatches)
+// @ts-nocheck
 /**
  * 🔐 US-311: Unified Session Management API Routes
  * WHY: RESTful API for unified NOSTR session management across devices
@@ -560,7 +560,7 @@ router.get(
       return res.status(200).json({
         success: true,
         data: {
-          sessions: sessions.map((s) => ({
+          sessions: sessions.map(s => ({
             id: s.id,
             device_id: s.device_id,
             device_info: s.device_info,
@@ -745,7 +745,7 @@ router.get('/health', async (req: Request, res: Response) => {
 // ERROR HANDLER
 // =====================================================
 
-router.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+router.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
   logger.error('Unified session route error', { error: err });
 
   return res.status(500).json({

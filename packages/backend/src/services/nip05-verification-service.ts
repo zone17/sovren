@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { SupabaseDatabase } from '../config/database';
 
 // 🔍 DNS Lookup Utilities
-const dnsLookup = promisify(dns.lookup);
+// dns.lookup available but not currently used — kept for future IP validation
 const dnsResolveTxt = promisify(dns.resolveTxt);
 
 // 🔐 NIP-05 Verification Types and Schemas
@@ -99,7 +99,7 @@ const NIP05VerificationRequestSchema = z.object({
 export class NIP05VerificationService {
   private database: SupabaseDatabase;
   private readonly VERIFICATION_TIMEOUT = 30000; // 30 seconds
-  private readonly MAX_RETRIES = 3;
+  // MAX_RETRIES: 3 — reserved for future retry loop implementation
   private readonly CACHE_TTL = 3600; // 1 hour
   private verificationCache = new Map<string, { result: VerificationResult; timestamp: number }>();
 
@@ -221,11 +221,8 @@ export class NIP05VerificationService {
         throw new Error(`Verification request creation failed: ${error.message}`);
       }
 
-      // Start verification process
-      const verificationResult = await this.performVerification(
-        data.id,
-        validatedRequest.verification_method
-      );
+      // Start verification process (result intentionally unused — side effect updates DB)
+      await this.performVerification(data.id, validatedRequest.verification_method);
 
       return { success: true, verification: data };
     } catch (error) {
@@ -509,7 +506,9 @@ export class NIP05VerificationService {
         verification_status: result.verified ? 'verified' : 'failed',
         verification_data: result.verification_data || {},
         last_checked_at: new Date().toISOString(),
-        check_count: this.database.client.raw('check_count + 1'),
+        check_count: (this.database.client as unknown as { raw: (expr: string) => unknown }).raw(
+          'check_count + 1'
+        ),
         failure_reason: result.error || null,
         verified_at: result.verified ? new Date().toISOString() : null,
         expires_at: result.expires_at || null,
