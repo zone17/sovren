@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Content Moderation Service Implementation
  * User Story: US-E5-013
@@ -184,7 +183,7 @@ export class ContentModerationService implements IContentModerationService {
    * Initialize default moderation rules
    */
   private initializeRules(): void {
-    this.defaultRules.forEach((rule) => {
+    this.defaultRules.forEach(rule => {
       this.rules.set(rule.id, rule);
     });
     this.logger.info(`Initialized ${this.rules.size} moderation rules`);
@@ -274,22 +273,16 @@ export class ContentModerationService implements IContentModerationService {
 
       // Audit log
       await this.auditLog.log({
-        actor: {
-          type: 'system',
-          id: 'moderation-service',
-          name: 'Content Moderation Service',
-        },
         action: 'content.moderated',
-        resource: {
-          type: 'content',
-          id: contentId,
-        },
-        outcome: result.status === ModerationStatus.APPROVED ? 'success' : 'flagged',
-        details: {
+        entityType: 'content',
+        entityId: contentId,
+        userId: 'moderation-service',
+        metadata: {
           moderationId,
-          action: result.action,
+          moderationAction: result.action,
           severity: result.severity,
           confidence: result.confidence,
+          outcome: result.status === ModerationStatus.APPROVED ? 'success' : 'flagged',
         },
       });
 
@@ -389,20 +382,15 @@ export class ContentModerationService implements IContentModerationService {
 
     // Audit log
     await this.auditLog.log({
-      actor: {
-        type: 'user',
-        id: reviewerId,
-      },
       action: 'content.reviewed',
-      resource: {
-        type: 'content',
-        id: originalDecision.contentId,
-      },
-      outcome: 'success',
-      details: {
+      entityType: 'content',
+      entityId: originalDecision.contentId,
+      userId: reviewerId,
+      metadata: {
         moderationId,
         decision,
         notes: options?.notes,
+        outcome: 'success',
       },
     });
 
@@ -482,20 +470,15 @@ export class ContentModerationService implements IContentModerationService {
 
     // Audit log
     await this.auditLog.log({
-      actor: {
-        type: 'user',
-        id: userId,
-      },
       action: 'moderation.appeal.submitted',
-      resource: {
-        type: 'content',
-        id: decision.contentId,
-      },
-      outcome: 'success',
-      details: {
+      entityType: 'content',
+      entityId: decision.contentId,
+      userId,
+      metadata: {
         appealId: appeal.id,
         moderationId,
         reason,
+        outcome: 'success',
       },
     });
 
@@ -578,20 +561,15 @@ export class ContentModerationService implements IContentModerationService {
 
     // Audit log
     await this.auditLog.log({
-      actor: {
-        type: 'user',
-        id: reviewerId,
-      },
       action: 'moderation.appeal.processed',
-      resource: {
-        type: 'content',
-        id: appeal.contentId,
-      },
-      outcome: approved ? 'approved' : 'rejected',
-      details: {
+      entityType: 'content',
+      entityId: appeal.contentId,
+      userId: reviewerId,
+      metadata: {
         appealId,
         approved,
         notes,
+        outcome: approved ? 'approved' : 'rejected',
       },
     });
 
@@ -641,41 +619,39 @@ export class ContentModerationService implements IContentModerationService {
 
     // Apply filters
     if (query.contentId) {
-      results = results.filter((d) => d.contentId === query.contentId);
+      results = results.filter(d => d.contentId === query.contentId);
     }
 
     if (query.status && query.status.length > 0) {
-      results = results.filter((d) => query.status!.includes(d.result.status));
+      results = results.filter(d => query.status!.includes(d.result.status));
     }
 
     if (query.categories && query.categories.length > 0) {
-      results = results.filter((d) =>
-        d.result.categories.some((c) => query.categories!.includes(c))
-      );
+      results = results.filter(d => d.result.categories.some(c => query.categories!.includes(c)));
     }
 
     if (query.severityMin !== undefined) {
-      results = results.filter((d) => d.result.severity >= query.severityMin!);
+      results = results.filter(d => d.result.severity >= query.severityMin!);
     }
 
     if (query.severityMax !== undefined) {
-      results = results.filter((d) => d.result.severity <= query.severityMax!);
+      results = results.filter(d => d.result.severity <= query.severityMax!);
     }
 
     if (query.startDate) {
-      results = results.filter((d) => d.timestamp >= query.startDate!);
+      results = results.filter(d => d.timestamp >= query.startDate!);
     }
 
     if (query.endDate) {
-      results = results.filter((d) => d.timestamp <= query.endDate!);
+      results = results.filter(d => d.timestamp <= query.endDate!);
     }
 
     if (query.reviewerId) {
-      results = results.filter((d) => d.reviewedBy === query.reviewerId);
+      results = results.filter(d => d.reviewedBy === query.reviewerId);
     }
 
     if (query.appealable !== undefined) {
-      results = results.filter((d) => d.appealable === query.appealable);
+      results = results.filter(d => d.appealable === query.appealable);
     }
 
     // Sort by timestamp descending
@@ -695,19 +671,19 @@ export class ContentModerationService implements IContentModerationService {
     let results = Array.from(this.appeals.values());
 
     if (query.userId) {
-      results = results.filter((a) => a.userId === query.userId);
+      results = results.filter(a => a.userId === query.userId);
     }
 
     if (query.status && query.status.length > 0) {
-      results = results.filter((a) => query.status!.includes(a.status));
+      results = results.filter(a => query.status!.includes(a.status));
     }
 
     if (query.startDate) {
-      results = results.filter((a) => a.submittedAt >= query.startDate!);
+      results = results.filter(a => a.submittedAt >= query.startDate!);
     }
 
     if (query.endDate) {
-      results = results.filter((a) => a.submittedAt <= query.endDate!);
+      results = results.filter(a => a.submittedAt <= query.endDate!);
     }
 
     // Sort by submission date descending
@@ -730,7 +706,7 @@ export class ContentModerationService implements IContentModerationService {
     let items = Array.from(this.queue.values());
 
     if (priority) {
-      items = items.filter((item) => item.priority === priority);
+      items = items.filter(item => item.priority === priority);
     }
 
     // Sort by priority (urgent > high > medium > low) then by flagged date
@@ -829,11 +805,11 @@ export class ContentModerationService implements IContentModerationService {
     this.rules.set(rule.id, rule);
 
     await this.auditLog.log({
-      actor: { type: 'system', id: 'moderation-service' },
       action: 'moderation.rule.added',
-      resource: { type: 'moderation-rule', id: rule.id },
-      outcome: 'success',
-      details: { rule },
+      entityType: 'moderation-rule',
+      entityId: rule.id,
+      userId: 'moderation-service',
+      metadata: { rule, outcome: 'success' },
     });
 
     this.logger.info('Moderation rule added', { ruleId: rule.id, ruleName: rule.name });
@@ -846,10 +822,11 @@ export class ContentModerationService implements IContentModerationService {
     this.rules.delete(ruleId);
 
     await this.auditLog.log({
-      actor: { type: 'system', id: 'moderation-service' },
       action: 'moderation.rule.removed',
-      resource: { type: 'moderation-rule', id: ruleId },
-      outcome: 'success',
+      entityType: 'moderation-rule',
+      entityId: ruleId,
+      userId: 'moderation-service',
+      metadata: { outcome: 'success' },
     });
 
     this.logger.info('Moderation rule removed', { ruleId });
@@ -874,11 +851,11 @@ export class ContentModerationService implements IContentModerationService {
     rule.enabled = enabled;
 
     await this.auditLog.log({
-      actor: { type: 'system', id: 'moderation-service' },
       action: 'moderation.rule.toggled',
-      resource: { type: 'moderation-rule', id: ruleId },
-      outcome: 'success',
-      details: { enabled },
+      entityType: 'moderation-rule',
+      entityId: ruleId,
+      userId: 'moderation-service',
+      metadata: { enabled, outcome: 'success' },
     });
 
     this.logger.info('Moderation rule toggled', { ruleId, enabled });
@@ -889,7 +866,7 @@ export class ContentModerationService implements IContentModerationService {
    */
   async getStatistics(startDate: Date, endDate: Date): Promise<ModerationStats> {
     const decisions = Array.from(this.decisions.values()).filter(
-      (d) => d.timestamp >= startDate && d.timestamp <= endDate
+      d => d.timestamp >= startDate && d.timestamp <= endDate
     );
 
     const stats: ModerationStats = {
@@ -944,12 +921,12 @@ export class ContentModerationService implements IContentModerationService {
 
     // Count appeals
     const appeals = Array.from(this.appeals.values()).filter(
-      (a) => a.submittedAt >= startDate && a.submittedAt <= endDate
+      a => a.submittedAt >= startDate && a.submittedAt <= endDate
     );
 
     stats.appeals = appeals.length;
-    stats.appealsApproved = appeals.filter((a) => a.status === AppealStatus.APPROVED).length;
-    stats.appealsRejected = appeals.filter((a) => a.status === AppealStatus.REJECTED).length;
+    stats.appealsApproved = appeals.filter(a => a.status === AppealStatus.APPROVED).length;
+    stats.appealsRejected = appeals.filter(a => a.status === AppealStatus.REJECTED).length;
 
     // Calculate average response time
     if (responseTimesCount > 0) {
@@ -1030,7 +1007,7 @@ export class ContentModerationService implements IContentModerationService {
    */
   private async analyzeWithRules(
     content: string,
-    metadata?: Record<string, any>
+    _metadata?: Record<string, any>
   ): Promise<ContentAnalysisResult> {
     const violations: Array<{
       rule: ModerationRule;
@@ -1063,12 +1040,12 @@ export class ContentModerationService implements IContentModerationService {
     );
 
     return {
-      categories: violations.map((v) => v.rule.category),
+      categories: violations.map(v => v.rule.category),
       confidence: 1.0, // Rule-based checks are deterministic
       severity: maxSeverity,
       details: {
         rulesChecked: this.rules.size,
-        violations: violations.map((v) => ({
+        violations: violations.map(v => ({
           rule: v.rule.name,
           category: v.rule.category,
           matchCount: v.matches.length,
@@ -1362,7 +1339,7 @@ export class ContentModerationService implements IContentModerationService {
       harassment: ModerationCategory.HARASSMENT,
     };
 
-    return aiCategories.map((cat) => mapping[cat]).filter((cat) => cat !== undefined);
+    return aiCategories.map(cat => mapping[cat]).filter(cat => cat !== undefined);
   }
 
   /**
