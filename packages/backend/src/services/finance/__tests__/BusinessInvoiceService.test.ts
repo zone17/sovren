@@ -430,6 +430,13 @@ describe('BusinessInvoiceService', () => {
       expect(result).toHaveProperty('totalSats', 10000);
       expect(result).toHaveProperty('status', 'draft');
       expect(result).toHaveProperty('createdAt', '2026-01-01');
+      expect(result.lineItems).toEqual(expect.any(Array));
+      expect(result.dueDate).toBeUndefined(); // null → undefined
+      expect(result.recurringInterval).toBeUndefined();
+      expect(result.recurrenceEndDate).toBeUndefined();
+      expect(result.lnurlPay).toBeUndefined();
+      expect(result.lightningPaymentLink).toBeUndefined();
+      expect(result.paidAt).toBeUndefined();
     });
 
     it('throws "Invoice not found" when data is null and error is null', async () => {

@@ -174,6 +174,7 @@ describe('DatabaseSessionManager', () => {
       const session = await sessionManager.createSession(mockPubkey, mockMetadata);
       expect(session.token_hash).toBeDefined();
       expect(session.token_hash).toHaveLength(64);
+      expect(session.token_hash).not.toBe(session.token);
     });
 
     it('should log session creation activity', async () => {

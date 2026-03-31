@@ -1132,8 +1132,8 @@ export class WebhookService implements IWebhookService {
    * CIRCUIT BREAKER
    */
 
-  async getCircuitState(endpointId: string): Promise<CircuitBreakerState> {
-    return this.circuitBreaker.getState(endpointId);
+  async getCircuitState(endpointId: string): Promise<'open' | 'closed' | 'half_open'> {
+    return this.circuitBreaker.getState(endpointId) as 'open' | 'closed' | 'half_open';
   }
 
   async openCircuit(endpointId: string): Promise<void> {

@@ -68,15 +68,15 @@ interface SessionRow {
 }
 
 /**
- * Database schema for session_activities table
+ * Domain type for session activities (camelCase)
  */
-interface SessionActivityRow {
+interface SessionActivityResult {
   id: string;
-  session_id: string;
+  sessionId: string;
   action: string;
-  created_at: string;
-  ip_address?: string;
-  user_agent?: string;
+  createdAt: string;
+  ipAddress?: string;
+  userAgent?: string;
   metadata?: Record<string, unknown>;
 }
 
@@ -123,7 +123,10 @@ export class DatabaseSessionManager {
   /**
    * Create new session
    */
-  public async createSession(pubkey: string, metadata: SessionMetadata): Promise<Session> {
+  public async createSession(
+    pubkey: string,
+    metadata: SessionMetadata
+  ): Promise<Session & { token: string }> {
     // Generate secure session token
     const token = this.generateToken();
     const tokenHash = this.hashToken(token);
@@ -190,8 +193,11 @@ export class DatabaseSessionManager {
       });
     }
 
-    // Return session (token is stored hashed; plain token should be returned separately)
-    return session;
+    // Return session with token (only time token is returned in plain text)
+    return {
+      ...session,
+      token,
+    };
   }
 
   /**
@@ -495,7 +501,7 @@ export class DatabaseSessionManager {
   public async getSessionActivities(
     sessionId: string,
     limit: number = 100
-  ): Promise<SessionActivityRow[]> {
+  ): Promise<SessionActivityResult[]> {
     const { data, error } = await this.supabase
       .from(this.activityTableName)
       .select('*')
@@ -509,11 +515,11 @@ export class DatabaseSessionManager {
 
     return data.map((row: Record<string, unknown>) => ({
       id: row.id as string,
-      session_id: row.session_id as string,
+      sessionId: row.session_id as string,
       action: row.action as string,
-      created_at: row.created_at as string,
-      ip_address: row.ip_address as string | undefined,
-      user_agent: row.user_agent as string | undefined,
+      createdAt: row.created_at as string,
+      ipAddress: row.ip_address as string | undefined,
+      userAgent: row.user_agent as string | undefined,
       metadata: row.metadata as Record<string, unknown> | undefined,
     }));
   }
