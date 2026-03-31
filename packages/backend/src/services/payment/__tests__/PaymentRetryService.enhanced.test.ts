@@ -212,7 +212,7 @@ describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
         );
 
         // Assert: All delays should be capped
-        delays.forEach((delay) => {
+        delays.forEach(delay => {
           expect(delay).toBeGreaterThanOrEqual(0);
           expect(delay).toBeLessThanOrEqual(60000);
         });
@@ -264,7 +264,7 @@ describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
         expect(uniqueDelays.size).toBeGreaterThan(1);
 
         // Assert: All delays within valid range
-        delays.forEach((delay) => {
+        delays.forEach(delay => {
           expect(delay).toBeGreaterThanOrEqual(0);
           expect(delay).toBeLessThanOrEqual(4000); // 1000 * 2^2
         });
@@ -357,13 +357,13 @@ describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
         const bucketSize = maxDelay / 10;
         const buckets = Array(10).fill(0);
 
-        samples.forEach((delay) => {
+        samples.forEach(delay => {
           const bucketIndex = Math.min(Math.floor(delay / bucketSize), 9);
           buckets[bucketIndex]++;
         });
 
         // Each bucket should have roughly 10% of samples (100 ± 50)
-        buckets.forEach((count) => {
+        buckets.forEach(count => {
           expect(count).toBeGreaterThan(50);
           expect(count).toBeLessThan(150);
         });
@@ -398,7 +398,7 @@ describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
         });
 
         // Assert: Should have circuit breaker enabled
-        const circuitState = (retryService as any).getCircuitBreakerState();
+        const circuitState = (retryService as any)._getCircuitBreakerState();
         expect(circuitState).toBeDefined();
         expect(circuitState.isOpen).toBe(false);
         expect(circuitState.failureCount).toBe(0);
@@ -457,14 +457,14 @@ describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
 
       it('should increment failure count on retry failure', () => {
         // Arrange: Initial state
-        let circuitState = (retryService as any).getCircuitBreakerState();
+        let circuitState = (retryService as any)._getCircuitBreakerState();
         expect(circuitState.failureCount).toBe(0);
 
         // Act: Record failure
         (retryService as any).recordRetryFailure();
 
         // Assert: Failure count incremented
-        circuitState = (retryService as any).getCircuitBreakerState();
+        circuitState = (retryService as any)._getCircuitBreakerState();
         expect(circuitState.failureCount).toBe(1);
       });
 
@@ -475,7 +475,7 @@ describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
         }
 
         // Assert: All failures tracked
-        const circuitState = (retryService as any).getCircuitBreakerState();
+        const circuitState = (retryService as any)._getCircuitBreakerState();
         expect(circuitState.failureCount).toBe(3);
       });
 
@@ -486,7 +486,7 @@ describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
         }
 
         // Assert: Circuit still closed
-        const circuitState = (retryService as any).getCircuitBreakerState();
+        const circuitState = (retryService as any)._getCircuitBreakerState();
         expect(circuitState.isOpen).toBe(false);
         expect(circuitState.failureCount).toBe(4);
       });
@@ -498,7 +498,7 @@ describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
         }
 
         // Assert: Circuit opened
-        const circuitState = (retryService as any).getCircuitBreakerState();
+        const circuitState = (retryService as any)._getCircuitBreakerState();
         expect(circuitState.isOpen).toBe(true);
         expect(circuitState.failureCount).toBe(5);
       });
@@ -535,14 +535,14 @@ describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
           (retryService as any).recordRetryFailure();
         }
 
-        let circuitState = (retryService as any).getCircuitBreakerState();
+        let circuitState = (retryService as any)._getCircuitBreakerState();
         expect(circuitState.failureCount).toBe(3);
 
         // Act: Record success
         (retryService as any).recordRetrySuccess();
 
         // Assert: Failure count reset
-        circuitState = (retryService as any).getCircuitBreakerState();
+        circuitState = (retryService as any)._getCircuitBreakerState();
         expect(circuitState.failureCount).toBe(0);
         expect(circuitState.isOpen).toBe(false);
       });
@@ -553,14 +553,14 @@ describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
           (retryService as any).recordRetryFailure();
         }
 
-        let circuitState = (retryService as any).getCircuitBreakerState();
+        let circuitState = (retryService as any)._getCircuitBreakerState();
         expect(circuitState.isOpen).toBe(true);
 
         // Act: Successful retry
         (retryService as any).recordRetrySuccess();
 
         // Assert: Circuit closed
-        circuitState = (retryService as any).getCircuitBreakerState();
+        circuitState = (retryService as any)._getCircuitBreakerState();
         expect(circuitState.isOpen).toBe(false);
         expect(circuitState.failureCount).toBe(0);
       });
@@ -658,12 +658,12 @@ describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
           (retryService as any).recordRetryFailure();
         }
 
-        let circuitState = (retryService as any).getCircuitBreakerState();
+        let circuitState = (retryService as any)._getCircuitBreakerState();
         expect(circuitState.isOpen).toBe(true);
 
         // Act: Manually set the openedAt time to 1 minute ago
         const oneMinuteAgo = new Date(Date.now() - 60000);
-        (retryService as any).setCircuitBreakerState({
+        (retryService as any)._setCircuitBreakerState({
           openedAt: oneMinuteAgo,
         });
 
@@ -671,7 +671,7 @@ describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
         const isAllowed = (retryService as any).isRetryAllowed();
 
         // Check state after timeout
-        circuitState = (retryService as any).getCircuitBreakerState();
+        circuitState = (retryService as any)._getCircuitBreakerState();
 
         // Assert: Should be half-open (allows test retry)
         expect(circuitState.isHalfOpen).toBe(true);
@@ -680,7 +680,7 @@ describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
 
       it('should allow one retry attempt in half-open state', () => {
         // Arrange: Circuit in half-open state
-        (retryService as any).setCircuitBreakerState({ isHalfOpen: true });
+        (retryService as any)._setCircuitBreakerState({ isHalfOpen: true });
 
         // Act & Assert: Should allow retry
         const isAllowed = (retryService as any).isRetryAllowed();
@@ -689,7 +689,7 @@ describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
 
       it('should close circuit if half-open retry succeeds', () => {
         // Arrange: Half-open state
-        (retryService as any).setCircuitBreakerState({
+        (retryService as any)._setCircuitBreakerState({
           isHalfOpen: true,
           failureCount: 5,
         });
@@ -698,7 +698,7 @@ describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
         (retryService as any).recordRetrySuccess();
 
         // Assert: Circuit fully closed
-        const circuitState = (retryService as any).getCircuitBreakerState();
+        const circuitState = (retryService as any)._getCircuitBreakerState();
         expect(circuitState.isOpen).toBe(false);
         expect(circuitState.isHalfOpen).toBe(false);
         expect(circuitState.failureCount).toBe(0);
@@ -706,7 +706,7 @@ describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
 
       it('should re-open circuit if half-open retry fails', () => {
         // Arrange: Half-open state
-        (retryService as any).setCircuitBreakerState({
+        (retryService as any)._setCircuitBreakerState({
           isHalfOpen: true,
           failureCount: 5,
         });
@@ -715,7 +715,7 @@ describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
         (retryService as any).recordRetryFailure();
 
         // Assert: Circuit re-opened
-        const circuitState = (retryService as any).getCircuitBreakerState();
+        const circuitState = (retryService as any)._getCircuitBreakerState();
         expect(circuitState.isOpen).toBe(true);
         expect(circuitState.isHalfOpen).toBe(false);
       });
