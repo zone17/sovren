@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ContentSearchService
  *
@@ -10,7 +9,7 @@
  * @coverage 95%+
  */
 
-import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
+import { Client as ElasticsearchClient, type ClientOptions } from '@elastic/elasticsearch';
 import type {
   IContentSearchService,
   SearchQuery,
@@ -29,6 +28,29 @@ import type { ILogger } from '../../interfaces/shared/ILogger';
 import { createHash } from 'crypto';
 
 /**
+ * Convert our config type to the ES v9 ClientOptions
+ */
+function toClientOptions(config: ElasticsearchConfig): ClientOptions {
+  const opts: ClientOptions = {
+    node: config.node,
+    maxRetries: config.maxRetries,
+    requestTimeout: config.requestTimeout,
+    sniffOnStart: config.sniffOnStart,
+  };
+  if (config.auth) {
+    if (config.auth.apiKey) {
+      opts.auth = { apiKey: config.auth.apiKey };
+    } else if (config.auth.username && config.auth.password) {
+      opts.auth = { username: config.auth.username, password: config.auth.password };
+    }
+  }
+  if (config.cloud) {
+    opts.cloud = config.cloud;
+  }
+  return opts;
+}
+
+/**
  * Elasticsearch-powered content search service with caching
  */
 export class ContentSearchService implements IContentSearchService {
@@ -43,8 +65,8 @@ export class ContentSearchService implements IContentSearchService {
     private readonly logger: ILogger,
     config: ElasticsearchConfig
   ) {
-    this.esClient = new ElasticsearchClient(config);
-    this.initializeIndex().catch((error) => {
+    this.esClient = new ElasticsearchClient(toClientOptions(config));
+    this.initializeIndex().catch(error => {
       this.logger.error('Failed to initialize Elasticsearch index', error);
     });
   }
@@ -61,79 +83,77 @@ export class ContentSearchService implements IContentSearchService {
       if (!indexExists) {
         await this.esClient.indices.create({
           index: this.indexName,
-          body: {
-            settings: {
-              number_of_shards: 2,
-              number_of_replicas: 1,
-              analysis: {
-                analyzer: {
-                  content_analyzer: {
-                    type: 'custom',
-                    tokenizer: 'standard',
-                    filter: ['lowercase', 'stop', 'porter_stem', 'asciifolding'],
-                  },
-                  autocomplete_analyzer: {
-                    type: 'custom',
-                    tokenizer: 'edge_ngram_tokenizer',
-                    filter: ['lowercase'],
-                  },
+          settings: {
+            number_of_shards: 2,
+            number_of_replicas: 1,
+            analysis: {
+              analyzer: {
+                content_analyzer: {
+                  type: 'custom',
+                  tokenizer: 'standard',
+                  filter: ['lowercase', 'stop', 'porter_stem', 'asciifolding'],
                 },
-                tokenizer: {
-                  edge_ngram_tokenizer: {
-                    type: 'edge_ngram',
-                    min_gram: 2,
-                    max_gram: 10,
-                    token_chars: ['letter', 'digit'],
-                  },
+                autocomplete_analyzer: {
+                  type: 'custom',
+                  tokenizer: 'edge_ngram_tokenizer',
+                  filter: ['lowercase'],
+                },
+              },
+              tokenizer: {
+                edge_ngram_tokenizer: {
+                  type: 'edge_ngram',
+                  min_gram: 2,
+                  max_gram: 10,
+                  token_chars: ['letter', 'digit'],
                 },
               },
             },
-            mappings: {
-              properties: {
-                id: { type: 'keyword' },
-                title: {
-                  type: 'text',
-                  analyzer: 'content_analyzer',
-                  fields: {
-                    raw: { type: 'keyword' },
-                    suggest: {
-                      type: 'completion',
-                      analyzer: 'simple',
-                    },
-                    autocomplete: {
-                      type: 'text',
-                      analyzer: 'autocomplete_analyzer',
-                      search_analyzer: 'standard',
-                    },
+          },
+          mappings: {
+            properties: {
+              id: { type: 'keyword' },
+              title: {
+                type: 'text',
+                analyzer: 'content_analyzer',
+                fields: {
+                  raw: { type: 'keyword' },
+                  suggest: {
+                    type: 'completion',
+                    analyzer: 'simple',
+                  },
+                  autocomplete: {
+                    type: 'text',
+                    analyzer: 'autocomplete_analyzer',
+                    search_analyzer: 'standard',
                   },
                 },
-                content: {
-                  type: 'text',
-                  analyzer: 'content_analyzer',
-                },
-                summary: {
-                  type: 'text',
-                  analyzer: 'content_analyzer',
-                },
-                authorId: { type: 'keyword' },
-                tags: { type: 'keyword' },
-                category: { type: 'keyword' },
-                status: { type: 'keyword' },
-                visibility: { type: 'keyword' },
-                publishedAt: { type: 'date' },
-                createdAt: { type: 'date' },
-                updatedAt: { type: 'date' },
-                slug: { type: 'keyword' },
-                version: { type: 'integer' },
-                metadata: {
-                  properties: {
-                    wordCount: { type: 'integer' },
-                    readingTime: { type: 'integer' },
-                    excerpt: { type: 'text' },
-                    hashtags: { type: 'keyword' },
-                    language: { type: 'keyword' },
-                    hasMedia: { type: 'boolean' },
-                  },
+              },
+              content: {
+                type: 'text',
+                analyzer: 'content_analyzer',
+              },
+              summary: {
+                type: 'text',
+                analyzer: 'content_analyzer',
+              },
+              authorId: { type: 'keyword' },
+              tags: { type: 'keyword' },
+              category: { type: 'keyword' },
+              status: { type: 'keyword' },
+              visibility: { type: 'keyword' },
+              publishedAt: { type: 'date' },
+              createdAt: { type: 'date' },
+              updatedAt: { type: 'date' },
+              slug: { type: 'keyword' },
+              version: { type: 'integer' },
+              metadata: {
+                properties: {
+                  wordCount: { type: 'integer' },
+                  readingTime: { type: 'integer' },
+                  excerpt: { type: 'text' },
+                  hashtags: { type: 'keyword' },
+                  language: { type: 'keyword' },
+                  hasMedia: { type: 'boolean' },
                 },
               },
             },
@@ -206,25 +226,26 @@ export class ContentSearchService implements IContentSearchService {
 
       const response = await this.esClient.search({
         index: this.indexName,
-        body: {
-          suggest: {
-            content_suggest: {
-              prefix,
-              completion: {
-                field,
-                size: 10,
-                skip_duplicates: true,
-                fuzzy: {
-                  fuzziness: 'AUTO',
-                },
+        suggest: {
+          content_suggest: {
+            prefix,
+            completion: {
+              field,
+              size: 10,
+              skip_duplicates: true,
+              fuzzy: {
+                fuzziness: 'AUTO',
               },
             },
           },
         },
       });
 
-      const suggestions = response.body.suggest?.content_suggest?.[0]?.options || [];
-      return suggestions.map((s: any) => s.text);
+      const suggest = response.suggest as
+        | Record<string, Array<{ options: Array<{ text: string }> }>>
+        | undefined;
+      const suggestions = suggest?.content_suggest?.[0]?.options || [];
+      return suggestions.map(s => s.text);
     } catch (error) {
       this.logger.error('Suggest failed', { prefix, error });
       return [];
@@ -243,7 +264,7 @@ export class ContentSearchService implements IContentSearchService {
       await this.esClient.index({
         index: this.indexName,
         id: document.id,
-        body: this.prepareDocumentForIndexing(document),
+        document: this.prepareDocumentForIndexing(document),
         refresh: 'wait_for',
       });
 
@@ -267,10 +288,8 @@ export class ContentSearchService implements IContentSearchService {
       await this.esClient.update({
         index: this.indexName,
         id,
-        body: {
-          doc: this.prepareDocumentForIndexing(updates),
-          doc_as_upsert: true,
-        },
+        doc: this.prepareDocumentForIndexing(updates),
+        doc_as_upsert: true,
         refresh: 'wait_for',
       });
 
@@ -317,20 +336,20 @@ export class ContentSearchService implements IContentSearchService {
         return;
       }
 
-      const operations = documents.flatMap((doc) => [
+      const operations = documents.flatMap(doc => [
         { index: { _index: this.indexName, _id: doc.id } },
         this.prepareDocumentForIndexing(doc),
       ]);
 
       const result = await this.esClient.bulk({
-        body: operations,
+        operations,
         refresh: 'wait_for',
       });
 
-      if (result.body.errors) {
-        const errors = result.body.items
-          .filter((item: any) => item.index?.error)
-          .map((item: any) => item.index.error);
+      if (result.errors) {
+        const errors = result.items
+          .filter(item => item.index?.error)
+          .map(item => item.index?.error);
 
         this.logger.error('Bulk indexing had errors', { errors, count: errors.length });
         throw new Error(`Bulk indexing failed: ${errors.length} errors`);
@@ -384,32 +403,30 @@ export class ContentSearchService implements IContentSearchService {
       index: this.indexName,
       from: (query.page - 1) * query.pageSize,
       size: query.pageSize,
-      body: {
-        query: this.buildQuery(query),
-        track_total_hits: true,
-      },
+      query: this.buildQuery(query),
+      track_total_hits: true,
     };
 
     // Add aggregations for faceted search
     if (query.facets && query.facets.length > 0) {
-      esQuery.body.aggs = this.buildAggregations(query.facets);
+      esQuery.aggs = this.buildAggregations(query.facets);
     }
 
     // Add highlighting
     if (query.highlight) {
-      esQuery.body.highlight = this.buildHighlight(query.highlight);
+      esQuery.highlight = this.buildHighlight(query.highlight);
     }
 
     // Add sorting
     if (query.sort && query.sort.length > 0) {
-      esQuery.body.sort = this.buildSort(query.sort);
+      esQuery.sort = this.buildSort(query.sort);
     } else {
-      esQuery.body.sort = [{ _score: { order: 'desc' } }];
+      esQuery.sort = [{ _score: { order: 'desc' } }];
     }
 
     // Add source filtering
     if (query.fields) {
-      esQuery.body._source = query.fields;
+      esQuery._source = query.fields;
     }
 
     return esQuery;
@@ -444,7 +461,7 @@ export class ContentSearchService implements IContentSearchService {
 
     // Apply filters
     if (query.filters) {
-      query.filters.forEach((f) => {
+      query.filters.forEach(f => {
         const filterClause = this.buildFilterClause(f);
         if (filterClause) {
           filter.push(filterClause);
@@ -500,7 +517,7 @@ export class ContentSearchService implements IContentSearchService {
   private buildAggregations(facets: SearchFacet[]): any {
     const aggs: any = {};
 
-    facets.forEach((facet) => {
+    facets.forEach(facet => {
       switch (facet.type) {
         case 'terms':
           aggs[facet.name] = {
@@ -562,7 +579,7 @@ export class ContentSearchService implements IContentSearchService {
    * Build sort configuration
    */
   private buildSort(sort: SearchSort[]): any {
-    return sort.map((s) => ({
+    return sort.map(s => ({
       [s.field]: {
         order: s.order,
         ...(s.mode && { mode: s.mode }),
@@ -575,8 +592,8 @@ export class ContentSearchService implements IContentSearchService {
    * Process Elasticsearch results into SearchResult
    */
   private processSearchResults(response: any, query: SearchQuery): SearchResult {
-    const hits = response.body.hits;
-    const aggregations = response.body.aggregations;
+    const hits = response.hits;
+    const aggregations = response.aggregations;
 
     // Extract documents
     const documents: ContentDocument[] = hits.hits.map((hit: any) => ({
@@ -589,7 +606,7 @@ export class ContentSearchService implements IContentSearchService {
     // Process aggregations into facets
     const facets: SearchAggregation[] = [];
     if (aggregations) {
-      Object.keys(aggregations).forEach((key) => {
+      Object.keys(aggregations).forEach(key => {
         const agg = aggregations[key];
         facets.push({
           name: key,
@@ -607,7 +624,7 @@ export class ContentSearchService implements IContentSearchService {
       pageSize: query.pageSize,
       totalPages: Math.ceil(hits.total.value / query.pageSize),
       facets,
-      took: response.body.took,
+      took: response.took,
       maxScore: hits.max_score,
     };
   }
@@ -615,8 +632,9 @@ export class ContentSearchService implements IContentSearchService {
   /**
    * Prepare document for indexing (remove internal fields)
    */
-  private prepareDocumentForIndexing(document: Partial<ContentDocument>): any {
-    const { _id, _score, _highlight, ...indexableDoc } = document as any;
+  private prepareDocumentForIndexing(document: Partial<ContentDocument>): Record<string, unknown> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { _id, _score, _highlight, ...indexableDoc } = document as Record<string, unknown>;
     return indexableDoc;
   }
 
@@ -639,7 +657,7 @@ export class ContentSearchService implements IContentSearchService {
   /**
    * Invalidate cache entries related to a document
    */
-  private async invalidateRelatedCache(document: Partial<ContentDocument>): Promise<void> {
+  private async invalidateRelatedCache(_document: Partial<ContentDocument>): Promise<void> {
     // Invalidate all search cache when content changes
     // In production, implement smarter cache invalidation based on tags, categories, etc.
     await this.cache.invalidate(`${this.cachePrefix}*`);
