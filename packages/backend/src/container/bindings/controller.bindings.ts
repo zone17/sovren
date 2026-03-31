@@ -52,7 +52,7 @@ export class ControllerModule implements IServiceModule {
     // ===========================
     // ContentController - SCOPED
     // ===========================
-    registry.registerSingletonFactory(TYPES.ContentController, (container) => {
+    registry.registerSingletonFactory(TYPES.ContentController, container => {
       const publishingService = container.resolve(TYPES.ContentPublishingService);
       const moderationService = container.resolve(TYPES.ContentModerationService);
       const searchService = container.resolve(TYPES.ContentSearchService);
@@ -75,7 +75,7 @@ export class ControllerModule implements IServiceModule {
     // ===========================
     // UserController - SCOPED
     // ===========================
-    registry.registerSingletonFactory(TYPES.UserController, (container) => {
+    registry.registerSingletonFactory(TYPES.UserController, container => {
       const profileService = container.resolve(TYPES.UserProfileService);
       const preferencesService = container.resolve(TYPES.UserPreferencesService);
       const activityService = container.resolve(TYPES.UserActivityService);
@@ -94,7 +94,7 @@ export class ControllerModule implements IServiceModule {
     // ===========================
     // PaymentController - SCOPED
     // ===========================
-    registry.registerSingletonFactory(TYPES.PaymentController, (container) => {
+    registry.registerSingletonFactory(TYPES.PaymentController, container => {
       const paymentService = container.resolve(TYPES.PaymentProcessingService);
       const invoiceService = container.resolve(TYPES.InvoiceService);
       const currencyService = container.resolve(TYPES.CurrencyService);

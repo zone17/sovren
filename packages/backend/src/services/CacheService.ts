@@ -174,7 +174,7 @@ class InMemoryCacheProvider implements ICacheProvider {
 
   async keys(pattern: string): Promise<string[]> {
     const regex = new RegExp(pattern.replace('*', '.*'));
-    return Array.from(this.store.keys()).filter((key) => regex.test(key));
+    return Array.from(this.store.keys()).filter(key => regex.test(key));
   }
 
   async *scanKeys(pattern: string): AsyncGenerator<string> {
@@ -205,7 +205,7 @@ class InMemoryCacheProvider implements ICacheProvider {
   }
 
   async mget(keys: string[]): Promise<(string | null)[]> {
-    return Promise.all(keys.map((key) => this.get(key)));
+    return Promise.all(keys.map(key => this.get(key)));
   }
 
   async mset(entries: Array<{ key: string; value: string; ttl?: number }>): Promise<void> {
@@ -410,7 +410,7 @@ export class CacheService implements ICacheService {
 
         if (taggedKeys) {
           const parsed = JSON.parse(taggedKeys) as string[];
-          parsed.forEach((key) => keys.add(key));
+          parsed.forEach(key => keys.add(key));
         }
       }
 
@@ -485,7 +485,7 @@ export class CacheService implements ICacheService {
 
   async getMany<T>(keys: string[]): Promise<Map<string, T | null>> {
     try {
-      const prefixedKeys = keys.map((key) => this.getPrefixedKey(key));
+      const prefixedKeys = keys.map(key => this.getPrefixedKey(key));
       const values = await this.provider.mget(prefixedKeys);
 
       const result = new Map<string, T | null>();
@@ -515,7 +515,7 @@ export class CacheService implements ICacheService {
 
   async setMany<T>(entries: Array<{ key: string; value: T; ttl?: number }>): Promise<void> {
     try {
-      const serialized = entries.map((entry) => ({
+      const serialized = entries.map(entry => ({
         key: this.getPrefixedKey(entry.key),
         value: typeof entry.value === 'string' ? entry.value : JSON.stringify(entry.value),
         ttl: entry.ttl || this.config.defaultTtl,
@@ -711,7 +711,7 @@ export class CacheService implements ICacheService {
       if (!existing) continue;
 
       const keys = JSON.parse(existing) as string[];
-      const filtered = keys.filter((k) => k !== key);
+      const filtered = keys.filter(k => k !== key);
 
       if (filtered.length > 0) {
         await this.provider.set(tagKey, JSON.stringify(filtered), 86400);

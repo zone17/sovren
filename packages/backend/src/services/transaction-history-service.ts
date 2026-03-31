@@ -260,7 +260,9 @@ export class TransactionHistoryService extends EventEmitter {
       return transaction;
     } catch (error) {
       this.logger.error('Failed to record transaction', error);
-      throw new Error(`Transaction recording failed: ${(error instanceof Error ? error.message : String(error))}`);
+      throw new Error(
+        `Transaction recording failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -340,7 +342,7 @@ export class TransactionHistoryService extends EventEmitter {
       if (error) throw error;
 
       // Map to Transaction objects
-      const transactions: Transaction[] = (data || []).map((item) => ({
+      const transactions: Transaction[] = (data || []).map(item => ({
         id: item.id,
         user_id: item.user_id,
         type: item.type,
@@ -369,7 +371,9 @@ export class TransactionHistoryService extends EventEmitter {
       };
     } catch (error) {
       this.logger.error('Failed to get payment history', error);
-      throw new Error(`Payment history retrieval failed: ${(error instanceof Error ? error.message : String(error))}`);
+      throw new Error(
+        `Payment history retrieval failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -470,7 +474,9 @@ export class TransactionHistoryService extends EventEmitter {
       };
     } catch (error) {
       this.logger.error('Failed to export transaction data', error);
-      throw new Error(`Transaction data export failed: ${(error instanceof Error ? error.message : String(error))}`);
+      throw new Error(
+        `Transaction data export failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -542,7 +548,9 @@ export class TransactionHistoryService extends EventEmitter {
       return analytics;
     } catch (error) {
       this.logger.error('Failed to get revenue analytics', error);
-      throw new Error(`Revenue analytics failed: ${(error instanceof Error ? error.message : String(error))}`);
+      throw new Error(
+        `Revenue analytics failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -621,7 +629,9 @@ export class TransactionHistoryService extends EventEmitter {
       return analytics;
     } catch (error) {
       this.logger.error('Failed to get spending analytics', error);
-      throw new Error(`Spending analytics failed: ${(error instanceof Error ? error.message : String(error))}`);
+      throw new Error(
+        `Spending analytics failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -699,7 +709,9 @@ export class TransactionHistoryService extends EventEmitter {
       return transaction;
     } catch (error) {
       this.logger.error('Failed to update transaction status', error);
-      throw new Error(`Transaction status update failed: ${(error instanceof Error ? error.message : String(error))}`);
+      throw new Error(
+        `Transaction status update failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -715,7 +727,7 @@ export class TransactionHistoryService extends EventEmitter {
     const total_fees = transactions.reduce((sum, txn) => sum + txn.fee_msats, 0);
 
     const transaction_count_by_type: Record<string, number> = {};
-    transactions.forEach((txn) => {
+    transactions.forEach(txn => {
       transaction_count_by_type[txn.type] = (transaction_count_by_type[txn.type] || 0) + 1;
     });
 
@@ -756,7 +768,7 @@ export class TransactionHistoryService extends EventEmitter {
       header: headers,
     });
 
-    const records = transactions.map((txn) => ({
+    const records = transactions.map(txn => ({
       id: txn.id,
       created_at: txn.created_at.toISOString(),
       type: txn.type,
@@ -781,7 +793,7 @@ export class TransactionHistoryService extends EventEmitter {
       export_date: new Date().toISOString(),
       date_range: options.date_range,
       transaction_count: transactions.length,
-      transactions: transactions.map((txn) => ({
+      transactions: transactions.map(txn => ({
         ...txn,
         metadata: options.include_metadata ? txn.metadata : undefined,
       })),
@@ -817,7 +829,7 @@ export class TransactionHistoryService extends EventEmitter {
   private calculateRevenueByPeriod(transactions: any[], period: string): Record<string, number> {
     const revenue: Record<string, number> = {};
 
-    transactions.forEach((txn) => {
+    transactions.forEach(txn => {
       const date = new Date(txn.completed_at || txn.created_at);
       let key: string;
 
@@ -850,7 +862,7 @@ export class TransactionHistoryService extends EventEmitter {
   private calculateRevenueByType(transactions: any[]): Record<string, number> {
     const revenue: Record<string, number> = {};
 
-    transactions.forEach((txn) => {
+    transactions.forEach(txn => {
       revenue[txn.type] = (revenue[txn.type] || 0) + (txn.net_amount_msats || 0);
     });
 
@@ -906,7 +918,7 @@ export class TransactionHistoryService extends EventEmitter {
   private calculateSpendingByCreator(transactions: any[]): Record<string, number> {
     const spending: Record<string, number> = {};
 
-    transactions.forEach((txn) => {
+    transactions.forEach(txn => {
       if (txn.creator_id) {
         spending[txn.creator_id] = (spending[txn.creator_id] || 0) + (txn.amount_msats || 0);
       }
@@ -918,7 +930,7 @@ export class TransactionHistoryService extends EventEmitter {
   private calculateSpendingByCategory(transactions: any[]): Record<string, number> {
     const categories: Record<string, number> = {};
 
-    transactions.forEach((txn) => {
+    transactions.forEach(txn => {
       categories[txn.type] = (categories[txn.type] || 0) + (txn.amount_msats || 0);
     });
 
@@ -941,7 +953,7 @@ export class TransactionHistoryService extends EventEmitter {
       { total_amount: number; transaction_count: number; name: string }
     > = {};
 
-    transactions.forEach((txn) => {
+    transactions.forEach(txn => {
       if (txn.creator_id) {
         if (!creators[txn.creator_id]) {
           creators[txn.creator_id] = {
@@ -1004,7 +1016,7 @@ export class TransactionHistoryService extends EventEmitter {
       this.logger.error('Health check failed', error);
       return {
         status: 'unhealthy',
-        metrics: { error: (error instanceof Error ? error.message : String(error)) },
+        metrics: { error: error instanceof Error ? error.message : String(error) },
       };
     }
   }

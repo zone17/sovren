@@ -140,9 +140,10 @@ export class NIP65Service {
     }
 
     // Convert hex string to Uint8Array if needed
-    const privKeyBytes = typeof privKeyInput === 'string'
-      ? new Uint8Array(privKeyInput.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)))
-      : privKeyInput;
+    const privKeyBytes =
+      typeof privKeyInput === 'string'
+        ? new Uint8Array(privKeyInput.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)))
+        : privKeyInput;
 
     // Sign and publish
     const pubkey = activeKey?.publicKey;

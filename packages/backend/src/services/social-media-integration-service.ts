@@ -68,16 +68,19 @@ export interface SocialPlatformAdapter {
 // PLATFORM CONFIGURATION
 // =====================================================
 
-const PLATFORM_CONFIGS: Record<string, {
-  maxTextLength: number;
-  maxHashtags: number;
-  supportedMediaTypes: string[];
-  maxMediaCount: number;
-  supportsThreads: boolean;
-  supportsPolls: boolean;
-  supportsScheduling: boolean;
-  requiresAltText: boolean;
-}> = {
+const PLATFORM_CONFIGS: Record<
+  string,
+  {
+    maxTextLength: number;
+    maxHashtags: number;
+    supportedMediaTypes: string[];
+    maxMediaCount: number;
+    supportsThreads: boolean;
+    supportsPolls: boolean;
+    supportsScheduling: boolean;
+    requiresAltText: boolean;
+  }
+> = {
   [SocialPlatform.TWITTER]: {
     maxTextLength: 280,
     maxHashtags: 3,
@@ -246,9 +249,17 @@ export class SocialMediaIntegrationService extends EventEmitter {
           platforms: [request.platform],
           status: PostStatus.SCHEDULED,
           scheduledAt: request.scheduledAt,
-          mediaAssets: (adaptedContent.mediaUrls || []).map((url: string) => ({ type: 'image' as const, url })),
+          mediaAssets: (adaptedContent.mediaUrls || []).map((url: string) => ({
+            type: 'image' as const,
+            url,
+          })),
           platformCustomizations: {},
-          analytics: { totalImpressions: 0, totalEngagement: 0, clickThroughRate: 0, conversionRate: 0 },
+          analytics: {
+            totalImpressions: 0,
+            totalEngagement: 0,
+            clickThroughRate: 0,
+            conversionRate: 0,
+          },
           createdAt: new Date(),
           updatedAt: new Date(),
         };
@@ -458,7 +469,7 @@ export class SocialMediaIntegrationService extends EventEmitter {
       }
 
       // Update post status
-      const allSuccessful = results.every((r) => r.success);
+      const allSuccessful = results.every(r => r.success);
       post.status = allSuccessful ? PostStatus.PUBLISHED : PostStatus.FAILED;
       post.publishedAt = new Date();
       post.updatedAt = new Date();
