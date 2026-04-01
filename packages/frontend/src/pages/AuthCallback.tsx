@@ -7,6 +7,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 import { Spinner } from '../components/ui/spinner';
 
@@ -47,12 +48,19 @@ const AuthCallback: React.FC = () => {
         <div className='glass p-8 rounded-lg shadow-lg max-w-md text-center'>
           <h2 className='text-xl font-bold text-red-400 mb-4'>Confirmation Failed</h2>
           <p className='text-sm text-muted-foreground mb-6'>{error}</p>
-          <a
-            href='/login'
+          <Link
+            to='/login'
             className='text-purple-400 hover:text-purple-300 font-medium transition-colors duration-150'
           >
             Go to login
-          </a>
+          </Link>
+          <span className='mx-2 text-muted-foreground'>|</span>
+          <Link
+            to='/signup'
+            className='text-purple-400 hover:text-purple-300 font-medium transition-colors duration-150'
+          >
+            Resend confirmation email
+          </Link>
         </div>
       </div>
     );

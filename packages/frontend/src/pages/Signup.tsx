@@ -41,6 +41,7 @@ const Signup: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [emailConfirmationSent, setEmailConfirmationSent] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   // Validate NOSTR key format
   const validatePublicKey = (key: string): boolean => {
@@ -532,9 +533,28 @@ const Signup: React.FC = () => {
                     />
                   </div>
 
+                  <div className='flex items-start space-x-2'>
+                    <input
+                      id='terms'
+                      type='checkbox'
+                      checked={termsAccepted}
+                      onChange={e => setTermsAccepted(e.target.checked)}
+                      className='mt-1 h-4 w-4 rounded border-border bg-card text-purple-500 focus:ring-purple-500'
+                    />
+                    <Label htmlFor='terms' className='text-sm text-muted-foreground leading-5'>
+                      I agree to the{' '}
+                      <Link
+                        to='/terms'
+                        className='text-purple-400 hover:text-purple-300 underline transition-colors duration-150'
+                      >
+                        Terms of Service
+                      </Link>
+                    </Label>
+                  </div>
+
                   <Button
                     onClick={handleEmailSignup}
-                    disabled={isLoading}
+                    disabled={isLoading || !termsAccepted}
                     className='w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white shadow-[0_4px_16px_rgba(139,92,246,0.3)] transition-all duration-150'
                   >
                     {isLoading ? (
