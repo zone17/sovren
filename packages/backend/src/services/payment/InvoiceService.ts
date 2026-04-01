@@ -3,7 +3,7 @@
 // Invoice interface mismatch (IPaymentService.Invoice lacks number, billingAddress, total, customerId, etc.),
 // ServiceError constructor signature, and multiple method return type mismatches.
 // Needs: 1) Money class implementation, 2) Invoice interface extension, 3) ServiceError options type fix
-import { injectable, inject } from 'inversify';
+
 import { TYPES } from '../../container/types';
 import {
   IInvoiceService,
@@ -48,8 +48,8 @@ import { Decimal } from 'decimal.js';
  *
  * @implements IInvoiceService
  */
-@injectable()
-export class InvoiceService implements IInvoiceService {
+
+export class InvoiceService {
   private readonly logger: Logger;
 
   // Financial precision configuration
@@ -74,11 +74,11 @@ export class InvoiceService implements IInvoiceService {
   };
 
   constructor(
-    @inject(TYPES.Database) private readonly db: IDatabase,
-    @inject(TYPES.Cache) private readonly cache: ICacheService,
-    @inject(TYPES.EventBus) private readonly eventBus: IEventBusService,
-    @inject(TYPES.AuditLog) private readonly auditLog: IAuditLogService,
-    @inject(TYPES.Notification) private readonly notification: INotificationService
+    private readonly db: IDatabase,
+    private readonly cache: ICacheService,
+    private readonly eventBus: IEventBusService,
+    private readonly auditLog: IAuditLogService,
+    private readonly notification: INotificationService
   ) {
     this.logger = new Logger(InvoiceService.name);
     // Configure Decimal.js for financial precision

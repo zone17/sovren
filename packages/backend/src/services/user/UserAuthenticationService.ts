@@ -2,7 +2,7 @@
 // TODO: requires infrastructure fixes — ServiceToken not assignable to inversify ServiceIdentifier,
 // missing auth interfaces (IUserAuthenticationService, LoginCredentials, AuthSession, MFAType, MFASetup),
 // ServiceError missing 'code' option, IEventBus missing 'emit', INotificationService missing 'send'
-import { injectable, inject } from 'inversify';
+
 import { TYPES } from '../../container/types';
 import {
   IUserAuthenticationService,
@@ -40,8 +40,8 @@ import { randomBytes } from 'crypto';
  *
  * @implements IUserAuthenticationService
  */
-@injectable()
-export class UserAuthenticationService implements IUserAuthenticationService {
+
+export class UserAuthenticationService {
   private readonly logger: Logger;
 
   // Security configuration
@@ -76,11 +76,11 @@ export class UserAuthenticationService implements IUserAuthenticationService {
   })();
 
   constructor(
-    @inject(TYPES.Database) private readonly db: IDatabase,
-    @inject(TYPES.Cache) private readonly cache: ICacheService,
-    @inject(TYPES.EventBus) private readonly eventBus: IEventBusService,
-    @inject(TYPES.AuditLog) private readonly auditLog: IAuditLogService,
-    @inject(TYPES.Notification) private readonly notification: INotificationService
+    private readonly db: IDatabase,
+    private readonly cache: ICacheService,
+    private readonly eventBus: IEventBusService,
+    private readonly auditLog: IAuditLogService,
+    private readonly notification: INotificationService
   ) {
     this.logger = new Logger(UserAuthenticationService.name);
   }

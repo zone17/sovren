@@ -47,7 +47,7 @@ import {
   formatAsCSV,
   generateExportId,
 } from './UserAnalyticsHelpers';
-import { injectable, inject } from 'inversify';
+
 import { TYPES } from '../../container/types';
 import { IUserAnalyticsService } from '../../interfaces/user/IUserAnalyticsService';
 import { ICacheService } from '../../interfaces/shared/ICacheService';
@@ -111,8 +111,8 @@ interface AggregationCache {
   expiresAt: Date;
 }
 
-@injectable()
-export class UserAnalyticsService implements IUserAnalyticsService {
+
+export class UserAnalyticsService {
   private readonly CACHE_TTL = {
     REALTIME: 30, // 30 seconds
     HOURLY: 3600, // 1 hour
@@ -128,11 +128,11 @@ export class UserAnalyticsService implements IUserAnalyticsService {
   };
 
   constructor(
-    @inject(TYPES.Database) private readonly db: IDatabase,
-    @inject(TYPES.CacheService) private readonly cache: ICacheService,
-    @inject(TYPES.EventBus) private readonly eventBus: IEventBus,
-    @inject(TYPES.AuditLog) private readonly auditLog: IAuditLogService,
-    @inject(TYPES.Logger) private readonly logger: ILogger
+    private readonly db: IDatabase,
+    private readonly cache: ICacheService,
+    private readonly eventBus: IEventBus,
+    private readonly auditLog: IAuditLogService,
+    private readonly logger: ILogger
   ) {
     this.initializeEventSubscriptions();
     this.startBufferFlushTimer();

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Platform Connection Service
  * EPIC-009: OAuth flows, token encryption, token refresh
@@ -63,7 +62,7 @@ export class PlatformConnectionService implements IPlatformConnectionService {
           clientId: process.env.BLUESKY_CLIENT_ID!,
           clientSecret: process.env.BLUESKY_CLIENT_SECRET!,
           callbackUrl: `${callbackBase}/api/v2/platforms/callback/bluesky`,
-        })
+        }) as IPlatformAdapter
       );
     }
 
@@ -74,7 +73,7 @@ export class PlatformConnectionService implements IPlatformConnectionService {
           clientId: process.env.TWITTER_CLIENT_ID!,
           clientSecret: process.env.TWITTER_CLIENT_SECRET!,
           callbackUrl: `${callbackBase}/api/v2/platforms/callback/twitter`,
-        })
+        }) as IPlatformAdapter
       );
     }
 
@@ -222,15 +221,9 @@ export class PlatformConnectionService implements IPlatformConnectionService {
     const allPlatforms: SupportedPlatform[] = ['mastodon', 'bluesky', 'twitter', 'youtube'];
 
     return allPlatforms.map((platform) => {
-      const connection = (data || []).find(
-        (c: {
-          platform: string;
-          status: string;
-          platform_username: string;
-          connected_at: string;
-          expires_at: string;
-          scopes: string[];
-        }) => c.platform === platform
+      const connections = (data || []) as any[];
+      const connection = connections.find(
+        (c: any) => c.platform === platform
       );
       if (connection) {
         return {
@@ -269,10 +262,10 @@ export class PlatformConnectionService implements IPlatformConnectionService {
 
     const key = getEncryptionKey();
     return decryptToken(
-      Buffer.from(data.access_token_encrypted),
+      Buffer.from((data as any).access_token_encrypted),
       key,
-      Buffer.from(data.token_iv),
-      Buffer.from(data.token_auth_tag)
+      Buffer.from((data as any).token_iv),
+      Buffer.from((data as any).token_auth_tag)
     );
   }
 
@@ -308,16 +301,16 @@ export class PlatformConnectionService implements IPlatformConnectionService {
           try {
             const key = getEncryptionKey();
             const refreshToken = decryptToken(
-              Buffer.from(connection.refresh_token_encrypted),
+              Buffer.from((connection as any).refresh_token_encrypted),
               key,
-              Buffer.from(connection.refresh_token_iv),
-              Buffer.from(connection.refresh_token_auth_tag)
+              Buffer.from((connection as any).refresh_token_iv),
+              Buffer.from((connection as any).refresh_token_auth_tag)
             );
 
-            const adapter = this.getAdapter(connection.platform);
+            const adapter = this.getAdapter((connection as any).platform as SupportedPlatform);
             const newTokens = await adapter.refreshTokens(refreshToken);
 
-            await this.storeEncryptedTokens(connection.creator_id, connection.platform, newTokens);
+            await this.storeEncryptedTokens((connection as any).creator_id as string, (connection as any).platform as SupportedPlatform, newTokens);
 
             this.logger.info('[PlatformConnectionService] Token refreshed', {
               creatorId: connection.creator_id,

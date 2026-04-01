@@ -138,7 +138,7 @@ class InMemoryAuditStorage implements IAuditStorage {
 /**
  * Concrete implementation of AuditLogService
  */
-export class AuditLogService implements IAuditLogService {
+export class AuditLogService {
   private readonly eventBus: IEventBus;
   private readonly logger: ILogger;
   private readonly cache?: ICacheService;

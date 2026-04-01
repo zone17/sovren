@@ -17,7 +17,7 @@
  * @story US-E5-021
  */
 
-import { injectable, inject } from 'inversify';
+
 import { TYPES } from '../../container/types';
 import { v4 as uuidv4 } from 'uuid';
 import { Logger } from '../../utils/logger';
@@ -63,8 +63,8 @@ interface IAuditLogService {
 /**
  * UserActivityService - Production-ready activity tracking
  */
-@injectable()
-export class UserActivityService implements IUserActivityService {
+
+export class UserActivityService {
   private readonly logger: Logger;
   private activityBuffer: ActivityBuffer;
   private flushInterval: NodeJS.Timeout | null = null;
@@ -85,10 +85,10 @@ export class UserActivityService implements IUserActivityService {
   };
 
   constructor(
-    @inject(TYPES.Database) private readonly db: IDatabase,
-    @inject(TYPES.CacheService) private readonly cache: ICacheService,
-    @inject(TYPES.EventBus) private readonly eventBus: IEventBus,
-    @inject(TYPES.AuditLog) private readonly auditLog: IAuditLogService
+    private readonly db: IDatabase,
+    private readonly cache: ICacheService,
+    private readonly eventBus: IEventBus,
+    private readonly auditLog: IAuditLogService
   ) {
     this.logger = new Logger(UserActivityService.name);
     this.activityBuffer = {

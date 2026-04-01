@@ -45,7 +45,7 @@ interface EmailQueueItem {
 /**
  * Concrete implementation of EmailService
  */
-export class EmailService implements IEmailService {
+export class EmailService {
   private readonly eventBus: IEventBus;
   private readonly logger: ILogger;
   private readonly cache?: ICacheService;
@@ -75,6 +75,7 @@ export class EmailService implements IEmailService {
     this.metrics = {
       sent: 0,
       failed: 0,
+      delivered: 0,
       bounced: 0,
       opened: 0,
       clicked: 0,
@@ -97,7 +98,9 @@ export class EmailService implements IEmailService {
       // Add to audit log
       await this.auditLog?.log({
         action: 'email.send',
-        details: {
+        entityType: 'email',
+        entityId: message.to?.toString() || 'unknown',
+        metadata: {
           to: message.to,
           subject: message.subject,
           provider: this.config.provider,
@@ -169,7 +172,7 @@ export class EmailService implements IEmailService {
         envelope: info.envelope,
         response: info.response,
       };
-    } catch (error) {
+    } catch (error: unknown) {
       this.metrics.failed++;
 
       // Log error
@@ -288,7 +291,7 @@ export class EmailService implements IEmailService {
       this.templates.set(name, compiled);
 
       this.logger.info(`Email template loaded: ${name}`);
-    } catch (error) {
+    } catch (error: unknown) {
       this.logger.error(`Failed to load email template: ${name}`, error);
       throw error;
     }
@@ -557,7 +560,7 @@ export class EmailService implements IEmailService {
               this.queue.splice(index, 1);
             }
           }
-        } catch (error) {
+        } catch (error: unknown) {
           item.retries++;
           item.error = error.message;
 

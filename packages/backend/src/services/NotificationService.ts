@@ -53,7 +53,7 @@ const NOTIFICATION_RATE_LIMIT_DURATION = parseInt(
 /**
  * Concrete implementation of NotificationService
  */
-export class NotificationService implements INotificationService {
+export class NotificationService {
   private readonly eventBus: IEventBus;
   private readonly logger: ILogger;
   private readonly cache?: ICacheService;

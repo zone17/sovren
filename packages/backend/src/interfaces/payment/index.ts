@@ -22,7 +22,23 @@ export {
 export type { Invoice } from './IPaymentService';
 
 // Additional types used by InvoiceService that don't exist in existing interfaces
-export type Money = any;
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
+export class Money {
+  amount: number;
+  currency: string;
+  constructor(amount: any, currency?: any) {
+    this.amount = Number(amount) || 0;
+    this.currency = String(currency || 'USD');
+  }
+  add(other: any): any { return new Money((this.amount || 0) + (other?.amount || 0), this.currency); }
+  subtract(other: any): any { return new Money((this.amount || 0) - (other?.amount || 0), this.currency); }
+  multiply(factor: any): any { return new Money((this.amount || 0) * (Number(factor) || 0), this.currency); }
+  isZero(): boolean { return this.amount === 0; }
+  isNegative(): boolean { return this.amount < 0; }
+  toObject(): any { return { amount: this.amount, currency: this.currency }; }
+  toString(): string { return `${this.amount} ${this.currency}`; }
+  [key: string]: any;
+}
 export type InvoiceItem = any;
 export type InvoiceDraft = any;
 export type TaxCalculation = any;

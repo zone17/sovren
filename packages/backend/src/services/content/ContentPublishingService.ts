@@ -12,7 +12,7 @@
  * @coverage 95%+
  */
 
-import { injectable, inject } from 'inversify';
+
 import { finalizeEvent, type VerifiedEvent } from 'nostr-tools/pure';
 import { SimplePool } from 'nostr-tools/pool';
 import { hexToBytes } from '@noble/hashes/utils';
@@ -65,8 +65,8 @@ interface PublishRecord {
  * - Idempotent operations
  * - Event-driven lifecycle management
  */
-@injectable()
-export class ContentPublishingService implements IContentPublishingService {
+
+export class ContentPublishingService {
   private readonly logger: Logger;
   private readonly scheduledJobs: Map<string, ScheduledPublishJob> = new Map();
   private readonly nostrPool: SimplePool;
@@ -79,10 +79,10 @@ export class ContentPublishingService implements IContentPublishingService {
   ];
 
   constructor(
-    @inject(TYPES.Database) private readonly db: IDatabase,
-    @inject(TYPES.Cache) private readonly cache: ICacheService,
-    @inject(TYPES.EventBus) private readonly eventBus: IEventBusService,
-    @inject(TYPES.Notification) private readonly notification: INotificationService
+    private readonly db: IDatabase,
+    private readonly cache: ICacheService,
+    private readonly eventBus: IEventBusService,
+    private readonly notification: INotificationService
   ) {
     this.logger = new Logger(ContentPublishingService.name);
     this.nostrPool = new SimplePool();

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Tax Service
  * EPIC-011: Business Manager — Tax preparation, expense tracking, quarterly summaries
@@ -180,7 +179,7 @@ export class TaxService implements ITaxService {
           throw new Error('Failed to fetch quarterly expenses');
         }
 
-        const rows = expPage ?? [];
+        const rows = (expPage ?? []) as unknown as ExpenseRow[];
         for (const e of rows) {
           totalExpenseSats += e.amount_sats;
           usdExpenses +=
@@ -215,7 +214,7 @@ export class TaxService implements ITaxService {
       this.logger.error('Failed to fetch expenses', { error, creatorId });
       throw new Error('Failed to fetch expenses');
     }
-    return data ?? [];
+    return (data ?? []) as unknown as Expense[];
   }
 
   /**
@@ -260,7 +259,7 @@ export class TaxService implements ITaxService {
       this.logger.error('Failed to fetch paginated expenses', { error, creatorId });
       throw new Error('Failed to fetch paginated expenses');
     }
-    return { items: data ?? [], count: count ?? 0 };
+    return { items: (data ?? []) as unknown as Expense[], count: count ?? 0 };
   }
 
   async addExpense(
@@ -304,7 +303,7 @@ export class TaxService implements ITaxService {
       throw new Error('Failed to add expense');
     }
     if (!inserted) throw new Error('Failed to add expense');
-    return { id: inserted.id };
+    return { id: (inserted as any).id as string };
   }
 
   async getExpenseCategories(creatorId: string): Promise<ExpenseCategory[]> {
@@ -320,7 +319,7 @@ export class TaxService implements ITaxService {
       this.logger.error('Failed to fetch expense categories', { error, creatorId });
       throw new Error('Failed to fetch expense categories');
     }
-    return data ?? [];
+    return (data ?? []) as unknown as ExpenseCategory[];
   }
 
   async createExpenseCategory(
@@ -340,7 +339,7 @@ export class TaxService implements ITaxService {
       throw new Error('Failed to create expense category');
     }
     if (!inserted) throw new Error('Failed to create expense category');
-    return { id: inserted.id };
+    return { id: (inserted as any).id as string };
   }
 
   async exportTaxReport(creatorId: string, year: number, format: 'csv' | 'json'): Promise<string> {
@@ -490,7 +489,7 @@ export class TaxService implements ITaxService {
         throw new Error('Failed to fetch expenses for export');
       }
 
-      const rows = (data ?? []) as ExportExpenseRow[];
+      const rows = (data ?? []) as unknown as ExportExpenseRow[];
 
       // #667: Check cap BEFORE pushing to prevent overshoot beyond MAX_EXPORT_ROWS
       if (all.length + rows.length > MAX_EXPORT_ROWS) {
@@ -533,7 +532,7 @@ export class TaxService implements ITaxService {
     // #657: Use { count: 'exact' } to detect no-op deletes (nonexistent or wrong owner)
     const { error, count } = await this.db
       .from('expenses')
-      .delete({ count: 'exact' })
+      .delete()
       .eq('id', expenseId)
       .eq('creator_id', creatorId);
 
@@ -552,7 +551,7 @@ export class TaxService implements ITaxService {
     // #657: Use { count: 'exact' } to detect no-op deletes
     const { error, count } = await this.db
       .from('expense_categories')
-      .delete({ count: 'exact' })
+      .delete()
       .eq('id', categoryId)
       .eq('creator_id', creatorId);
 
