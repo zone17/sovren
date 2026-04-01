@@ -1,4 +1,3 @@
-// @ts-nocheck
 // TODO: requires infrastructure fix — ServiceToken/inversify incompatibility, TYPES.EventBus/AuditLog, Supabase count/total type narrowing
 /**
  * UserActivityService Implementation
@@ -46,7 +45,7 @@ import {
 
 // Mock interfaces for dependencies (these should exist in your codebase)
 interface IDatabase {
-  query(sql: string, params?: unknown[]): Promise<{ rows: unknown[] }>;
+  query(sql: string, params?: unknown[]): Promise<{ rows: Record<string, any>[] }>; // eslint-disable-line @typescript-eslint/no-explicit-any
 }
 
 interface ICacheService {
@@ -1365,7 +1364,7 @@ export class UserActivityService {
       await this.cache.increment(key, 1);
       await this.cache.set(key, await this.cache.get(key), 86400); // 24 hours TTL
     } catch (error) {
-      this.logger.warn('Failed to increment activity counter', { error: error.message });
+      this.logger.warn('Failed to increment activity counter', { error: (error as Error).message });
     }
   }
 

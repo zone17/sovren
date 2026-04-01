@@ -1,6 +1,5 @@
-// @ts-nocheck
 /**
- * 🔐 US-311: Unified Session Management API Routes
+ * US-311: Unified Session Management API Routes
  * WHY: RESTful API for unified NOSTR session management across devices
  *
  * Features:
@@ -14,7 +13,11 @@
 
 import express, { Request, Response, NextFunction } from 'express';
 import rateLimit from 'express-rate-limit';
-import { asyncHandler } from '../middleware/error-handler-middleware';
+import { asyncHandler as _asyncHandler } from '../middleware/error-handler-middleware';
+
+// Type-safe wrapper: route handlers may return Response for early returns
+const asyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) =>
+  _asyncHandler(fn as (req: Request, res: Response, next: NextFunction) => Promise<void>);
 import { getClientIP } from '../utils/client-ip';
 import { z } from 'zod';
 import { DatabaseSessionManager } from '../services/DatabaseSessionManager';
@@ -240,7 +243,7 @@ router.post(
 router.post(
   '/validate',
   validateSessionRateLimit,
-  asyncHandler(async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
     try {
       const validatedData = ValidateSessionSchema.parse(req.body);
 
@@ -263,7 +266,7 @@ router.post(
           success: false,
           valid: false,
           reason: validation.reason,
-          expired: validation.expired,
+          expired: (validation as any).expired,
           code: 'SESSION_INVALID',
           timestamp: new Date().toISOString(),
         });
@@ -280,8 +283,8 @@ router.post(
             device_info: validation.session!.device_info,
             created_at: validation.session!.created_at,
             expires_at: validation.session!.expires_at,
-            last_activity: validation.session!.last_activity,
-            is_active: validation.session!.is_active,
+            last_activity: validation.session!.last_activity_at,
+            is_active: validation.session!.active,
           },
         },
         timestamp: new Date().toISOString(),
@@ -321,7 +324,7 @@ router.post(
 router.post(
   '/refresh',
   refreshRateLimit,
-  asyncHandler(async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
     try {
       const validatedData = RefreshSessionSchema.parse(req.body);
 
@@ -347,10 +350,10 @@ router.post(
             pubkey: refreshedSession.pubkey,
             device_id: refreshedSession.device_id,
             expires_at: refreshedSession.expires_at,
-            last_activity: refreshedSession.last_activity,
-            refresh_count: refreshedSession.refresh_count,
+            last_activity: refreshedSession.last_activity_at,
+            refresh_count: (refreshedSession as any).refresh_count,
           },
-          token: refreshedSession.token, // New token!
+          token: (refreshedSession as any).token, // New token!
         },
         message: 'Session refreshed successfully',
         timestamp: new Date().toISOString(),
@@ -390,7 +393,7 @@ router.post(
 router.delete(
   '/revoke',
   revokeRateLimit,
-  asyncHandler(async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
     try {
       const validatedData = RevokeSessionSchema.parse(req.body);
 
@@ -439,7 +442,7 @@ router.delete(
 router.delete(
   '/revoke-all',
   revokeRateLimit,
-  asyncHandler(async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
     try {
       const pubkey = req.query.pubkey as string;
       const exceptSessionId = req.query.except as string | undefined;
@@ -489,11 +492,12 @@ router.delete(
 router.delete(
   '/revoke-device',
   revokeRateLimit,
-  asyncHandler(async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
     try {
       const validatedData = RevokeDeviceSchema.parse(req.body);
 
-      const revokedCount = await sessionManager.revokeSessionsByDevice(
+      // Type assertion: method exists on implementation but not in base type
+      const revokedCount = await (sessionManager as any).revokeSessionsByDevice(
         validatedData.pubkey,
         validatedData.device_id
       );
@@ -543,7 +547,7 @@ router.delete(
 router.get(
   '/list',
   validateSessionRateLimit,
-  asyncHandler(async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
     try {
       const pubkey = req.query.pubkey as string;
 
@@ -566,9 +570,9 @@ router.get(
             device_info: s.device_info,
             created_at: s.created_at,
             expires_at: s.expires_at,
-            last_activity: s.last_activity,
-            is_active: s.is_active,
-            refresh_count: s.refresh_count,
+            last_activity: s.last_activity_at,
+            is_active: s.active,
+            refresh_count: (s as any).refresh_count,
           })),
           total: sessions.length,
         },
@@ -598,7 +602,7 @@ router.get(
 router.get(
   '/stats',
   validateSessionRateLimit,
-  asyncHandler(async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
     try {
       const pubkey = req.query.pubkey as string | undefined;
 
@@ -643,7 +647,7 @@ router.get(
 router.get(
   '/activities',
   validateSessionRateLimit,
-  asyncHandler(async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
     try {
       const sessionId = req.query.session_id as string;
       const limit = parseInt(req.query.limit as string) || 100;
@@ -690,7 +694,7 @@ router.post(
   revokeRateLimit,
   authenticate,
   requireAuth,
-  asyncHandler(async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
     try {
       const cleanedCount = await sessionManager.cleanExpiredSessions();
 
@@ -721,7 +725,8 @@ router.post(
 router.get('/health', async (req: Request, res: Response) => {
   try {
     // Try to query sessions table
-    const health = await sessionManager.healthCheck();
+    // Type assertion: healthCheck exists on DatabaseSessionManager implementation
+    const health = await (sessionManager as any).healthCheck();
 
     return res.status(health.healthy ? 200 : 503).json({
       success: health.healthy,

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * NotificationService Implementation
  * User Story: US-E5-008
@@ -13,18 +12,105 @@ import type { ICacheService } from '../interfaces/shared/ICacheService';
 import type { IEmailService } from '../interfaces/communication/IEmailService';
 import type { IQueueService } from '../interfaces/queue/IQueueService';
 import type {
-  Notification,
-  NotificationChannel,
-  NotificationPreferences,
-  NotificationTemplate,
-  NotificationDeliveryStatus,
   NotificationPriority,
-  NotificationResult,
-  NotificationMetrics,
-  BulkNotificationRequest,
-  BulkNotificationResult,
-  NotificationHistory,
 } from '../types/notification';
+
+/**
+ * Internal notification types used by this service.
+ * These extend the shared types with richer domain-specific fields.
+ */
+
+type InternalChannel = 'email' | 'push' | 'inApp' | 'sms';
+
+interface Notification {
+  id?: string;
+  userId: string;
+  type?: string;
+  title: string;
+  body: string;
+  email?: string;
+  channels?: InternalChannel[];
+  priority?: NotificationPriority;
+  templateId?: string;
+  data?: Record<string, unknown>;
+  retryOnFailure?: boolean;
+  [key: string]: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+}
+
+interface NotificationResult {
+  success: boolean;
+  error?: string;
+  channels: InternalChannel[];
+  messageId?: string;
+  deliveredAt?: Date;
+  queued?: boolean;
+}
+
+interface NotificationPreferences {
+  userId: string;
+  enabled: boolean;
+  channels: InternalChannel[];
+  quiet?: {
+    enabled: boolean;
+    start?: string;
+    end?: string;
+    timezone?: string;
+  };
+  types?: Record<string, boolean>;
+}
+
+interface NotificationTemplate {
+  id: string;
+  title: string;
+  body: string;
+  channels?: InternalChannel[];
+  priority?: NotificationPriority;
+}
+
+interface NotificationDeliveryStatus {
+  notificationId: string;
+  status: 'sent' | 'delivered' | 'failed';
+  deliveredAt?: Date;
+  channel: InternalChannel;
+  events: unknown[];
+}
+
+interface NotificationMetrics {
+  sent: number;
+  failed: number;
+  pending: number;
+  delivered: number;
+  opened: number;
+  clicked: number;
+  byChannel: Record<InternalChannel, { sent: number; failed: number }>;
+}
+
+interface BulkNotificationRequest {
+  notifications: Notification[];
+  batchSize?: number;
+  delayMs?: number;
+}
+
+interface BulkNotificationResult {
+  totalSent: number;
+  totalFailed: number;
+  totalQueued: number;
+  results: NotificationResult[];
+  duration: number;
+}
+
+interface NotificationHistory {
+  id: string;
+  userId: string;
+  title: string;
+  body: string;
+  channel: InternalChannel;
+  status: 'sent' | 'failed';
+  sentAt: Date;
+  type?: string;
+}
+
+type NotificationChannel = InternalChannel;
 
 // EventEmitter and webpush imported when push notification channel is implemented
 import { createHash } from 'crypto';
@@ -198,7 +284,7 @@ export class NotificationService {
 
           results.push({
             success: false,
-            error: error.message,
+            error: (error as Error).message,
             channels: [channel],
           });
         }
@@ -237,7 +323,7 @@ export class NotificationService {
 
       return {
         success: false,
-        error: error.message,
+        error: (error as Error).message,
         channels: [],
       };
     }
@@ -316,23 +402,18 @@ export class NotificationService {
     }
 
     // Get from memory store
-    let preferences = this.userPreferences.get(userId);
-
-    if (!preferences) {
-      // Return default preferences
-      preferences = {
-        userId,
-        enabled: true,
-        channels: ['email', 'push', 'inApp'],
-        quiet: {
-          enabled: false,
-          start: '22:00',
-          end: '08:00',
-          timezone: 'UTC',
-        },
-        types: {},
-      };
-    }
+    const preferences: NotificationPreferences = this.userPreferences.get(userId) ?? {
+      userId,
+      enabled: true,
+      channels: ['email', 'push', 'inApp'],
+      quiet: {
+        enabled: false,
+        start: '22:00',
+        end: '08:00',
+        timezone: 'UTC',
+      },
+      types: {},
+    };
 
     // Cache preferences
     if (this.cache) {
@@ -388,7 +469,7 @@ export class NotificationService {
       notificationId,
       status: 'delivered',
       deliveredAt: new Date(),
-      channel: 'email',
+      channel: 'email' as InternalChannel,
       events: [],
     };
   }
@@ -428,7 +509,7 @@ export class NotificationService {
   async getMetrics(): Promise<NotificationMetrics> {
     let pending = 0;
     if (this.queueService) {
-      const queue = this.queueService.getQueue(NOTIFICATION_QUEUE);
+      const queue = (this.queueService as any).getQueue(NOTIFICATION_QUEUE);
       if (queue) {
         pending = (await queue.getWaitingCount()) + (await queue.getActiveCount());
       }
@@ -442,7 +523,7 @@ export class NotificationService {
 
   async retryFailed(): Promise<void> {
     if (this.queueService) {
-      const queue = this.queueService.getQueue(NOTIFICATION_QUEUE);
+      const queue = (this.queueService as any).getQueue(NOTIFICATION_QUEUE);
       if (queue) {
         const failed = await queue.getFailed();
         for (const job of failed) {
@@ -455,7 +536,7 @@ export class NotificationService {
 
   async clearQueue(): Promise<void> {
     if (this.queueService) {
-      const queue = this.queueService.getQueue(NOTIFICATION_QUEUE);
+      const queue = (this.queueService as any).getQueue(NOTIFICATION_QUEUE);
       if (queue) {
         await queue.obliterate({ force: true });
         this.logger.info('Notification queue cleared');
@@ -476,11 +557,11 @@ export class NotificationService {
       const emailSvc = this.emailService;
       this.channelHandlers.set('email', {
         send: async (notification) => {
-          const result = await emailSvc.send({
+          const result = await emailSvc.sendEmail({
             to: notification.email || '',
             subject: notification.title,
-            text: notification.body,
-            html: notification.data?.html,
+            body: notification.body,
+            html: notification.data?.html as string | undefined,
           });
 
           return {
@@ -565,16 +646,16 @@ export class NotificationService {
     preferences: NotificationPreferences
   ): NotificationChannel[] {
     // Use specified channels or user preferences
-    let channels = notification.channels || preferences.channels || ['email'];
+    let channels: InternalChannel[] = notification.channels || preferences.channels || ['email'];
 
     // Check quiet hours
     if (preferences.quiet?.enabled && this.isQuietHours(preferences.quiet)) {
       // Filter out noisy channels during quiet hours
-      channels = channels.filter((c) => c === 'email' || c === 'inApp');
+      channels = channels.filter((c: InternalChannel) => c === 'email' || c === 'inApp');
     }
 
     // Sort by priority
-    return channels.sort((a, b) => {
+    return channels.sort((a: InternalChannel, b: InternalChannel) => {
       const handlerA = this.channelHandlers.get(a);
       const handlerB = this.channelHandlers.get(b);
       return (handlerA?.getPriority() || 999) - (handlerB?.getPriority() || 999);
