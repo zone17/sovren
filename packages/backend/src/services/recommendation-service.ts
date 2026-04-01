@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 🤖 RECOMMENDATION SERVICE
  *
@@ -112,7 +111,7 @@ export class RecommendationService {
 
       recommendedCreators?.forEach((rec) => {
         const creatorId = rec.creator_id;
-        const creator = rec.creators;
+        const creator = rec.creators as unknown as Record<string, unknown>;
 
         if (!creatorScores.has(creatorId)) {
           creatorScores.set(creatorId, 0);
@@ -123,7 +122,9 @@ export class RecommendationService {
         creatorScores.set(creatorId, (creatorScores.get(creatorId) ?? 0) + 1);
 
         // Bonus score for matching categories
-        const matchingCategories = creator.categories?.filter((cat: string) =>
+        const creatorObj = creator as Record<string, unknown>;
+        const categories = (creatorObj?.categories as string[]) || [];
+        const matchingCategories = categories.filter((cat: string) =>
           userCategories.has(cat)
         );
         creatorScores.set(
@@ -137,21 +138,21 @@ export class RecommendationService {
         .sort(([, a], [, b]) => b - a)
         .slice(0, params.limit)
         .map(([creatorId, score]) => {
-          const creator = creatorData.get(creatorId);
+          const creator = creatorData.get(creatorId) ?? {};
           return {
-            id: creator.id,
-            name: creator.name,
-            avatar_url: creator.avatar_url,
-            bio: creator.bio,
-            subscriber_count: creator.subscriber_count || 0,
-            content_count: creator.content_count || 0,
-            categories: creator.categories || [],
-            average_rating: creator.average_rating || 0,
+            id: creator.id as string,
+            name: creator.name as string,
+            avatar_url: creator.avatar_url as string,
+            bio: creator.bio as string,
+            subscriber_count: (creator.subscriber_count as number) || 0,
+            content_count: (creator.content_count as number) || 0,
+            categories: (creator.categories as string[]) || [],
+            average_rating: (creator.average_rating as number) || 0,
             similarity_score: score,
           };
         });
 
-      return sortedCreators;
+      return sortedCreators as unknown as Creator[];
     } catch (error) {
       this.logger.error('Failed to get creator recommendations', error);
       throw error;
@@ -187,10 +188,14 @@ export class RecommendationService {
       const tagCount = new Map<string, number>();
 
       viewHistory?.forEach((view) => {
-        const content = view.content;
+        const content = view.content as unknown as Record<string, unknown> | null;
         if (content) {
-          categoryCount.set(content.category, (categoryCount.get(content.category) || 0) + 1);
-          content.tags?.forEach((tag: string) => {
+          const category = content.category as string;
+          if (category) {
+            categoryCount.set(category, (categoryCount.get(category) || 0) + 1);
+          }
+          const tags = content.tags as string[] | undefined;
+          tags?.forEach((tag: string) => {
             tagCount.set(tag, (tagCount.get(tag) || 0) + 1);
           });
         }
@@ -394,7 +399,7 @@ export class RecommendationService {
     let score = 0;
 
     // Category match
-    if (userCategories.includes(content.category)) {
+    if (content.category && userCategories.includes(content.category)) {
       score += 30;
       if (userCategories[0] === content.category) {
         score += 20; // Top category bonus

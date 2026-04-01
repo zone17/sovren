@@ -1,4 +1,5 @@
 // @ts-nocheck
+// TODO: requires infrastructure fixes — ServiceToken/inversify incompatibility, nostr-tools VerifiedEvent import, IEventBus.emit, INotificationService.send, IDatabase.query.rows
 /**
  * ContentPublishingService
  *

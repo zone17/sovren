@@ -1,4 +1,7 @@
 // @ts-nocheck
+// TODO: requires infrastructure fixes — ServiceToken not assignable to inversify ServiceIdentifier,
+// missing auth interfaces (IUserAuthenticationService, LoginCredentials, AuthSession, MFAType, MFASetup),
+// ServiceError missing 'code' option, IEventBus missing 'emit', INotificationService missing 'send'
 import { injectable, inject } from 'inversify';
 import { TYPES } from '../../container/types';
 import {

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import type {
   IContentVersioningService,
   ContentVersion,
@@ -81,8 +80,9 @@ export class ContentVersioningService implements IContentVersioningService {
         [content.id]
       );
 
+      const rows = latestVersionResult as unknown as Array<Record<string, unknown>>;
       const nextVersionNumber =
-        latestVersionResult.rows.length > 0 ? latestVersionResult.rows[0].version_number + 1 : 1;
+        rows.length > 0 ? (rows[0].version_number as number) + 1 : 1;
 
       // Determine if this should be a snapshot or delta
       const isSnapshot = nextVersionNumber % this.snapshotInterval === 0;
@@ -160,7 +160,7 @@ export class ContentVersioningService implements IContentVersioningService {
       });
 
       // Emit event
-      await this.eventBus.emit('content.version.created', {
+      await (this.eventBus as unknown as { emit(e: string, d: unknown): Promise<void> }).emit('content.version.created', {
         versionId: version.id,
         contentId: content.id,
         versionNumber: nextVersionNumber,
@@ -202,7 +202,7 @@ export class ContentVersioningService implements IContentVersioningService {
         [contentId]
       );
 
-      const versions = result.rows.map((row) => this.mapRowToVersion(row));
+      const versions = (result as unknown as Array<Record<string, unknown>>).map((row) => this.mapRowToVersion(row));
 
       this.logger.debug('Retrieved versions', {
         contentId,
@@ -240,13 +240,14 @@ export class ContentVersioningService implements IContentVersioningService {
         versionId,
       ]);
 
-      if (result.rows.length === 0) {
+      const versionRows = result as unknown as Array<Record<string, unknown>>;
+      if (versionRows.length === 0) {
         throw new ServiceError('Version not found', {
           context: { versionId },
         });
       }
 
-      const version = this.mapRowToVersion(result.rows[0]);
+      const version = this.mapRowToVersion(versionRows[0]);
 
       // Cache it
       await this.cache.set(`${this.cachePrefix}${versionId}`, version, this.cacheTTL);
@@ -324,7 +325,7 @@ export class ContentVersioningService implements IContentVersioningService {
       });
 
       // Emit event
-      await this.eventBus.emit('content.reverted', {
+      await (this.eventBus as unknown as { emit(e: string, d: unknown): Promise<void> }).emit('content.reverted', {
         contentId,
         versionId,
         newVersionNumber: newVersion.versionNumber,
@@ -600,13 +601,14 @@ export class ContentVersioningService implements IContentVersioningService {
       [contentId, targetVersion]
     );
 
-    if (snapshotResult.rows.length === 0) {
+    const snapRows = snapshotResult as unknown as Array<Record<string, unknown>>;
+    if (snapRows.length === 0) {
       throw new ServiceError('No snapshot found for reconstruction', {
         context: { contentId, targetVersion },
       });
     }
 
-    const snapshotVersion = this.mapRowToVersion(snapshotResult.rows[0]);
+    const snapshotVersion = this.mapRowToVersion(snapRows[0]);
     let content = snapshotVersion.snapshot!;
 
     // If target is the snapshot, we're done
@@ -624,7 +626,8 @@ export class ContentVersioningService implements IContentVersioningService {
       [contentId, snapshotVersion.versionNumber, targetVersion]
     );
 
-    for (const row of deltasResult.rows) {
+    const deltaRows = deltasResult as unknown as Array<Record<string, unknown>>;
+    for (const row of deltaRows) {
       const version = this.mapRowToVersion(row);
       if (version.delta) {
         content = this.applyDelta(content, version.delta);
