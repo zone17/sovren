@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * SubscriptionService Implementation
  * User Story: US-E5-026
@@ -327,8 +326,11 @@ export class SubscriptionService implements ISubscriptionService {
 
       // Audit log
       await this.auditLog.log({
-        actor: { type: 'user', id: params.userId, name: 'User' },
         action: 'subscription.create',
+        entityType: 'subscription',
+        entityId: subscription.id,
+        userId: params.userId,
+        actor: { type: 'user', id: params.userId, name: 'User' },
         resource: { type: 'subscription', id: subscription.id },
         outcome: 'success',
         details: { planId: params.planId, billingInterval: params.billingInterval, isTrialing },
@@ -405,8 +407,11 @@ export class SubscriptionService implements ISubscriptionService {
     }
 
     await this.auditLog.log({
-      actor: { type: 'user', id: subscription.userId, name: 'User' },
       action: 'subscription.update',
+      entityType: 'subscription',
+      entityId: subscriptionId,
+      userId: subscription.userId,
+      actor: { type: 'user', id: subscription.userId, name: 'User' },
       resource: { type: 'subscription', id: subscriptionId },
       outcome: 'success',
       details: params,
@@ -433,8 +438,10 @@ export class SubscriptionService implements ISubscriptionService {
     await this.repository.savePlan(plan);
 
     await this.auditLog.log({
-      actor: { type: 'system', id: 'subscription-service', name: 'Subscription Service' },
       action: 'plan.create',
+      entityType: 'subscription_plan',
+      entityId: plan.id,
+      actor: { type: 'system', id: 'subscription-service', name: 'Subscription Service' },
       resource: { type: 'subscription_plan', id: plan.id },
       outcome: 'success',
       details: { tier: plan.tier, monthlyPrice: plan.monthlyPrice },
@@ -518,8 +525,11 @@ export class SubscriptionService implements ISubscriptionService {
     await this.repository.updateSubscription(subscription);
 
     await this.auditLog.log({
-      actor: { type: 'user', id: subscription.userId, name: 'User' },
       action: 'subscription.cancel',
+      entityType: 'subscription',
+      entityId: subscriptionId,
+      userId: subscription.userId,
+      actor: { type: 'user', id: subscription.userId, name: 'User' },
       resource: { type: 'subscription', id: subscriptionId },
       outcome: 'success',
       details: { immediate: options.immediate, reason: options.reason },
@@ -757,16 +767,15 @@ export class SubscriptionService implements ISubscriptionService {
       invoice = await this.createProrationInvoice(subscription, proration);
 
       // Process payment
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const paymentResult = await this.paymentService.processPayment({
-        userId: subscription.userId,
-        amount: proration.amountDue,
-        currency: subscription.currency as any,
-        description: `Upgrade to ${proration.newPlan.name}`,
-        metadata: { subscriptionId, invoiceId: invoice.id },
-      });
+        invoiceId: invoice.id,
+        method: 'lightning' as any,
+        metadata: { userId: subscription.userId, subscriptionId, amount: proration.amountDue },
+      } as any);
 
       if (paymentResult.success) {
-        await this.markInvoicePaid(invoice.id, paymentResult.transactionId);
+        await this.markInvoicePaid(invoice.id, paymentResult.transactionId!);
       } else {
         throw new Error(`Payment failed: ${paymentResult.error}`);
       }
@@ -951,17 +960,16 @@ export class SubscriptionService implements ISubscriptionService {
       const invoice = await this.createInvoice(subscriptionId, InvoiceType.RENEWAL);
 
       // Process payment
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const paymentResult = await this.paymentService.processPayment({
-        userId: subscription.userId,
-        amount: invoice.totalAmount,
-        currency: subscription.currency as any,
-        description: `Subscription renewal`,
-        metadata: { subscriptionId, invoiceId: invoice.id },
-      });
+        invoiceId: invoice.id,
+        method: 'lightning' as any,
+        metadata: { userId: subscription.userId, subscriptionId, amount: invoice.totalAmount },
+      } as any);
 
       if (paymentResult.success) {
         // Mark invoice paid
-        await this.markInvoicePaid(invoice.id, paymentResult.transactionId);
+        await this.markInvoicePaid(invoice.id, paymentResult.transactionId!);
 
         // Update subscription
         subscription.lastPaymentId = paymentResult.transactionId;
@@ -1008,7 +1016,7 @@ export class SubscriptionService implements ISubscriptionService {
         return {
           subscriptionId,
           success: false,
-          error: paymentResult.error,
+          error: typeof paymentResult.error === 'string' ? paymentResult.error : paymentResult.error?.message ?? 'Payment failed',
           nextBillingDate: subscription.nextBillingDate,
           retryScheduled: retryDate,
         };
@@ -1659,7 +1667,7 @@ export class SubscriptionService implements ISubscriptionService {
 
     // Publish to event bus (aligned with IEventBus.publish interface)
     const domainEvent = new DomainEventBuilder()
-      .withType(eventType as DomainEventType)
+      .withType(eventType as unknown as DomainEventType)
       .withAggregateId(subscription.id)
       .withAggregateType('subscription')
       .withPayload(event)
