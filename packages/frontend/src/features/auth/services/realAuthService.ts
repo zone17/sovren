@@ -264,9 +264,7 @@ export class RealAuthService {
     nameOverride?: string
   ): User {
     const metadata = supabaseUser.user_metadata ?? {};
-    const role = this.mapBackendRole(
-      (roleOverride ?? metadata.role ?? 'supporter') as string
-    );
+    const role = this.mapBackendRole((roleOverride ?? metadata.role ?? 'supporter') as string);
     const name = (nameOverride ?? metadata.name ?? supabaseUser.email ?? '') as string;
     return {
       id: supabaseUser.id,

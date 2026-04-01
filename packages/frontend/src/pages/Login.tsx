@@ -9,7 +9,7 @@ import { createSignatureMessage } from '@shared/types/nostr/auth';
 
 async function sha256Hex(input: string): Promise<string> {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input));
-  return Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, '0')).join('');
+  return Array.from(new Uint8Array(buf), b => b.toString(16).padStart(2, '0')).join('');
 }
 
 const Login: React.FC = () => {
@@ -48,7 +48,9 @@ const Login: React.FC = () => {
     const isNsec = key.startsWith('nsec1');
     const isHex = /^[0-9a-fA-F]{64}$/.test(key);
     if (!isNsec && !isHex) {
-      setPrivateKeyError('Please enter a valid NOSTR private key (starts with nsec1 or 64-char hex)');
+      setPrivateKeyError(
+        'Please enter a valid NOSTR private key (starts with nsec1 or 64-char hex)'
+      );
       return false;
     }
     setPrivateKeyError(null);
@@ -285,24 +287,24 @@ const Login: React.FC = () => {
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = e.target;
-    setEmailCredentials((prev) => ({ ...prev, [name]: value }));
+    setEmailCredentials(prev => ({ ...prev, [name]: value }));
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="border-b border-border bg-card/80 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link to="/" className="flex items-center">
-              <span className="text-2xl font-bold text-purple-500">Sovren</span>
-              <span className="ml-2 text-sm text-muted-foreground">
+    <div className='min-h-screen bg-background'>
+      <div className='border-b border-border bg-card/80 backdrop-blur-sm'>
+        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+          <div className='flex justify-between items-center h-16'>
+            <Link to='/' className='flex items-center'>
+              <span className='text-2xl font-bold text-purple-500'>Sovren</span>
+              <span className='ml-2 text-sm text-muted-foreground'>
                 Decentralized Creator Platform
               </span>
             </Link>
-            <div className="flex space-x-4">
+            <div className='flex space-x-4'>
               <Link
-                to="/signup"
-                className="text-muted-foreground hover:text-foreground px-3 py-2 text-sm font-medium transition-colors duration-150"
+                to='/signup'
+                className='text-muted-foreground hover:text-foreground px-3 py-2 text-sm font-medium transition-colors duration-150'
               >
                 Sign Up
               </Link>
@@ -311,21 +313,21 @@ const Login: React.FC = () => {
         </div>
       </div>
 
-      <div className="min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-        <div className="sm:mx-auto sm:w-full sm:max-w-md">
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-foreground font-display">
+      <div className='min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8'>
+        <div className='sm:mx-auto sm:w-full sm:max-w-md'>
+          <h2 className='mt-6 text-center text-3xl font-extrabold text-foreground font-display'>
             Sign in to Sovren
           </h2>
-          <p className="mt-2 text-center text-sm text-muted-foreground">
+          <p className='mt-2 text-center text-sm text-muted-foreground'>
             Decentralized creator platform with true ownership
           </p>
         </div>
 
-        <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-          <div className="glass py-8 px-4 shadow-lg sm:rounded-lg sm:px-10">
+        <div className='mt-8 sm:mx-auto sm:w-full sm:max-w-md'>
+          <div className='glass py-8 px-4 shadow-lg sm:rounded-lg sm:px-10'>
             {/* Authentication Mode Selector */}
-            <div className="mb-6">
-              <div className="flex space-x-1 bg-card/50 p-1 rounded-lg border border-border/50">
+            <div className='mb-6'>
+              <div className='flex space-x-1 bg-card/50 p-1 rounded-lg border border-border/50'>
                 <button
                   onClick={() => setAuthMode('nostr')}
                   className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all duration-150 ${
@@ -350,19 +352,21 @@ const Login: React.FC = () => {
             </div>
 
             {error && (
-              <div className="mb-6 rounded-md bg-red-500/10 border border-red-500/20 p-4">
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-red-400">{error}</h3>
+              <div className='mb-6 rounded-md bg-red-500/10 border border-red-500/20 p-4'>
+                <div className='ml-3'>
+                  <h3 className='text-sm font-medium text-red-400'>{error}</h3>
                 </div>
               </div>
             )}
 
             {/* NOSTR Login */}
             {authMode === 'nostr' && (
-              <div className="space-y-6">
-                <div className="bg-purple-500/10 border border-purple-500/20 rounded-md p-4">
-                  <h3 className="text-sm font-medium text-purple-300 mb-2">Sovereign Authentication</h3>
-                  <p className="text-sm text-purple-200/80">
+              <div className='space-y-6'>
+                <div className='bg-purple-500/10 border border-purple-500/20 rounded-md p-4'>
+                  <h3 className='text-sm font-medium text-purple-300 mb-2'>
+                    Sovereign Authentication
+                  </h3>
+                  <p className='text-sm text-purple-200/80'>
                     Use your NOSTR keys for true decentralized authentication. Your identity works
                     across all NOSTR-compatible platforms.
                   </p>
@@ -374,11 +378,11 @@ const Login: React.FC = () => {
                     <Button
                       onClick={handleSignInClick}
                       disabled={isLoading}
-                      className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white shadow-[0_4px_16px_rgba(139,92,246,0.3)] transition-all duration-150"
+                      className='w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white shadow-[0_4px_16px_rgba(139,92,246,0.3)] transition-all duration-150'
                     >
                       {isLoading ? (
-                        <span className="flex items-center justify-center">
-                          <Spinner size="sm" className="mr-2" />
+                        <span className='flex items-center justify-center'>
+                          <Spinner size='sm' className='mr-2' />
                           Authenticating...
                         </span>
                       ) : (
@@ -386,7 +390,7 @@ const Login: React.FC = () => {
                       )}
                     </Button>
                     {hasExtension === null && (
-                      <p className="mt-2 text-xs text-muted-foreground text-center">
+                      <p className='mt-2 text-xs text-muted-foreground text-center'>
                         Uses Alby, nos2x, or any NIP-07 browser extension
                       </p>
                     )}
@@ -395,20 +399,20 @@ const Login: React.FC = () => {
 
                 {/* Fallback: manual key entry */}
                 {hasExtension === false && (
-                  <div className="space-y-6">
-                    <div className="text-sm text-muted-foreground text-center">
+                  <div className='space-y-6'>
+                    <div className='text-sm text-muted-foreground text-center'>
                       No NOSTR extension detected. Enter your keys manually.
                     </div>
 
                     <div>
                       <Label
-                        htmlFor="publicKey"
-                        className="block text-sm font-medium text-foreground mb-2"
+                        htmlFor='publicKey'
+                        className='block text-sm font-medium text-foreground mb-2'
                       >
                         Public Key (npub...)
                       </Label>
                       <textarea
-                        id="publicKey"
+                        id='publicKey'
                         rows={3}
                         value={publicKeyInput}
                         onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -419,22 +423,22 @@ const Login: React.FC = () => {
                         className={`block w-full px-3 py-2 border rounded-md shadow-sm bg-card text-foreground placeholder-muted-foreground focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-sm font-mono transition-colors duration-150 ${
                           publicKeyError ? 'border-red-500/50' : 'border-border'
                         }`}
-                        placeholder="npub1... or hex format"
+                        placeholder='npub1... or hex format'
                       />
                       {publicKeyError && (
-                        <p className="mt-1 text-xs text-red-400">{publicKeyError}</p>
+                        <p className='mt-1 text-xs text-red-400'>{publicKeyError}</p>
                       )}
                     </div>
 
                     <div>
                       <Label
-                        htmlFor="privateKey"
-                        className="block text-sm font-medium text-foreground mb-2"
+                        htmlFor='privateKey'
+                        className='block text-sm font-medium text-foreground mb-2'
                       >
                         Private Key (nsec...)
                       </Label>
                       <textarea
-                        id="privateKey"
+                        id='privateKey'
                         rows={3}
                         value={privateKeyInput}
                         onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -445,12 +449,12 @@ const Login: React.FC = () => {
                         className={`block w-full px-3 py-2 border rounded-md shadow-sm bg-card text-foreground placeholder-muted-foreground focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-sm font-mono transition-colors duration-150 ${
                           privateKeyError ? 'border-red-500/50' : 'border-border'
                         }`}
-                        placeholder="nsec1... or hex format (never sent to server)"
+                        placeholder='nsec1... or hex format (never sent to server)'
                       />
                       {privateKeyError ? (
-                        <p className="mt-1 text-xs text-red-400">{privateKeyError}</p>
+                        <p className='mt-1 text-xs text-red-400'>{privateKeyError}</p>
                       ) : (
-                        <p className="mt-1 text-xs text-muted-foreground">
+                        <p className='mt-1 text-xs text-muted-foreground'>
                           Private key stays in your browser and is never sent to our servers
                         </p>
                       )}
@@ -460,12 +464,12 @@ const Login: React.FC = () => {
                       <Button
                         onClick={generateNostrKeys}
                         disabled={isGeneratingKeys}
-                        variant="outline"
-                        className="w-full mb-4 border-purple-500/30 hover:border-purple-500/50 transition-colors duration-150"
+                        variant='outline'
+                        className='w-full mb-4 border-purple-500/30 hover:border-purple-500/50 transition-colors duration-150'
                       >
                         {isGeneratingKeys ? (
-                          <span className="flex items-center justify-center">
-                            <Spinner size="sm" className="mr-2" />
+                          <span className='flex items-center justify-center'>
+                            <Spinner size='sm' className='mr-2' />
                             Generating...
                           </span>
                         ) : (
@@ -477,11 +481,11 @@ const Login: React.FC = () => {
                     <Button
                       onClick={handleManualLogin}
                       disabled={isLoading || !isManualKeysValid()}
-                      className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white shadow-[0_4px_16px_rgba(139,92,246,0.3)] transition-all duration-150"
+                      className='w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white shadow-[0_4px_16px_rgba(139,92,246,0.3)] transition-all duration-150'
                     >
                       {isLoading ? (
-                        <span className="flex items-center justify-center">
-                          <Spinner size="sm" className="mr-2" />
+                        <span className='flex items-center justify-center'>
+                          <Spinner size='sm' className='mr-2' />
                           Authenticating...
                         </span>
                       ) : (
@@ -489,10 +493,10 @@ const Login: React.FC = () => {
                       )}
                     </Button>
 
-                    <div className="text-center">
+                    <div className='text-center'>
                       <button
                         onClick={() => setHasExtension(null)}
-                        className="text-sm text-purple-400 hover:text-purple-300 transition-colors duration-150"
+                        className='text-sm text-purple-400 hover:text-purple-300 transition-colors duration-150'
                       >
                         Try extension sign-in instead
                       </button>
@@ -504,43 +508,43 @@ const Login: React.FC = () => {
 
             {/* Email Login */}
             {authMode === 'email' && (
-              <div className="space-y-6">
+              <div className='space-y-6'>
                 <div>
-                  <Label htmlFor="email">Email address</Label>
+                  <Label htmlFor='email'>Email address</Label>
                   <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
+                    id='email'
+                    name='email'
+                    type='email'
+                    autoComplete='email'
                     required
                     value={emailCredentials.email}
                     onChange={handleEmailChange}
-                    placeholder="Enter your email"
+                    placeholder='Enter your email'
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor='password'>Password</Label>
                   <Input
-                    id="password"
-                    name="password"
-                    type="password"
-                    autoComplete="current-password"
+                    id='password'
+                    name='password'
+                    type='password'
+                    autoComplete='current-password'
                     required
                     value={emailCredentials.password}
                     onChange={handleEmailChange}
-                    placeholder="Enter your password"
+                    placeholder='Enter your password'
                   />
                 </div>
 
                 <Button
                   onClick={handleEmailLogin}
                   disabled={isLoading || !emailCredentials.email || !emailCredentials.password}
-                  className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white shadow-[0_4px_16px_rgba(139,92,246,0.3)] transition-all duration-150"
+                  className='w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white shadow-[0_4px_16px_rgba(139,92,246,0.3)] transition-all duration-150'
                 >
                   {isLoading ? (
-                    <span className="flex items-center justify-center">
-                      <Spinner size="sm" className="mr-2" />
+                    <span className='flex items-center justify-center'>
+                      <Spinner size='sm' className='mr-2' />
                       Signing in...
                     </span>
                   ) : (
@@ -550,12 +554,12 @@ const Login: React.FC = () => {
               </div>
             )}
 
-            <div className="mt-6 text-center">
-              <p className="text-sm text-muted-foreground">
+            <div className='mt-6 text-center'>
+              <p className='text-sm text-muted-foreground'>
                 Don't have an account?{' '}
                 <Link
-                  to="/signup"
-                  className="font-medium text-purple-400 hover:text-purple-300 transition-colors duration-150"
+                  to='/signup'
+                  className='font-medium text-purple-400 hover:text-purple-300 transition-colors duration-150'
                 >
                   Create account
                 </Link>

@@ -29,7 +29,9 @@ const AuthCallback: React.FC = () => {
           // Email confirmed and session active — redirect to profile
           navigate('/profile', { replace: true });
         } else {
-          setError('Email confirmation failed. Please try again or request a new confirmation link.');
+          setError(
+            'Email confirmation failed. Please try again or request a new confirmation link.'
+          );
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Authentication callback failed');
@@ -41,13 +43,13 @@ const AuthCallback: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="glass p-8 rounded-lg shadow-lg max-w-md text-center">
-          <h2 className="text-xl font-bold text-red-400 mb-4">Confirmation Failed</h2>
-          <p className="text-sm text-muted-foreground mb-6">{error}</p>
+      <div className='min-h-screen bg-background flex items-center justify-center'>
+        <div className='glass p-8 rounded-lg shadow-lg max-w-md text-center'>
+          <h2 className='text-xl font-bold text-red-400 mb-4'>Confirmation Failed</h2>
+          <p className='text-sm text-muted-foreground mb-6'>{error}</p>
           <a
-            href="/login"
-            className="text-purple-400 hover:text-purple-300 font-medium transition-colors duration-150"
+            href='/login'
+            className='text-purple-400 hover:text-purple-300 font-medium transition-colors duration-150'
           >
             Go to login
           </a>
@@ -57,10 +59,10 @@ const AuthCallback: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="text-center">
-        <Spinner size="lg" className="mb-4" />
-        <p className="text-sm text-muted-foreground">Confirming your email...</p>
+    <div className='min-h-screen bg-background flex items-center justify-center'>
+      <div className='text-center'>
+        <Spinner size='lg' className='mb-4' />
+        <p className='text-sm text-muted-foreground'>Confirming your email...</p>
       </div>
     </div>
   );

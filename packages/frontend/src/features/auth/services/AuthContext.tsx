@@ -98,9 +98,16 @@ const demoAuthService: AuthService = {
       updated_at: new Date().toISOString(),
       email_verified: false,
       nostr_verified: false,
-      permissions: data.role === 'creator'
-        ? ['content.create', 'content.edit', 'content.delete', 'content.publish', 'payments.receive']
-        : ['payments.send'],
+      permissions:
+        data.role === 'creator'
+          ? [
+              'content.create',
+              'content.edit',
+              'content.delete',
+              'content.publish',
+              'payments.receive',
+            ]
+          : ['payments.send'],
     };
     localStorage.setItem('demo_user', JSON.stringify(demoUser));
     return { success: true, user: demoUser };
