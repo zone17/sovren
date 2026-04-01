@@ -107,6 +107,7 @@ describe('UserAuthenticationService', () => {
 
     mockNotification = {
       send: vi.fn(),
+      sendNotification: vi.fn(),
       sendBatch: vi.fn(),
     } as any;
 
@@ -259,9 +260,9 @@ describe('UserAuthenticationService', () => {
       await service.login(mockCredentials);
 
       // Assert
-      expect(mockNotification.send).toHaveBeenCalledWith(
+      expect(mockNotification.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          recipientId: 'user-123',
+          userId: 'user-123',
           type: 'security_alert',
           title: 'New device login',
         })
@@ -364,7 +365,7 @@ describe('UserAuthenticationService', () => {
       await service.verifyMFA('user-123', 'BACKUP1');
 
       // Assert
-      expect(mockNotification.send).toHaveBeenCalledWith(
+      expect(mockNotification.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
           type: 'security_warning',
           title: 'Low on backup codes',
@@ -487,7 +488,7 @@ describe('UserAuthenticationService', () => {
       const strong = await service.validatePassword('MyVeryStr0ng!P@ssw0rd2024');
 
       expect(weak.strength).toBe('weak');
-      expect(medium.strength).toBe('medium');
+      expect(medium.strength).toBe('fair');
       expect(strong.strength).toBe('strong');
     });
   });
@@ -514,7 +515,7 @@ describe('UserAuthenticationService', () => {
         'user.sessions_invalidated',
         expect.any(Object)
       );
-      expect(mockNotification.send).toHaveBeenCalledWith(
+      expect(mockNotification.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
           type: 'security_alert',
           title: 'Account locked',

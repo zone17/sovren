@@ -24,12 +24,12 @@ class MockDatabase {
     this.queryResults.set(key, result);
   }
 
-  async query(sql: string, params: any[]): Promise<{ rows: any[] }> {
+  async query(sql: string, params: any[]): Promise<any[]> {
     // Check for overridden query results first
     for (const [key, result] of this.queryResults) {
       if (sql.toLowerCase().includes(key.toLowerCase())) {
         this.queryResults.delete(key); // One-time override
-        return { rows: result };
+        return result;
       }
     }
 
@@ -37,8 +37,7 @@ class MockDatabase {
     // Note: signup_source must be checked BEFORE generic COUNT(*)+users
     // because the signup query includes both patterns
     if (sql.includes('signup_source')) {
-      return {
-        rows: [
+      return [
           {
             count: '500',
             signup_source: 'organic',
@@ -60,33 +59,32 @@ class MockDatabase {
             signup_campaign: 'google_ads',
             referrer: 'google.com',
           },
-        ],
-      };
+        ];
+
     }
 
     if (sql.includes('COUNT(*)') && sql.includes('users') && !sql.includes('user_activity')) {
-      return { rows: [{ count: '1000' }] };
+      return [{ count: '1000' }];
     }
 
     if (sql.includes('user_activity') && sql.includes('DISTINCT user_id') && sql.includes('ANY')) {
       // Cohort retention query — return realistic count relative to cohort size
-      return { rows: [{ count: '3' }] };
+      return [{ count: '3' }];
     }
 
     if (sql.includes('user_activity') && sql.includes('DISTINCT user_id')) {
-      return { rows: [{ count: '750' }] };
+      return [{ count: '750' }];
     }
 
     if (sql.includes('user_sessions')) {
-      return {
-        rows: [
+      return [
           {
             count: '50',
             avg_duration: '180',
             avg_actions: '5.5',
           },
-        ],
-      };
+        ];
+
     }
 
     if (sql.includes('DATE(activity_timestamp)')) {
@@ -103,21 +101,20 @@ class MockDatabase {
           bounce_rate: '25.5',
         });
       }
-      return { rows: mockData };
+      return mockData;
     }
 
     if (sql.includes('payments') && sql.includes('total_revenue')) {
-      return {
-        rows: [
+      return [
           { user_id: 'user1', total_revenue: '150.00' },
           { user_id: 'user2', total_revenue: '300.00' },
           { user_id: 'user3', total_revenue: '75.00' },
-        ],
-      };
+        ];
+
     }
 
     if (sql.includes('last_activity <')) {
-      return { rows: [{ count: '150' }] };
+      return [{ count: '150' }];
     }
 
     if (sql.includes('DATE(created_at)')) {
@@ -132,12 +129,11 @@ class MockDatabase {
           cumulative_users: '' + (100 + i * 10),
         });
       }
-      return { rows: mockData };
+      return mockData;
     }
 
     if (sql.includes('user_id') && sql.includes('WHERE user_id =')) {
-      return {
-        rows: [
+      return [
           {
             user_id: params[0],
             created_at: new Date('2024-01-01'),
@@ -149,8 +145,8 @@ class MockDatabase {
             subscription_status: 'active',
             payment_history_count: 5,
           },
-        ],
-      };
+        ];
+
     }
 
     // Cohort user query: SELECT user_id FROM users WHERE created_at >= ...
@@ -160,20 +156,18 @@ class MockDatabase {
       sql.includes('created_at') &&
       !sql.includes('COUNT')
     ) {
-      return {
-        rows: [
+      return [
           { user_id: 'user1' },
           { user_id: 'user2' },
           { user_id: 'user3' },
           { user_id: 'user4' },
           { user_id: 'user5' },
-        ],
-      };
+        ];
+
     }
 
     if (sql.includes('activity_level')) {
-      return {
-        rows: [
+      return [
           {
             user_id: 'user1',
             activity_level: 'high',
@@ -186,27 +180,27 @@ class MockDatabase {
             location: 'US',
             created_at: new Date('2024-01-15'),
           },
-        ],
-      };
+        ];
+
     }
 
     // User journey funnel queries
     if (sql.includes('user_journey')) {
-      return { rows: [{ count: '100', avg_time: '60' }] };
+      return [{ count: '100', avg_time: '60' }];
     }
 
     // Retention cohort queries
     if (sql.includes('cohort') || sql.includes('retained')) {
-      return { rows: [{ count: '80', retention_rate: '0.8' }] };
+      return [{ count: '80', retention_rate: '0.8' }];
     }
 
     // Default: return a count row for COUNT queries to prevent undefined access
     if (sql.includes('COUNT')) {
-      return { rows: [{ count: '0' }] };
+      return [{ count: '0' }];
     }
 
     // Default response
-    return { rows: [] };
+    return [];
   }
 
   async execute(sql: string, params: any[]): Promise<void> {
