@@ -1,6 +1,5 @@
-// @ts-nocheck
 /**
- * 🤖 **AI-ENHANCED FEATURES SERVICE**
+ * AI-ENHANCED FEATURES SERVICE
  *
  * Elite implementation of US-103 through US-106
  * Complete AI-powered content enhancement system
@@ -97,9 +96,9 @@ export class AIEnhancedFeaturesService {
         modelVersion: '1.0.0',
         lastUpdated: new Date(),
       };
-    } catch (error) {
+    } catch (error: unknown) {
       throw new ContentTaggingError(
-        `Failed to generate content tags: ${error.message}`,
+        `Failed to generate content tags: ${(error as Error).message}`,
         'TAGGING_ERROR',
         contentId,
         { contentText: contentText.substring(0, 100) }
@@ -139,9 +138,9 @@ export class AIEnhancedFeaturesService {
 
       // Trigger learning algorithm update (async)
       this.updateTaggingModel(contentId, feedback).catch(console.error);
-    } catch (error) {
+    } catch (error: unknown) {
       throw new ContentTaggingError(
-        `Failed to process tag feedback: ${error.message}`,
+        `Failed to process tag feedback: ${(error as Error).message}`,
         'FEEDBACK_ERROR',
         contentId,
         { userId, feedback }
@@ -173,9 +172,9 @@ export class AIEnhancedFeaturesService {
       await this.storeContentTopics(contentId, hierarchicalTopics);
 
       return hierarchicalTopics;
-    } catch (error) {
+    } catch (error: unknown) {
       throw new TopicExtractionError(
-        `Failed to extract topics: ${error.message}`,
+        `Failed to extract topics: ${(error as Error).message}`,
         'EXTRACTION_ERROR',
         contentId,
         'hybrid'
@@ -202,9 +201,9 @@ export class AIEnhancedFeaturesService {
       if (error) throw error;
 
       return this.calculateTrendMetrics(data);
-    } catch (error) {
+    } catch (error: unknown) {
       throw new TopicExtractionError(
-        `Failed to analyze topic trends: ${error.message}`,
+        `Failed to analyze topic trends: ${(error as Error).message}`,
         'TREND_ANALYSIS_ERROR',
         topicId,
         'trend_analysis'
@@ -238,9 +237,9 @@ export class AIEnhancedFeaturesService {
       await this.storeClusters(clustersWithQuality);
 
       return clustersWithQuality;
-    } catch (error) {
+    } catch (error: unknown) {
       throw new ContentClusteringError(
-        `Failed to perform clustering: ${error.message}`,
+        `Failed to perform clustering: ${(error as Error).message}`,
         'CLUSTERING_ERROR',
         'kmeans'
       );
@@ -265,7 +264,7 @@ export class AIEnhancedFeaturesService {
         await this.updateClusterAssignments(contentId, newAssignments);
         await this.updateClusterQualityMetrics(newAssignments.map((a) => a.clusterId));
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to update clusters in real-time:', error);
     }
   }
@@ -318,9 +317,9 @@ export class AIEnhancedFeaturesService {
       await this.storeRelatedContentSuggestions(contentId, rankedSuggestions);
 
       return rankedSuggestions.slice(0, relatedConfig.maxSuggestions);
-    } catch (error) {
+    } catch (error: unknown) {
       throw new RelatedContentError(
-        `Failed to generate related content suggestions: ${error.message}`,
+        `Failed to generate related content suggestions: ${(error as Error).message}`,
         'SUGGESTION_ERROR',
         contentId,
         'hybrid'
@@ -347,9 +346,9 @@ export class AIEnhancedFeaturesService {
       if (error) throw error;
 
       return this.calculateRelatedContentMetrics(data);
-    } catch (error) {
+    } catch (error: unknown) {
       throw new RelatedContentError(
-        `Failed to analyze related content performance: ${error.message}`,
+        `Failed to analyze related content performance: ${(error as Error).message}`,
         'ANALYTICS_ERROR',
         contentId,
         'performance_analysis'
@@ -432,7 +431,9 @@ export class AIEnhancedFeaturesService {
     // Clean up cache if it gets too large
     if (this.cache.size > this.config.cacheConfig!.maxSize) {
       const oldestKey = this.cache.keys().next().value;
-      this.cache.delete(oldestKey);
+      if (oldestKey !== undefined) {
+        this.cache.delete(oldestKey);
+      }
     }
   }
 
@@ -735,9 +736,9 @@ export class AIEnhancedFeaturesService {
         source: tag.source,
         reasoning: tag.reasoning,
       }));
-    } catch (error) {
+    } catch (error: unknown) {
       throw new ContentTaggingError(
-        `Failed to get content tags: ${error.message}`,
+        `Failed to get content tags: ${(error as Error).message}`,
         'TAG_RETRIEVAL_ERROR',
         contentId
       );
@@ -775,9 +776,9 @@ export class AIEnhancedFeaturesService {
         isActive: topic.is_active,
         createdAt: new Date(topic.created_at),
       }));
-    } catch (error) {
+    } catch (error: unknown) {
       throw new TopicExtractionError(
-        `Failed to get topic hierarchy: ${error.message}`,
+        `Failed to get topic hierarchy: ${(error as Error).message}`,
         'HIERARCHY_ERROR',
         rootTopic || 'root',
         'hierarchy'
@@ -847,9 +848,9 @@ export class AIEnhancedFeaturesService {
         lastUpdated: new Date(cluster.last_updated),
         isActive: cluster.is_active,
       }));
-    } catch (error) {
+    } catch (error: unknown) {
       throw new ContentClusteringError(
-        `Failed to get clusters: ${error.message}`,
+        `Failed to get clusters: ${(error as Error).message}`,
         'CLUSTER_RETRIEVAL_ERROR',
         'unknown'
       );
@@ -885,9 +886,9 @@ export class AIEnhancedFeaturesService {
           })),
         },
       };
-    } catch (error) {
+    } catch (error: unknown) {
       throw new ContentClusteringError(
-        `Failed to get cluster analytics: ${error.message}`,
+        `Failed to get cluster analytics: ${(error as Error).message}`,
         'ANALYTICS_ERROR',
         'analytics'
       );
@@ -921,9 +922,9 @@ export class AIEnhancedFeaturesService {
       this.updateSuggestionMetrics(interaction.suggestionId, interaction.interactionType).catch(
         console.error
       );
-    } catch (error) {
+    } catch (error: unknown) {
       throw new RelatedContentError(
-        `Failed to track interaction: ${error.message}`,
+        `Failed to track interaction: ${(error as Error).message}`,
         'TRACKING_ERROR',
         interaction.contentId,
         'interaction_tracking'
@@ -987,11 +988,11 @@ export class AIEnhancedFeaturesService {
               );
               break;
           }
-        } catch (error) {
+        } catch (error: unknown) {
           results.errors.push({
             enhancement,
-            error: error.message,
-            code: error.code || 'UNKNOWN_ERROR',
+            error: (error as Error).message,
+            code: (error as any).code || 'UNKNOWN_ERROR',
           });
         }
       }
@@ -1009,8 +1010,8 @@ export class AIEnhancedFeaturesService {
       };
 
       return results;
-    } catch (error) {
-      throw new Error(`Content enhancement failed: ${error.message}`);
+    } catch (error: unknown) {
+      throw new Error(`Content enhancement failed: ${(error as Error).message}`);
     }
   }
 
@@ -1037,8 +1038,8 @@ export class AIEnhancedFeaturesService {
       }
 
       return services;
-    } catch (error) {
-      throw new Error(`Health check failed: ${error.message}`);
+    } catch (error: unknown) {
+      throw new Error(`Health check failed: ${(error as Error).message}`);
     }
   }
 

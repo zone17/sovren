@@ -1,4 +1,3 @@
-// @ts-nocheck
 // TODO: requires infrastructure fixes — ServiceToken/inversify incompatibility, nostr-tools VerifiedEvent import, IEventBus.emit, INotificationService.send, IDatabase.query.rows
 /**
  * ContentPublishingService
@@ -13,7 +12,22 @@
  */
 
 
-import { finalizeEvent, type VerifiedEvent } from 'nostr-tools/pure';
+import { finalizeEvent } from 'nostr-tools/pure';
+
+/**
+ * Local VerifiedEvent type — nostr-tools exports this from 'nostr-tools/pure'
+ * but moduleResolution: "node" in tsconfig can't resolve the subpath export.
+ * This mirrors the actual nostr-tools VerifiedEvent shape.
+ */
+interface VerifiedEvent {
+  id: string;
+  pubkey: string;
+  created_at: number;
+  kind: number;
+  tags: string[][];
+  content: string;
+  sig: string;
+}
 import { SimplePool } from 'nostr-tools/pool';
 import { hexToBytes } from '@noble/hashes/utils';
 import { v4 as uuidv4 } from 'uuid';
@@ -31,6 +45,22 @@ import { IEventBusService } from '../../interfaces/IEventBusService';
 import { IDatabase } from '../../interfaces/IDatabase';
 import { INotificationService } from '../../interfaces/INotificationService';
 import { Logger } from '../../utils/logger';
+
+/**
+ * Wrapper for database query results that provides a .rows accessor.
+ * IDatabase.query returns T[], but this service was written expecting { rows: T[] }.
+ * This adapter normalizes both shapes.
+ */
+interface QueryResult<T> {
+  rows: T[];
+}
+
+/**
+ * Wraps a raw array result from IDatabase.query into a { rows } object.
+ */
+function asRows<T>(result: T[]): QueryResult<T> {
+  return { rows: result };
+}
 import { ServiceError } from '../../utils/errors';
 import { decrypt, isEncrypted } from '../../utils/encryption';
 import { getSecretsService } from '../SecretsService';
@@ -96,14 +126,14 @@ export class ContentPublishingService {
     try {
       this.logger.info('Recovering scheduled publish jobs');
 
-      const result = await this.db.query<any>(
+      const result = asRows(await this.db.query<any>(
         `SELECT cs.schedule_id, cs.content_id, cs.scheduled_for
          FROM content_schedule cs
          JOIN content c ON c.id = cs.content_id
          WHERE c.status = 'scheduled'
            AND cs.scheduled_for > $1`,
         [new Date()]
-      );
+      ));
 
       for (const row of result.rows) {
         const publishAt = new Date(row.scheduled_for);
@@ -590,7 +620,7 @@ export class ContentPublishingService {
    */
   async getScheduledContent(): Promise<ScheduledContent[]> {
     try {
-      const result = await this.db.query<any>(
+      const result = asRows(await this.db.query<any>(
         `SELECT
            c.*,
            cs.schedule_id,
@@ -599,9 +629,9 @@ export class ContentPublishingService {
          JOIN content_schedule cs ON c.id = cs.content_id
          WHERE c.status = 'scheduled'
          ORDER BY cs.scheduled_for ASC`
-      );
+      ));
 
-      return result.rows.map((row) => ({
+      return result.rows.map((row: any) => ({
         ...row,
         scheduledFor: new Date(row.scheduled_for),
         scheduleId: row.schedule_id,
@@ -641,7 +671,7 @@ export class ContentPublishingService {
    * Retrieves content by ID
    */
   private async getContent(contentId: string): Promise<Content> {
-    const result = await this.db.query<any>('SELECT * FROM content WHERE id = $1', [contentId]);
+    const result = asRows(await this.db.query<any>('SELECT * FROM content WHERE id = $1', [contentId]));
 
     if (result.rows.length === 0) {
       throw new ServiceError('Content not found', {
@@ -707,12 +737,12 @@ export class ContentPublishingService {
     }
 
     // Check database
-    const result = await this.db.query<any>(
+    const result = asRows(await this.db.query<any>(
       `SELECT content_id, published_at, nostr_event_id
        FROM content_publish_records
        WHERE idempotency_key = $1`,
       [idempotencyKey]
-    );
+    ));
 
     if (result.rows.length > 0) {
       const record = result.rows[0];
@@ -765,28 +795,27 @@ export class ContentPublishingService {
   private async notifySubscribers(content: PublishedContent): Promise<void> {
     try {
       // Get subscribers for this author
-      const result = await this.db.query<any>(
+      const result = asRows(await this.db.query<any>(
         `SELECT user_id
          FROM subscriptions
          WHERE author_id = $1
            AND status = 'active'`,
         [content.authorId]
-      );
+      ));
 
-      const subscribers = result.rows.map((row) => row.user_id);
+      const subscribers = result.rows.map((row: any) => row.user_id);
 
       // Send notifications
       for (const subscriberId of subscribers) {
-        await this.notification.send({
-          recipientId: subscriberId,
+        await this.notification.sendNotification({
+          userId: subscriberId,
           type: 'new_content',
           title: 'New content from creator you follow',
           message: `${content.title}`,
-          data: {
+          metadata: {
             contentId: content.id,
             authorId: content.authorId,
           },
-          channels: ['in_app', 'email'],
         });
       }
 
@@ -810,12 +839,12 @@ export class ContentPublishingService {
     authorId: string
   ): Promise<{ publicKey: string; privateKey: string; relays?: string[] } | null> {
     try {
-      const result = await this.db.query<any>(
+      const result = asRows(await this.db.query<any>(
         `SELECT nostr_public_key, nostr_private_key, nostr_relays
          FROM users
          WHERE id = $1`,
         [authorId]
-      );
+      ));
 
       if (result.rows.length === 0 || !result.rows[0].nostr_private_key) {
         return null;
