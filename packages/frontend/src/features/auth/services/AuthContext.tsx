@@ -272,8 +272,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return { success: false, error: errorMsg };
       }
 
+      // If no token/session, email confirmation is required — don't set auth state
+      if (!result.token) {
+        return { success: true, requiresConfirmation: true, user: result.user };
+      }
+
       setUser(result.user);
-      return { success: true, user: result.user };
+      return { success: true, user: result.user, token: result.token };
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Email signup failed';
       setError(errorMsg);

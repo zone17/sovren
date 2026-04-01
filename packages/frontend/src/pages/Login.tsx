@@ -327,9 +327,17 @@ const Login: React.FC = () => {
           <div className='glass py-8 px-4 shadow-lg sm:rounded-lg sm:px-10'>
             {/* Authentication Mode Selector */}
             <div className='mb-6'>
-              <div className='flex space-x-1 bg-card/50 p-1 rounded-lg border border-border/50'>
+              <div
+                role='tablist'
+                className='flex space-x-1 bg-card/50 p-1 rounded-lg border border-border/50'
+              >
                 <button
-                  onClick={() => setAuthMode('nostr')}
+                  role='tab'
+                  aria-selected={authMode === 'nostr'}
+                  onClick={() => {
+                    setAuthMode('nostr');
+                    setError(null);
+                  }}
                   className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all duration-150 ${
                     authMode === 'nostr'
                       ? 'bg-purple-500/20 text-purple-400 shadow-sm border border-purple-500/30'
@@ -339,7 +347,12 @@ const Login: React.FC = () => {
                   NOSTR Keys
                 </button>
                 <button
-                  onClick={() => setAuthMode('email')}
+                  role='tab'
+                  aria-selected={authMode === 'email'}
+                  onClick={() => {
+                    setAuthMode('email');
+                    setError(null);
+                  }}
                   className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all duration-150 ${
                     authMode === 'email'
                       ? 'bg-purple-500/20 text-purple-400 shadow-sm border border-purple-500/30'

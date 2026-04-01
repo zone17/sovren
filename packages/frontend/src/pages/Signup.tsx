@@ -155,8 +155,8 @@ const Signup: React.FC = () => {
       return;
     }
 
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters');
       return;
     }
 
@@ -177,18 +177,18 @@ const Signup: React.FC = () => {
         terms_accepted: true,
       });
 
-      if (result.error || !result.user) {
+      if (result.error || (!result.user && !result.requiresConfirmation)) {
         throw new Error(result.error || 'Registration failed');
       }
 
-      // If user has a session token, they're fully logged in (email confirmation disabled)
-      if (result.token) {
-        navigate('/profile');
+      // Email confirmation required — show confirmation UI, don't navigate
+      if (result.requiresConfirmation) {
+        setEmailConfirmationSent(true);
         return;
       }
 
-      // Otherwise, email confirmation is required
-      setEmailConfirmationSent(true);
+      // Fully authenticated (email confirmation disabled) — redirect to profile
+      navigate('/profile');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
     } finally {
@@ -245,9 +245,17 @@ const Signup: React.FC = () => {
             <CardContent className='py-8 px-6'>
               {/* Authentication Mode Selector */}
               <div className='mb-6'>
-                <div className='flex space-x-1 bg-card/50 p-1 rounded-lg border border-border/50'>
+                <div
+                  role='tablist'
+                  className='flex space-x-1 bg-card/50 p-1 rounded-lg border border-border/50'
+                >
                   <button
-                    onClick={() => setAuthMode('nostr')}
+                    role='tab'
+                    aria-selected={authMode === 'nostr'}
+                    onClick={() => {
+                      setAuthMode('nostr');
+                      setError(null);
+                    }}
                     className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all duration-150 ${
                       authMode === 'nostr'
                         ? 'bg-purple-500/20 text-purple-400 shadow-sm border border-purple-500/30'
@@ -257,7 +265,12 @@ const Signup: React.FC = () => {
                     NOSTR Keys
                   </button>
                   <button
-                    onClick={() => setAuthMode('email')}
+                    role='tab'
+                    aria-selected={authMode === 'email'}
+                    onClick={() => {
+                      setAuthMode('email');
+                      setError(null);
+                    }}
                     className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all duration-150 ${
                       authMode === 'email'
                         ? 'bg-purple-500/20 text-purple-400 shadow-sm border border-purple-500/30'

@@ -259,7 +259,12 @@ export class RealAuthService {
   }
 
   private mapSupabaseUser(
-    supabaseUser: { id: string; email?: string; user_metadata?: Record<string, unknown> },
+    supabaseUser: {
+      id: string;
+      email?: string;
+      email_confirmed_at?: string | null;
+      user_metadata?: Record<string, unknown>;
+    },
     roleOverride?: string,
     nameOverride?: string
   ): User {
@@ -277,7 +282,7 @@ export class RealAuthService {
       website: undefined,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      email_verified: !!supabaseUser.email,
+      email_verified: !!supabaseUser.email_confirmed_at,
       nostr_verified: false,
       permissions: this.getRolePermissions(role),
     };

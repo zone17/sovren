@@ -2,16 +2,15 @@
  * Auth Callback — handles Supabase email confirmation redirects.
  *
  * Supabase appends tokens as URL hash fragments after email confirmation.
- * This page extracts the session and redirects to /profile on success.
+ * This page extracts the session and uses a hard redirect to /login so
+ * the app re-initializes and AuthContext picks up the session from localStorage.
  */
 
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 import { Spinner } from '../components/ui/spinner';
 
 const AuthCallback: React.FC = () => {
-  const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -26,8 +25,9 @@ const AuthCallback: React.FC = () => {
         }
 
         if (data.session) {
-          // Email confirmed and session active — redirect to profile
-          navigate('/profile', { replace: true });
+          // Hard redirect so the entire app re-initializes and AuthContext
+          // picks up the Supabase session from localStorage on mount
+          window.location.href = '/login?confirmed=true';
         } else {
           setError(
             'Email confirmation failed. Please try again or request a new confirmation link.'
@@ -39,7 +39,7 @@ const AuthCallback: React.FC = () => {
     };
 
     void handleCallback();
-  }, [navigate]);
+  }, []);
 
   if (error) {
     return (
