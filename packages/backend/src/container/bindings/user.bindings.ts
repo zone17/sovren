@@ -1,4 +1,5 @@
 // @ts-nocheck
+// TODO: requires DI container refactoring — factory/binding type mismatches with service interfaces
 // TypeScript strict mode enabled
 /**
  * User Services Binding Module

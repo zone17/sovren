@@ -1,4 +1,5 @@
 // @ts-nocheck
+// TODO: requires DI container refactoring — factory/binding type mismatches with service interfaces
 /**
  * Shared Service Factory
  * Factory implementation for shared/utility services
