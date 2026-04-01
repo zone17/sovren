@@ -715,7 +715,7 @@ describe('DatabaseSessionManager', () => {
       });
 
       await sessionManager.querySessions({ active: true });
-      expect(mockChain.eq).toHaveBeenCalledWith('active', true);
+      expect(mockChain.eq).toHaveBeenCalledWith('is_active', true);
     });
 
     it('should apply date range filters', async () => {
