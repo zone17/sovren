@@ -34,7 +34,11 @@ interface SubscriptionServiceApi extends SubscriptionManagementService {
   updateSubscriptionTier(id: string, data: any): Promise<any>;
   deleteSubscriptionTier(id: string): Promise<void>;
   getTierSubscriptions(tierId: string): Promise<any[]>;
-  getTierSubscribers(tierId: string, page: number, limit: number): Promise<{ data: any[]; total: number }>;
+  getTierSubscribers(
+    tierId: string,
+    page: number,
+    limit: number
+  ): Promise<{ data: any[]; total: number }>;
   getUserSubscriptions(userId: string): Promise<any[]>;
 }
 
@@ -57,7 +61,9 @@ function getSubscriptionService(): SubscriptionServiceApi {
       });
     });
     // Type assertion: service has these methods or will have them added
-    _subscriptionService = new SubscriptionManagementService(lightningService) as unknown as SubscriptionServiceApi;
+    _subscriptionService = new SubscriptionManagementService(
+      lightningService
+    ) as unknown as SubscriptionServiceApi;
   }
   return _subscriptionService as SubscriptionServiceApi;
 }

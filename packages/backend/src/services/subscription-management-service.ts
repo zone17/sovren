@@ -291,7 +291,7 @@ export class SubscriptionManagementService extends EventEmitter {
 
       if (error) throw error;
 
-      return data.map((tier) => ({
+      return data.map(tier => ({
         id: tier.id,
         creator_id: tier.creator_id,
         name: tier.name,
@@ -531,7 +531,10 @@ export class SubscriptionManagementService extends EventEmitter {
         has_trial: !!trial_end,
       });
 
-      return { subscription, initial_invoice: createdInvoice as Record<string, unknown> | undefined };
+      return {
+        subscription,
+        initial_invoice: createdInvoice as Record<string, unknown> | undefined,
+      };
     } catch (error) {
       this.logger.error('Failed to create subscription', error);
       throw new Error(
@@ -633,7 +636,7 @@ export class SubscriptionManagementService extends EventEmitter {
       if (error) throw error;
 
       // Check for valid subscription
-      const activeSubscription = subscriptions?.find((sub) => {
+      const activeSubscription = subscriptions?.find(sub => {
         const now = new Date();
         const periodEnd = new Date(sub.current_period_end);
         return periodEnd > now;
@@ -648,9 +651,7 @@ export class SubscriptionManagementService extends EventEmitter {
       // Check required benefits
       let has_access = true;
       if (validated.required_benefits && validated.required_benefits.length > 0) {
-        has_access = validated.required_benefits.every((benefit) =>
-          tier.benefits.includes(benefit)
-        );
+        has_access = validated.required_benefits.every(benefit => tier.benefits.includes(benefit));
       }
 
       return {
@@ -1110,9 +1111,12 @@ export class SubscriptionManagementService extends EventEmitter {
         await operation();
         return true;
       } catch (err: unknown) {
-        this.logger.warn(`${label} attempt ${attempt}/${maxRetries} failed`, err as Record<string, unknown>);
+        this.logger.warn(
+          `${label} attempt ${attempt}/${maxRetries} failed`,
+          err as Record<string, unknown>
+        );
         if (attempt < maxRetries) {
-          await new Promise((r) => setTimeout(r, 100 * attempt));
+          await new Promise(r => setTimeout(r, 100 * attempt));
         }
       }
     }

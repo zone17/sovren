@@ -266,7 +266,7 @@ export class EventBusService implements IEventBus {
    * Get a specific event by ID
    */
   async getEvent(eventId: string): Promise<DomainEvent | null> {
-    const stored = this.eventStore.find((s) => s.event.id === eventId);
+    const stored = this.eventStore.find(s => s.event.id === eventId);
     return stored?.event || null;
   }
 
@@ -274,27 +274,27 @@ export class EventBusService implements IEventBus {
    * Query events with filter
    */
   async queryEvents(filter: EventFilter, limit = 100, offset = 0): Promise<DomainEvent[]> {
-    let filtered = this.eventStore.map((s) => s.event);
+    let filtered = this.eventStore.map(s => s.event);
 
     // Apply filters
     if (filter.types && filter.types.length > 0) {
-      filtered = filtered.filter((e) => filter.types!.includes(e.type));
+      filtered = filtered.filter(e => filter.types!.includes(e.type));
     }
 
     if (filter.aggregateTypes && filter.aggregateTypes.length > 0) {
-      filtered = filtered.filter((e) => filter.aggregateTypes!.includes(e.aggregateType));
+      filtered = filtered.filter(e => filter.aggregateTypes!.includes(e.aggregateType));
     }
 
     if (filter.userId) {
-      filtered = filtered.filter((e) => e.metadata.userId === filter.userId);
+      filtered = filtered.filter(e => e.metadata.userId === filter.userId);
     }
 
     if (filter.after) {
-      filtered = filtered.filter((e) => e.metadata.timestamp >= filter.after!);
+      filtered = filtered.filter(e => e.metadata.timestamp >= filter.after!);
     }
 
     if (filter.before) {
-      filtered = filtered.filter((e) => e.metadata.timestamp <= filter.before!);
+      filtered = filtered.filter(e => e.metadata.timestamp <= filter.before!);
     }
 
     // Apply pagination
@@ -350,7 +350,7 @@ export class EventBusService implements IEventBus {
    * Get active subscriptions
    */
   getActiveSubscriptions(): EventSubscription[] {
-    return Array.from(this.subscriptions.values()).map((e) => e.subscription);
+    return Array.from(this.subscriptions.values()).map(e => e.subscription);
   }
 
   /**
@@ -617,7 +617,7 @@ export class EventBusService implements IEventBus {
    * Delay helper
    */
   private delay(ms: number): Promise<void> {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       const timer = setTimeout(() => {
         this.activeTimers.delete(timer);
         resolve();

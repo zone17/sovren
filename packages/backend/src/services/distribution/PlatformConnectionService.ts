@@ -220,11 +220,9 @@ export class PlatformConnectionService implements IPlatformConnectionService {
 
     const allPlatforms: SupportedPlatform[] = ['mastodon', 'bluesky', 'twitter', 'youtube'];
 
-    return allPlatforms.map((platform) => {
+    return allPlatforms.map(platform => {
       const connections = (data || []) as any[];
-      const connection = connections.find(
-        (c: any) => c.platform === platform
-      );
+      const connection = connections.find((c: any) => c.platform === platform);
       if (connection) {
         return {
           platform,
@@ -293,7 +291,7 @@ export class PlatformConnectionService implements IPlatformConnectionService {
     for (let i = 0; i < data.length; i += batchSize) {
       const batch = data.slice(i, i + batchSize);
       const results = await Promise.allSettled(
-        batch.map(async (connection) => {
+        batch.map(async connection => {
           if (!connection.refresh_token_encrypted) {
             return;
           }
@@ -310,7 +308,11 @@ export class PlatformConnectionService implements IPlatformConnectionService {
             const adapter = this.getAdapter((connection as any).platform as SupportedPlatform);
             const newTokens = await adapter.refreshTokens(refreshToken);
 
-            await this.storeEncryptedTokens((connection as any).creator_id as string, (connection as any).platform as SupportedPlatform, newTokens);
+            await this.storeEncryptedTokens(
+              (connection as any).creator_id as string,
+              (connection as any).platform as SupportedPlatform,
+              newTokens
+            );
 
             this.logger.info('[PlatformConnectionService] Token refreshed', {
               creatorId: connection.creator_id,

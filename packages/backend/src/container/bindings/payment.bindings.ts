@@ -38,28 +38,33 @@ export class PaymentServicesModule implements IServiceModule {
 
   register(registry: IServiceRegistry): void {
     // PaymentProcessingService - SINGLETON
-    registry.registerSingletonFactory(TYPES.PaymentProcessingService, (container) => {
+    registry.registerSingletonFactory(TYPES.PaymentProcessingService, container => {
       const eventBus = container.resolve(TYPES.EventBusService);
       const logger = container.resolve(TYPES.Logger);
       const cache = container.resolve(TYPES.CacheService);
       const paymentRepo = container.resolveOptional(TYPES.PaymentRepository);
       return new PaymentProcessingService(
-        eventBus as any, logger as any, cache as any, paymentRepo as any,
+        eventBus as any,
+        logger as any,
+        cache as any,
+        paymentRepo as any
       ) as unknown as IPaymentProcessingService;
     });
 
     // CurrencyService - TRANSIENT
-    registry.registerTransient(TYPES.CurrencyService, (container) => {
+    registry.registerTransient(TYPES.CurrencyService, container => {
       const eventBus = container.resolve(TYPES.EventBusService);
       const logger = container.resolve(TYPES.Logger);
       const cache = container.resolve(TYPES.CacheService);
       return new CurrencyService(
-        eventBus as any, logger as any, cache as any,
+        eventBus as any,
+        logger as any,
+        cache as any
       ) as unknown as ICurrencyService;
     });
 
     // SubscriptionService - SINGLETON
-    registry.registerSingletonFactory(TYPES.SubscriptionService, (container) => {
+    registry.registerSingletonFactory(TYPES.SubscriptionService, container => {
       const paymentProcessing = container.resolve(TYPES.PaymentProcessingService);
       const currencyService = container.resolve(TYPES.CurrencyService);
       const auditLog = container.resolve(TYPES.AuditLogService);
@@ -68,13 +73,18 @@ export class PaymentServicesModule implements IServiceModule {
       const subscriptionRepo = container.resolveOptional(TYPES.SubscriptionRepository);
       const cache = container.resolveOptional(TYPES.CacheService);
       return new SubscriptionService(
-        paymentProcessing as any, currencyService as any, auditLog as any,
-        eventBus as any, logger as any, subscriptionRepo as any, cache as any,
+        paymentProcessing as any,
+        currencyService as any,
+        auditLog as any,
+        eventBus as any,
+        logger as any,
+        subscriptionRepo as any,
+        cache as any
       ) as unknown as ISubscriptionService;
     });
 
     // RefundService - SINGLETON
-    registry.registerSingletonFactory(TYPES.RefundService, (container) => {
+    registry.registerSingletonFactory(TYPES.RefundService, container => {
       const paymentProcessing = container.resolve(TYPES.PaymentProcessingService);
       const currencyService = container.resolve(TYPES.CurrencyService);
       const eventBus = container.resolve(TYPES.EventBusService);
@@ -82,45 +92,58 @@ export class PaymentServicesModule implements IServiceModule {
       const cache = container.resolve(TYPES.CacheService);
       const paymentRepo = container.resolveOptional(TYPES.PaymentRepository);
       return new RefundService(
-        paymentProcessing as any, currencyService as any, eventBus as any,
-        logger as any, cache as any, paymentRepo as any,
+        paymentProcessing as any,
+        currencyService as any,
+        eventBus as any,
+        logger as any,
+        cache as any,
+        paymentRepo as any
       ) as unknown as IRefundService;
     });
 
     // PaymentAnalyticsService - SINGLETON
-    registry.registerSingletonFactory(TYPES.PaymentAnalyticsService, (container) => {
+    registry.registerSingletonFactory(TYPES.PaymentAnalyticsService, container => {
       const paymentProcessing = container.resolve(TYPES.PaymentProcessingService);
       const currencyService = container.resolve(TYPES.CurrencyService);
       const cache = container.resolve(TYPES.CacheService);
       const eventBus = container.resolve(TYPES.EventBusService);
       const logger = container.resolve(TYPES.Logger);
       return new PaymentAnalyticsService(
-        paymentProcessing as any, currencyService as any,
-        cache as any, eventBus as any, logger as any,
+        paymentProcessing as any,
+        currencyService as any,
+        cache as any,
+        eventBus as any,
+        logger as any
       ) as unknown as IPaymentAnalyticsService;
     });
 
     // WebhookService - SINGLETON
-    registry.registerSingletonFactory(TYPES.WebhookService, (container) => {
+    registry.registerSingletonFactory(TYPES.WebhookService, container => {
       const eventBus = container.resolve(TYPES.EventBusService);
       const logger = container.resolve(TYPES.Logger);
       const cache = container.resolve(TYPES.CacheService);
       const auditLog = container.resolve(TYPES.AuditLogService);
       return new WebhookService(
-        eventBus as any, logger as any, cache as any, auditLog as any,
+        eventBus as any,
+        logger as any,
+        cache as any,
+        auditLog as any
       ) as unknown as IWebhookService;
     });
 
     // InvoiceService - SINGLETON
-    registry.registerSingletonFactory(TYPES.InvoiceService, (container) => {
+    registry.registerSingletonFactory(TYPES.InvoiceService, container => {
       const db = container.resolve(TYPES.Database);
       const cache = container.resolve(TYPES.CacheService);
       const eventBus = container.resolve(TYPES.EventBusService);
       const auditLog = container.resolve(TYPES.AuditLogService);
       const notification = container.resolveOptional(TYPES.NotificationService);
       return new InvoiceService(
-        db as any, cache as any, eventBus as any,
-        auditLog as any, notification as any,
+        db as any,
+        cache as any,
+        eventBus as any,
+        auditLog as any,
+        notification as any
       ) as unknown as IInvoiceService;
     });
   }

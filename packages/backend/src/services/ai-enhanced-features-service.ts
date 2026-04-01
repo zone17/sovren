@@ -592,7 +592,7 @@ export class AIEnhancedFeaturesService {
 
   private async updateClusterAssignments(_contentId: string, _assignments: any[]): Promise<void> {
     // Implementation placeholder
-    console.log(`Updating cluster assignments for content ${contentId}`);
+    console.log(`Updating cluster assignments for content ${_contentId}`);
   }
 
   private async updateClusterQualityMetrics(clusterIds: string[]): Promise<void> {

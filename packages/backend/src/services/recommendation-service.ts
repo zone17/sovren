@@ -67,7 +67,7 @@ export class RecommendationService {
         .select('creator_id')
         .eq('follower_id', params.user_id);
 
-      const followedCreatorIds = following?.map((f) => f.creator_id) || [];
+      const followedCreatorIds = following?.map(f => f.creator_id) || [];
 
       if (followedCreatorIds.length === 0) {
         // New user - return popular creators
@@ -81,7 +81,7 @@ export class RecommendationService {
         .in('id', followedCreatorIds);
 
       const userCategories = new Set<string>();
-      followedCreators?.forEach((creator) => {
+      followedCreators?.forEach(creator => {
         creator.categories?.forEach((cat: string) => userCategories.add(cat));
       });
 
@@ -95,7 +95,7 @@ export class RecommendationService {
         .neq('follower_id', params.user_id)
         .limit(100);
 
-      const similarUserIds = similarUsers?.map((u) => u.follower_id) || [];
+      const similarUserIds = similarUsers?.map(u => u.follower_id) || [];
 
       // Get creators followed by similar users
       const { data: recommendedCreators } = await supabase
@@ -109,7 +109,7 @@ export class RecommendationService {
       const creatorScores = new Map<string, number>();
       const creatorData = new Map<string, Record<string, unknown>>();
 
-      recommendedCreators?.forEach((rec) => {
+      recommendedCreators?.forEach(rec => {
         const creatorId = rec.creator_id;
         const creator = rec.creators as unknown as Record<string, unknown>;
 
@@ -124,9 +124,7 @@ export class RecommendationService {
         // Bonus score for matching categories
         const creatorObj = creator as Record<string, unknown>;
         const categories = (creatorObj?.categories as string[]) || [];
-        const matchingCategories = categories.filter((cat: string) =>
-          userCategories.has(cat)
-        );
+        const matchingCategories = categories.filter((cat: string) => userCategories.has(cat));
         creatorScores.set(
           creatorId,
           (creatorScores.get(creatorId) ?? 0) + matchingCategories.length * 0.5
@@ -176,7 +174,7 @@ export class RecommendationService {
         .order('viewed_at', { ascending: false })
         .limit(50);
 
-      const viewedContentIds = viewHistory?.map((v) => v.content_id) || [];
+      const viewedContentIds = viewHistory?.map(v => v.content_id) || [];
 
       if (viewedContentIds.length === 0) {
         // New user - return trending content
@@ -187,7 +185,7 @@ export class RecommendationService {
       const categoryCount = new Map<string, number>();
       const tagCount = new Map<string, number>();
 
-      viewHistory?.forEach((view) => {
+      viewHistory?.forEach(view => {
         const content = view.content as unknown as Record<string, unknown> | null;
         if (content) {
           const category = content.category as string;
@@ -232,7 +230,7 @@ export class RecommendationService {
       if (error) throw error;
 
       // Score and rank recommendations
-      const recommendations = (data || []).map((content) => {
+      const recommendations = (data || []).map(content => {
         let score = content.engagement_score || 0;
 
         // Boost score for matching categories
@@ -340,7 +338,7 @@ export class RecommendationService {
 
       if (error) throw error;
 
-      return (data || []).map((creator) => ({
+      return (data || []).map(creator => ({
         id: creator.id,
         name: creator.name,
         avatar_url: creator.avatar_url,
@@ -370,7 +368,7 @@ export class RecommendationService {
 
       if (error) throw error;
 
-      return (data || []).map((content) => ({
+      return (data || []).map(content => ({
         id: content.id,
         title: content.title,
         description: content.description,

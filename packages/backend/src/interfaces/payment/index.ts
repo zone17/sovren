@@ -30,13 +30,27 @@ export class Money {
     this.amount = Number(amount) || 0;
     this.currency = String(currency || 'USD');
   }
-  add(other: any): any { return new Money((this.amount || 0) + (other?.amount || 0), this.currency); }
-  subtract(other: any): any { return new Money((this.amount || 0) - (other?.amount || 0), this.currency); }
-  multiply(factor: any): any { return new Money((this.amount || 0) * (Number(factor) || 0), this.currency); }
-  isZero(): boolean { return this.amount === 0; }
-  isNegative(): boolean { return this.amount < 0; }
-  toObject(): any { return { amount: this.amount, currency: this.currency }; }
-  toString(): string { return `${this.amount} ${this.currency}`; }
+  add(other: any): any {
+    return new Money((this.amount || 0) + (other?.amount || 0), this.currency);
+  }
+  subtract(other: any): any {
+    return new Money((this.amount || 0) - (other?.amount || 0), this.currency);
+  }
+  multiply(factor: any): any {
+    return new Money((this.amount || 0) * (Number(factor) || 0), this.currency);
+  }
+  isZero(): boolean {
+    return this.amount === 0;
+  }
+  isNegative(): boolean {
+    return this.amount < 0;
+  }
+  toObject(): any {
+    return { amount: this.amount, currency: this.currency };
+  }
+  toString(): string {
+    return `${this.amount} ${this.currency}`;
+  }
   [key: string]: any;
 }
 export type InvoiceItem = any;

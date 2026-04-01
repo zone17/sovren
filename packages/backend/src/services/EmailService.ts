@@ -460,9 +460,7 @@ export class EmailService {
     return { html, text };
   }
 
-  private async prepareAttachments(
-    attachments?: EmailAttachment[]
-  ): Promise<
+  private async prepareAttachments(attachments?: EmailAttachment[]): Promise<
     Array<{
       filename: string;
       content: Buffer | string;

@@ -308,7 +308,10 @@ export class PaymentProcessingServiceFactory extends SafeServiceFactory<IPayment
       },
 
       async verifyPayment(paymentId: string): Promise<boolean> {
-        const results = await db.query<{ status: string }>('SELECT status FROM payments WHERE id = ?', [paymentId]);
+        const results = await db.query<{ status: string }>(
+          'SELECT status FROM payments WHERE id = ?',
+          [paymentId]
+        );
         return results.length > 0 && results[0].status === 'completed';
       },
 

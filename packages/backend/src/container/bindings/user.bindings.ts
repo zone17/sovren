@@ -35,58 +35,72 @@ export class UserServicesModule implements IServiceModule {
 
   register(registry: IServiceRegistry): void {
     // UserProfileService - SINGLETON
-    registry.registerSingletonFactory(TYPES.UserProfileService, (container) => {
+    registry.registerSingletonFactory(TYPES.UserProfileService, container => {
       const eventBus = container.resolve(TYPES.EventBusService);
       const logger = container.resolve(TYPES.Logger);
       const cache = container.resolve(TYPES.CacheService);
       const auditLog = container.resolve(TYPES.AuditLogService);
       return new UserProfileService(
-        eventBus as any, logger as any, cache as any, auditLog as any,
+        eventBus as any,
+        logger as any,
+        cache as any,
+        auditLog as any
       ) as unknown as IUserProfileService;
     });
 
     // UserPreferencesService - SINGLETON
-    registry.registerSingletonFactory(TYPES.UserPreferencesService, (container) => {
+    registry.registerSingletonFactory(TYPES.UserPreferencesService, container => {
       const preferencesRepo = container.resolve(TYPES.UserPreferencesRepository);
       const cache = container.resolve(TYPES.CacheService);
       const eventBus = container.resolve(TYPES.EventBusService);
       const logger = container.resolve(TYPES.Logger);
       return new UserPreferencesService(
-        preferencesRepo as any, cache as any, eventBus as any, logger as any,
+        preferencesRepo as any,
+        cache as any,
+        eventBus as any,
+        logger as any
       ) as unknown as IUserPreferencesService;
     });
 
     // UserActivityService - SINGLETON
-    registry.registerSingletonFactory(TYPES.UserActivityService, (container) => {
+    registry.registerSingletonFactory(TYPES.UserActivityService, container => {
       const db = container.resolve(TYPES.Database);
       const cache = container.resolve(TYPES.CacheService);
       const eventBus = container.resolve(TYPES.EventBusService);
       const auditLog = container.resolve(TYPES.AuditLogService);
       return new UserActivityService(
-        db as any, cache as any, eventBus as any, auditLog as any,
+        db as any,
+        cache as any,
+        eventBus as any,
+        auditLog as any
       ) as unknown as IUserActivityService;
     });
 
     // UserRelationshipService - SINGLETON
-    registry.registerSingletonFactory(TYPES.UserRelationshipService, (container) => {
+    registry.registerSingletonFactory(TYPES.UserRelationshipService, container => {
       const eventBus = container.resolve(TYPES.EventBusService);
       const logger = container.resolve(TYPES.Logger);
       const cache = container.resolveOptional(TYPES.CacheService);
       return new UserRelationshipService(
-        eventBus as any, logger as any, cache as any,
+        eventBus as any,
+        logger as any,
+        cache as any
       ) as unknown as IUserRelationshipService;
     });
 
     // UserAnalyticsService - SINGLETON
-    registry.registerSingletonFactory(TYPES.UserAnalyticsService, (container) => {
+    registry.registerSingletonFactory(TYPES.UserAnalyticsService, container => {
       const db = container.resolve(TYPES.Database);
       const cache = container.resolve(TYPES.CacheService);
       const eventBus = container.resolve(TYPES.EventBusService);
       const auditLog = container.resolve(TYPES.AuditLogService);
       const logger = container.resolve(TYPES.Logger);
       return new UserAnalyticsService(
-        db as any, cache as any, eventBus as any,
-        auditLog as any, logger as any,
+        db as any,
+        cache as any,
+        eventBus as any,
+        auditLog as any,
+        logger as any
       ) as unknown as IUserAnalyticsService;
     });
   }

@@ -253,7 +253,9 @@ export class LightningPaymentService extends EventEmitter {
       return invoice;
     } catch (error) {
       this.logger.error('Failed to generate BOLT11 invoice', error);
-      throw new Error(`Invoice generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Invoice generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -290,7 +292,7 @@ export class LightningPaymentService extends EventEmitter {
       if (providers.length === 0) {
         providers.push(
           ...Array.from(this.walletProviders.values())
-            .filter((p) => p.is_active)
+            .filter(p => p.is_active)
             .sort((a, b) => a.priority - b.priority)
             .slice(0, 3)
         ); // Top 3 default providers
@@ -299,7 +301,9 @@ export class LightningPaymentService extends EventEmitter {
       return providers;
     } catch (error) {
       this.logger.error('Failed to get wallet providers', error);
-      throw new Error(`Wallet provider retrieval failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Wallet provider retrieval failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -368,7 +372,9 @@ export class LightningPaymentService extends EventEmitter {
       });
     } catch (error) {
       this.logger.error('Failed to add wallet provider', error);
-      throw new Error(`Wallet provider configuration failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Wallet provider configuration failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -393,8 +399,8 @@ export class LightningPaymentService extends EventEmitter {
       // Verify with multiple providers
       const verifications = await Promise.allSettled(
         Array.from(this.walletProviders.values())
-          .filter((p) => p.is_active)
-          .map((provider) => this.verifyWithProvider(provider, payment_hash))
+          .filter(p => p.is_active)
+          .map(provider => this.verifyWithProvider(provider, payment_hash))
       );
 
       // Find successful verification
@@ -454,7 +460,9 @@ export class LightningPaymentService extends EventEmitter {
       return verification;
     } catch (error) {
       this.logger.error('Failed to verify payment', error);
-      throw new Error(`Payment verification failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Payment verification failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -500,7 +508,9 @@ export class LightningPaymentService extends EventEmitter {
       return statusInfo;
     } catch (error) {
       this.logger.error('Failed to get payment status', error);
-      throw new Error(`Payment status retrieval failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Payment status retrieval failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -528,7 +538,7 @@ export class LightningPaymentService extends EventEmitter {
 
       if (error) throw error;
 
-      return data.map((item) => ({
+      return data.map(item => ({
         payment_hash: item.payment_hash,
         status: item.status as z.infer<typeof PaymentStatusSchema>,
         updated_at: new Date(item.updated_at),
@@ -536,7 +546,9 @@ export class LightningPaymentService extends EventEmitter {
       }));
     } catch (error) {
       this.logger.error('Failed to track payment status updates', error);
-      throw new Error(`Payment status tracking failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Payment status tracking failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -578,7 +590,7 @@ export class LightningPaymentService extends EventEmitter {
       },
     ];
 
-    providers.forEach((provider) => {
+    providers.forEach(provider => {
       this.walletProviders.set(provider.id, provider);
     });
   }
@@ -732,7 +744,10 @@ export class LightningPaymentService extends EventEmitter {
         status,
         updated_at: updated_at.toISOString(),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        metadata: metadata ? (supabase as any).raw?.(`metadata || ?::jsonb`, [JSON.stringify(metadata)]) ?? metadata : undefined,
+        metadata: metadata
+          ? ((supabase as any).raw?.(`metadata || ?::jsonb`, [JSON.stringify(metadata)]) ??
+            metadata)
+          : undefined,
       })
       .eq('payment_hash', payment_hash);
 

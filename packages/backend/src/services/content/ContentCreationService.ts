@@ -145,12 +145,15 @@ export class ContentCreationService implements IContentCreationService {
       });
 
       // Emit event
-      await (this.eventBus as unknown as { emit(e: string, d: unknown): Promise<void> }).emit('content.created', {
-        contentId: content.id,
-        authorId: content.authorId,
-        title: content.title,
-        timestamp: Date.now(),
-      });
+      await (this.eventBus as unknown as { emit(e: string, d: unknown): Promise<void> }).emit(
+        'content.created',
+        {
+          contentId: content.id,
+          authorId: content.authorId,
+          title: content.title,
+          timestamp: Date.now(),
+        }
+      );
 
       // Notify collaborators if any
       if (draft.collaborators && draft.collaborators.length > 0) {
@@ -254,11 +257,14 @@ export class ContentCreationService implements IContentCreationService {
       });
 
       // Emit event
-      await (this.eventBus as unknown as { emit(e: string, d: unknown): Promise<void> }).emit('media.uploaded', {
-        assetId: mediaAsset.id,
-        filename: mediaAsset.filename,
-        timestamp: Date.now(),
-      });
+      await (this.eventBus as unknown as { emit(e: string, d: unknown): Promise<void> }).emit(
+        'media.uploaded',
+        {
+          assetId: mediaAsset.id,
+          filename: mediaAsset.filename,
+          timestamp: Date.now(),
+        }
+      );
 
       this.logger.info('Media uploaded successfully', {
         assetId: mediaAsset.id,
@@ -288,7 +294,7 @@ export class ContentCreationService implements IContentCreationService {
       if (validation.error) {
         return {
           isValid: false,
-          errors: validation.error.details.map((detail) => ({
+          errors: validation.error.details.map(detail => ({
             field: detail.path.join('.'),
             message: detail.message,
             type: detail.type,
@@ -384,10 +390,13 @@ export class ContentCreationService implements IContentCreationService {
       );
 
       // Emit autosave event
-      await (this.eventBus as unknown as { emit(e: string, d: unknown): Promise<void> }).emit('content.autosaved', {
-        contentId,
-        timestamp: Date.now(),
-      });
+      await (this.eventBus as unknown as { emit(e: string, d: unknown): Promise<void> }).emit(
+        'content.autosaved',
+        {
+          contentId,
+          timestamp: Date.now(),
+        }
+      );
 
       this.logger.debug('Content auto-saved', { contentId });
     } catch (error) {
@@ -550,11 +559,14 @@ export class ContentCreationService implements IContentCreationService {
     await this.cache.delete(`content:${contentId}`);
 
     // Emit event
-    await (this.eventBus as unknown as { emit(e: string, d: unknown): Promise<void> }).emit('content.updated', {
-      contentId,
-      updatedFields: Object.keys(updates),
-      timestamp: Date.now(),
-    });
+    await (this.eventBus as unknown as { emit(e: string, d: unknown): Promise<void> }).emit(
+      'content.updated',
+      {
+        contentId,
+        updatedFields: Object.keys(updates),
+        timestamp: Date.now(),
+      }
+    );
 
     return this.getContent(contentId);
   }
@@ -572,10 +584,13 @@ export class ContentCreationService implements IContentCreationService {
     await this.cache.delete(`content:${contentId}`);
 
     // Emit event
-    await (this.eventBus as unknown as { emit(e: string, d: unknown): Promise<void> }).emit('content.deleted', {
-      contentId,
-      timestamp: Date.now(),
-    });
+    await (this.eventBus as unknown as { emit(e: string, d: unknown): Promise<void> }).emit(
+      'content.deleted',
+      {
+        contentId,
+        timestamp: Date.now(),
+      }
+    );
 
     this.logger.info('Content deleted', { contentId });
   }

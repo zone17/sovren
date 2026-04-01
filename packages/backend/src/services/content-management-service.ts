@@ -658,7 +658,8 @@ export class ContentManagementService {
     const { error: updateError } = await this.supabase
       .from('content_items')
       .update({
-        view_count: (this.supabase as unknown as { sql: (s: TemplateStringsArray) => unknown }).sql`view_count + 1`,
+        view_count: (this.supabase as unknown as { sql: (s: TemplateStringsArray) => unknown })
+          .sql`view_count + 1`,
         updated_at: new Date().toISOString(),
       })
       .eq('id', contentId);
@@ -709,7 +710,7 @@ export class ContentManagementService {
     if (error) throw new ServiceError(`Failed to fetch analytics: ${error.message}`);
 
     const views = data?.length || 0;
-    const uniqueViewers = new Set(data?.map((event) => event.user_id).filter(Boolean)).size;
+    const uniqueViewers = new Set(data?.map(event => event.user_id).filter(Boolean)).size;
     const engagementRate = views > 0 ? (uniqueViewers / views) * 100 : 0;
 
     // Calculate average read time (mock calculation)
