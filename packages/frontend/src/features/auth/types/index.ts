@@ -90,6 +90,7 @@ export interface AuthResponse {
   refreshToken?: string;
   error?: string;
   challenge?: string;
+  requiresConfirmation?: boolean;
 }
 
 // 🛡️ **PROTECTED ROUTE PROPS**

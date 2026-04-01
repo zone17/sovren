@@ -6,7 +6,8 @@
  */
 
 import { apiClient } from '../../../services/api/apiClient';
-import type { AuthResponse, NostrSignature, User } from '../types';
+import { supabase } from '../../../services/supabase';
+import type { AuthResponse, LoginCredentials, NostrSignature, SignupData, User } from '../types';
 
 // 🌐 **API RESPONSE INTERFACES**
 interface BackendAuthResponse {
@@ -150,6 +151,86 @@ export class RealAuthService {
     }
   }
 
+  /**
+   * Email signup via Supabase Auth
+   */
+  async signUpWithEmail(data: SignupData): Promise<AuthResponse> {
+    try {
+      const { data: authData, error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            name: data.name,
+            role: data.role,
+          },
+        },
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      if (!authData.user) {
+        return { success: false, error: 'Signup failed — no user returned' };
+      }
+
+      // If email confirmation is required, user won't have a session yet
+      if (!authData.session) {
+        return {
+          success: true,
+          user: this.mapSupabaseUser(authData.user, data.role, data.name),
+        };
+      }
+
+      // Session exists — set token for API calls
+      apiClient.setToken(authData.session.access_token);
+
+      return {
+        success: true,
+        user: this.mapSupabaseUser(authData.user, data.role, data.name),
+        token: authData.session.access_token,
+      };
+    } catch (error) {
+      console.error('Email signup failed:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Email signup failed',
+      };
+    }
+  }
+
+  /**
+   * Email login via Supabase Auth
+   */
+  async signInWithEmail(credentials: LoginCredentials): Promise<AuthResponse> {
+    try {
+      const { data: authData, error } = await supabase.auth.signInWithPassword({
+        email: credentials.email,
+        password: credentials.password,
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      if (!authData.user || !authData.session) {
+        return { success: false, error: 'Login failed — no session returned' };
+      }
+
+      apiClient.setToken(authData.session.access_token);
+
+      const user = this.mapSupabaseUser(authData.user);
+      return { success: true, user, token: authData.session.access_token };
+    } catch (error) {
+      console.error('Email login failed:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Email login failed',
+      };
+    }
+  }
+
   // -- Private helpers --
 
   private mapUser(
@@ -173,6 +254,36 @@ export class RealAuthService {
       updated_at: new Date().toISOString(),
       email_verified: backendUser.emailVerified ?? false,
       nostr_verified: !!(backendUser.nostr_pubkey ?? fallbackPubkey),
+      permissions: this.getRolePermissions(role),
+    };
+  }
+
+  private mapSupabaseUser(
+    supabaseUser: {
+      id: string;
+      email?: string;
+      email_confirmed_at?: string | null;
+      user_metadata?: Record<string, unknown>;
+    },
+    roleOverride?: string,
+    nameOverride?: string
+  ): User {
+    const metadata = supabaseUser.user_metadata ?? {};
+    const role = this.mapBackendRole((roleOverride ?? metadata.role ?? 'supporter') as string);
+    const name = (nameOverride ?? metadata.name ?? supabaseUser.email ?? '') as string;
+    return {
+      id: supabaseUser.id,
+      email: supabaseUser.email ?? '',
+      name,
+      role,
+      nostr_pubkey: undefined,
+      avatar_url: undefined,
+      bio: undefined,
+      website: undefined,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      email_verified: !!supabaseUser.email_confirmed_at,
+      nostr_verified: false,
       permissions: this.getRolePermissions(role),
     };
   }

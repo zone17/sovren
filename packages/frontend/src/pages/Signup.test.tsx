@@ -43,14 +43,12 @@ describe('Signup Component', () => {
     it('renders NOSTR key generation button', () => {
       renderWithProviders(<Signup />);
 
-      // Should have Generate New Keys button (NOSTR-only signup)
       expect(screen.getByText('Generate New Keys')).toBeInTheDocument();
     });
 
     it('renders Sovereign Identity section', () => {
       renderWithProviders(<Signup />);
 
-      // NOSTR signup shows "Sovereign Identity" heading
       expect(screen.getByText('Sovereign Identity')).toBeInTheDocument();
     });
 
@@ -65,7 +63,6 @@ describe('Signup Component', () => {
     it('renders email signup tab as secondary option', () => {
       renderWithProviders(<Signup />);
 
-      // Email signup tab exists as an alternative to NOSTR signup
       expect(screen.getByText('Email')).toBeInTheDocument();
     });
   });
@@ -77,10 +74,37 @@ describe('Signup Component', () => {
       const generateButton = screen.getByText('Generate New Keys');
       fireEvent.click(generateButton);
 
-      // Should show loading state (button becomes disabled)
       await waitFor(() => {
         expect(generateButton).toBeDisabled();
       });
+    });
+
+    it('switches to email signup when email tab is clicked', () => {
+      renderWithProviders(<Signup />);
+
+      const emailTab = screen.getByText('Email');
+      fireEvent.click(emailTab);
+
+      expect(screen.getByLabelText('Full Name')).toBeInTheDocument();
+      expect(screen.getByLabelText('Email address')).toBeInTheDocument();
+      expect(screen.getByLabelText('Password')).toBeInTheDocument();
+      expect(screen.getByLabelText('Confirm Password')).toBeInTheDocument();
+    });
+
+    it('handles email form input', () => {
+      renderWithProviders(<Signup />);
+
+      const emailTab = screen.getByText('Email');
+      fireEvent.click(emailTab);
+
+      const nameInput = screen.getByLabelText('Full Name');
+      const emailInput = screen.getByLabelText('Email address');
+
+      fireEvent.change(nameInput, { target: { value: 'Test User' } });
+      fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+
+      expect(nameInput).toHaveValue('Test User');
+      expect(emailInput).toHaveValue('test@example.com');
     });
   });
 });

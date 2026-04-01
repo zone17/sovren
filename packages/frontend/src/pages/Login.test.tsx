@@ -43,28 +43,22 @@ describe('Login Component', () => {
     it('renders authentication mode selector', () => {
       renderWithProviders(<Login />);
 
-      // Check for authentication mode tabs
-      expect(screen.getByText('🌐 NOSTR Keys')).toBeInTheDocument();
-      expect(screen.getByText('📧 Email')).toBeInTheDocument();
+      expect(screen.getByText('NOSTR Keys')).toBeInTheDocument();
+      expect(screen.getByText('Email')).toBeInTheDocument();
     });
 
     it('shows NOSTR authentication by default', () => {
       renderWithProviders(<Login />);
 
-      // Check for NOSTR-specific elements (default mode)
-      expect(screen.getByText('🔐 Sovereign Authentication')).toBeInTheDocument();
-      expect(screen.getByLabelText('Public Key (npub...)')).toBeInTheDocument();
-      expect(screen.getByLabelText('Private Key (nsec...)')).toBeInTheDocument();
+      expect(screen.getByText('Sovereign Authentication')).toBeInTheDocument();
     });
 
     it('switches to email mode when clicked', () => {
       renderWithProviders(<Login />);
 
-      // Switch to email mode
-      const emailTab = screen.getByText('📧 Email');
+      const emailTab = screen.getByText('Email');
       fireEvent.click(emailTab);
 
-      // Check for email form elements
       expect(screen.getByLabelText('Email address')).toBeInTheDocument();
       expect(screen.getByLabelText('Password')).toBeInTheDocument();
     });
@@ -81,95 +75,79 @@ describe('Login Component', () => {
       renderWithProviders(<Login />);
 
       // Default should be NOSTR
-      expect(screen.getByText('🔐 Sovereign Authentication')).toBeInTheDocument();
+      expect(screen.getByText('Sovereign Authentication')).toBeInTheDocument();
 
       // Switch to email
-      const emailTab = screen.getByText('📧 Email');
+      const emailTab = screen.getByText('Email');
       fireEvent.click(emailTab);
 
       // Should show email form
       expect(screen.getByLabelText('Email address')).toBeInTheDocument();
 
       // Switch back to NOSTR
-      const nostrTab = screen.getByText('🌐 NOSTR Keys');
+      const nostrTab = screen.getByText('NOSTR Keys');
       fireEvent.click(nostrTab);
 
       // Should show NOSTR form again
-      expect(screen.getByText('🔐 Sovereign Authentication')).toBeInTheDocument();
+      expect(screen.getByText('Sovereign Authentication')).toBeInTheDocument();
     });
 
-    it('handles NOSTR key input', () => {
+    it('handles email input', () => {
       renderWithProviders(<Login />);
 
-      const publicKeyInput = screen.getByLabelText('Public Key (npub...)');
-      const privateKeyInput = screen.getByLabelText('Private Key (nsec...)');
+      // Switch to email mode
+      const emailTab = screen.getByText('Email');
+      fireEvent.click(emailTab);
 
-      fireEvent.change(publicKeyInput, { target: { value: 'npub1test123' } });
-      fireEvent.change(privateKeyInput, { target: { value: 'nsec1test123' } });
+      const emailInput = screen.getByLabelText('Email address');
+      const passwordInput = screen.getByLabelText('Password');
 
-      expect(publicKeyInput).toHaveValue('npub1test123');
-      expect(privateKeyInput).toHaveValue('nsec1test123');
-    });
+      fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+      fireEvent.change(passwordInput, { target: { value: 'password123' } });
 
-    it('generates new NOSTR keys when generate button is clicked', async (): Promise<void> => {
-      renderWithProviders(<Login />);
-
-      const generateButton = screen.getByText('🔑 Generate New Keys');
-      fireEvent.click(generateButton);
-
-      // Should show loading state
-      await waitFor(() => {
-        expect(generateButton).toBeDisabled();
-      });
+      expect(emailInput).toHaveValue('test@example.com');
+      expect(passwordInput).toHaveValue('password123');
     });
   });
 
   describe('Form Validation', () => {
-    it('disables NOSTR sign in button when keys are missing', () => {
-      renderWithProviders(<Login />);
-
-      const signInButton = screen.getByText('🌐 Sign In with NOSTR');
-      expect(signInButton).toBeDisabled();
-    });
-
-    it('enables NOSTR sign in button when keys are provided', () => {
-      renderWithProviders(<Login />);
-
-      const publicKeyInput = screen.getByLabelText('Public Key (npub...)');
-      const privateKeyInput = screen.getByLabelText('Private Key (nsec...)');
-
-      fireEvent.change(publicKeyInput, { target: { value: 'npub1test123' } });
-      fireEvent.change(privateKeyInput, { target: { value: 'nsec1test123' } });
-
-      const signInButton = screen.getByText('🌐 Sign In with NOSTR');
-      expect(signInButton).not.toBeDisabled();
-    });
-
     it('disables email sign in button when credentials are missing', () => {
       renderWithProviders(<Login />);
 
       // Switch to email mode
-      const emailTab = screen.getByText('📧 Email');
+      const emailTab = screen.getByText('Email');
       fireEvent.click(emailTab);
 
-      const signInButton = screen.getByText('📧 Sign In with Email');
+      const signInButton = screen.getByText('Sign in with Email');
       expect(signInButton).toBeDisabled();
+    });
+
+    it('enables email sign in button when credentials are provided', () => {
+      renderWithProviders(<Login />);
+
+      // Switch to email mode
+      const emailTab = screen.getByText('Email');
+      fireEvent.click(emailTab);
+
+      const emailInput = screen.getByLabelText('Email address');
+      const passwordInput = screen.getByLabelText('Password');
+
+      fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+      fireEvent.change(passwordInput, { target: { value: 'password123' } });
+
+      const signInButton = screen.getByText('Sign in with Email');
+      expect(signInButton).not.toBeDisabled();
     });
   });
 
   describe('Accessibility', () => {
-    it('has proper form labels', () => {
+    it('has proper form labels for email mode', () => {
       renderWithProviders(<Login />);
 
-      // NOSTR mode labels
-      expect(screen.getByLabelText('Public Key (npub...)')).toHaveAttribute('id', 'publicKey');
-      expect(screen.getByLabelText('Private Key (nsec...)')).toHaveAttribute('id', 'privateKey');
-
       // Switch to email mode
-      const emailTab = screen.getByText('📧 Email');
+      const emailTab = screen.getByText('Email');
       fireEvent.click(emailTab);
 
-      // Email mode labels
       expect(screen.getByLabelText('Email address')).toHaveAttribute('type', 'email');
       expect(screen.getByLabelText('Password')).toHaveAttribute('type', 'password');
     });

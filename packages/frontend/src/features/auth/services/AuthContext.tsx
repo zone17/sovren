@@ -26,7 +26,7 @@ import type {
 } from '../types';
 import { realAuthService } from './realAuthService';
 
-// Auth service interface (NOSTR-only — no email auth)
+// Auth service interface (NOSTR + email auth)
 interface AuthService {
   verifyAuth: () => Promise<{ user: User | null; error?: string }>;
   authenticateNostr: (signature: NostrSignature) => Promise<AuthResponse>;
@@ -35,6 +35,8 @@ interface AuthService {
     timestamp?: number;
     error?: string;
   }>;
+  signUpWithEmail: (data: SignupData) => Promise<AuthResponse>;
+  signInWithEmail: (credentials: LoginCredentials) => Promise<AuthResponse>;
   logout: () => Promise<void>;
 }
 
@@ -80,6 +82,55 @@ const demoAuthService: AuthService = {
       challenge: 'demo-challenge-' + Date.now() + Math.random().toString(36).substring(2, 11),
       timestamp: Math.floor(Date.now() / 1000),
     };
+  },
+
+  signUpWithEmail: async (data: SignupData) => {
+    const demoUser: User = {
+      id: 'demo-email-' + Date.now(),
+      email: data.email,
+      name: data.name,
+      role: data.role,
+      nostr_pubkey: undefined,
+      avatar_url: undefined,
+      bio: undefined,
+      website: undefined,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      email_verified: false,
+      nostr_verified: false,
+      permissions:
+        data.role === 'creator'
+          ? [
+              'content.create',
+              'content.edit',
+              'content.delete',
+              'content.publish',
+              'payments.receive',
+            ]
+          : ['payments.send'],
+    };
+    localStorage.setItem('demo_user', JSON.stringify(demoUser));
+    return { success: true, user: demoUser };
+  },
+
+  signInWithEmail: async (credentials: LoginCredentials) => {
+    const demoUser: User = {
+      id: 'demo-email-' + Date.now(),
+      email: credentials.email,
+      name: credentials.email.split('@')[0],
+      role: 'supporter',
+      nostr_pubkey: undefined,
+      avatar_url: undefined,
+      bio: undefined,
+      website: undefined,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      email_verified: true,
+      nostr_verified: false,
+      permissions: ['payments.send'],
+    };
+    localStorage.setItem('demo_user', JSON.stringify(demoUser));
+    return { success: true, user: demoUser };
   },
 
   logout: async () => {
@@ -154,9 +205,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return () => window.removeEventListener('auth:session-expired', handleSessionExpired);
   }, [performLogout, navigate]);
 
-  // Email login — kept for interface compatibility, no real backend route
+  // Email login via Supabase Auth
   const login = async (credentials: LoginCredentials): Promise<AuthResponse> => {
-    return { success: false, error: 'Email login not supported. Use NOSTR authentication.' };
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const authService = getAuthService();
+      const result = await authService.signInWithEmail(credentials);
+
+      if (result.error || !result.user) {
+        const errorMsg = result.error || 'Email login failed';
+        setError(errorMsg);
+        return { success: false, error: errorMsg };
+      }
+
+      setUser(result.user);
+      return { success: true, user: result.user };
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Email login failed';
+      setError(errorMsg);
+      return { success: false, error: errorMsg };
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // NOSTR authentication
@@ -185,9 +257,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // Signup — kept for interface compatibility
-  const signup = async (_data: SignupData): Promise<AuthResponse> => {
-    return { success: false, error: 'Email signup not supported. Use NOSTR authentication.' };
+  // Email signup via Supabase Auth
+  const signup = async (data: SignupData): Promise<AuthResponse> => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const authService = getAuthService();
+      const result = await authService.signUpWithEmail(data);
+
+      if (result.error || !result.user) {
+        const errorMsg = result.error || 'Email signup failed';
+        setError(errorMsg);
+        return { success: false, error: errorMsg };
+      }
+
+      // If no token/session, email confirmation is required — don't set auth state
+      if (!result.token) {
+        return { success: true, requiresConfirmation: true, user: result.user };
+      }
+
+      setUser(result.user);
+      return { success: true, user: result.user, token: result.token };
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Email signup failed';
+      setError(errorMsg);
+      return { success: false, error: errorMsg };
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Generate NOSTR challenge
