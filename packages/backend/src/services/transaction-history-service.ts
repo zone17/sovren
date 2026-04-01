@@ -665,6 +665,9 @@ export class TransactionHistoryService extends EventEmitter {
       }
 
       if (validated.metadata) {
+        // Note: This overwrites metadata entirely. The old code attempted a JSONB merge
+        // via supabase.raw() which doesn't exist on the Supabase JS client. Callers
+        // should pass the complete metadata object, not a partial update.
         updateData.metadata = validated.metadata;
       }
 

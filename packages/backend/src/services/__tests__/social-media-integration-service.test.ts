@@ -25,7 +25,12 @@ import {
 } from '../../types/social-media-integration';
 import { Logger } from '../../utils/logger';
 import { AnalyticsService } from '../analytics-service';
-import { RedisService } from '../redis-service';
+// RedisService interface defined locally in social-media-integration-service.ts (not exported)
+interface RedisService {
+  setex(key: string, ttl: number, value: string): Promise<void>;
+  get(key: string): Promise<string | null>;
+  del(key: string): Promise<void>;
+}
 import { SocialMediaIntegrationService } from '../social-media-integration-service';
 
 // =====================================================
