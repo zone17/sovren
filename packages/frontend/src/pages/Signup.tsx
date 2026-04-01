@@ -40,6 +40,7 @@ const Signup: React.FC = () => {
   // UI state
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [emailConfirmationSent, setEmailConfirmationSent] = useState(false);
 
   // Validate NOSTR key format
   const validatePublicKey = (key: string): boolean => {
@@ -152,6 +153,11 @@ const Signup: React.FC = () => {
       return;
     }
 
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
     if (!formData.name || !formData.email || !formData.password) {
       setError('Please fill in all required fields');
       return;
@@ -173,7 +179,14 @@ const Signup: React.FC = () => {
         throw new Error(result.error || 'Registration failed');
       }
 
-      navigate('/profile');
+      // If user has a session token, they're fully logged in (email confirmation disabled)
+      if (result.token) {
+        navigate('/profile');
+        return;
+      }
+
+      // Otherwise, email confirmation is required
+      setEmailConfirmationSent(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
     } finally {
@@ -394,8 +407,30 @@ const Signup: React.FC = () => {
                 </div>
               )}
 
+              {/* Email Confirmation Sent */}
+              {authMode === 'email' && emailConfirmationSent && (
+                <div className="space-y-6 text-center">
+                  <div className="bg-green-500/10 border border-green-500/20 rounded-md p-6">
+                    <h3 className="text-lg font-medium text-green-300 mb-2">Check your email</h3>
+                    <p className="text-sm text-green-200/80">
+                      We sent a confirmation link to <strong>{formData.email}</strong>.
+                      Click the link to activate your account.
+                    </p>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Already confirmed?{' '}
+                    <Link
+                      to="/login"
+                      className="font-medium text-purple-400 hover:text-purple-300 transition-colors duration-150"
+                    >
+                      Sign in
+                    </Link>
+                  </p>
+                </div>
+              )}
+
               {/* Email Registration */}
-              {authMode === 'email' && (
+              {authMode === 'email' && !emailConfirmationSent && (
                 <div className="space-y-6">
                   {/* Role Selection */}
                   <div>

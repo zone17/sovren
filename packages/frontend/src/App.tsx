@@ -22,6 +22,9 @@ const Login = React.lazy(() =>
 const Signup = React.lazy(() =>
   import('./pages/Signup').then(module => ({ default: module.default }))
 );
+const AuthCallback = React.lazy(() =>
+  import('./pages/AuthCallback').then(module => ({ default: module.default }))
+);
 const Profile = React.lazy(() =>
   import('./pages/Profile').then(module => ({ default: module.default }))
 );
@@ -171,6 +174,17 @@ function App(): React.ReactElement {
               <Suspense fallback={<LoadingSpinner />}>
                 <AuthErrorBoundary>
                   <Signup />
+                </AuthErrorBoundary>
+              </Suspense>
+            }
+          />
+
+          <Route
+            path='/auth/callback'
+            element={
+              <Suspense fallback={<LoadingSpinner />}>
+                <AuthErrorBoundary>
+                  <AuthCallback />
                 </AuthErrorBoundary>
               </Suspense>
             }
