@@ -1,5 +1,3 @@
-// @ts-nocheck
-// TODO: requires DI container refactoring — factory/binding type mismatches with service interfaces
 /**
  * User Service Factory
  * Factory implementation for user-related services
@@ -169,6 +167,23 @@ interface ICacheService {
   set<T>(key: string, value: T, ttl?: number): Promise<void>;
   delete(key: string): Promise<void>;
 }
+
+// Type stubs for interface method signatures
+type SessionValidation = any;
+type TokenPair = any;
+type ProfileData = any;
+type TimePeriod = any;
+type ActivityStats = any;
+type ActivityExport = any;
+type UserRelation = any;
+type UserMetric = any;
+type SegmentationCriteria = any;
+type UserSegment = any;
+type UserReport = any;
+type ChurnPrediction = any;
+type NotificationPreferences = any;
+type PrivacyPreferences = any;
+type ContentPreferences = any;
 
 // Factory Implementations
 

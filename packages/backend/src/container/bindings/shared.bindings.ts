@@ -1,6 +1,3 @@
-// @ts-nocheck
-// TODO: requires DI container refactoring — factory/binding type mismatches with service interfaces
-// TypeScript strict mode enabled
 /**
  * Shared Services Binding Module
  * Registers all Phase 2 shared services in the DI container
@@ -10,6 +7,13 @@
 
 import type { IServiceRegistry, IServiceContainer } from '../../interfaces/shared/IServiceRegistry';
 import type { IServiceModule } from '../../interfaces/shared/IServiceRegistry';
+import type { IEventBus } from '../../interfaces/shared/IEventBus';
+import type { ILogger } from '../../interfaces/shared/ILogger';
+import type { ICacheService } from '../../interfaces/shared/ICacheService';
+import type { IEmailService } from '../../interfaces/communication/IEmailService';
+import type { INotificationService } from '../../interfaces/communication/INotificationService';
+import type { IAuditLogService } from '../../interfaces/shared/IAuditLogService';
+import type { IQueueService } from '../../interfaces/queue/IQueueService';
 import { TYPES } from '../types';
 
 // Import service implementations
@@ -18,6 +22,16 @@ import { NotificationService } from '../../services/NotificationService';
 import { AuditLogService } from '../../services/AuditLogService';
 import { CacheService } from '../../services/CacheService';
 import { EventBusService } from '../../services/EventBusService';
+
+/** Helper to read env-like config from a record with fallback */
+function configGet(config: Record<string, unknown>, key: string, fallback: string = ''): string {
+  const val = config[key];
+  if (typeof val === 'string') return val;
+  if (typeof (config as Record<string, any>).get === 'function') {
+    return String((config as Record<string, any>).get(key, fallback));
+  }
+  return fallback;
+}
 
 /**
  * Shared Services Module
@@ -31,92 +45,90 @@ export class SharedServicesModule implements IServiceModule {
     // ===========================
     // EventBusService - SINGLETON
     // ===========================
-    // Central event-driven communication
-    // Stateful: Maintains event subscriptions and event store
     registry.registerSingletonFactory(TYPES.EventBusService, (container) => {
-      const logger = container.resolveOptional(TYPES.Logger);
-      return new EventBusService(logger);
+      const logger = container.resolveOptional(TYPES.Logger) ?? undefined;
+      return new EventBusService(logger) as unknown as IEventBus;
     });
 
     // ===========================
     // CacheService - SINGLETON
     // ===========================
-    // Redis-based caching with state
-    // Stateful: Maintains connection pool and statistics
     registry.registerSingletonFactory(TYPES.CacheService, (container) => {
       const eventBus = container.resolve(TYPES.EventBusService);
       const logger = container.resolve(TYPES.Logger);
-      const config = container.resolve(TYPES.Config);
+      const config = container.resolve(TYPES.Config) as Record<string, unknown>;
 
-      // Get cache configuration from config service
       const cacheConfig = {
-        provider: config.get('CACHE_PROVIDER', 'redis'),
-        prefix: config.get('CACHE_PREFIX', 'sovren'),
-        defaultTtl: parseInt(config.get('CACHE_DEFAULT_TTL', '3600'), 10),
+        provider: configGet(config, 'CACHE_PROVIDER', 'redis'),
+        prefix: configGet(config, 'CACHE_PREFIX', 'sovren'),
+        defaultTtl: parseInt(configGet(config, 'CACHE_DEFAULT_TTL', '3600'), 10),
         redis: {
-          host: config.get('REDIS_HOST', 'localhost'),
-          port: parseInt(config.get('REDIS_PORT', '6379'), 10),
-          password: config.get('REDIS_PASSWORD'),
-          db: parseInt(config.get('REDIS_DB', '0'), 10),
+          host: configGet(config, 'REDIS_HOST', 'localhost'),
+          port: parseInt(configGet(config, 'REDIS_PORT', '6379'), 10),
+          password: configGet(config, 'REDIS_PASSWORD'),
+          db: parseInt(configGet(config, 'REDIS_DB', '0'), 10),
         },
         warmup: {
-          enabled: config.get('CACHE_WARMUP_ENABLED', 'false') === 'true',
-          interval: parseInt(config.get('CACHE_WARMUP_INTERVAL', '3600'), 10),
+          enabled: configGet(config, 'CACHE_WARMUP_ENABLED', 'false') === 'true',
+          interval: parseInt(configGet(config, 'CACHE_WARMUP_INTERVAL', '3600'), 10),
         },
       };
 
-      return new CacheService(eventBus, logger, cacheConfig);
+      return new CacheService(eventBus, logger, cacheConfig) as unknown as ICacheService;
     });
 
     // ===========================
     // EmailService - TRANSIENT
     // ===========================
-    // Stateless email sending
-    // New instance per resolution for isolated email operations
     registry.registerTransient(TYPES.EmailService, (container) => {
-      const config = container.resolve(TYPES.Config);
+      const eventBus = container.resolve(TYPES.EventBusService);
       const logger = container.resolve(TYPES.Logger);
+      const config = container.resolve(TYPES.Config) as Record<string, unknown>;
+      const cache = container.resolveOptional(TYPES.CacheService) ?? undefined;
 
-      return new EmailService(config, logger);
+      const emailConfig = {
+        provider: configGet(config, 'EMAIL_PROVIDER', 'smtp'),
+        fromEmail: configGet(config, 'EMAIL_FROM', 'noreply@sovren.dev'),
+        fromName: configGet(config, 'EMAIL_FROM_NAME', 'Sovren'),
+        apiKey: configGet(config, 'EMAIL_API_KEY'),
+        host: configGet(config, 'SMTP_HOST', 'localhost'),
+        port: parseInt(configGet(config, 'SMTP_PORT', '587'), 10),
+        secure: configGet(config, 'SMTP_SECURE', 'false') === 'true',
+      };
+
+      return new EmailService(eventBus, logger, emailConfig, cache) as unknown as IEmailService;
     });
 
     // ===========================
     // NotificationService - TRANSIENT
     // ===========================
-    // Multi-channel notification dispatch with BullMQ queue backend
     registry.registerTransient(TYPES.NotificationService, (container) => {
       const eventBus = container.resolve(TYPES.EventBusService);
       const logger = container.resolve(TYPES.Logger);
-      const cache = container.resolveOptional(TYPES.CacheService);
-      const emailService = container.resolveOptional(TYPES.EmailService);
-      const queueService = container.resolveOptional(TYPES.QueueService);
+      const cache = container.resolveOptional(TYPES.CacheService) ?? undefined;
+      const emailService = container.resolveOptional(TYPES.EmailService) as IEmailService | undefined;
+      const queueService = container.resolveOptional(TYPES.QueueService) as IQueueService | undefined;
 
       return new NotificationService(
         eventBus,
         logger,
-        cache ?? undefined,
-        emailService ?? undefined,
-        queueService ?? undefined
-      );
+        cache,
+        emailService,
+        queueService
+      ) as unknown as INotificationService;
     });
 
     // ===========================
     // AuditLogService - TRANSIENT
     // ===========================
-    // Audit trail and compliance logging
-    // Stateless: Writes to database without maintaining state
     registry.registerTransient(TYPES.AuditLogService, (container) => {
-      const database = container.resolve(TYPES.Database);
+      const eventBus = container.resolve(TYPES.EventBusService);
       const logger = container.resolve(TYPES.Logger);
 
-      return new AuditLogService(database, logger);
+      return new AuditLogService(eventBus, logger) as unknown as IAuditLogService;
     });
   }
 
-  /**
-   * Module dependencies
-   * Requires infrastructure services to be registered first
-   */
   dependencies = [];
 }
 
@@ -130,7 +142,6 @@ export function registerSharedServices(registry: IServiceRegistry): void {
 
 /**
  * Service health check registration
- * Registers health checks for all services with healthCheck capability
  */
 export async function registerSharedServiceHealthChecks(container: IServiceContainer): Promise<void> {
   const healthChecks: Array<{ name: string; check: () => Promise<boolean> }> = [
@@ -145,12 +156,11 @@ export async function registerSharedServiceHealthChecks(container: IServiceConta
       name: 'CacheService',
       check: async () => {
         const cache = container.resolve(TYPES.CacheService);
-        return cache.healthCheck ? await cache.healthCheck() : true;
+        return (cache as any).healthCheck ? await (cache as any).healthCheck() : true;
       },
     },
   ];
 
-  // Return health check registry
   void healthChecks;
 }
 

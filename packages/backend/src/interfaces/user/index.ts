@@ -7,6 +7,7 @@
 
 export * from './IUserActivityService';
 export * from './IUserAnalyticsService';
+export * from './IUserAuthenticationService';
 export * from './IUserPreferencesService';
 export * from './IUserProfileService';
 export * from './IUserRelationshipService';

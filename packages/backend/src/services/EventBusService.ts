@@ -76,6 +76,26 @@ export class EventBusService implements IEventBus {
   }
 
   /**
+   * Emit a simplified event by name and optional payload.
+   * Creates a lightweight DomainEvent and delegates to publish().
+   */
+  async emit(event: string, data?: unknown): Promise<void> {
+    const domainEvent: DomainEvent = {
+      id: `evt_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`,
+      type: event as DomainEventType,
+      aggregateId: 'system',
+      aggregateType: 'system',
+      payload: data,
+      metadata: {
+        timestamp: new Date(),
+        version: '1.0.0',
+        source: 'emit',
+      },
+    };
+    await this.publish(domainEvent);
+  }
+
+  /**
    * Publish multiple events in batch
    */
   async publishBatch<T = any>(events: DomainEvent<T>[]): Promise<void> {
