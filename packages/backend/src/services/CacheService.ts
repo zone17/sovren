@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * CacheService Implementation
  * User Story: US-E5-010
@@ -7,7 +6,8 @@
  */
 
 import type { ICacheService } from '../interfaces/shared/ICacheService';
-import type { IEventBus } from '../interfaces/shared/IEventBus';
+import type { IEventBus, DomainEvent } from '../interfaces/shared/IEventBus';
+import { DomainEventType, DomainEventBuilder } from '../interfaces/shared/IEventBus';
 import type { ILogger } from '../interfaces/shared/ILogger';
 import type {
   CacheOptions,
@@ -174,7 +174,7 @@ class InMemoryCacheProvider implements ICacheProvider {
 
   async keys(pattern: string): Promise<string[]> {
     const regex = new RegExp(pattern.replace('*', '.*'));
-    return Array.from(this.store.keys()).filter((key) => regex.test(key));
+    return Array.from(this.store.keys()).filter(key => regex.test(key));
   }
 
   async *scanKeys(pattern: string): AsyncGenerator<string> {
@@ -205,7 +205,7 @@ class InMemoryCacheProvider implements ICacheProvider {
   }
 
   async mget(keys: string[]): Promise<(string | null)[]> {
-    return Promise.all(keys.map((key) => this.get(key)));
+    return Promise.all(keys.map(key => this.get(key)));
   }
 
   async mset(entries: Array<{ key: string; value: string; ttl?: number }>): Promise<void> {
@@ -252,6 +252,7 @@ export class CacheService implements ICacheService {
     this.stats = {
       hits: 0,
       misses: 0,
+      keys: 0,
       sets: 0,
       deletes: 0,
       hitRate: 0,
@@ -326,7 +327,7 @@ export class CacheService implements ICacheService {
       }
 
       // Emit event
-      await this.eventBus.emit('cache.set', {
+      await this.emitCacheEvent('cache.set', {
         key,
         ttl: effectiveTtl,
         tags: options?.tags,
@@ -351,7 +352,7 @@ export class CacheService implements ICacheService {
         await this.removeTags(key);
 
         // Emit event
-        await this.eventBus.emit('cache.delete', { key });
+        await this.emitCacheEvent('cache.delete', { key });
       }
 
       return result;
@@ -386,7 +387,7 @@ export class CacheService implements ICacheService {
       this.logger.info(`Cache invalidation: ${pattern} (${count} keys deleted)`);
 
       // Emit event
-      await this.eventBus.emit('cache.invalidate', {
+      await this.emitCacheEvent('cache.invalidate', {
         pattern,
         count,
       });
@@ -409,7 +410,7 @@ export class CacheService implements ICacheService {
 
         if (taggedKeys) {
           const parsed = JSON.parse(taggedKeys) as string[];
-          parsed.forEach((key) => keys.add(key));
+          parsed.forEach(key => keys.add(key));
         }
       }
 
@@ -449,7 +450,7 @@ export class CacheService implements ICacheService {
       this.logger.warn('Cache flushed');
 
       // Emit event
-      await this.eventBus.emit('cache.flush', {});
+      await this.emitCacheEvent('cache.flush', {});
     } catch (error) {
       this.logger.error('Cache flush error', error);
       throw error;
@@ -484,7 +485,7 @@ export class CacheService implements ICacheService {
 
   async getMany<T>(keys: string[]): Promise<Map<string, T | null>> {
     try {
-      const prefixedKeys = keys.map((key) => this.getPrefixedKey(key));
+      const prefixedKeys = keys.map(key => this.getPrefixedKey(key));
       const values = await this.provider.mget(prefixedKeys);
 
       const result = new Map<string, T | null>();
@@ -514,7 +515,7 @@ export class CacheService implements ICacheService {
 
   async setMany<T>(entries: Array<{ key: string; value: T; ttl?: number }>): Promise<void> {
     try {
-      const serialized = entries.map((entry) => ({
+      const serialized = entries.map(entry => ({
         key: this.getPrefixedKey(entry.key),
         value: typeof entry.value === 'string' ? entry.value : JSON.stringify(entry.value),
         ttl: entry.ttl || this.config.defaultTtl,
@@ -596,9 +597,9 @@ export class CacheService implements ICacheService {
     this.invalidationPatterns.set(pattern.name, pattern);
 
     // Subscribe to events
-    pattern.events.forEach((event) => {
-      this.eventBus.on(event, async (data) => {
-        const keysToInvalidate = pattern.keyGenerator(data);
+    (pattern.events as DomainEventType[]).forEach((eventType: DomainEventType) => {
+      this.eventBus.subscribe(eventType, async (domainEvent: DomainEvent) => {
+        const keysToInvalidate = pattern.keyGenerator(domainEvent.payload);
 
         for (const key of keysToInvalidate) {
           await this.delete(key);
@@ -635,6 +636,21 @@ export class CacheService implements ICacheService {
   }
 
   // Private helper methods
+
+  /**
+   * Publish a cache-related domain event via the event bus.
+   * Wraps plain data into a DomainEvent envelope.
+   */
+  private async emitCacheEvent(eventName: string, data: Record<string, unknown>): Promise<void> {
+    const event = new DomainEventBuilder()
+      .withType(DomainEventType.SERVICE_STARTED) // Cache events don't have a dedicated type
+      .withAggregateId(eventName)
+      .withAggregateType('cache')
+      .withPayload({ eventName, ...data })
+      .withSource('CacheService')
+      .build();
+    await this.eventBus.publish(event);
+  }
 
   private getPrefixedKey(key: string): string {
     return this.config.prefix ? `${this.config.prefix}:${key}` : key;
@@ -695,7 +711,7 @@ export class CacheService implements ICacheService {
       if (!existing) continue;
 
       const keys = JSON.parse(existing) as string[];
-      const filtered = keys.filter((k) => k !== key);
+      const filtered = keys.filter(k => k !== key);
 
       if (filtered.length > 0) {
         await this.provider.set(tagKey, JSON.stringify(filtered), 86400);

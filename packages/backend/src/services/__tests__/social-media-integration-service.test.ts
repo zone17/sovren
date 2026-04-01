@@ -25,7 +25,12 @@ import {
 } from '../../types/social-media-integration';
 import { Logger } from '../../utils/logger';
 import { AnalyticsService } from '../analytics-service';
-import { RedisService } from '../redis-service';
+// RedisService interface defined locally in social-media-integration-service.ts (not exported)
+interface RedisService {
+  setex(key: string, ttl: number, value: string): Promise<void>;
+  get(key: string): Promise<string | null>;
+  del(key: string): Promise<void>;
+}
 import { SocialMediaIntegrationService } from '../social-media-integration-service';
 
 // =====================================================
@@ -175,9 +180,9 @@ describe('SocialMediaIntegrationService', () => {
         expect(result.postUrl).toBe('https://twitter.com/user/status/123');
         expect(result.shareId).toBeDefined();
         expect(mockAnalytics.track).toHaveBeenCalledWith(
-          mockUserId,
           'social_content_shared',
           expect.objectContaining({
+            userId: mockUserId,
             platform: SocialPlatform.TWITTER,
             contentId: mockContentId,
           })
@@ -265,17 +270,14 @@ describe('SocialMediaIntegrationService', () => {
           }),
         };
         (service as any).platformAdapters.set(SocialPlatform.TWITTER, mockAdapter);
-        (service as any).schedulePost = vi.fn().mockResolvedValue({
-          postId: 'scheduled_post_123',
-          postUrl: 'https://twitter.com/scheduled/123',
-        });
+        (service as any).schedulePostPublication = vi.fn().mockResolvedValue(undefined);
 
         // Act
         const result = await service.shareContent(mockUserId, shareRequest);
 
         // Assert
         expect(result.success).toBe(true);
-        expect((service as any).schedulePost).toHaveBeenCalled();
+        expect((service as any).schedulePostPublication).toHaveBeenCalled();
       });
     });
 

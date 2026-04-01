@@ -1,5 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
 /**
  * 🌐 ELITE SERVICE: NIP-65 Relay List Metadata
  * US-319: NIP-65 Relay List Implementation
@@ -72,13 +70,6 @@ export interface RelayListOptions {
 }
 
 /**
- * Get default relays from centralized configuration
- * @deprecated Use RelayConfig.getRelays() directly
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const getDefaultRelays = (): RelayMetadata[] => RelayConfig.getRelays();
-
-/**
  * NIP-65 Relay List Metadata Service
  */
 export class NIP65Service {
@@ -141,20 +132,32 @@ export class NIP65Service {
       tags,
     };
 
-    // Get private key
-    const privKey = privateKey || (await this.keyManagement.getPrivateKey());
-    if (!privKey) {
+    // Get private key from active key pair
+    const activeKey = this.keyManagement.getActiveKey();
+    const privKeyInput = privateKey || activeKey?.privateKey;
+    if (!privKeyInput) {
       throw new Error('No private key available');
     }
 
+    // Convert hex string to Uint8Array if needed
+    const privKeyBytes =
+      typeof privKeyInput === 'string'
+        ? new Uint8Array(privKeyInput.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)))
+        : privKeyInput;
+
     // Sign and publish
+    const pubkey = activeKey?.publicKey;
+    if (!pubkey) {
+      throw new Error('No public key available');
+    }
+
     const unsignedEvent: UnsignedNostrEvent = {
       ...eventTemplate,
-      pubkey: await this.keyManagement.getPublicKey(),
+      pubkey,
       created_at: Math.floor(Date.now() / 1000),
     };
 
-    const signedEvent = finalizeEvent(unsignedEvent, privKey) as RelayListEvent;
+    const signedEvent = finalizeEvent(unsignedEvent, privKeyBytes) as RelayListEvent;
 
     // Publish to network
     await this.relayPool.publishEvent(signedEvent);
@@ -312,7 +315,11 @@ export class NIP65Service {
     privateKey?: string
   ): Promise<RelayListEvent> {
     // Get current relay list
-    const publicKey = await this.keyManagement.getPublicKey();
+    const activeKey = this.keyManagement.getActiveKey();
+    if (!activeKey) {
+      throw new Error('No active key available');
+    }
+    const publicKey = activeKey.publicKey;
     const currentList = await this.fetchRelayList(publicKey, {
       includeDefaults: false,
     });
