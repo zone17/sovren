@@ -1,4 +1,8 @@
 // @ts-nocheck
+// TODO: requires interface redesign — 171 errors from Money class usage (needs actual class, not type alias),
+// Invoice interface mismatch (IPaymentService.Invoice lacks number, billingAddress, total, customerId, etc.),
+// ServiceError constructor signature, and multiple method return type mismatches.
+// Needs: 1) Money class implementation, 2) Invoice interface extension, 3) ServiceError options type fix
 import { injectable, inject } from 'inversify';
 import { TYPES } from '../../container/types';
 import {

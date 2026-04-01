@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Payment Retry Service
  *
@@ -12,9 +11,37 @@
  */
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { PaymentState, Payment, PaymentNotFoundError } from '@shared/types';
+import { PaymentState, PaymentNotFoundError } from '@shared/types';
 import { PaymentStateMachine } from './PaymentStateMachine';
 import { EmailIntegrationService } from '../email-integration-service';
+
+/**
+ * Local interface matching actual Supabase payments table row shape (snake_case).
+ * The shared Payment type uses camelCase which doesn't match DB columns.
+ */
+interface PaymentRow {
+  id: string;
+  amount: number;
+  currency: string;
+  state: string;
+  status?: string;
+  user_id: string;
+  post_id: string;
+  description?: string;
+  expires_at?: number;
+  expiresAt?: Date;
+  payment_hash?: string;
+  retry_count?: number;
+  next_retry_at?: string | null;
+  retry_error_code?: string;
+  last_error?: string;
+  lastError?: string;
+  invoice_status?: string;
+  preimage?: string;
+  metadata?: Record<string, unknown>;
+  created_at?: string;
+  updated_at?: string;
+}
 
 /**
  * Retry configuration for exponential backoff with jitter and circuit breaker
@@ -889,7 +916,7 @@ export class PaymentRetryService {
    * @returns Promise resolving to payment object
    * @throws {PaymentNotFoundError} If payment doesn't exist
    */
-  private async getPayment(paymentId: string): Promise<Payment> {
+  private async getPayment(paymentId: string): Promise<PaymentRow> {
     const { data: payment, error } = await this.supabase
       .from('payments')
       .select('*')
@@ -901,7 +928,7 @@ export class PaymentRetryService {
       throw new PaymentNotFoundError(paymentId);
     }
 
-    return payment as Payment;
+    return payment as PaymentRow;
   }
 
   /**
@@ -912,7 +939,7 @@ export class PaymentRetryService {
    * @param errorCode Error code from failed attempt
    * @throws {PaymentNotRetryableError} If error is not retryable
    */
-  private async validateRetryEligibility(payment: Payment, errorCode: string): Promise<void> {
+  private async validateRetryEligibility(payment: PaymentRow, errorCode: string): Promise<void> {
     // Check if error is retryable
     if (!this.isRetryable(errorCode)) {
       this.logger?.warn('Payment error is not retryable', {
@@ -937,7 +964,7 @@ export class PaymentRetryService {
    * @param errorMessage Final error message
    */
   private async handleRetryExhaustion(
-    payment: Payment,
+    payment: PaymentRow,
     errorCode: string,
     errorMessage?: string
   ): Promise<void> {
@@ -1013,7 +1040,7 @@ export class PaymentRetryService {
    * }
    * ```
    */
-  private async verifyPaymentStatus(payment: Payment): Promise<boolean> {
+  private async verifyPaymentStatus(payment: PaymentRow): Promise<boolean> {
     this.logger?.debug('Verifying payment status', {
       paymentId: payment.id,
       paymentHash: payment.payment_hash,
