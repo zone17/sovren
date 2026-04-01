@@ -109,8 +109,8 @@ const demoAuthService: AuthService = {
             ]
           : ['payments.send'],
     };
-    localStorage.setItem('demo_user', JSON.stringify(demoUser));
-    return { success: true, user: demoUser };
+    // Mirror production: require email confirmation — do NOT store to localStorage
+    return { success: true, user: demoUser, requiresConfirmation: true };
   },
 
   signInWithEmail: async (credentials: LoginCredentials) => {

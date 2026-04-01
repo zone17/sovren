@@ -5,6 +5,7 @@
  * - No more localStorage token storage
  * - Uses apiClient for HTTP transport
  * - Auth verification relies on credentials:'include' (cookies sent automatically)
+ * - Email signup/signin via Supabase Auth
  */
 
 import type { NostrSignature } from '../../types';
@@ -17,8 +18,19 @@ const mockApiClient = vi.hoisted(() => ({
   getToken: vi.fn(),
 }));
 
+const mockSupabaseAuth = vi.hoisted(() => ({
+  signUp: vi.fn(),
+  signInWithPassword: vi.fn(),
+}));
+
 vi.mock('../../../../services/api/apiClient', () => ({
   apiClient: mockApiClient,
+}));
+
+vi.mock('../../../../services/supabase', () => ({
+  supabase: {
+    auth: mockSupabaseAuth,
+  },
 }));
 
 import { realAuthService } from '../realAuthService';
@@ -91,6 +103,7 @@ describe('RealAuthService - Cookie-based Auth', () => {
         pubkey: 'npub1234567890abcdef',
         challenge: 'challenge-123',
         signature: 'signature-abc',
+        timestamp: Date.now(),
       };
 
       const mockBackendResponse = {
@@ -132,6 +145,7 @@ describe('RealAuthService - Cookie-based Auth', () => {
         pubkey: 'npub1234567890abcdef',
         challenge: 'challenge-123',
         signature: 'invalid-signature',
+        timestamp: Date.now(),
       };
 
       const mockBackendResponse = {
@@ -211,6 +225,187 @@ describe('RealAuthService - Cookie-based Auth', () => {
 
       expect(mockApiClient.post).not.toHaveBeenCalled();
       expect(mockApiClient.setToken).toHaveBeenCalledWith(null);
+    });
+  });
+
+  describe('signUpWithEmail', () => {
+    const signupData = {
+      name: 'Jane Doe',
+      email: 'jane@example.com',
+      password: 'securePassword123',
+      role: 'creator' as const,
+      terms_accepted: true,
+    };
+
+    it('should return requiresConfirmation when no session is returned (email confirmation required)', async () => {
+      mockSupabaseAuth.signUp.mockResolvedValue({
+        data: {
+          user: {
+            id: 'supabase-user-1',
+            email: 'jane@example.com',
+            email_confirmed_at: null,
+            user_metadata: { name: 'Jane Doe', role: 'creator' },
+          },
+          session: null,
+        },
+        error: null,
+      });
+
+      const result = await realAuthService.signUpWithEmail(signupData);
+
+      expect(result.success).toBe(true);
+      expect(result.user).toBeDefined();
+      expect(result.user?.email).toBe('jane@example.com');
+      expect(result.user?.email_verified).toBe(false);
+      expect(result.token).toBeUndefined();
+      // apiClient.setToken should NOT have been called (no session)
+      expect(mockApiClient.setToken).not.toHaveBeenCalled();
+    });
+
+    it('should return token when session is returned (email confirmation disabled)', async () => {
+      mockSupabaseAuth.signUp.mockResolvedValue({
+        data: {
+          user: {
+            id: 'supabase-user-2',
+            email: 'jane@example.com',
+            email_confirmed_at: '2026-03-30T00:00:00Z',
+            user_metadata: { name: 'Jane Doe', role: 'creator' },
+          },
+          session: {
+            access_token: 'supabase-access-token',
+            refresh_token: 'supabase-refresh-token',
+          },
+        },
+        error: null,
+      });
+
+      const result = await realAuthService.signUpWithEmail(signupData);
+
+      expect(result.success).toBe(true);
+      expect(result.user).toBeDefined();
+      expect(result.user?.email_verified).toBe(true);
+      expect(result.token).toBe('supabase-access-token');
+      expect(mockApiClient.setToken).toHaveBeenCalledWith('supabase-access-token');
+    });
+
+    it('should return error for duplicate email', async () => {
+      mockSupabaseAuth.signUp.mockResolvedValue({
+        data: { user: null, session: null },
+        error: { message: 'User already registered' },
+      });
+
+      const result = await realAuthService.signUpWithEmail(signupData);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('User already registered');
+    });
+
+    it('should handle unexpected exceptions during signup', async () => {
+      mockSupabaseAuth.signUp.mockRejectedValue(new Error('Network failure'));
+
+      const result = await realAuthService.signUpWithEmail(signupData);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Network failure');
+    });
+  });
+
+  describe('signInWithEmail', () => {
+    const credentials = {
+      email: 'jane@example.com',
+      password: 'securePassword123',
+    };
+
+    it('should return session and user on successful login', async () => {
+      mockSupabaseAuth.signInWithPassword.mockResolvedValue({
+        data: {
+          user: {
+            id: 'supabase-user-1',
+            email: 'jane@example.com',
+            email_confirmed_at: '2026-03-30T00:00:00Z',
+            user_metadata: { name: 'Jane Doe', role: 'creator' },
+          },
+          session: {
+            access_token: 'login-access-token',
+            refresh_token: 'login-refresh-token',
+          },
+        },
+        error: null,
+      });
+
+      const result = await realAuthService.signInWithEmail(credentials);
+
+      expect(result.success).toBe(true);
+      expect(result.user).toBeDefined();
+      expect(result.user?.email).toBe('jane@example.com');
+      expect(result.user?.email_verified).toBe(true);
+      expect(result.token).toBe('login-access-token');
+      expect(mockApiClient.setToken).toHaveBeenCalledWith('login-access-token');
+    });
+
+    it('should return error for wrong password', async () => {
+      mockSupabaseAuth.signInWithPassword.mockResolvedValue({
+        data: { user: null, session: null },
+        error: { message: 'Invalid login credentials' },
+      });
+
+      const result = await realAuthService.signInWithEmail(credentials);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Invalid login credentials');
+    });
+
+    it('should handle unexpected exceptions during login', async () => {
+      mockSupabaseAuth.signInWithPassword.mockRejectedValue(new Error('Connection refused'));
+
+      const result = await realAuthService.signInWithEmail(credentials);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Connection refused');
+    });
+  });
+
+  describe('mapSupabaseUser', () => {
+    it('should use email_confirmed_at for email_verified', async () => {
+      // Test with confirmed email
+      mockSupabaseAuth.signInWithPassword.mockResolvedValue({
+        data: {
+          user: {
+            id: 'user-confirmed',
+            email: 'confirmed@example.com',
+            email_confirmed_at: '2026-01-01T00:00:00Z',
+            user_metadata: {},
+          },
+          session: { access_token: 'token-1', refresh_token: 'rt-1' },
+        },
+        error: null,
+      });
+
+      const confirmedResult = await realAuthService.signInWithEmail({
+        email: 'confirmed@example.com',
+        password: 'pass',
+      });
+      expect(confirmedResult.user?.email_verified).toBe(true);
+
+      // Test with unconfirmed email (null)
+      mockSupabaseAuth.signInWithPassword.mockResolvedValue({
+        data: {
+          user: {
+            id: 'user-unconfirmed',
+            email: 'unconfirmed@example.com',
+            email_confirmed_at: null,
+            user_metadata: {},
+          },
+          session: { access_token: 'token-2', refresh_token: 'rt-2' },
+        },
+        error: null,
+      });
+
+      const unconfirmedResult = await realAuthService.signInWithEmail({
+        email: 'unconfirmed@example.com',
+        password: 'pass',
+      });
+      expect(unconfirmedResult.user?.email_verified).toBe(false);
     });
   });
 
