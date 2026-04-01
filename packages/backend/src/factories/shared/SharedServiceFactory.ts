@@ -179,7 +179,7 @@ export class EmailServiceFactory extends SafeServiceFactory<IEmailService> {
   async create(): Promise<IEmailService> {
     const logger = this.resolve(SHARED_SERVICE_TOKENS.Logger);
     const db = this.resolve(SHARED_SERVICE_TOKENS.Database);
-    const _eventBus = this.resolve(SHARED_SERVICE_TOKENS.EventBus);
+    void this.resolve(SHARED_SERVICE_TOKENS.EventBus);
 
     const sendEmailFn = async (options: EmailOptions): Promise<EmailResult> => {
       try {
@@ -290,7 +290,7 @@ export class NotificationServiceFactory extends SafeServiceFactory<INotification
   async create(): Promise<INotificationService> {
     const logger = this.resolve(SHARED_SERVICE_TOKENS.Logger);
     const db = this.resolve(SHARED_SERVICE_TOKENS.Database);
-    const _eventBus = this.resolve(SHARED_SERVICE_TOKENS.EventBus);
+    void this.resolve(SHARED_SERVICE_TOKENS.EventBus);
     const cache = this.resolve(SHARED_SERVICE_TOKENS.CacheService);
 
     const sendNotificationFn = async (notification: Notification): Promise<any> => {
@@ -332,7 +332,7 @@ export class NotificationServiceFactory extends SafeServiceFactory<INotification
       sendNotification: sendNotificationFn,
 
       async sendBulkNotifications(notifications: Notification[]): Promise<any> {
-        const results = await Promise.all(notifications.map((n) => sendNotificationFn(n)));
+        const results = await Promise.all(notifications.map(n => sendNotificationFn(n)));
 
         return {
           total: notifications.length,
@@ -349,7 +349,7 @@ export class NotificationServiceFactory extends SafeServiceFactory<INotification
         return results;
       },
 
-      async updateNotificationPreferences(userId: string, preferences: any): Promise<void> {
+      async updateNotificationPreferences(userId: string, _preferences: any): Promise<void> {
         logger.info(`Updating notification preferences for user ${userId}`);
         // Update preferences in database
       },
@@ -494,7 +494,7 @@ export class AuditLogServiceFactory extends SafeServiceFactory<IAuditLogService>
       },
 
       async purgeOldLogs(beforeDate: Date): Promise<number> {
-        const result = await db.execute('DELETE FROM audit_logs WHERE timestamp < ?', [beforeDate]);
+        await db.execute('DELETE FROM audit_logs WHERE timestamp < ?', [beforeDate]);
         logger.info(`Purged audit logs before ${beforeDate}`);
         return 0; // Would return affected rows count
       },
@@ -571,7 +571,7 @@ export class CacheServiceFactory extends SafeServiceFactory<ICacheService> {
         if (redis) {
           const keys = await redis.keys(pattern);
           if (keys.length > 0) {
-            await Promise.all(keys.map((k) => redis.del(k)));
+            await Promise.all(keys.map(k => redis.del(k)));
           }
           return keys.length;
         } else {

@@ -32,6 +32,7 @@
  * - Privacy-compliant analytics
  */
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import crypto from 'crypto';
 import {
   calculateChurnRiskScore,
@@ -47,7 +48,9 @@ import {
   generateExportId,
 } from './UserAnalyticsHelpers';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { TYPES } from '../../container/types';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { IUserAnalyticsService } from '../../interfaces/user/IUserAnalyticsService';
 import { ICacheService } from '../../interfaces/shared/ICacheService';
 import { IEventBus, DomainEventType } from '../../interfaces/shared/IEventBus';
@@ -58,9 +61,13 @@ import { IDatabase } from '../../interfaces/shared/IDatabase';
  * DB query wrapper — IDatabase.query returns T[], but this service expects { rows: T[] }.
  * This adapter creates a proxy that normalizes the result shape.
  */
-function wrapDb(db: IDatabase): { query<T = any>(sql: string, params?: any[]): Promise<{ rows: T[] }> } { // eslint-disable-line @typescript-eslint/no-explicit-any
+function wrapDb(db: IDatabase): {
+  query<T = any>(sql: string, params?: any[]): Promise<{ rows: T[] }>;
+} {
+  // eslint-disable-line @typescript-eslint/no-explicit-any
   return {
-    async query<T = any>(sql: string, params?: any[]): Promise<{ rows: T[] }> { // eslint-disable-line @typescript-eslint/no-explicit-any
+    async query<T = any>(sql: string, params?: any[]): Promise<{ rows: T[] }> {
+      // eslint-disable-line @typescript-eslint/no-explicit-any
       const result = await db.query<T>(sql, params);
       return { rows: result };
     },
@@ -117,12 +124,12 @@ interface EventBuffer {
 /**
  * Cached aggregation data
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface AggregationCache {
   data: any;
   computedAt: Date;
   expiresAt: Date;
 }
-
 
 export class UserAnalyticsService {
   private readonly CACHE_TTL = {
@@ -158,11 +165,19 @@ export class UserAnalyticsService {
    */
   private initializeEventSubscriptions(): void {
     // Subscribe to user events
-    this.eventBus.subscribe('user.created' as DomainEventType, (event) => this.handleUserCreated(event));
-    this.eventBus.subscribe('user.login' as DomainEventType, (event) => this.handleUserLogin(event));
-    this.eventBus.subscribe('user.activity' as DomainEventType, (event) => this.handleUserActivity(event));
-    this.eventBus.subscribe('content.created' as DomainEventType, (event) => this.handleContentCreated(event));
-    this.eventBus.subscribe('content.viewed' as DomainEventType, (event) => this.handleContentViewed(event));
+    this.eventBus.subscribe('user.created' as DomainEventType, event =>
+      this.handleUserCreated(event)
+    );
+    this.eventBus.subscribe('user.login' as DomainEventType, event => this.handleUserLogin(event));
+    this.eventBus.subscribe('user.activity' as DomainEventType, event =>
+      this.handleUserActivity(event)
+    );
+    this.eventBus.subscribe('content.created' as DomainEventType, event =>
+      this.handleContentCreated(event)
+    );
+    this.eventBus.subscribe('content.viewed' as DomainEventType, event =>
+      this.handleContentViewed(event)
+    );
 
     this.logger.info('UserAnalyticsService: Event subscriptions initialized');
   }
@@ -172,7 +187,7 @@ export class UserAnalyticsService {
    */
   private startBufferFlushTimer(): void {
     setInterval(() => {
-      this.flushEventBuffer().catch((error) => {
+      this.flushEventBuffer().catch(error => {
         this.logger.error('Failed to flush event buffer', { error });
       });
     }, this.EVENT_BUFFER_FLUSH_INTERVAL);
@@ -349,7 +364,7 @@ export class UserAnalyticsService {
         WHERE created_at >= $1 AND created_at < $2
       `;
       const cohortResult = await this.db.query(cohortQuery, [cohortDate, cohortEndDate]);
-      const cohortUserIds = cohortResult.rows.map((row) => row.user_id);
+      const cohortUserIds = cohortResult.rows.map(row => row.user_id);
       const cohortSize = cohortUserIds.length;
 
       if (cohortSize === 0) {
@@ -437,7 +452,7 @@ export class UserAnalyticsService {
         const cohortSize = cohortUsersResult.rows.length;
 
         if (cohortSize > 0) {
-          const userIds = cohortUsersResult.rows.map((row) => row.user_id);
+          const userIds = cohortUsersResult.rows.map(row => row.user_id);
 
           // Build retention data
           const retentionData: CohortRetentionData[] = [];
@@ -539,7 +554,7 @@ export class UserAnalyticsService {
       }
 
       const result = await this.db.query(query, params);
-      const userIds = result.rows.map((row) => row.user_id);
+      const userIds = result.rows.map(row => row.user_id);
 
       if (userIds.length === 0) {
         return segments;
@@ -715,7 +730,7 @@ export class UserAnalyticsService {
       const params = segment ? [segment] : [];
       const result = await this.db.query(query, params);
 
-      const revenues = result.rows.map((row) => parseFloat(row.total_revenue));
+      const revenues = result.rows.map(row => parseFloat(row.total_revenue));
       const averageLTV =
         revenues.length > 0 ? revenues.reduce((sum, rev) => sum + rev, 0) / revenues.length : 0;
 
@@ -733,15 +748,15 @@ export class UserAnalyticsService {
         { range: { min: 500, max: Infinity }, userCount: 0, percentage: 0, revenue: 0 },
       ];
 
-      revenues.forEach((rev) => {
-        const bucket = ltvDistribution.find((d) => rev >= d.range.min && rev < d.range.max);
+      revenues.forEach(rev => {
+        const bucket = ltvDistribution.find(d => rev >= d.range.min && rev < d.range.max);
         if (bucket) {
           bucket.userCount++;
           bucket.revenue += rev;
         }
       });
 
-      ltvDistribution.forEach((bucket) => {
+      ltvDistribution.forEach(bucket => {
         bucket.percentage = revenues.length > 0 ? (bucket.userCount / revenues.length) * 100 : 0;
       });
 
@@ -963,7 +978,7 @@ export class UserAnalyticsService {
       const result = await this.db.query(query, [timeRange.startDate, timeRange.endDate]);
 
       // Build trend points
-      const trends: TrendPoint[] = result.rows.map((row) => ({
+      const trends: TrendPoint[] = result.rows.map(row => ({
         timestamp: new Date(row.date),
         value: parseInt(row.cumulative_users),
         trend: 'stable' as const,
@@ -1098,13 +1113,13 @@ export class UserAnalyticsService {
       const overallScore = components.reduce((sum, c) => sum + c.score * c.weight, 0);
 
       // Calculate engagement score (subset of overall)
-      const engagementScore = components.find((c) => c.component === 'engagement')?.score || 0;
+      const engagementScore = components.find(c => c.component === 'engagement')?.score || 0;
 
       // Calculate risk score (inverse of health)
       const riskScore = 100 - overallScore;
 
       // Calculate value score
-      const valueScore = components.find((c) => c.component === 'monetization')?.score || 0;
+      const valueScore = components.find(c => c.component === 'monetization')?.score || 0;
 
       // Determine health trend (would compare to historical data)
       const healthTrend =
@@ -1220,21 +1235,16 @@ export class UserAnalyticsService {
 
       // Format data based on export format
       let formattedData: string;
-      let contentType: string;
-
       switch (options.format) {
         case 'csv':
           formattedData = this.formatAsCSV(data);
-          contentType = 'text/csv';
           break;
         case 'json':
           formattedData = JSON.stringify(data, null, 2);
-          contentType = 'application/json';
           break;
         case 'xlsx':
           // Would use xlsx library in real implementation
           formattedData = JSON.stringify(data);
-          contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
           break;
         default:
           throw new Error(`Unsupported export format: ${options.format}`);
@@ -1497,7 +1507,7 @@ export class UserAnalyticsService {
     const sourceMap = new Map<string, SignupSource>();
     let total = 0;
 
-    rows.forEach((row) => {
+    rows.forEach(row => {
       const source = row.signup_source || 'organic';
       const count = parseInt(row.count);
       total += count;
@@ -1517,7 +1527,7 @@ export class UserAnalyticsService {
     });
 
     const sources = Array.from(sourceMap.values());
-    sources.forEach((source) => {
+    sources.forEach(source => {
       source.percentage = total > 0 ? (source.count / total) * 100 : 0;
     });
 
@@ -1525,7 +1535,7 @@ export class UserAnalyticsService {
   }
 
   private async calculateConversionRate(
-    timeRange: AnalyticsTimeRange
+    _timeRange: AnalyticsTimeRange
   ): Promise<{ rate: number; avgTime: number }> {
     // Simplified conversion calculation
     // In real implementation, would track visitor -> signup funnel
@@ -1552,7 +1562,7 @@ export class UserAnalyticsService {
     try {
       const result = await this.db.query(query, [timeRange.startDate, timeRange.endDate]);
 
-      return result.rows.map((row) => ({
+      return result.rows.map(row => ({
         referrer: row.referrer,
         visits: parseInt(row.visits),
         signups: parseInt(row.signups),
@@ -1601,7 +1611,7 @@ export class UserAnalyticsService {
 
     const result = await this.db.query(query, [timeRange.startDate, timeRange.endDate]);
 
-    return result.rows.map((row) => ({
+    return result.rows.map(row => ({
       timestamp: new Date(row.date),
       activeUsers: parseInt(row.active_users),
       sessions: parseInt(row.sessions),
@@ -1720,7 +1730,7 @@ export class UserAnalyticsService {
     try {
       const result = await this.db.query(query, [userIds]);
 
-      return result.rows.map((row) => ({
+      return result.rows.map(row => ({
         action: row.action_name,
         count: parseInt(row.count),
         uniqueUsers: parseInt(row.unique_users),
@@ -1733,7 +1743,7 @@ export class UserAnalyticsService {
   }
 
   private async getFunnelDefinition(
-    funnelId: string
+    _funnelId: string
   ): Promise<Array<{ name: string; action: string }>> {
     // In real implementation, would fetch from database
     return [
@@ -1769,7 +1779,7 @@ export class UserAnalyticsService {
   }
 
   private async generateChurnPredictions(
-    timeRange: AnalyticsTimeRange
+    _timeRange: AnalyticsTimeRange
   ): Promise<ChurnPrediction[]> {
     // Get users who are at risk
     const query = `
@@ -1784,7 +1794,7 @@ export class UserAnalyticsService {
     const result = await this.db.query(query);
 
     const predictions = await Promise.all(
-      result.rows.map((row) => this.predictUserChurn(row.user_id))
+      result.rows.map(row => this.predictUserChurn(row.user_id))
     );
 
     return predictions;
@@ -1814,7 +1824,7 @@ export class UserAnalyticsService {
     predictions: ChurnPrediction[]
   ): Promise<RetentionOpportunity[]> {
     const highRiskCount = predictions.filter(
-      (p) => p.riskLevel === 'high' || p.riskLevel === 'critical'
+      p => p.riskLevel === 'high' || p.riskLevel === 'critical'
     ).length;
 
     return [
@@ -1881,7 +1891,7 @@ export class UserAnalyticsService {
     try {
       const result = await this.db.query(query);
 
-      return result.rows.map((row) => ({
+      return result.rows.map(row => ({
         activityType: row.activity_type,
         count: parseInt(row.count),
         trend: 'stable' as const,

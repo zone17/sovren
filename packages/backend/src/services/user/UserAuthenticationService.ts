@@ -2,8 +2,10 @@
 // missing auth interfaces (IUserAuthenticationService, LoginCredentials, AuthSession, MFAType, MFASetup),
 // ServiceError missing 'code' option, IEventBus missing 'emit', INotificationService missing 'send'
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { TYPES } from '../../container/types';
 import {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   IUserAuthenticationService,
   LoginCredentials,
   AuthSession,
@@ -91,6 +93,7 @@ export class UserAuthenticationService {
    */
   public async login(credentials: LoginCredentials): Promise<AuthSession> {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { username, password, mfaToken, rememberMe, ipAddress, userAgent } = credentials;
 
       this.logger.info('Login attempt', { username, ipAddress });
@@ -107,7 +110,9 @@ export class UserAuthenticationService {
 
       // Check if account is locked
       if (await this.isAccountLocked(user.id)) {
-        throw new ServiceError('Account is temporarily locked', { context: { code: 'ACCOUNT_LOCKED' } });
+        throw new ServiceError('Account is temporarily locked', {
+          context: { code: 'ACCOUNT_LOCKED' },
+        });
       }
 
       // Verify password (constant-time comparison via argon2)
@@ -369,7 +374,9 @@ export class UserAuthenticationService {
 
         case 'webauthn': {
           // WebAuthn setup would go here
-          throw new ServiceError('WebAuthn not yet implemented', { context: { code: 'NOT_IMPLEMENTED' } });
+          throw new ServiceError('WebAuthn not yet implemented', {
+            context: { code: 'NOT_IMPLEMENTED' },
+          });
         }
 
         default:
@@ -485,7 +492,7 @@ export class UserAuthenticationService {
 
     // Check common passwords (simplified - use a proper library in production)
     const commonPasswords = ['password', '12345678', 'qwerty', 'abc123'];
-    if (commonPasswords.some((common) => password.toLowerCase().includes(common))) {
+    if (commonPasswords.some(common => password.toLowerCase().includes(common))) {
       errors.push('Password is too common');
     }
 
@@ -568,9 +575,10 @@ export class UserAuthenticationService {
   // ============================================================================
 
   private async getUserByUsername(username: string): Promise<any> {
-    const result = await this.db.query<any>('SELECT * FROM users WHERE username = $1 OR email = $1', [
-      username,
-    ]);
+    const result = await this.db.query<any>(
+      'SELECT * FROM users WHERE username = $1 OR email = $1',
+      [username]
+    );
     return result[0];
   }
 
@@ -631,7 +639,9 @@ export class UserAuthenticationService {
     if (userKey) {
       const userAttempts = (await this.cache.get<number>(userKey)) || 0;
       if (userAttempts >= this.MAX_LOGIN_ATTEMPTS) {
-        throw new ServiceError('Too many failed attempts', { context: { code: 'TOO_MANY_ATTEMPTS' } });
+        throw new ServiceError('Too many failed attempts', {
+          context: { code: 'TOO_MANY_ATTEMPTS' },
+        });
       }
     }
   }

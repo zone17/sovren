@@ -419,7 +419,7 @@ export class ContentModerationServiceFactory extends SafeServiceFactory<IContent
     };
 
     const aiService: any = {
-      analyzeContent: async (request: any) => {
+      analyzeContent: async (_request: any) => {
         // Mock AI service - would integrate with real AI service
         return {
           categories: [],
@@ -513,7 +513,7 @@ export class ContentSearchServiceFactory extends SafeServiceFactory<IContentSear
           await cache.set(cacheKey, results, 300); // 5 minutes
         }
 
-        return results.map((r) => ({ ...r, score: 1.0 }));
+        return results.map(r => ({ ...r, score: 1.0 }));
       },
 
       async indexContent(content: Content): Promise<void> {
@@ -530,7 +530,7 @@ export class ContentSearchServiceFactory extends SafeServiceFactory<IContentSear
           'SELECT DISTINCT title FROM content WHERE title LIKE ? LIMIT 10',
           [`${query}%`]
         );
-        return results.map((r) => r.title);
+        return results.map(r => r.title);
       },
 
       async advancedSearch(criteria: any): Promise<SearchResult[]> {
@@ -586,6 +586,11 @@ export class ContentVersioningServiceFactory extends SafeServiceFactory<IContent
       },
     };
 
-    return new ContentVersioningService(db, cache as any, eventBus, auditLog) as unknown as IContentVersioningService;
+    return new ContentVersioningService(
+      db,
+      cache as any,
+      eventBus,
+      auditLog
+    ) as unknown as IContentVersioningService;
   }
 }

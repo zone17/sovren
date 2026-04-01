@@ -8,7 +8,8 @@
 import type { IServiceRegistry, IServiceContainer } from '../../interfaces/shared/IServiceRegistry';
 import type { IServiceModule } from '../../interfaces/shared/IServiceRegistry';
 import type { IEventBus } from '../../interfaces/shared/IEventBus';
-import type { ILogger } from '../../interfaces/shared/ILogger';
+// ILogger imported for future DI binding use
+// import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { ICacheService } from '../../interfaces/shared/ICacheService';
 import type { IEmailService } from '../../interfaces/communication/IEmailService';
 import type { INotificationService } from '../../interfaces/communication/INotificationService';
@@ -45,7 +46,7 @@ export class SharedServicesModule implements IServiceModule {
     // ===========================
     // EventBusService - SINGLETON
     // ===========================
-    registry.registerSingletonFactory(TYPES.EventBusService, (container) => {
+    registry.registerSingletonFactory(TYPES.EventBusService, container => {
       const logger = container.resolveOptional(TYPES.Logger) ?? undefined;
       return new EventBusService(logger) as unknown as IEventBus;
     });
@@ -53,7 +54,7 @@ export class SharedServicesModule implements IServiceModule {
     // ===========================
     // CacheService - SINGLETON
     // ===========================
-    registry.registerSingletonFactory(TYPES.CacheService, (container) => {
+    registry.registerSingletonFactory(TYPES.CacheService, container => {
       const eventBus = container.resolve(TYPES.EventBusService);
       const logger = container.resolve(TYPES.Logger);
       const config = container.resolve(TYPES.Config) as Record<string, unknown>;
@@ -80,7 +81,7 @@ export class SharedServicesModule implements IServiceModule {
     // ===========================
     // EmailService - TRANSIENT
     // ===========================
-    registry.registerTransient(TYPES.EmailService, (container) => {
+    registry.registerTransient(TYPES.EmailService, container => {
       const eventBus = container.resolve(TYPES.EventBusService);
       const logger = container.resolve(TYPES.Logger);
       const config = container.resolve(TYPES.Config) as Record<string, unknown>;
@@ -102,12 +103,16 @@ export class SharedServicesModule implements IServiceModule {
     // ===========================
     // NotificationService - TRANSIENT
     // ===========================
-    registry.registerTransient(TYPES.NotificationService, (container) => {
+    registry.registerTransient(TYPES.NotificationService, container => {
       const eventBus = container.resolve(TYPES.EventBusService);
       const logger = container.resolve(TYPES.Logger);
       const cache = container.resolveOptional(TYPES.CacheService) ?? undefined;
-      const emailService = container.resolveOptional(TYPES.EmailService) as IEmailService | undefined;
-      const queueService = container.resolveOptional(TYPES.QueueService) as IQueueService | undefined;
+      const emailService = container.resolveOptional(TYPES.EmailService) as
+        | IEmailService
+        | undefined;
+      const queueService = container.resolveOptional(TYPES.QueueService) as
+        | IQueueService
+        | undefined;
 
       return new NotificationService(
         eventBus,
@@ -121,7 +126,7 @@ export class SharedServicesModule implements IServiceModule {
     // ===========================
     // AuditLogService - TRANSIENT
     // ===========================
-    registry.registerTransient(TYPES.AuditLogService, (container) => {
+    registry.registerTransient(TYPES.AuditLogService, container => {
       const eventBus = container.resolve(TYPES.EventBusService);
       const logger = container.resolve(TYPES.Logger);
 
@@ -143,7 +148,9 @@ export function registerSharedServices(registry: IServiceRegistry): void {
 /**
  * Service health check registration
  */
-export async function registerSharedServiceHealthChecks(container: IServiceContainer): Promise<void> {
+export async function registerSharedServiceHealthChecks(
+  container: IServiceContainer
+): Promise<void> {
   const healthChecks: Array<{ name: string; check: () => Promise<boolean> }> = [
     {
       name: 'EventBusService',

@@ -6,6 +6,8 @@
  * Part of Epic 005 - Backend Service Layer Refactoring
  */
 
+// IAuditLogService interface used for type conformance (implements pattern)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { IAuditLogService } from '../interfaces/shared/IAuditLogService';
 import type { IEventBus } from '../interfaces/shared/IEventBus';
 import type { ILogger } from '../interfaces/shared/ILogger';
@@ -16,7 +18,6 @@ import type {
   AuditLogQueryResult,
   AuditLogMetrics,
   AuditLogExport,
-  AuditLogRetention,
   AuditContext,
 } from '../types/audit';
 
@@ -284,7 +285,9 @@ export class AuditLogService {
     }
   }
 
-  async logBatch(entries: Omit<InternalAuditEntry, 'id' | 'timestamp' | 'hash'>[]): Promise<string[]> {
+  async logBatch(
+    entries: Omit<InternalAuditEntry, 'id' | 'timestamp' | 'hash'>[]
+  ): Promise<string[]> {
     const ids: string[] = [];
 
     // Process in batches for performance

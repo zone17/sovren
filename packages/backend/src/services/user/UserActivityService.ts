@@ -16,11 +16,12 @@
  * @story US-E5-021
  */
 
-
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { TYPES } from '../../container/types';
 import { v4 as uuidv4 } from 'uuid';
 import { Logger } from '../../utils/logger';
 import { ServiceError, NotFoundError } from '../../utils/errors';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { IUserActivityService } from '../../interfaces/user/IUserActivityService';
 import type { IEventBus } from '../../interfaces/shared/IEventBus';
 import { DomainEventType } from '../../interfaces/shared/IEventBus';

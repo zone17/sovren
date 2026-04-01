@@ -89,7 +89,7 @@ export class AIRecommendationService {
 
       const response: RecommendationResponse = {
         // Type assertion: enriched recommendations match the response shape
-        recommendations: await this.enrichRecommendations(recommendations) as any,
+        recommendations: (await this.enrichRecommendations(recommendations)) as any,
         metadata: {
           total_recommendations: recommendations.length,
           algorithm_used: 'hybrid',
@@ -350,7 +350,6 @@ export class AIRecommendationService {
     userPrefs: UserPreferences | null,
     behaviorData: any
   ): Promise<ContentRecommendation[]> {
-    const recommendations: ContentRecommendation[] = [];
     const limit = request.limit || 10;
 
     // Combine multiple recommendation strategies
@@ -367,7 +366,10 @@ export class AIRecommendationService {
 
     // Sort by score and return top results
     return uniqueRecs
-      .sort((a: ContentRecommendation, b: ContentRecommendation) => b.recommendation_score - a.recommendation_score)
+      .sort(
+        (a: ContentRecommendation, b: ContentRecommendation) =>
+          b.recommendation_score - a.recommendation_score
+      )
       .slice(0, limit);
   }
 
@@ -404,11 +406,16 @@ export class AIRecommendationService {
 
   // Stub methods — implementations planned for future sprints
 
-  private async storeRecommendations(_recs: ContentRecommendation[], _req: RecommendationRequest): Promise<void> {
+  private async storeRecommendations(
+    _recs: ContentRecommendation[],
+    _req: RecommendationRequest
+  ): Promise<void> {
     // TODO: Store recommendations for tracking and analytics
   }
 
-  private async enrichRecommendations(recs: ContentRecommendation[]): Promise<ContentRecommendation[]> {
+  private async enrichRecommendations(
+    recs: ContentRecommendation[]
+  ): Promise<ContentRecommendation[]> {
     return recs; // TODO: Enrich with additional metadata
   }
 
@@ -425,7 +432,9 @@ export class AIRecommendationService {
   }
 
   private async generateBehaviorBasedRecommendations(
-    _userId: string, _patterns: unknown, _limit: number
+    _userId: string,
+    _patterns: unknown,
+    _limit: number
   ): Promise<ContentRecommendation[]> {
     return []; // TODO: Generate behavioral recommendations
   }
@@ -435,7 +444,9 @@ export class AIRecommendationService {
   }
 
   private async findSimilarContent(
-    _contentId: string, _threshold: number, _maxResults: number
+    _contentId: string,
+    _threshold: number,
+    _maxResults: number
   ): Promise<ContentRecommendation[]> {
     return []; // TODO: Find similar content
   }
@@ -444,7 +455,9 @@ export class AIRecommendationService {
     // TODO: Process feedback for model improvement
   }
 
-  private async updateRecommendationMetrics(_feedback: Omit<RecommendationFeedback, 'id' | 'created_at'>): Promise<void> {
+  private async updateRecommendationMetrics(
+    _feedback: Omit<RecommendationFeedback, 'id' | 'created_at'>
+  ): Promise<void> {
     // TODO: Update performance metrics
   }
 
@@ -457,25 +470,31 @@ export class AIRecommendationService {
   }
 
   private async getContentBasedRecommendations(
-    _req: RecommendationRequest, _prefs: UserPreferences | null, _limit: number
+    _req: RecommendationRequest,
+    _prefs: UserPreferences | null,
+    _limit: number
   ): Promise<ContentRecommendation[]> {
     return []; // TODO: Content-based recommendations
   }
 
   private async getCollaborativeRecommendations(
-    _req: RecommendationRequest, _limit: number
+    _req: RecommendationRequest,
+    _limit: number
   ): Promise<ContentRecommendation[]> {
     return []; // TODO: Collaborative filtering recommendations
   }
 
   private async getBehaviorBasedRecommendations(
-    _req: RecommendationRequest, _data: unknown, _limit: number
+    _req: RecommendationRequest,
+    _data: unknown,
+    _limit: number
   ): Promise<ContentRecommendation[]> {
     return []; // TODO: Behavior-based recommendations
   }
 
   private async getTrendingRecommendations(
-    _req: RecommendationRequest, _limit: number
+    _req: RecommendationRequest,
+    _limit: number
   ): Promise<ContentRecommendation[]> {
     return []; // TODO: Trending content recommendations
   }

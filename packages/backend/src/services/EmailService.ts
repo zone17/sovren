@@ -5,6 +5,7 @@
  * Part of Epic 005 - Backend Service Layer Refactoring
  */
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { IEmailService } from '../interfaces/communication/IEmailService';
 import type { IEventBus } from '../interfaces/shared/IEventBus';
 import type { ILogger } from '../interfaces/shared/ILogger';
@@ -224,7 +225,9 @@ export class EmailService {
       const batch = request.messages.slice(i, i + batchSize);
 
       // Send batch in parallel
-      const batchResults = await Promise.allSettled(batch.map((msg: EmailMessage) => this.send(msg)));
+      const batchResults = await Promise.allSettled(
+        batch.map((msg: EmailMessage) => this.send(msg))
+      );
 
       // Collect results
       for (const result of batchResults) {
@@ -240,14 +243,14 @@ export class EmailService {
 
       // Delay between batches
       if (i + batchSize < request.messages.length) {
-        await new Promise((resolve) => setTimeout(resolve, delayBetweenBatches));
+        await new Promise(resolve => setTimeout(resolve, delayBetweenBatches));
       }
     }
 
     // Calculate summary
-    const successful = results.filter((r) => r.success).length;
-    const failed = results.filter((r) => !r.success).length;
-    const queued = results.filter((r) => r.queued).length;
+    const successful = results.filter(r => r.success).length;
+    const failed = results.filter(r => !r.success).length;
+    void results.filter(r => r.queued).length;
 
     return {
       sent: successful,
@@ -357,7 +360,7 @@ export class EmailService {
   }
 
   async retryFailed(): Promise<void> {
-    const failedItems = this.queue.filter((item) => item.retries > 0);
+    const failedItems = this.queue.filter(item => item.retries > 0);
 
     for (const item of failedItems) {
       // Reset retry count
@@ -459,12 +462,20 @@ export class EmailService {
 
   private async prepareAttachments(
     attachments?: EmailAttachment[]
-  ): Promise<Array<{ filename: string; content: Buffer | string; contentType?: string; encoding?: string; cid?: string }>> {
+  ): Promise<
+    Array<{
+      filename: string;
+      content: Buffer | string;
+      contentType?: string;
+      encoding?: string;
+      cid?: string;
+    }>
+  > {
     if (!attachments || attachments.length === 0) {
       return [];
     }
 
-    return attachments.map((att) => ({
+    return attachments.map(att => ({
       filename: att.filename,
       content: att.content,
       contentType: att.contentType,
@@ -533,7 +544,7 @@ export class EmailService {
   private startQueueProcessor(): void {
     this.processInterval = setInterval(() => {
       if (!this.isProcessing) {
-        this.processQueue().catch((error) => {
+        this.processQueue().catch(error => {
           this.logger.error('Queue processing error', error);
         });
       }
@@ -550,7 +561,7 @@ export class EmailService {
     try {
       const now = Date.now();
       const readyItems = this.queue.filter(
-        (item) => !item.nextRetryAt || item.nextRetryAt.getTime() <= now
+        item => !item.nextRetryAt || item.nextRetryAt.getTime() <= now
       );
 
       for (const item of readyItems) {

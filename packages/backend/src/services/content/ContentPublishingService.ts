@@ -11,7 +11,6 @@
  * @coverage 95%+
  */
 
-
 import { finalizeEvent } from 'nostr-tools/pure';
 
 /**
@@ -31,8 +30,10 @@ interface VerifiedEvent {
 import { SimplePool } from 'nostr-tools/pool';
 import { hexToBytes } from '@noble/hashes/utils';
 import { v4 as uuidv4 } from 'uuid';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { TYPES } from '../../container/types';
 import {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   IContentPublishingService,
   PublishOptions,
   PublishedContent,
@@ -126,14 +127,16 @@ export class ContentPublishingService {
     try {
       this.logger.info('Recovering scheduled publish jobs');
 
-      const result = asRows(await this.db.query<any>(
-        `SELECT cs.schedule_id, cs.content_id, cs.scheduled_for
+      const result = asRows(
+        await this.db.query<any>(
+          `SELECT cs.schedule_id, cs.content_id, cs.scheduled_for
          FROM content_schedule cs
          JOIN content c ON c.id = cs.content_id
          WHERE c.status = 'scheduled'
            AND cs.scheduled_for > $1`,
-        [new Date()]
-      ));
+          [new Date()]
+        )
+      );
 
       for (const row of result.rows) {
         const publishAt = new Date(row.scheduled_for);
@@ -145,7 +148,7 @@ export class ContentPublishingService {
             contentId: row.content_id,
             scheduleId: row.schedule_id,
           });
-          this.publish(row.content_id, { immediate: true }).catch((error) => {
+          this.publish(row.content_id, { immediate: true }).catch(error => {
             this.logger.error('Failed to execute overdue publish', {
               contentId: row.content_id,
               error,
@@ -620,8 +623,9 @@ export class ContentPublishingService {
    */
   async getScheduledContent(): Promise<ScheduledContent[]> {
     try {
-      const result = asRows(await this.db.query<any>(
-        `SELECT
+      const result = asRows(
+        await this.db.query<any>(
+          `SELECT
            c.*,
            cs.schedule_id,
            cs.scheduled_for
@@ -629,7 +633,8 @@ export class ContentPublishingService {
          JOIN content_schedule cs ON c.id = cs.content_id
          WHERE c.status = 'scheduled'
          ORDER BY cs.scheduled_for ASC`
-      ));
+        )
+      );
 
       return result.rows.map((row: any) => ({
         ...row,
@@ -652,7 +657,7 @@ export class ContentPublishingService {
     this.logger.info('Shutting down ContentPublishingService');
 
     // Clear all scheduled jobs
-    for (const [scheduleId, job] of this.scheduledJobs) {
+    for (const [, job] of this.scheduledJobs) {
       clearTimeout(job.timeout);
     }
     this.scheduledJobs.clear();
@@ -671,7 +676,9 @@ export class ContentPublishingService {
    * Retrieves content by ID
    */
   private async getContent(contentId: string): Promise<Content> {
-    const result = asRows(await this.db.query<any>('SELECT * FROM content WHERE id = $1', [contentId]));
+    const result = asRows(
+      await this.db.query<any>('SELECT * FROM content WHERE id = $1', [contentId])
+    );
 
     if (result.rows.length === 0) {
       throw new ServiceError('Content not found', {
@@ -737,12 +744,14 @@ export class ContentPublishingService {
     }
 
     // Check database
-    const result = asRows(await this.db.query<any>(
-      `SELECT content_id, published_at, nostr_event_id
+    const result = asRows(
+      await this.db.query<any>(
+        `SELECT content_id, published_at, nostr_event_id
        FROM content_publish_records
        WHERE idempotency_key = $1`,
-      [idempotencyKey]
-    ));
+        [idempotencyKey]
+      )
+    );
 
     if (result.rows.length > 0) {
       const record = result.rows[0];
@@ -795,13 +804,15 @@ export class ContentPublishingService {
   private async notifySubscribers(content: PublishedContent): Promise<void> {
     try {
       // Get subscribers for this author
-      const result = asRows(await this.db.query<any>(
-        `SELECT user_id
+      const result = asRows(
+        await this.db.query<any>(
+          `SELECT user_id
          FROM subscriptions
          WHERE author_id = $1
            AND status = 'active'`,
-        [content.authorId]
-      ));
+          [content.authorId]
+        )
+      );
 
       const subscribers = result.rows.map((row: any) => row.user_id);
 
@@ -839,12 +850,14 @@ export class ContentPublishingService {
     authorId: string
   ): Promise<{ publicKey: string; privateKey: string; relays?: string[] } | null> {
     try {
-      const result = asRows(await this.db.query<any>(
-        `SELECT nostr_public_key, nostr_private_key, nostr_relays
+      const result = asRows(
+        await this.db.query<any>(
+          `SELECT nostr_public_key, nostr_private_key, nostr_relays
          FROM users
          WHERE id = $1`,
-        [authorId]
-      ));
+          [authorId]
+        )
+      );
 
       if (result.rows.length === 0 || !result.rows[0].nostr_private_key) {
         return null;
@@ -900,7 +913,7 @@ export class ContentPublishingService {
 
     // Add content tags
     if (content.tags && content.tags.length > 0) {
-      content.tags.forEach((tag) => {
+      content.tags.forEach(tag => {
         tags.push(['t', tag]);
       });
     }

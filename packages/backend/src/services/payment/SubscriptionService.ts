@@ -102,19 +102,19 @@ class InMemorySubscriptionRepository implements ISubscriptionRepository {
     let results = Array.from(this.subscriptions.values());
 
     if (query.userId) {
-      results = results.filter((s) => s.userId === query.userId);
+      results = results.filter(s => s.userId === query.userId);
     }
     if (query.status) {
-      results = results.filter((s) => s.status === query.status);
+      results = results.filter(s => s.status === query.status);
     }
     if (query.planId) {
-      results = results.filter((s) => s.planId === query.planId);
+      results = results.filter(s => s.planId === query.planId);
     }
     if (query.startDate) {
-      results = results.filter((s) => s.createdAt >= query.startDate!);
+      results = results.filter(s => s.createdAt >= query.startDate!);
     }
     if (query.endDate) {
-      results = results.filter((s) => s.createdAt <= query.endDate!);
+      results = results.filter(s => s.createdAt <= query.endDate!);
     }
 
     // Sort
@@ -151,9 +151,9 @@ class InMemorySubscriptionRepository implements ISubscriptionRepository {
   }
 
   async listPlans(tier?: SubscriptionTier): Promise<SubscriptionPlan[]> {
-    let plans = Array.from(this.plans.values()).filter((p) => p.active);
+    let plans = Array.from(this.plans.values()).filter(p => p.active);
     if (tier) {
-      plans = plans.filter((p) => p.tier === tier);
+      plans = plans.filter(p => p.tier === tier);
     }
     return plans;
   }
@@ -175,7 +175,7 @@ class InMemorySubscriptionRepository implements ISubscriptionRepository {
     limit = 100
   ): Promise<SubscriptionInvoice[]> {
     return Array.from(this.invoices.values())
-      .filter((inv) => inv.subscriptionId === subscriptionId)
+      .filter(inv => inv.subscriptionId === subscriptionId)
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
       .slice(0, limit);
   }
@@ -190,7 +190,7 @@ class InMemorySubscriptionRepository implements ISubscriptionRepository {
 
   async getEventHistory(subscriptionId: string, limit = 100): Promise<SubscriptionEvent[]> {
     return this.events
-      .filter((e) => e.subscriptionId === subscriptionId)
+      .filter(e => e.subscriptionId === subscriptionId)
       .sort((a, b) => b.occurredAt.getTime() - a.occurredAt.getTime())
       .slice(0, limit);
   }
@@ -734,7 +734,7 @@ export class SubscriptionService implements ISubscriptionService {
     });
     const cutoffDate = new Date(Date.now() + daysAhead * 86400000);
 
-    return allSubscriptions.filter((sub) => sub.trialEndDate && sub.trialEndDate <= cutoffDate);
+    return allSubscriptions.filter(sub => sub.trialEndDate && sub.trialEndDate <= cutoffDate);
   }
 
   /**
@@ -1016,7 +1016,10 @@ export class SubscriptionService implements ISubscriptionService {
         return {
           subscriptionId,
           success: false,
-          error: typeof paymentResult.error === 'string' ? paymentResult.error : paymentResult.error?.message ?? 'Payment failed',
+          error:
+            typeof paymentResult.error === 'string'
+              ? paymentResult.error
+              : (paymentResult.error?.message ?? 'Payment failed'),
           nextBillingDate: subscription.nextBillingDate,
           retryScheduled: retryDate,
         };
@@ -1042,7 +1045,7 @@ export class SubscriptionService implements ISubscriptionService {
     });
 
     const subscriptionsToBill = dueSubscriptions.filter(
-      (sub) => sub.autoRenew && sub.nextBillingDate <= targetDate
+      sub => sub.autoRenew && sub.nextBillingDate <= targetDate
     );
 
     const results: RenewalResult[] = [];
@@ -1062,8 +1065,8 @@ export class SubscriptionService implements ISubscriptionService {
       }
     }
 
-    const successful = results.filter((r) => r.success).length;
-    const failed = results.filter((r) => !r.success).length;
+    const successful = results.filter(r => r.success).length;
+    const failed = results.filter(r => !r.success).length;
 
     return {
       totalProcessed: results.length,
@@ -1241,7 +1244,7 @@ export class SubscriptionService implements ISubscriptionService {
     subscriptionId: string,
     metricName: string,
     quantity: number,
-    timestamp?: Date
+    _timestamp?: Date
   ): Promise<void> {
     let usage = await this.repository.getCurrentUsage(subscriptionId);
 
@@ -1344,8 +1347,8 @@ export class SubscriptionService implements ISubscriptionService {
 
   async getAnalytics(
     periodType: 'day' | 'week' | 'month' | 'year',
-    startDate: Date,
-    endDate: Date
+    _startDate: Date,
+    _endDate: Date
   ): Promise<SubscriptionAnalytics[]> {
     // This would typically query aggregated analytics data
     // For now, return a single period

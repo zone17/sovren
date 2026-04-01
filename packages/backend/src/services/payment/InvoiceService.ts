@@ -1,10 +1,13 @@
 // TODO: requires interface redesign — Money class usage, Invoice interface mismatch,
 // ServiceError constructor signature, and multiple method return type mismatches.
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { TYPES } from '../../container/types';
 import {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   IInvoiceService,
   InvoiceDraft,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   Invoice,
   InvoiceItem,
   Money,
@@ -83,7 +86,8 @@ type WrappedDb = {
 };
 function wrapDb(db: IDatabase): WrappedDb {
   return {
-    async query<T = any>(sql: string, params?: any[]): Promise<{ rows: T[] }> { // eslint-disable-line @typescript-eslint/no-explicit-any
+    async query<T = any>(sql: string, params?: any[]): Promise<{ rows: T[] }> {
+      // eslint-disable-line @typescript-eslint/no-explicit-any
       const result = await db.query<T>(sql, params);
       return { rows: result };
     },
@@ -684,9 +688,7 @@ export class InvoiceService {
       if (addr?.line2) {
         doc.text(addr.line2);
       }
-      doc.text(
-        `${addr?.city ?? ''}, ${addr?.state ?? ''} ${addr?.postalCode ?? ''}`
-      );
+      doc.text(`${addr?.city ?? ''}, ${addr?.state ?? ''} ${addr?.postalCode ?? ''}`);
       doc.text(addr?.country ?? '');
 
       // Line items
@@ -859,7 +861,7 @@ export class InvoiceService {
       const invoice = await this.getInvoice(invoiceId);
 
       // Generate PDF
-      const pdf = await this.generatePDF(invoiceId);
+      await this.generatePDF(invoiceId);
 
       // Get customer info
       void (await this.getCustomer(recipientId));
@@ -1296,7 +1298,9 @@ export class InvoiceService {
     }
 
     if (!draft.items || draft.items.length === 0) {
-      throw new ServiceError('Invoice must have at least one item', { context: { code: 'NO_ITEMS' } });
+      throw new ServiceError('Invoice must have at least one item', {
+        context: { code: 'NO_ITEMS' },
+      });
     }
 
     if (!draft.currency) {
@@ -1304,7 +1308,9 @@ export class InvoiceService {
     }
 
     if (!draft.billingAddress) {
-      throw new ServiceError('Billing address is required', { context: { code: 'MISSING_ADDRESS' } });
+      throw new ServiceError('Billing address is required', {
+        context: { code: 'MISSING_ADDRESS' },
+      });
     }
 
     // Validate each line item
@@ -1519,7 +1525,8 @@ export class InvoiceService {
     });
   }
 
-  private mapDbRowToInvoice(row: Record<string, any>): InvoiceInternal { // eslint-disable-line @typescript-eslint/no-explicit-any
+  private mapDbRowToInvoice(row: Record<string, any>): InvoiceInternal {
+    // eslint-disable-line @typescript-eslint/no-explicit-any
     return {
       id: row.id,
       userId: row.user_id || row.customer_id,
@@ -1553,7 +1560,8 @@ export class InvoiceService {
     } as InvoiceInternal;
   }
 
-  private mapDbRowToInvoiceItem(row: Record<string, any>): InvoiceItem { // eslint-disable-line @typescript-eslint/no-explicit-any
+  private mapDbRowToInvoiceItem(row: Record<string, any>): InvoiceItem {
+    // eslint-disable-line @typescript-eslint/no-explicit-any
     return {
       id: row.id,
       description: row.description,

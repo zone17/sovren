@@ -262,7 +262,7 @@ export class AIEnhancedFeaturesService {
       // Update if changed
       if (this.hasClusterAssignmentChanged(existingAssignments, newAssignments)) {
         await this.updateClusterAssignments(contentId, newAssignments);
-        await this.updateClusterQualityMetrics(newAssignments.map((a) => a.clusterId));
+        await this.updateClusterQualityMetrics(newAssignments.map(a => a.clusterId));
       }
     } catch (error: unknown) {
       console.error('Failed to update clusters in real-time:', error);
@@ -374,20 +374,20 @@ export class AIEnhancedFeaturesService {
     };
   }
 
-  private async extractAITags(text: string, config: AutoTaggingConfig): Promise<any[]> {
+  private async extractAITags(_text: string, _config: AutoTaggingConfig): Promise<any[]> {
     // AI-based tag extraction using OpenAI or local models
     // Implementation would connect to AI services
     return [];
   }
 
-  private async extractRuleBasedTags(text: string, config: AutoTaggingConfig): Promise<any[]> {
+  private async extractRuleBasedTags(_text: string, _config: AutoTaggingConfig): Promise<any[]> {
     // Rule-based tag extraction
     return [];
   }
 
   private async extractCollaborativeTags(
-    contentId: string,
-    config: AutoTaggingConfig
+    _contentId: string,
+    _config: AutoTaggingConfig
   ): Promise<any[]> {
     // Collaborative filtering for tags
     return [];
@@ -396,13 +396,13 @@ export class AIEnhancedFeaturesService {
   private consolidateTags(tags: any[], config: AutoTaggingConfig): any[] {
     // Consolidate and rank tags
     return tags
-      .filter((tag) => tag.confidence >= config.confidenceThreshold)
+      .filter(tag => tag.confidence >= config.confidenceThreshold)
       .slice(0, config.maxTagsPerCategory);
   }
 
   private async storeContentTags(contentId: string, tags: any[]): Promise<void> {
     // Store tags in database
-    const tagRecords = tags.map((tag) => ({
+    const tagRecords = tags.map(tag => ({
       content_id: contentId,
       tag: tag.tag,
       confidence: tag.confidence,
@@ -498,7 +498,7 @@ export class AIEnhancedFeaturesService {
     };
   }
 
-  private async runTopicExtraction(text: string, config: any): Promise<ExtractedTopic[]> {
+  private async runTopicExtraction(_text: string, _config: any): Promise<ExtractedTopic[]> {
     // Implementation placeholder - would run actual topic extraction
     return [
       {
@@ -557,10 +557,10 @@ export class AIEnhancedFeaturesService {
 
   private async extractContentFeatures(contentIds: string[]): Promise<any[]> {
     // Implementation placeholder - would extract features from content
-    return contentIds.map((id) => ({ contentId: id, features: [] }));
+    return contentIds.map(id => ({ contentId: id, features: [] }));
   }
 
-  private async runClusteringAlgorithm(features: any[], config: any): Promise<ContentCluster[]> {
+  private async runClusteringAlgorithm(_features: any[], _config: any): Promise<ContentCluster[]> {
     // Implementation placeholder - would run actual clustering
     return [];
   }
@@ -575,22 +575,22 @@ export class AIEnhancedFeaturesService {
     console.log(`Storing ${clusters.length} clusters`);
   }
 
-  private async getContentClusterAssignments(contentId: string): Promise<any[]> {
+  private async getContentClusterAssignments(_contentId: string): Promise<any[]> {
     // Implementation placeholder
     return [];
   }
 
-  private async recalculateClusterAssignments(contentId: string): Promise<any[]> {
+  private async recalculateClusterAssignments(_contentId: string): Promise<any[]> {
     // Implementation placeholder
     return [];
   }
 
-  private hasClusterAssignmentChanged(existing: any[], newAssignments: any[]): boolean {
+  private hasClusterAssignmentChanged(_existing: any[], _newAssignments: any[]): boolean {
     // Implementation placeholder
     return false;
   }
 
-  private async updateClusterAssignments(contentId: string, assignments: any[]): Promise<void> {
+  private async updateClusterAssignments(_contentId: string, _assignments: any[]): Promise<void> {
     // Implementation placeholder
     console.log(`Updating cluster assignments for content ${contentId}`);
   }
@@ -648,34 +648,34 @@ export class AIEnhancedFeaturesService {
   }
 
   private async generateContentBasedSuggestions(
-    contentId: string,
-    config: any
+    _contentId: string,
+    _config: any
   ): Promise<RelatedContentSuggestion[]> {
     // Implementation placeholder
     return [];
   }
 
   private async generateCollaborativeFilteringSuggestions(
-    contentId: string,
-    userId?: string,
-    config?: any
+    _contentId: string,
+    _userId?: string,
+    _config?: any
   ): Promise<RelatedContentSuggestion[]> {
     // Implementation placeholder
     return [];
   }
 
   private async generateBehavioralSuggestions(
-    contentId: string,
-    userId?: string,
-    config?: any
+    _contentId: string,
+    _userId?: string,
+    _config?: any
   ): Promise<RelatedContentSuggestion[]> {
     // Implementation placeholder
     return [];
   }
 
   private async generateGraphBasedSuggestions(
-    contentId: string,
-    config: any
+    _contentId: string,
+    _config: any
   ): Promise<RelatedContentSuggestion[]> {
     // Implementation placeholder
     return [];
@@ -683,7 +683,7 @@ export class AIEnhancedFeaturesService {
 
   private async rankAndDiversifySuggestions(
     suggestions: any[],
-    config: any
+    _config: any
   ): Promise<RelatedContentSuggestion[]> {
     // Implementation placeholder
     return suggestions;
@@ -729,7 +729,7 @@ export class AIEnhancedFeaturesService {
 
       if (error) throw error;
 
-      return data.map((tag) => ({
+      return data.map(tag => ({
         tag: tag.tag,
         confidence: tag.confidence,
         category: tag.category,
@@ -748,7 +748,7 @@ export class AIEnhancedFeaturesService {
   /**
    * Get topic hierarchy from root topic
    */
-  async getTopicHierarchy(rootTopic?: string, maxDepth: number = 3): Promise<ExtractedTopic[]> {
+  async getTopicHierarchy(rootTopic?: string, _maxDepth: number = 3): Promise<ExtractedTopic[]> {
     try {
       let query = this.supabase.from('extracted_topics').select('*').eq('is_active', true);
 
@@ -763,7 +763,7 @@ export class AIEnhancedFeaturesService {
       if (error) throw error;
 
       // TODO: Implement recursive hierarchy building with maxDepth
-      return data.map((topic) => ({
+      return data.map(topic => ({
         id: topic.id,
         name: topic.name,
         displayName: topic.display_name,
@@ -818,7 +818,7 @@ export class AIEnhancedFeaturesService {
 
       if (error) throw error;
 
-      return data.map((cluster) => ({
+      return data.map(cluster => ({
         id: cluster.id,
         name: cluster.name,
         description: cluster.description,
@@ -880,7 +880,7 @@ export class AIEnhancedFeaturesService {
           totalContentCount: data.reduce((sum, item) => sum + (item.content_count || 0), 0),
           avgQualityScore:
             data.reduce((sum, item) => sum + (item.silhouette_score || 0), 0) / data.length,
-          engagementTrend: data.map((item) => ({
+          engagementTrend: data.map(item => ({
             timestamp: item.timestamp,
             engagement: item.avg_engagement_rate,
           })),

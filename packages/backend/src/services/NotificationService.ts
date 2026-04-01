@@ -5,15 +5,14 @@
  * Part of Epic 005 - Backend Service Layer Refactoring
  */
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { INotificationService } from '../interfaces/communication/INotificationService';
 import type { IEventBus } from '../interfaces/shared/IEventBus';
 import type { ILogger } from '../interfaces/shared/ILogger';
 import type { ICacheService } from '../interfaces/shared/ICacheService';
 import type { IEmailService } from '../interfaces/communication/IEmailService';
 import type { IQueueService } from '../interfaces/queue/IQueueService';
-import type {
-  NotificationPriority,
-} from '../types/notification';
+import type { NotificationPriority } from '../types/notification';
 
 /**
  * Internal notification types used by this service.
@@ -355,7 +354,7 @@ export class NotificationService {
 
         // Send batch in parallel
         const batchResults = await Promise.allSettled(
-          batch.map((notification) => this.send(notification))
+          batch.map(notification => this.send(notification))
         );
 
         // Collect results
@@ -373,15 +372,15 @@ export class NotificationService {
 
         // Delay between batches
         if (i + batchSize < notifications.length) {
-          await new Promise((resolve) => setTimeout(resolve, delayBetweenBatches));
+          await new Promise(resolve => setTimeout(resolve, delayBetweenBatches));
         }
       }
     }
 
     // Calculate summary
-    const successful = results.filter((r) => r.success).length;
-    const failed = results.filter((r) => !r.success).length;
-    const queued = results.filter((r) => r.queued).length;
+    const successful = results.filter(r => r.success).length;
+    const failed = results.filter(r => !r.success).length;
+    const queued = results.filter(r => r.queued).length;
 
     return {
       totalSent: successful,
@@ -556,7 +555,7 @@ export class NotificationService {
     if (this.emailService) {
       const emailSvc = this.emailService;
       this.channelHandlers.set('email', {
-        send: async (notification) => {
+        send: async notification => {
           const result = await emailSvc.sendEmail({
             to: notification.email || '',
             subject: notification.title,
@@ -578,7 +577,7 @@ export class NotificationService {
 
     // Push notification handler
     this.channelHandlers.set('push', {
-      send: async (notification) => {
+      send: async notification => {
         // In production, would use web-push or FCM
         return {
           success: true,
@@ -592,7 +591,7 @@ export class NotificationService {
 
     // In-app notification handler
     this.channelHandlers.set('inApp', {
-      send: async (notification) => {
+      send: async notification => {
         // Store in database/cache for retrieval by frontend
         if (this.cache) {
           await this.cache.set(
@@ -614,7 +613,7 @@ export class NotificationService {
 
     // SMS handler (stub)
     this.channelHandlers.set('sms', {
-      send: async (_notification) => {
+      send: async _notification => {
         // Would integrate with Twilio or similar
         return {
           success: false,
@@ -882,7 +881,7 @@ export class NotificationService {
           throw new Error(result.error || 'All channels failed');
         }
       },
-      onCompleted: async (job) => {
+      onCompleted: async job => {
         this.logger.info(`[NotificationService] Notification job ${job.id} completed`);
       },
       onFailed: async (job, error) => {
