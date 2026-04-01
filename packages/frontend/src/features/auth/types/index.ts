@@ -130,3 +130,6 @@ export type UserWithPermissions = User & {
   hasRole: (role: UserRole) => boolean;
   hasAnyPermission: (permissions: Permission[]) => boolean;
 };
+
+// Account Linking
+export * from './account-linking';
