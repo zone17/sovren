@@ -1,4 +1,5 @@
 // @ts-nocheck
+// TODO: requires infrastructure fix — ServiceToken/inversify incompatibility, TYPES.EventBus/AuditLog, Supabase count/total type narrowing
 /**
  * UserActivityService Implementation
  * Comprehensive user activity tracking with analytics, security, and privacy controls
@@ -106,7 +107,7 @@ export class UserActivityService implements IUserActivityService {
   private initializeService(): void {
     // Start periodic buffer flush
     this.flushInterval = setInterval(() => {
-      this.flush().catch((error) => {
+      this.flush().catch(error => {
         this.logger.error('Failed to flush activity buffer', error);
       });
     }, this.FLUSH_INTERVAL_MS);
@@ -122,7 +123,7 @@ export class UserActivityService implements IUserActivityService {
    */
   private subscribeToEvents(): void {
     // User events
-    this.eventBus.subscribe(DomainEventType.USER_LOGGED_IN, async (event) => {
+    this.eventBus.subscribe(DomainEventType.USER_LOGGED_IN, async event => {
       await this.logActivity(
         event.aggregateId,
         ActivityType.LOGIN,
@@ -134,26 +135,26 @@ export class UserActivityService implements IUserActivityService {
       );
     });
 
-    this.eventBus.subscribe(DomainEventType.USER_LOGGED_OUT, async (event) => {
+    this.eventBus.subscribe(DomainEventType.USER_LOGGED_OUT, async event => {
       await this.logActivity(event.aggregateId, ActivityType.LOGOUT, {}, event.payload.sessionId);
     });
 
     // Content events
-    this.eventBus.subscribe(DomainEventType.CONTENT_CREATED, async (event) => {
+    this.eventBus.subscribe(DomainEventType.CONTENT_CREATED, async event => {
       await this.logActivity(event.metadata.userId || 'unknown', ActivityType.CONTENT_CREATED, {
         resourceId: event.aggregateId,
         resourceType: 'content',
       });
     });
 
-    this.eventBus.subscribe(DomainEventType.CONTENT_PUBLISHED, async (event) => {
+    this.eventBus.subscribe(DomainEventType.CONTENT_PUBLISHED, async event => {
       await this.logActivity(event.metadata.userId || 'unknown', ActivityType.CONTENT_PUBLISHED, {
         resourceId: event.aggregateId,
         resourceType: 'content',
       });
     });
 
-    this.eventBus.subscribe(DomainEventType.CONTENT_VIEWED, async (event) => {
+    this.eventBus.subscribe(DomainEventType.CONTENT_VIEWED, async event => {
       await this.logActivity(event.metadata.userId || 'unknown', ActivityType.CONTENT_VIEWED, {
         resourceId: event.aggregateId,
         resourceType: 'content',
@@ -162,7 +163,7 @@ export class UserActivityService implements IUserActivityService {
     });
 
     // Payment events
-    this.eventBus.subscribe(DomainEventType.PAYMENT_RECEIVED, async (event) => {
+    this.eventBus.subscribe(DomainEventType.PAYMENT_RECEIVED, async event => {
       await this.logActivity(event.metadata.userId || 'unknown', ActivityType.PAYMENT_RECEIVED, {
         resourceId: event.aggregateId,
         amount: event.payload.amount,
@@ -171,7 +172,7 @@ export class UserActivityService implements IUserActivityService {
     });
 
     // Subscription events
-    this.eventBus.subscribe(DomainEventType.SUBSCRIPTION_CREATED, async (event) => {
+    this.eventBus.subscribe(DomainEventType.SUBSCRIPTION_CREATED, async event => {
       await this.logActivity(
         event.metadata.userId || 'unknown',
         ActivityType.SUBSCRIPTION_CREATED,
@@ -216,7 +217,7 @@ export class UserActivityService implements IUserActivityService {
 
       // Update session if provided
       if (sessionId) {
-        await this.updateSessionActivity(sessionId).catch((error) => {
+        await this.updateSessionActivity(sessionId).catch(error => {
           this.logger.warn('Failed to update session activity', {
             sessionId,
             error: error.message,
@@ -261,7 +262,7 @@ export class UserActivityService implements IUserActivityService {
     try {
       this.ensureNotDisposed();
 
-      const enhancedActivities: ActivityEvent[] = activities.map((activity) => ({
+      const enhancedActivities: ActivityEvent[] = activities.map(activity => ({
         ...activity,
         id: uuidv4(),
         timestamp: new Date(),
@@ -382,7 +383,7 @@ export class UserActivityService implements IUserActivityService {
       }
 
       // Wait before polling again
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
   }
 
@@ -475,7 +476,7 @@ export class UserActivityService implements IUserActivityService {
           'UPDATE user_sessions SET last_activity_at = $1, activity_count = $2 WHERE id = $3',
           [session.lastActivityAt, session.activityCount, sessionId]
         )
-        .catch((error) => {
+        .catch(error => {
           this.logger.warn('Failed to update session in database', {
             sessionId,
             error: error.message,
@@ -611,7 +612,7 @@ export class UserActivityService implements IUserActivityService {
         params
       );
       const byType: { [key in ActivityType]?: number } = {};
-      byTypeResult.rows.forEach((row) => {
+      byTypeResult.rows.forEach(row => {
         byType[row.type as ActivityType] = parseInt(row.count, 10);
       });
 
@@ -621,7 +622,7 @@ export class UserActivityService implements IUserActivityService {
         params
       );
       const byHour = new Array(24).fill(0);
-      byHourResult.rows.forEach((row) => {
+      byHourResult.rows.forEach(row => {
         byHour[parseInt(row.hour, 10)] = parseInt(row.count, 10);
       });
 
@@ -631,7 +632,7 @@ export class UserActivityService implements IUserActivityService {
         params
       );
       const byDayOfWeek = new Array(7).fill(0);
-      byDayResult.rows.forEach((row) => {
+      byDayResult.rows.forEach(row => {
         byDayOfWeek[parseInt(row.day, 10)] = parseInt(row.count, 10);
       });
 
@@ -766,7 +767,7 @@ export class UserActivityService implements IUserActivityService {
       const retentionEnd = new Date(retentionDate);
       retentionEnd.setHours(23, 59, 59, 999);
 
-      const cohortUserIds = cohortResult.rows.map((row) => row.user_id);
+      const cohortUserIds = cohortResult.rows.map(row => row.user_id);
       const retentionResult = await this.db.query(
         'SELECT COUNT(DISTINCT user_id) as count FROM user_activities WHERE user_id = ANY($1) AND timestamp >= $2 AND timestamp <= $3',
         [cohortUserIds, retentionStart, retentionEnd]
@@ -794,17 +795,17 @@ export class UserActivityService implements IUserActivityService {
       // Find most active hours
       const hourCounts = stats.byHour.map((count, hour) => ({ hour, count }));
       hourCounts.sort((a, b) => b.count - a.count);
-      const mostActiveHours = hourCounts.slice(0, 3).map((h) => h.hour);
+      const mostActiveHours = hourCounts.slice(0, 3).map(h => h.hour);
 
       // Find most active days
       const dayCounts = stats.byDayOfWeek.map((count, day) => ({ day, count }));
       dayCounts.sort((a, b) => b.count - a.count);
-      const mostActiveDays = dayCounts.slice(0, 3).map((d) => d.day);
+      const mostActiveDays = dayCounts.slice(0, 3).map(d => d.day);
 
       // Find most frequent activities
       const activityEntries = Object.entries(stats.byType) as [ActivityType, number][];
       activityEntries.sort((a, b) => b[1] - a[1]);
-      const mostFrequentActivities = activityEntries.slice(0, 5).map((e) => e[0]);
+      const mostFrequentActivities = activityEntries.slice(0, 5).map(e => e[0]);
 
       // Find peak activity time
       const allActivities = await this.getActivityFeed({
@@ -970,9 +971,7 @@ export class UserActivityService implements IUserActivityService {
       }
 
       // Check for multiple failed logins
-      const failedLogins = activities.activities.filter(
-        (a) => a.type === ActivityType.FAILED_LOGIN
-      );
+      const failedLogins = activities.activities.filter(a => a.type === ActivityType.FAILED_LOGIN);
       if (failedLogins.length >= 5) {
         result.patterns.multipleFailedLogins = true;
         result.reasons.push(`${failedLogins.length} failed login attempts`);
@@ -980,7 +979,7 @@ export class UserActivityService implements IUserActivityService {
 
       // Check for unusual locations
       const locations = activities.activities
-        .map((a) => a.metadata.location?.country)
+        .map(a => a.metadata.location?.country)
         .filter(Boolean);
       const uniqueLocations = new Set(locations);
       if (uniqueLocations.size > 3) {
@@ -989,7 +988,7 @@ export class UserActivityService implements IUserActivityService {
       }
 
       // Check for unusual times (e.g., 2am-5am)
-      const nightActivities = activities.activities.filter((a) => {
+      const nightActivities = activities.activities.filter(a => {
         const hour = a.timestamp.getHours();
         return hour >= 2 && hour <= 5;
       });
@@ -1075,7 +1074,7 @@ export class UserActivityService implements IUserActivityService {
       let data: string | object;
 
       if (format === 'json') {
-        data = activities.activities.map((activity) => ({
+        data = activities.activities.map(activity => ({
           id: activity.id,
           type: activity.type,
           timestamp: activity.timestamp.toISOString(),
@@ -1084,7 +1083,7 @@ export class UserActivityService implements IUserActivityService {
       } else {
         // CSV format
         const headers = ['id', 'type', 'timestamp', ...(includeMetadata ? ['metadata'] : [])];
-        const rows = activities.activities.map((activity) =>
+        const rows = activities.activities.map(activity =>
           [
             activity.id,
             activity.type,
@@ -1274,7 +1273,7 @@ export class UserActivityService implements IUserActivityService {
         )
         .join(',');
 
-      const params = activities.flatMap((a) => [
+      const params = activities.flatMap(a => [
         a.id,
         a.userId,
         a.sessionId || null,
@@ -1404,7 +1403,7 @@ export class UserActivityService implements IUserActivityService {
 
     // Group by hour
     const hourCounts: Record<string, number> = {};
-    activities.forEach((activity) => {
+    activities.forEach(activity => {
       const hourKey = activity.timestamp.toISOString().substring(0, 13); // YYYY-MM-DDTHH
       hourCounts[hourKey] = (hourCounts[hourKey] || 0) + 1;
     });
