@@ -1,4 +1,3 @@
-// @ts-nocheck
 // TODO(SOV-REFACTOR-001): This file is 2103 lines. Decompose into:
 // - UserAcquisitionService (getUserAcquisitionMetrics, aggregateSignupSources, calculateConversionRate, getTopReferrers — ~250 lines)
 // - UserEngagementService (getEngagementMetrics, getRetentionMetrics, getCohortAnalysis, getEngagementTimeSeries — ~300 lines)
@@ -51,9 +50,22 @@ import {
 import { TYPES } from '../../container/types';
 import { IUserAnalyticsService } from '../../interfaces/user/IUserAnalyticsService';
 import { ICacheService } from '../../interfaces/shared/ICacheService';
-import { IEventBus } from '../../interfaces/shared/IEventBus';
+import { IEventBus, DomainEventType } from '../../interfaces/shared/IEventBus';
 import { IAuditLogService } from '../../interfaces/shared/IAuditLogService';
 import { IDatabase } from '../../interfaces/shared/IDatabase';
+
+/**
+ * DB query wrapper — IDatabase.query returns T[], but this service expects { rows: T[] }.
+ * This adapter creates a proxy that normalizes the result shape.
+ */
+function wrapDb(db: IDatabase): { query<T = any>(sql: string, params?: any[]): Promise<{ rows: T[] }> } { // eslint-disable-line @typescript-eslint/no-explicit-any
+  return {
+    async query<T = any>(sql: string, params?: any[]): Promise<{ rows: T[] }> { // eslint-disable-line @typescript-eslint/no-explicit-any
+      const result = await db.query<T>(sql, params);
+      return { rows: result };
+    },
+  };
+}
 import { ILogger } from '../../interfaces/shared/ILogger';
 import {
   UserAcquisitionMetrics,
@@ -127,13 +139,16 @@ export class UserAnalyticsService {
     lastFlush: new Date(),
   };
 
+  private readonly db: ReturnType<typeof wrapDb>;
+
   constructor(
-    private readonly db: IDatabase,
+    db: IDatabase,
     private readonly cache: ICacheService,
     private readonly eventBus: IEventBus,
     private readonly auditLog: IAuditLogService,
     private readonly logger: ILogger
   ) {
+    this.db = wrapDb(db);
     this.initializeEventSubscriptions();
     this.startBufferFlushTimer();
   }
@@ -143,11 +158,11 @@ export class UserAnalyticsService {
    */
   private initializeEventSubscriptions(): void {
     // Subscribe to user events
-    this.eventBus.subscribe('user.created', (event) => this.handleUserCreated(event));
-    this.eventBus.subscribe('user.login', (event) => this.handleUserLogin(event));
-    this.eventBus.subscribe('user.activity', (event) => this.handleUserActivity(event));
-    this.eventBus.subscribe('content.created', (event) => this.handleContentCreated(event));
-    this.eventBus.subscribe('content.viewed', (event) => this.handleContentViewed(event));
+    this.eventBus.subscribe('user.created' as DomainEventType, (event) => this.handleUserCreated(event));
+    this.eventBus.subscribe('user.login' as DomainEventType, (event) => this.handleUserLogin(event));
+    this.eventBus.subscribe('user.activity' as DomainEventType, (event) => this.handleUserActivity(event));
+    this.eventBus.subscribe('content.created' as DomainEventType, (event) => this.handleContentCreated(event));
+    this.eventBus.subscribe('content.viewed' as DomainEventType, (event) => this.handleContentViewed(event));
 
     this.logger.info('UserAnalyticsService: Event subscriptions initialized');
   }
@@ -229,10 +244,12 @@ export class UserAnalyticsService {
       };
 
       // Cache for 1 hour
-      await this.cache.set(cacheKey, metrics, { ttl: this.CACHE_TTL.HOURLY });
+      await this.cache.set(cacheKey, metrics, this.CACHE_TTL.HOURLY);
 
       await this.auditLog.log({
         action: 'analytics.acquisition.retrieved',
+        entityType: 'analytics',
+        entityId: 'acquisition',
         userId: 'system',
         metadata: { timeRange },
       });
@@ -302,7 +319,7 @@ export class UserAnalyticsService {
         timeSeriesData,
       };
 
-      await this.cache.set(cacheKey, metrics, { ttl: this.CACHE_TTL.HOURLY });
+      await this.cache.set(cacheKey, metrics, this.CACHE_TTL.HOURLY);
 
       return metrics;
     } catch (error) {
@@ -376,7 +393,7 @@ export class UserAnalyticsService {
         retentionCurve,
       };
 
-      await this.cache.set(cacheKey, metrics, { ttl: this.CACHE_TTL.DAILY });
+      await this.cache.set(cacheKey, metrics, this.CACHE_TTL.DAILY);
 
       return metrics;
     } catch (error) {
@@ -470,7 +487,7 @@ export class UserAnalyticsService {
         currentDate = cohortEndDate;
       }
 
-      await this.cache.set(cacheKey, cohorts, { ttl: this.CACHE_TTL.DAILY });
+      await this.cache.set(cacheKey, cohorts, this.CACHE_TTL.DAILY);
 
       return cohorts;
     } catch (error) {
@@ -660,7 +677,7 @@ export class UserAnalyticsService {
         dropOffPoints,
       };
 
-      await this.cache.set(cacheKey, funnel, { ttl: this.CACHE_TTL.HOURLY });
+      await this.cache.set(cacheKey, funnel, this.CACHE_TTL.HOURLY);
 
       return funnel;
     } catch (error) {
@@ -742,7 +759,7 @@ export class UserAnalyticsService {
         ltvToCacRatio: customerAcquisitionCost > 0 ? averageLTV / customerAcquisitionCost : 0,
       };
 
-      await this.cache.set(cacheKey, metrics, { ttl: this.CACHE_TTL.DAILY });
+      await this.cache.set(cacheKey, metrics, this.CACHE_TTL.DAILY);
 
       return metrics;
     } catch (error) {
@@ -804,7 +821,7 @@ export class UserAnalyticsService {
         retentionOpportunities,
       };
 
-      await this.cache.set(cacheKey, analysis, { ttl: this.CACHE_TTL.DAILY });
+      await this.cache.set(cacheKey, analysis, this.CACHE_TTL.DAILY);
 
       return analysis;
     } catch (error) {
@@ -910,7 +927,7 @@ export class UserAnalyticsService {
         recommendedActions,
       };
 
-      await this.cache.set(cacheKey, prediction, { ttl: this.CACHE_TTL.HOURLY });
+      await this.cache.set(cacheKey, prediction, this.CACHE_TTL.HOURLY);
 
       return prediction;
     } catch (error) {
@@ -989,7 +1006,7 @@ export class UserAnalyticsService {
         trends,
       };
 
-      await this.cache.set(cacheKey, growthTrends, { ttl: this.CACHE_TTL.DAILY });
+      await this.cache.set(cacheKey, growthTrends, this.CACHE_TTL.DAILY);
 
       return growthTrends;
     } catch (error) {
@@ -1104,7 +1121,7 @@ export class UserAnalyticsService {
         healthTrend,
       };
 
-      await this.cache.set(cacheKey, healthScore, { ttl: this.CACHE_TTL.HOURLY });
+      await this.cache.set(cacheKey, healthScore, this.CACHE_TTL.HOURLY);
 
       return healthScore;
     } catch (error) {
@@ -1180,7 +1197,7 @@ export class UserAnalyticsService {
         alerts,
       };
 
-      await this.cache.set(cacheKey, dashboard, { ttl: this.CACHE_TTL.REALTIME });
+      await this.cache.set(cacheKey, dashboard, this.CACHE_TTL.REALTIME);
 
       return dashboard;
     } catch (error) {
@@ -1239,6 +1256,8 @@ export class UserAnalyticsService {
 
       await this.auditLog.log({
         action: 'analytics.export.created',
+        entityType: 'analytics',
+        entityId: exportId,
         userId: 'system',
         metadata: { exportId, format: options.format, recordCount: result.recordCount },
       });
@@ -1265,11 +1284,10 @@ export class UserAnalyticsService {
 
       // Publish event to event bus for real-time processing
       await this.eventBus.publish({
-        type: 'user.activity.tracked',
+        type: 'user.activity.tracked' as DomainEventType,
         aggregateId: event.userId,
-        data: event,
-        timestamp: new Date(),
-      });
+        payload: event,
+      } as any); // Type assertion: DomainEvent requires additional fields filled by eventBus
     } catch (error) {
       this.logger.error('Failed to track activity', { error, event });
       // Don't throw - we don't want to fail user operations due to analytics
@@ -1361,11 +1379,11 @@ export class UserAnalyticsService {
       if (metricType) {
         // Invalidate specific metric cache
         const pattern = `analytics:${metricType}:*`;
-        await this.cache.invalidatePattern(pattern);
+        await (this.cache as any).invalidatePattern(pattern);
         this.logger.info('Cache refreshed for metric type', { metricType });
       } else {
         // Invalidate all analytics cache
-        await this.cache.invalidatePattern('analytics:*');
+        await (this.cache as any).invalidatePattern('analytics:*');
         this.logger.info('All analytics cache refreshed');
       }
     } catch (error) {
