@@ -1,7 +1,5 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
 /**
- * 📬 DMInbox Component
+ * DMInbox Component
  * US-311: Build Encrypted DM Inbox UI Component
  * Epic 003: NOSTR Consolidation
  *
@@ -107,7 +105,7 @@ export const DMInbox: React.FC<DMInboxProps> = ({ className = '', onError }) => 
         }
 
         // Subscribe to DM events (kind 4) addressed to user
-        const subId = subscriptionManager.subscribe(
+        const subId = await subscriptionManager.subscribe(
           [
             {
               kinds: [4],
@@ -153,7 +151,7 @@ export const DMInbox: React.FC<DMInboxProps> = ({ className = '', onError }) => 
   // ========================================
 
   const handleIncomingEvent = useCallback(
-    async (event: NostrEvent, _relay: string) => {
+    async (event: NostrEvent) => {
       try {
         // Deduplicate events
         if (seenEventIdsRef.current.has(event.id)) {
@@ -593,7 +591,7 @@ export const DMInbox: React.FC<DMInboxProps> = ({ className = '', onError }) => 
                     className='w-3 h-3 mr-1'
                     fill='currentColor'
                     viewBox='0 0 20 20'
-                    title='Encrypted with NIP-04'
+                    aria-label='Encrypted with NIP-04'
                   >
                     <path
                       fillRule='evenodd'

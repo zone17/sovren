@@ -1,5 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   AlertTriangle,
@@ -17,12 +15,38 @@ import {
 import React, { useCallback, useEffect, useState } from 'react';
 
 // Local type stubs for key management
-type NostrEnhancedKeyPair = any;
-type NostrEntropySource = any;
-// NostrKeyBackupMethod removed - unused
-type NostrKeyManagementConfig = any;
-type NostrKeySecurityLevel = any;
+// These are placeholder types until the real NOSTR service layer is implemented.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+interface NostrEnhancedKeyPair {
+  [key: string]: any;
+  keyId: string;
+  name?: string;
+  description?: string;
+  publicKey: string;
+  privateKey: string;
+  securityLevel: string;
+  entropyBits: number;
+  created: number;
+  backedUp: boolean;
+  compromised: boolean;
+}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type NostrKeyManagementConfig = Record<string, any>;
+
+const NostrKeySecurityLevel = { BASIC: 'basic', ENHANCED: 'enhanced', MAXIMUM: 'maximum' } as const;
+type NostrKeySecurityLevel = (typeof NostrKeySecurityLevel)[keyof typeof NostrKeySecurityLevel];
+
+const NostrEntropySource = {
+  WEB_CRYPTO_API: 'web_crypto_api',
+  SECURE_RANDOM: 'secure_random',
+} as const;
+type NostrEntropySource = (typeof NostrEntropySource)[keyof typeof NostrEntropySource];
+
+const NostrKeyBackupMethod = { MNEMONIC_PHRASE: 'mnemonic_phrase' } as const;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const NostrKeyManagementService: any = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const NostrBrowserKeyStorage: any = null;
 
 /**
@@ -57,8 +81,9 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
 }) => {
   // State management
   const [activeTab, setActiveTab] = useState<TabType>('keys');
-  const [keyManagementService, setKeyManagementService] =
-    useState<NostrKeyManagementService | null>(null);
+  const [keyManagementService, setKeyManagementService] = useState<
+    typeof NostrKeyManagementService | null
+  >(null);
   const [keys, setKeys] = useState<NostrEnhancedKeyPair[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -131,7 +156,7 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
 
   // Load keys from storage
   const loadKeys = useCallback(
-    async (service?: NostrKeyManagementService) => {
+    async (service?: typeof NostrKeyManagementService) => {
       const activeService = service || keyManagementService;
       if (!activeService) return;
 
@@ -149,7 +174,7 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
 
   // Update statistics
   const updateStats = useCallback(
-    (service?: NostrKeyManagementService) => {
+    (service?: typeof NostrKeyManagementService) => {
       const activeService = service || keyManagementService;
       if (!activeService) return;
 
@@ -493,7 +518,9 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
                               </h3>
                               {renderKeyValidation(keyPair)}
                               {keyPair.backedUp && (
-                                <CheckCircle className='w-4 h-4 text-green-600' title='Backed up' />
+                                <span title='Backed up'>
+                                  <CheckCircle className='w-4 h-4 text-green-600' />
+                                </span>
                               )}
                             </div>
 

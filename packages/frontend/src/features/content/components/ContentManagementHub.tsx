@@ -1,7 +1,5 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
 /**
- * 🏠 **CONTENT MANAGEMENT HUB - UNIFIED SYSTEM**
+ * CONTENT MANAGEMENT HUB - UNIFIED SYSTEM
  *
  * Elite Engineering Standards:
  * ✅ Single entry point for all content management
@@ -38,11 +36,18 @@ import {
 // Lazy-loaded components for performance
 const ContentLibrary = React.lazy(() => import('./ContentLibrary'));
 const ContentEditor = React.lazy(() => import('./ContentEditor'));
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const ContentCollections = React.lazy(() =>
-  Promise.resolve({ default: () => <div>Collections</div> })
+  Promise.resolve({ default: (_props: any) => <div>Collections</div> })
 );
-const ContentSeries = React.lazy(() => Promise.resolve({ default: () => <div>Series</div> }));
-const ContentAnalytics = React.lazy(() => Promise.resolve({ default: () => <div>Analytics</div> }));
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ContentSeries = React.lazy(() =>
+  Promise.resolve({ default: (_props: any) => <div>Series</div> })
+);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ContentAnalytics = React.lazy(() =>
+  Promise.resolve({ default: (_props: any) => <div>Analytics</div> })
+);
 
 // Actions
 import {
@@ -132,7 +137,7 @@ export const ContentManagementHub: React.FC<ContentManagementHubProps> = ({
   const availableTabs = useMemo(() => {
     const tabs = [];
 
-    if (canAccess.library && flags.enableContentLibrary) {
+    if (canAccess.library && flags?.enableContentLibrary) {
       tabs.push({
         id: 'library',
         label: 'Library',
@@ -142,7 +147,7 @@ export const ContentManagementHub: React.FC<ContentManagementHubProps> = ({
       });
     }
 
-    if (canAccess.editor && flags.enableContentEditor) {
+    if (canAccess.editor && flags?.enableContentEditor) {
       tabs.push({
         id: 'editor',
         label: 'Editor',
@@ -151,7 +156,7 @@ export const ContentManagementHub: React.FC<ContentManagementHubProps> = ({
       });
     }
 
-    if (canAccess.collections && flags.enableContentCollections) {
+    if (canAccess.collections && flags?.enableContentCollections) {
       tabs.push({
         id: 'collections',
         label: 'Collections',
@@ -161,7 +166,7 @@ export const ContentManagementHub: React.FC<ContentManagementHubProps> = ({
       });
     }
 
-    if (canAccess.series && flags.enableContentSeries) {
+    if (canAccess.series && flags?.enableContentSeries) {
       tabs.push({
         id: 'series',
         label: 'Series',
@@ -171,7 +176,7 @@ export const ContentManagementHub: React.FC<ContentManagementHubProps> = ({
       });
     }
 
-    if (canAccess.analytics && flags.enableContentAnalytics) {
+    if (canAccess.analytics && flags?.enableContentAnalytics) {
       tabs.push({
         id: 'analytics',
         label: 'Analytics',
@@ -203,7 +208,19 @@ export const ContentManagementHub: React.FC<ContentManagementHubProps> = ({
         loadPromises.push(dispatch(loadSeries({ creator_pubkey: user_id })));
       }
       if (canAccess.analytics) {
-        loadPromises.push(dispatch(loadAnalytics({ creator_pubkey: user_id })));
+        loadPromises.push(
+          dispatch(
+            loadAnalytics({
+              creator_pubkeys: [user_id],
+              time_range: {
+                start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+                end: new Date().toISOString(),
+                period: 'day',
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+              },
+            })
+          )
+        );
       }
 
       // Track loading progress
@@ -243,69 +260,61 @@ export const ContentManagementHub: React.FC<ContentManagementHubProps> = ({
   }, [dispatch, sidebar_open]);
 
   // Render tab content
-  const renderTabContent = useCallback(
-    (tab: string) => {
-      const commonProps = {
-        userId: user_id,
-        permissions,
-      };
+  const renderTabContent = useCallback((tab: string) => {
+    switch (tab) {
+      case 'library':
+        return (
+          <ErrorBoundary FallbackComponent={ErrorFallback}>
+            <Suspense fallback={<LoadingFallback title='Content Library' />}>
+              <ContentLibrary />
+            </Suspense>
+          </ErrorBoundary>
+        );
 
-      switch (tab) {
-        case 'library':
-          return (
-            <ErrorBoundary FallbackComponent={ErrorFallback}>
-              <Suspense fallback={<LoadingFallback title='Content Library' />}>
-                <ContentLibrary {...commonProps} />
-              </Suspense>
-            </ErrorBoundary>
-          );
+      case 'editor':
+        return (
+          <ErrorBoundary FallbackComponent={ErrorFallback}>
+            <Suspense fallback={<LoadingFallback title='Content Editor' />}>
+              <ContentEditor contentType='article' />
+            </Suspense>
+          </ErrorBoundary>
+        );
 
-        case 'editor':
-          return (
-            <ErrorBoundary FallbackComponent={ErrorFallback}>
-              <Suspense fallback={<LoadingFallback title='Content Editor' />}>
-                <ContentEditor {...commonProps} />
-              </Suspense>
-            </ErrorBoundary>
-          );
+      case 'collections':
+        return (
+          <ErrorBoundary FallbackComponent={ErrorFallback}>
+            <Suspense fallback={<LoadingFallback title='Content Collections' />}>
+              <ContentCollections />
+            </Suspense>
+          </ErrorBoundary>
+        );
 
-        case 'collections':
-          return (
-            <ErrorBoundary FallbackComponent={ErrorFallback}>
-              <Suspense fallback={<LoadingFallback title='Content Collections' />}>
-                <ContentCollections {...commonProps} />
-              </Suspense>
-            </ErrorBoundary>
-          );
+      case 'series':
+        return (
+          <ErrorBoundary FallbackComponent={ErrorFallback}>
+            <Suspense fallback={<LoadingFallback title='Content Series' />}>
+              <ContentSeries />
+            </Suspense>
+          </ErrorBoundary>
+        );
 
-        case 'series':
-          return (
-            <ErrorBoundary FallbackComponent={ErrorFallback}>
-              <Suspense fallback={<LoadingFallback title='Content Series' />}>
-                <ContentSeries {...commonProps} />
-              </Suspense>
-            </ErrorBoundary>
-          );
+      case 'analytics':
+        return (
+          <ErrorBoundary FallbackComponent={ErrorFallback}>
+            <Suspense fallback={<LoadingFallback title='Content Analytics' />}>
+              <ContentAnalytics />
+            </Suspense>
+          </ErrorBoundary>
+        );
 
-        case 'analytics':
-          return (
-            <ErrorBoundary FallbackComponent={ErrorFallback}>
-              <Suspense fallback={<LoadingFallback title='Content Analytics' />}>
-                <ContentAnalytics {...commonProps} />
-              </Suspense>
-            </ErrorBoundary>
-          );
-
-        default:
-          return (
-            <div className='flex items-center justify-center h-64'>
-              <p className='text-muted-foreground'>Select a tab to get started</p>
-            </div>
-          );
-      }
-    },
-    [user_id, permissions]
-  );
+      default:
+        return (
+          <div className='flex items-center justify-center h-64'>
+            <p className='text-muted-foreground'>Select a tab to get started</p>
+          </div>
+        );
+    }
+  }, []);
 
   // Show loading state if not mounted
   if (!mounted) {

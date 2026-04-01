@@ -1,6 +1,4 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
-// 🤖 Personalized Content Recommendations Component
+// Personalized Content Recommendations Component
 // Implementation of US-095: Personalized content recommendations
 // Elite engineering standards with comprehensive testing and accessibility
 
@@ -58,6 +56,20 @@ interface ContentRecommendation {
   };
 }
 
+interface RecommendationFeedback {
+  id: string;
+  userId: string;
+  recommendationId: string;
+  contentId: string;
+  feedbackType: 'implicit' | 'explicit';
+  action: string;
+  rating?: number;
+  context: {
+    timestamp: Date;
+    sessionId: string;
+  };
+}
+
 interface PersonalizedRecommendationsProps {
   userId: string;
   maxRecommendations?: number;
@@ -67,7 +79,7 @@ interface PersonalizedRecommendationsProps {
   enableBehavioralLearning?: boolean;
   className?: string;
   onRecommendationClick?: (recommendation: ContentRecommendation) => void;
-  onFeedback?: (feedback: any) => void;
+  onFeedback?: (feedback: RecommendationFeedback) => void;
 }
 
 // Mock service for demonstration
@@ -185,7 +197,7 @@ const AlgorithmExplanation: React.FC<{
 const RecommendationCard: React.FC<{
   recommendation: ContentRecommendation;
   onInteraction: (recommendationId: string, action: string) => void;
-  onFeedback: (feedback: any) => void;
+  onFeedback: (feedback: RecommendationFeedback) => void;
   showExplanations: boolean;
 }> = ({ recommendation, onInteraction, onFeedback, showExplanations }) => {
   const [isLiked, setIsLiked] = useState(false);
@@ -477,14 +489,13 @@ export const PersonalizedRecommendations: React.FC<PersonalizedRecommendationsPr
 
         // Use mock data for now
         setRecommendations(mockRecommendations.slice(0, maxRecommendations));
-      } catch (err) {
+      } catch (_err) {
         setError('Failed to load recommendations');
 
-        toast({
-          title: 'Recommendation Error',
-          description: 'Unable to load personalized recommendations. Please try again.',
-          variant: 'destructive',
-        });
+        toast.error(
+          'Recommendation Error',
+          'Unable to load personalized recommendations. Please try again.'
+        );
       } finally {
         setLoading(false);
         setRefreshing(false);
@@ -500,24 +511,20 @@ export const PersonalizedRecommendations: React.FC<PersonalizedRecommendationsPr
 
   // Handle feedback
   const handleFeedback = useCallback(
-    async (feedback: any) => {
+    async (feedback: RecommendationFeedback) => {
       try {
         console.log('Feedback received:', feedback);
 
-        toast({
-          title: 'Feedback Received',
-          description: 'Thank you! Your feedback helps improve our recommendations.',
-        });
+        toast.success(
+          'Feedback Received',
+          'Thank you! Your feedback helps improve our recommendations.'
+        );
 
         if (onFeedback) {
           onFeedback(feedback);
         }
-      } catch (error) {
-        toast({
-          title: 'Feedback Error',
-          description: 'Unable to process feedback. Please try again.',
-          variant: 'destructive',
-        });
+      } catch (_error) {
+        toast.error('Feedback Error', 'Unable to process feedback. Please try again.');
       }
     },
     [onFeedback]
