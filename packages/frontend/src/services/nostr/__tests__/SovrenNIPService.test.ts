@@ -49,7 +49,7 @@ describe('SovrenNIPService', () => {
   beforeEach(() => {
     // Setup mocks
     mockPublisher = {
-      publishEvent: vi.fn().mockResolvedValue({
+      createAndPublish: vi.fn().mockResolvedValue({
         success: true,
         event: {
           id: 'event123',
@@ -74,6 +74,7 @@ describe('SovrenNIPService', () => {
 
     mockCache = {
       add: vi.fn().mockResolvedValue(undefined),
+      set: vi.fn().mockResolvedValue(undefined),
       get: vi.fn().mockResolvedValue(null),
     };
 
@@ -135,8 +136,8 @@ describe('SovrenNIPService', () => {
       expect(result.success).toBe(true);
       expect(result.data).toBeDefined();
       expect(result.error).toBeUndefined();
-      expect(mockPublisher.publishEvent).toHaveBeenCalledTimes(1);
-      expect(mockCache.add).toHaveBeenCalledTimes(1);
+      expect(mockPublisher.createAndPublish).toHaveBeenCalledTimes(1);
+      expect(mockCache.set).toHaveBeenCalledTimes(1);
     });
 
     it('should fail when no public key available', async () => {
@@ -149,7 +150,7 @@ describe('SovrenNIPService', () => {
     });
 
     it('should handle publish failure gracefully', async () => {
-      mockPublisher.publishEvent.mockResolvedValue({
+      mockPublisher.createAndPublish.mockResolvedValue({
         success: false,
       });
 
@@ -245,7 +246,7 @@ describe('SovrenNIPService', () => {
 
       expect(result.success).toBe(true);
       expect(result.data).toBeDefined();
-      expect(mockPublisher.publishEvent).toHaveBeenCalled();
+      expect(mockPublisher.createAndPublish).toHaveBeenCalled();
     });
 
     it('should fetch monetization settings by content ID', async () => {
@@ -296,7 +297,7 @@ describe('SovrenNIPService', () => {
 
       expect(result.success).toBe(true);
       expect(result.data).toBeDefined();
-      expect(mockCache.add).toHaveBeenCalled();
+      expect(mockCache.set).toHaveBeenCalled();
     });
 
     it('should fetch analytics for content', async () => {
