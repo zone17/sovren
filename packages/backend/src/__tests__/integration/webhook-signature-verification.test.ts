@@ -388,14 +388,21 @@ describe('Webhook Signature Verification (PAY-003)', () => {
       const responses = await Promise.all(requests);
 
       // At least one should be rate limited (429 Too Many Requests)
-      const rateLimitedResponses = responses.filter((res) => res.status === 429);
+      const rateLimitedResponses = responses.filter(res => res.status === 429);
       expect(rateLimitedResponses.length).toBeGreaterThan(0);
     }, 30000); // Increase timeout for multiple requests
   });
 
   describe('Security Logging', () => {
     it('should log IP address on signature verification failure', async () => {
-      // Mock console.error to capture logs
+      // Use a fresh app with trust proxy enabled so X-Forwarded-For sets a
+      // unique req.ip, avoiding rate limiter exhaustion from prior tests.
+      const freshRouter = (await import('../../routes/webhooks')).default;
+      const freshApp = express();
+      freshApp.set('trust proxy', true);
+      freshApp.use(express.json());
+      freshApp.use('/api/webhooks', freshRouter);
+
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
 
       const payload = {
@@ -407,20 +414,32 @@ describe('Webhook Signature Verification (PAY-003)', () => {
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const invalidSignature = 'invalid-signature';
 
-      await request(app)
+      const response = await request(freshApp)
         .post('/api/webhooks/lightning')
         .set('x-webhook-signature', invalidSignature)
         .set('x-webhook-timestamp', timestamp)
         .set('X-Forwarded-For', '192.168.1.100') // Test IP
         .send(payload);
 
-      // Should have logged the security event with IP
+      // Verify the request was rejected with 401 (not 429 from rate limiter)
+      expect(response.status).toBe(401);
+      expect(response.body).toHaveProperty('success', false);
+
+      // Should have logged the security event with IP via console.error
       expect(consoleErrorSpy).toHaveBeenCalled();
 
       consoleErrorSpy.mockRestore();
     });
 
     it('should log replay attack attempts', async () => {
+      // Use a fresh app with trust proxy enabled so X-Forwarded-For sets a
+      // unique req.ip, avoiding rate limiter exhaustion from prior tests.
+      const freshRouter = (await import('../../routes/webhooks')).default;
+      const freshApp = express();
+      freshApp.set('trust proxy', true);
+      freshApp.use(express.json());
+      freshApp.use('/api/webhooks', freshRouter);
+
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
 
       const payload = {
@@ -433,13 +452,17 @@ describe('Webhook Signature Verification (PAY-003)', () => {
       const oldTimestamp = Math.floor(Date.now() / 1000) - 400;
       const { payload: signedPayload, headers } = createSignedWebhookRequest(payload, oldTimestamp);
 
-      await request(app)
+      const response = await request(freshApp)
         .post('/api/webhooks/lightning')
         .set(headers)
         .set('X-Forwarded-For', '192.168.1.200')
         .send(signedPayload);
 
-      // Should have logged the replay attack attempt
+      // Verify the request was rejected with 401 (not 429 from rate limiter)
+      expect(response.status).toBe(401);
+      expect(response.body).toHaveProperty('success', false);
+
+      // Should have logged the replay attack attempt via console.error
       expect(consoleErrorSpy).toHaveBeenCalled();
 
       consoleErrorSpy.mockRestore();
