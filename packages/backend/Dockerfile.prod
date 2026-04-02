@@ -16,12 +16,17 @@ RUN apk add --no-cache python3 make g++ && \
 COPY package.json package-lock.json ./
 COPY scripts/fix-express-path-to-regexp.js scripts/
 
-# Copy only the workspace package.json files the backend needs
+# Copy all workspace package.json files (npm ci needs the full workspace
+# structure to resolve the lockfile, even for packages we won't build)
 COPY packages/backend/package.json packages/backend/
 COPY packages/shared/package.json packages/shared/
+COPY packages/frontend/package.json packages/frontend/
+COPY packages/testing/package.json packages/testing/
 
-# Install all deps (including devDependencies for build step)
-RUN npm ci --workspace=packages/backend --workspace=packages/shared --include=dev && \
+# Install all workspace deps (npm ci resolves the full workspace lockfile;
+# --workspace scoping can skip transitive hoisted deps like @types/node,
+# so we install everything and rely on .dockerignore to exclude frontend/testing source)
+RUN npm ci --include=dev && \
     npm cache clean --force && \
     rm -rf ~/.npm /tmp/*
 
@@ -34,6 +39,8 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/package.json ./
 COPY --from=deps /app/packages/backend/package.json ./packages/backend/
 COPY --from=deps /app/packages/shared/package.json ./packages/shared/
+COPY --from=deps /app/packages/frontend/package.json ./packages/frontend/
+COPY --from=deps /app/packages/testing/package.json ./packages/testing/
 
 # Copy backend source and config for build
 COPY packages/backend/tsconfig*.json packages/backend/
@@ -50,7 +57,7 @@ RUN npm run build
 
 # Prune devDependencies from the root (where npm workspaces hoists everything)
 WORKDIR /app
-RUN npm prune --omit=dev --workspace=packages/backend --workspace=packages/shared && \
+RUN npm prune --omit=dev && \
     npm cache clean --force
 
 # Stage 3: Production runtime

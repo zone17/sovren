@@ -72,6 +72,11 @@ eslint*
 .prettier*
 .editorconfig
 
-# Exclude packages not needed for backend Docker build
-packages/frontend
-packages/testing
+# Exclude source from packages not needed for backend Docker build
+# (keep package.json for npm ci workspace resolution)
+packages/frontend/src
+packages/frontend/public
+packages/frontend/e2e
+packages/frontend/dist
+packages/testing/src
+packages/testing/dist
