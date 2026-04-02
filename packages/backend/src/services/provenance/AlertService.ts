@@ -4,7 +4,14 @@
  * EPIC-008: Content Shield (US-E8-004b)
  */
 
-import type { ContentAlert, AlertDetail, AlertStatus, Pagination } from '@shared/types/provenance';
+import type {
+  ContentAlert,
+  AlertDetail,
+  AlertStatus,
+  Pagination,
+  MatchLevel,
+  HashType,
+} from '@shared/types/provenance';
 import { ALERT_STATUS_TRANSITIONS } from '@shared/types/provenance';
 import type { IAlertService } from '../../interfaces/provenance/IAlertService';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
@@ -54,13 +61,13 @@ export class AlertService implements IAlertService {
       original_content_id: row.original_content_id as string,
       original_title: (row.original_title as string) || 'Untitled',
       detected_copy_url: row.detected_copy_url as string,
-      detected_author_pubkey: row.detected_author_pubkey as string,
+      detected_author_pubkey: row.detected_author_pubkey as string | null,
       similarity_score: parseFloat(row.similarity_score as string),
-      match_level: row.match_level as string,
-      hash_type: row.hash_type as string,
-      status: row.status as string,
+      match_level: row.match_level as MatchLevel,
+      hash_type: row.hash_type as HashType,
+      status: row.status as AlertStatus,
       detected_at: row.detected_at as string,
-      relay: row.relay as string,
+      relay: row.relay as string | null,
     }));
 
     return {
@@ -95,32 +102,34 @@ export class AlertService implements IAlertService {
       .eq('content_id', alert.original_content_id)
       .single();
 
+    // Cast DB row fields to their proper types
+    const row = alert as Record<string, unknown>;
     return {
-      id: alert.id,
+      id: row.id as string,
       original: {
-        content_id: alert.original_content_id,
-        title: alert.original_title || 'Untitled',
+        content_id: row.original_content_id as string,
+        title: (row.original_title as string) || 'Untitled',
         excerpt: '', // Would be fetched from content service
-        published_at: alert.detected_at, // Approximation
+        published_at: row.detected_at as string, // Approximation
         provenance: {
-          signature: provenance?.signature || '',
-          nostr_event_id: provenance?.nostr_event_id || '',
+          signature: (provenance?.signature as string) || '',
+          nostr_event_id: (provenance?.nostr_event_id as string) || '',
         },
       },
       detected: {
-        url: alert.detected_copy_url,
-        author_pubkey: alert.detected_author_pubkey,
+        url: row.detected_copy_url as string,
+        author_pubkey: row.detected_author_pubkey as string | null,
         excerpt: '', // Would be fetched from detected content
-        published_at: alert.detected_at,
+        published_at: row.detected_at as string,
       },
       comparison: {
-        similarity_score: parseFloat(alert.similarity_score as string),
-        match_level: alert.match_level as string,
-        hash_type: alert.hash_type as string,
+        similarity_score: parseFloat(row.similarity_score as string),
+        match_level: row.match_level as MatchLevel,
+        hash_type: row.hash_type as HashType,
         highlighted_sections: [],
       },
-      status: alert.status as AlertStatus,
-      detected_at: alert.detected_at,
+      status: row.status as AlertStatus,
+      detected_at: row.detected_at as string,
     };
   }
 

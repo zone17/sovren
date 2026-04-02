@@ -4,7 +4,7 @@
  * EPIC-008: Content Shield (US-E8-004c)
  */
 
-import type { DmcaReport } from '@shared/types/provenance';
+import type { DmcaReport, MatchLevel, RelayConfirmation } from '@shared/types/provenance';
 import type { IDmcaService } from '../../interfaces/provenance/IDmcaService';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { ILogger } from '../../interfaces/shared/ILogger';
@@ -42,6 +42,10 @@ export class DmcaService implements IDmcaService {
 
     this.logger.info('DMCA report generated', { alertId, creatorId });
 
+    // Cast DB row fields to their proper types
+    const alertRow = alert as Record<string, unknown>;
+    const provRow = provenance as Record<string, unknown>;
+
     return {
       title: 'DMCA Takedown Report',
       generated_at: new Date().toISOString(),
@@ -51,21 +55,21 @@ export class DmcaService implements IDmcaService {
         display_name: '', // Would be resolved from user profile
       },
       original_content: {
-        content_id: alert.original_content_id,
-        published_at: provenance.created_at,
-        provenance_signature: provenance.signature,
-        nostr_event_id: provenance.nostr_event_id,
-        content_hash: provenance.content_hash,
-        relay_confirmations: provenance.relay_confirmations || [],
+        content_id: alertRow.original_content_id as string,
+        published_at: provRow.created_at as string,
+        provenance_signature: provRow.signature as string,
+        nostr_event_id: provRow.nostr_event_id as string,
+        content_hash: provRow.content_hash as string,
+        relay_confirmations: (provRow.relay_confirmations as RelayConfirmation[]) || [],
       },
       infringing_content: {
-        url: alert.detected_copy_url,
-        author_pubkey: alert.detected_author_pubkey,
-        detected_at: alert.detected_at,
-        similarity_score: parseFloat(alert.similarity_score as string),
-        match_level: alert.match_level,
+        url: alertRow.detected_copy_url as string,
+        author_pubkey: alertRow.detected_author_pubkey as string | null,
+        detected_at: alertRow.detected_at as string,
+        similarity_score: parseFloat(alertRow.similarity_score as string),
+        match_level: alertRow.match_level as MatchLevel,
       },
-      verification_url: `https://sovren.dev/verify/${alert.original_content_id}`,
+      verification_url: `https://sovren.dev/verify/${alertRow.original_content_id as string}`,
     };
   }
 }
