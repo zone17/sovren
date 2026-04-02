@@ -250,7 +250,7 @@ describe('DMInbox - Rendering', () => {
       fireEvent.click(threadItem.closest('[data-testid="thread-item"]')!);
 
       await waitFor(() => {
-        expect(screen.getByTitle(/encrypted with nip-04/i)).toBeInTheDocument();
+        expect(screen.getByLabelText(/encrypted with nip-04/i)).toBeInTheDocument();
       });
     }
   });
@@ -599,8 +599,8 @@ describe('DMInbox - Accessibility', () => {
   it('should have visible focus indicators', async () => {
     render(<DMInbox />);
 
-    // The search input is always available and focusable
-    const searchInput = screen.getByPlaceholderText(/search conversations/i);
+    // Wait for the search input to render after initial load
+    const searchInput = await screen.findByPlaceholderText(/search/i);
 
     // Call .focus() directly (not fireEvent) to properly update document.activeElement
     searchInput.focus();
