@@ -41,8 +41,12 @@ ALTER TABLE platform_connections
 -- Drop the old indexes on TEXT creator_id
 DROP INDEX IF EXISTS idx_platform_connections_creator;
 
+-- RLS dance: drop policies that reference creator_id before dropping the column
+DROP POLICY IF EXISTS "platform_connections_select_own" ON platform_connections;
+DROP POLICY IF EXISTS "platform_connections_service_role" ON platform_connections;
+
 ALTER TABLE platform_connections
-  DROP COLUMN creator_id;
+  DROP COLUMN IF EXISTS creator_id;
 
 ALTER TABLE platform_connections
   RENAME COLUMN creator_user_id TO creator_id;
@@ -61,6 +65,17 @@ ALTER TABLE platform_connections
 CREATE INDEX IF NOT EXISTS idx_platform_connections_creator
   ON platform_connections(creator_id);
 
+-- RLS dance: recreate policies with UUID comparison (no ::text cast needed)
+CREATE POLICY "platform_connections_service_role"
+  ON platform_connections
+  FOR ALL
+  USING (auth.role() = 'service_role');
+
+CREATE POLICY "platform_connections_select_own"
+  ON platform_connections
+  FOR SELECT
+  USING (creator_id = auth.uid());
+
 -- ---------------------------------------------------------------------------
 -- 2. cross_posts
 -- ---------------------------------------------------------------------------
@@ -76,8 +91,12 @@ WHERE u.nostr_pubkey = cp.creator_id
 
 DROP INDEX IF EXISTS idx_cross_posts_creator;
 
+-- RLS dance: drop policies that reference creator_id before dropping the column
+DROP POLICY IF EXISTS "cross_posts_select_own" ON cross_posts;
+DROP POLICY IF EXISTS "cross_posts_service_role" ON cross_posts;
+
 ALTER TABLE cross_posts
-  DROP COLUMN creator_id;
+  DROP COLUMN IF EXISTS creator_id;
 
 ALTER TABLE cross_posts
   RENAME COLUMN creator_user_id TO creator_id;
@@ -91,6 +110,17 @@ ALTER TABLE cross_posts
 
 CREATE INDEX IF NOT EXISTS idx_cross_posts_creator
   ON cross_posts(creator_id);
+
+-- RLS dance: recreate policies with UUID comparison
+CREATE POLICY "cross_posts_service_role"
+  ON cross_posts
+  FOR ALL
+  USING (auth.role() = 'service_role');
+
+CREATE POLICY "cross_posts_select_own"
+  ON cross_posts
+  FOR SELECT
+  USING (creator_id = auth.uid());
 
 -- ---------------------------------------------------------------------------
 -- 3. repurposed_content
@@ -107,8 +137,12 @@ WHERE u.nostr_pubkey = rc.creator_id
 
 DROP INDEX IF EXISTS idx_repurposed_creator;
 
+-- RLS dance: drop policies that reference creator_id before dropping the column
+DROP POLICY IF EXISTS "repurposed_content_select_own" ON repurposed_content;
+DROP POLICY IF EXISTS "repurposed_content_service_role" ON repurposed_content;
+
 ALTER TABLE repurposed_content
-  DROP COLUMN creator_id;
+  DROP COLUMN IF EXISTS creator_id;
 
 ALTER TABLE repurposed_content
   RENAME COLUMN creator_user_id TO creator_id;
@@ -122,6 +156,17 @@ ALTER TABLE repurposed_content
 
 CREATE INDEX IF NOT EXISTS idx_repurposed_creator
   ON repurposed_content(creator_id);
+
+-- RLS dance: recreate policies with UUID comparison
+CREATE POLICY "repurposed_content_service_role"
+  ON repurposed_content
+  FOR ALL
+  USING (auth.role() = 'service_role');
+
+CREATE POLICY "repurposed_content_select_own"
+  ON repurposed_content
+  FOR SELECT
+  USING (creator_id = auth.uid());
 
 -- ---------------------------------------------------------------------------
 -- 4. inbox_messages
@@ -144,8 +189,12 @@ DROP INDEX IF EXISTS idx_inbox_creator;
 DROP INDEX IF EXISTS idx_inbox_creator_unread;
 DROP INDEX IF EXISTS idx_inbox_creator_platform;
 
+-- RLS dance: drop policies that reference creator_id before dropping the column
+DROP POLICY IF EXISTS "inbox_messages_select_own" ON inbox_messages;
+DROP POLICY IF EXISTS "inbox_messages_service_role" ON inbox_messages;
+
 ALTER TABLE inbox_messages
-  DROP COLUMN creator_id;
+  DROP COLUMN IF EXISTS creator_id;
 
 ALTER TABLE inbox_messages
   RENAME COLUMN creator_user_id TO creator_id;
@@ -171,6 +220,17 @@ CREATE INDEX IF NOT EXISTS idx_inbox_creator_unread
 CREATE INDEX IF NOT EXISTS idx_inbox_creator_platform
   ON inbox_messages(creator_id, platform);
 
+-- RLS dance: recreate policies with UUID comparison
+CREATE POLICY "inbox_messages_service_role"
+  ON inbox_messages
+  FOR ALL
+  USING (auth.role() = 'service_role');
+
+CREATE POLICY "inbox_messages_select_own"
+  ON inbox_messages
+  FOR SELECT
+  USING (creator_id = auth.uid());
+
 -- ---------------------------------------------------------------------------
 -- 5. platform_metrics_history
 -- ---------------------------------------------------------------------------
@@ -191,8 +251,12 @@ ALTER TABLE platform_metrics_history
 DROP INDEX IF EXISTS idx_platform_metrics_creator;
 DROP INDEX IF EXISTS idx_platform_metrics_recorded;
 
+-- RLS dance: drop policies that reference creator_id before dropping the column
+DROP POLICY IF EXISTS "platform_metrics_history_select_own" ON platform_metrics_history;
+DROP POLICY IF EXISTS "platform_metrics_history_service_role" ON platform_metrics_history;
+
 ALTER TABLE platform_metrics_history
-  DROP COLUMN creator_id;
+  DROP COLUMN IF EXISTS creator_id;
 
 ALTER TABLE platform_metrics_history
   RENAME COLUMN creator_user_id TO creator_id;
@@ -213,6 +277,17 @@ CREATE INDEX IF NOT EXISTS idx_platform_metrics_creator
 
 CREATE INDEX IF NOT EXISTS idx_platform_metrics_recorded
   ON platform_metrics_history(recorded_at DESC);
+
+-- RLS dance: recreate policies with UUID comparison
+CREATE POLICY "platform_metrics_history_service_role"
+  ON platform_metrics_history
+  FOR ALL
+  USING (auth.role() = 'service_role');
+
+CREATE POLICY "platform_metrics_history_select_own"
+  ON platform_metrics_history
+  FOR SELECT
+  USING (creator_id = auth.uid());
 
 -- ---------------------------------------------------------------------------
 -- NOTE: Orphaned rows audit
