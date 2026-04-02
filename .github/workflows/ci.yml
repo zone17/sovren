@@ -588,14 +588,11 @@ jobs:
             type=sha,prefix={{branch}}-
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Copy root lockfile into backend context
-        run: cp package-lock.json packages/backend/package-lock.json
-
       - name: Build and push backend image
         id: build
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
-          context: ./packages/backend
+          context: .
           file: ./packages/backend/Dockerfile.prod
           push: true
           tags: ${{ steps.meta.outputs.tags }}

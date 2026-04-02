@@ -67,7 +67,10 @@ __mocks__
 jest.config.*
 vitest.config.*
 playwright.config.*
-tsconfig*.json
 eslint*
 .prettier*
 .editorconfig
+
+# Exclude packages not needed for backend Docker build
+packages/frontend
+packages/testing
