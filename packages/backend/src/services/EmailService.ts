@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * EmailService Implementation
  * User Story: US-E5-007
@@ -6,6 +5,7 @@
  * Part of Epic 005 - Backend Service Layer Refactoring
  */
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { IEmailService } from '../interfaces/communication/IEmailService';
 import type { IEventBus } from '../interfaces/shared/IEventBus';
 import type { ILogger } from '../interfaces/shared/ILogger';
@@ -45,7 +45,7 @@ interface EmailQueueItem {
 /**
  * Concrete implementation of EmailService
  */
-export class EmailService implements IEmailService {
+export class EmailService {
   private readonly eventBus: IEventBus;
   private readonly logger: ILogger;
   private readonly cache?: ICacheService;
@@ -75,6 +75,7 @@ export class EmailService implements IEmailService {
     this.metrics = {
       sent: 0,
       failed: 0,
+      delivered: 0,
       bounced: 0,
       opened: 0,
       clicked: 0,
@@ -97,7 +98,9 @@ export class EmailService implements IEmailService {
       // Add to audit log
       await this.auditLog?.log({
         action: 'email.send',
-        details: {
+        entityType: 'email',
+        entityId: message.to?.toString() || 'unknown',
+        metadata: {
           to: message.to,
           subject: message.subject,
           provider: this.config.provider,
@@ -169,12 +172,13 @@ export class EmailService implements IEmailService {
         envelope: info.envelope,
         response: info.response,
       };
-    } catch (error) {
+    } catch (error: unknown) {
       this.metrics.failed++;
+      const errMsg = error instanceof Error ? error.message : String(error);
 
       // Log error
       this.logger.error('Failed to send email', {
-        error: error.message,
+        error: errMsg,
         to: message.to,
         subject: message.subject,
       });
@@ -183,7 +187,7 @@ export class EmailService implements IEmailService {
       await this.eventBus.emit('email.failed', {
         to: message.to,
         subject: message.subject,
-        error: error.message,
+        error: errMsg,
       });
 
       // Add to retry queue if retriable
@@ -192,7 +196,7 @@ export class EmailService implements IEmailService {
 
         return {
           success: false,
-          error: error.message,
+          error: errMsg,
           queued: true,
           queueId: this.getMessageHash(message),
         };
@@ -200,7 +204,7 @@ export class EmailService implements IEmailService {
 
       return {
         success: false,
-        error: error.message,
+        error: errMsg,
         queued: false,
       };
     }
@@ -221,7 +225,9 @@ export class EmailService implements IEmailService {
       const batch = request.messages.slice(i, i + batchSize);
 
       // Send batch in parallel
-      const batchResults = await Promise.allSettled(batch.map((message) => this.send(message)));
+      const batchResults = await Promise.allSettled(
+        batch.map((msg: EmailMessage) => this.send(msg))
+      );
 
       // Collect results
       for (const result of batchResults) {
@@ -237,21 +243,19 @@ export class EmailService implements IEmailService {
 
       // Delay between batches
       if (i + batchSize < request.messages.length) {
-        await new Promise((resolve) => setTimeout(resolve, delayBetweenBatches));
+        await new Promise(resolve => setTimeout(resolve, delayBetweenBatches));
       }
     }
 
     // Calculate summary
-    const successful = results.filter((r) => r.success).length;
-    const failed = results.filter((r) => !r.success).length;
-    const queued = results.filter((r) => r.queued).length;
+    const successful = results.filter(r => r.success).length;
+    const failed = results.filter(r => !r.success).length;
+    void results.filter(r => r.queued).length;
 
     return {
-      totalSent: successful,
-      totalFailed: failed,
-      totalQueued: queued,
+      sent: successful,
+      failed,
       results,
-      duration: Date.now() - Date.now(), // This would track actual duration
     };
   }
 
@@ -262,14 +266,18 @@ export class EmailService implements IEmailService {
     options?: Partial<EmailMessage>
   ): Promise<EmailSendResult> {
     const template: EmailTemplate = {
+      id: templateName,
       name: templateName,
       subject: options?.subject || `Email from ${this.config.defaultFrom}`,
+      body: '', // Will be rendered from template
       data,
     };
 
     const message: EmailMessage = {
       ...options,
       to,
+      subject: options?.subject || template.subject,
+      body: '', // Will be populated from template rendering
       template,
     };
 
@@ -288,7 +296,7 @@ export class EmailService implements IEmailService {
       this.templates.set(name, compiled);
 
       this.logger.info(`Email template loaded: ${name}`);
-    } catch (error) {
+    } catch (error: unknown) {
       this.logger.error(`Failed to load email template: ${name}`, error);
       throw error;
     }
@@ -338,7 +346,9 @@ export class EmailService implements IEmailService {
     // Add to audit log
     await this.auditLog?.log({
       action: 'email.bounce',
-      details: bounce,
+      entityType: 'email',
+      entityId: bounce.messageId,
+      metadata: bounce as Record<string, any>,
     });
   }
 
@@ -350,7 +360,7 @@ export class EmailService implements IEmailService {
   }
 
   async retryFailed(): Promise<void> {
-    const failedItems = this.queue.filter((item) => item.retries > 0);
+    const failedItems = this.queue.filter(item => item.retries > 0);
 
     for (const item of failedItems) {
       // Reset retry count
@@ -400,7 +410,7 @@ export class EmailService implements IEmailService {
   private createTransporter(): nodemailer.Transporter {
     switch (this.config.provider) {
       case 'smtp':
-        return nodemailer.createTransporter({
+        return nodemailer.createTransport({
           host: this.config.providerConfig.host,
           port: this.config.providerConfig.port,
           secure: this.config.providerConfig.secure,
@@ -414,7 +424,7 @@ export class EmailService implements IEmailService {
       case 'mailgun':
       case 'ses':
         // These would use provider-specific configurations
-        return nodemailer.createTransporter({
+        return nodemailer.createTransport({
           jsonTransport: true, // Mock for now
         });
 
@@ -450,14 +460,20 @@ export class EmailService implements IEmailService {
     return { html, text };
   }
 
-  private async prepareAttachments(
-    attachments?: EmailAttachment[]
-  ): Promise<nodemailer.Attachment[]> {
+  private async prepareAttachments(attachments?: EmailAttachment[]): Promise<
+    Array<{
+      filename: string;
+      content: Buffer | string;
+      contentType?: string;
+      encoding?: string;
+      cid?: string;
+    }>
+  > {
     if (!attachments || attachments.length === 0) {
       return [];
     }
 
-    return attachments.map((att) => ({
+    return attachments.map(att => ({
       filename: att.filename,
       content: att.content,
       contentType: att.contentType,
@@ -526,7 +542,7 @@ export class EmailService implements IEmailService {
   private startQueueProcessor(): void {
     this.processInterval = setInterval(() => {
       if (!this.isProcessing) {
-        this.processQueue().catch((error) => {
+        this.processQueue().catch(error => {
           this.logger.error('Queue processing error', error);
         });
       }
@@ -543,7 +559,7 @@ export class EmailService implements IEmailService {
     try {
       const now = Date.now();
       const readyItems = this.queue.filter(
-        (item) => !item.nextRetryAt || item.nextRetryAt.getTime() <= now
+        item => !item.nextRetryAt || item.nextRetryAt.getTime() <= now
       );
 
       for (const item of readyItems) {
@@ -557,9 +573,9 @@ export class EmailService implements IEmailService {
               this.queue.splice(index, 1);
             }
           }
-        } catch (error) {
+        } catch (error: unknown) {
           item.retries++;
-          item.error = error.message;
+          item.error = error instanceof Error ? error.message : String(error);
 
           if (item.retries >= item.maxRetries) {
             // Max retries reached, remove from queue

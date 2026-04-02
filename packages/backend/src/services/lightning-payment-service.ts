@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { createHash, randomBytes } from 'crypto';
 import { EventEmitter } from 'events';
 import { z } from 'zod';
@@ -50,6 +49,7 @@ const PaymentVerificationSchema = z.object({
   fee_paid_msats: z.number().nonnegative(),
   verified_at: z.date(),
   confirmation_count: z.number().nonnegative(),
+  provider_id: z.string().optional(),
 });
 
 // Interface Definitions
@@ -82,7 +82,7 @@ interface PaymentVerification {
   fee_paid_msats: number;
   verified_at: Date;
   confirmation_count: number;
-  provider_id: string;
+  provider_id?: string;
 }
 
 interface PaymentStatusUpdate {
@@ -253,7 +253,9 @@ export class LightningPaymentService extends EventEmitter {
       return invoice;
     } catch (error) {
       this.logger.error('Failed to generate BOLT11 invoice', error);
-      throw new Error(`Invoice generation failed: ${error.message}`);
+      throw new Error(
+        `Invoice generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -290,7 +292,7 @@ export class LightningPaymentService extends EventEmitter {
       if (providers.length === 0) {
         providers.push(
           ...Array.from(this.walletProviders.values())
-            .filter((p) => p.is_active)
+            .filter(p => p.is_active)
             .sort((a, b) => a.priority - b.priority)
             .slice(0, 3)
         ); // Top 3 default providers
@@ -299,7 +301,9 @@ export class LightningPaymentService extends EventEmitter {
       return providers;
     } catch (error) {
       this.logger.error('Failed to get wallet providers', error);
-      throw new Error(`Wallet provider retrieval failed: ${error.message}`);
+      throw new Error(
+        `Wallet provider retrieval failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -356,7 +360,8 @@ export class LightningPaymentService extends EventEmitter {
       if (validated.is_default) {
         await supabase
           .from('user_wallet_providers')
-          .update({ priority: supabase.raw('priority + 1') })
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .update({ priority: (supabase as any).raw?.('priority + 1') ?? 1 })
           .eq('user_id', validated.user_id)
           .neq('provider_type', validated.provider_type);
       }
@@ -367,7 +372,9 @@ export class LightningPaymentService extends EventEmitter {
       });
     } catch (error) {
       this.logger.error('Failed to add wallet provider', error);
-      throw new Error(`Wallet provider configuration failed: ${error.message}`);
+      throw new Error(
+        `Wallet provider configuration failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -392,8 +399,8 @@ export class LightningPaymentService extends EventEmitter {
       // Verify with multiple providers
       const verifications = await Promise.allSettled(
         Array.from(this.walletProviders.values())
-          .filter((p) => p.is_active)
-          .map((provider) => this.verifyWithProvider(provider, payment_hash))
+          .filter(p => p.is_active)
+          .map(provider => this.verifyWithProvider(provider, payment_hash))
       );
 
       // Find successful verification
@@ -453,7 +460,9 @@ export class LightningPaymentService extends EventEmitter {
       return verification;
     } catch (error) {
       this.logger.error('Failed to verify payment', error);
-      throw new Error(`Payment verification failed: ${error.message}`);
+      throw new Error(
+        `Payment verification failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -499,7 +508,9 @@ export class LightningPaymentService extends EventEmitter {
       return statusInfo;
     } catch (error) {
       this.logger.error('Failed to get payment status', error);
-      throw new Error(`Payment status retrieval failed: ${error.message}`);
+      throw new Error(
+        `Payment status retrieval failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -527,7 +538,7 @@ export class LightningPaymentService extends EventEmitter {
 
       if (error) throw error;
 
-      return data.map((item) => ({
+      return data.map(item => ({
         payment_hash: item.payment_hash,
         status: item.status as z.infer<typeof PaymentStatusSchema>,
         updated_at: new Date(item.updated_at),
@@ -535,7 +546,9 @@ export class LightningPaymentService extends EventEmitter {
       }));
     } catch (error) {
       this.logger.error('Failed to track payment status updates', error);
-      throw new Error(`Payment status tracking failed: ${error.message}`);
+      throw new Error(
+        `Payment status tracking failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -577,7 +590,7 @@ export class LightningPaymentService extends EventEmitter {
       },
     ];
 
-    providers.forEach((provider) => {
+    providers.forEach(provider => {
       this.walletProviders.set(provider.id, provider);
     });
   }
@@ -730,8 +743,10 @@ export class LightningPaymentService extends EventEmitter {
       .update({
         status,
         updated_at: updated_at.toISOString(),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         metadata: metadata
-          ? supabase.raw(`metadata || ?::jsonb`, [JSON.stringify(metadata)])
+          ? ((supabase as any).raw?.(`metadata || ?::jsonb`, [JSON.stringify(metadata)]) ??
+            metadata)
           : undefined,
       })
       .eq('payment_hash', payment_hash);
@@ -827,7 +842,7 @@ export class LightningPaymentService extends EventEmitter {
       this.logger.error('Health check failed', error);
       return {
         status: 'unhealthy',
-        metrics: { error: error.message },
+        metrics: { error: error instanceof Error ? error.message : 'Unknown error' },
       };
     }
   }
@@ -838,7 +853,8 @@ export class LightningPaymentService extends EventEmitter {
   async shutdown(): Promise<void> {
     // Clear all payment monitors
     for (const [, monitor] of this.paymentMonitors) {
-      clearInterval(monitor);
+      clearInterval(monitor.interval);
+      clearTimeout(monitor.timeout);
     }
     this.paymentMonitors.clear();
 

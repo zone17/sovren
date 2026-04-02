@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 📝 **CONTENT MANAGEMENT SERVICE**
  *
@@ -104,7 +103,7 @@ export class ContentManagementService {
 
     // Update slug if title changed
     if (updates.title) {
-      updateData.slug = this.generateSlug(updates.title);
+      (updateData as Record<string, unknown>).slug = this.generateSlug(updates.title);
     }
 
     const { data, error } = await this.supabase
@@ -230,7 +229,7 @@ export class ContentManagementService {
 
       const items: ContentItem[] = data || [];
       const pageInfo = buildCursorPageInfo(
-        items as Array<{ created_at: string; id: string }>,
+        items as unknown as Array<{ created_at: string; id: string }>,
         limit,
         direction
       );
@@ -302,6 +301,7 @@ export class ContentManagementService {
     // Create media asset record
     const mediaAsset: MediaAsset = {
       id: crypto.randomUUID(),
+      type: file.type.split('/')[0] || 'file',
       filename: file.name,
       file_path: filePath,
       file_size: file.size,
@@ -392,6 +392,7 @@ export class ContentManagementService {
     const collection: ContentCollection = {
       id: crypto.randomUUID(),
       name: data.name,
+      items: [],
       slug: this.generateSlug(data.name),
       description: data.description,
       type: data.type,
@@ -541,6 +542,7 @@ export class ContentManagementService {
     contentId: string,
     orderIndex: number,
     metadata: {
+      title?: string;
       is_required?: boolean;
       estimated_duration?: number;
       prerequisites?: string[];
@@ -557,6 +559,8 @@ export class ContentManagementService {
 
     const episode: SeriesEpisode = {
       id: crypto.randomUUID(),
+      title: metadata.title || `Episode ${orderIndex}`,
+      order: orderIndex,
       content_id: contentId,
       order_index: orderIndex,
       is_required: metadata.is_required || false,
@@ -594,6 +598,8 @@ export class ContentManagementService {
   }): Promise<PremiumContent> {
     const premiumAccess: PremiumContent = {
       id: crypto.randomUUID(),
+      contentId: data.content_id,
+      price: data.price_paid,
       content_id: data.content_id,
       user_id: data.user_id,
       access_type: data.access_type,
@@ -652,7 +658,8 @@ export class ContentManagementService {
     const { error: updateError } = await this.supabase
       .from('content_items')
       .update({
-        view_count: this.supabase.sql`view_count + 1`,
+        view_count: (this.supabase as unknown as { sql: (s: TemplateStringsArray) => unknown })
+          .sql`view_count + 1`,
         updated_at: new Date().toISOString(),
       })
       .eq('id', contentId);
@@ -703,7 +710,7 @@ export class ContentManagementService {
     if (error) throw new ServiceError(`Failed to fetch analytics: ${error.message}`);
 
     const views = data?.length || 0;
-    const uniqueViewers = new Set(data?.map((event) => event.user_id).filter(Boolean)).size;
+    const uniqueViewers = new Set(data?.map(event => event.user_id).filter(Boolean)).size;
     const engagementRate = views > 0 ? (uniqueViewers / views) * 100 : 0;
 
     // Calculate average read time (mock calculation)
@@ -768,21 +775,20 @@ export class ContentManagementService {
   /**
    * Get image dimensions
    */
-  private getImageDimensions(file: File): Promise<{ width: number; height: number }> {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => {
-        resolve({ width: img.width, height: img.height });
-      };
-      img.onerror = reject;
-      img.src = URL.createObjectURL(file);
-    });
+  private getImageDimensions(_file: File): Promise<{ width: number; height: number }> {
+    // TODO: Implement server-side image dimension extraction (e.g., using sharp)
+    // Browser APIs (Image, URL.createObjectURL) are not available in Node.js
+    return Promise.resolve({ width: 0, height: 0 });
   }
 
   /**
    * Get media duration
    */
-  private getMediaDuration(file: File): Promise<number> {
+  private getMediaDuration(_file: File): Promise<number> {
+    // TODO: Implement server-side media duration extraction (e.g., using ffprobe)
+    // Browser APIs (document.createElement) are not available in Node.js
+    return Promise.resolve(0);
+    /* Original browser-based implementation:
     return new Promise((resolve, reject) => {
       const media = file.type.startsWith('video/')
         ? document.createElement('video')
@@ -794,6 +800,7 @@ export class ContentManagementService {
       media.onerror = reject;
       media.src = URL.createObjectURL(file);
     });
+    */
   }
 
   // ==================== SEARCH AND INDEXING ====================

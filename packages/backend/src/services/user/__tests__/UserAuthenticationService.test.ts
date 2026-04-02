@@ -107,6 +107,7 @@ describe('UserAuthenticationService', () => {
 
     mockNotification = {
       send: vi.fn(),
+      sendNotification: vi.fn(),
       sendBatch: vi.fn(),
     } as any;
 
@@ -137,7 +138,7 @@ describe('UserAuthenticationService', () => {
     it('should authenticate valid credentials without MFA', async () => {
       // Arrange
       mockCache.get.mockResolvedValue(null); // No rate limiting
-      mockDb.query.mockResolvedValue({ rows: [mockUser] });
+      mockDb.query.mockResolvedValue([mockUser]);
       (argon2.verify as any).mockResolvedValue(true);
 
       // Act
@@ -166,7 +167,7 @@ describe('UserAuthenticationService', () => {
       // Arrange
       const mfaUser = { ...mockUser, mfaEnabled: true, mfaTypes: ['totp'] };
       mockCache.get.mockResolvedValue(null);
-      mockDb.query.mockResolvedValue({ rows: [mfaUser] });
+      mockDb.query.mockResolvedValue([mfaUser]);
       (argon2.verify as any).mockResolvedValue(true);
 
       // Act
@@ -186,7 +187,7 @@ describe('UserAuthenticationService', () => {
       const mfaUser = { ...mockUser, mfaEnabled: true };
       const credentialsWithMFA = { ...mockCredentials, mfaToken: '123456' };
       mockCache.get.mockResolvedValue(null);
-      mockDb.query.mockResolvedValue({ rows: [mfaUser] });
+      mockDb.query.mockResolvedValue([mfaUser]);
       (argon2.verify as any).mockResolvedValue(true);
 
       // Mock MFA verification
@@ -219,7 +220,7 @@ describe('UserAuthenticationService', () => {
         .mockResolvedValueOnce(null) // isAccountLocked
         .mockResolvedValueOnce(0) // recordFailedAttempt: IP attempts
         .mockResolvedValueOnce(4); // recordFailedAttempt: user attempts (4+1 >= 5 triggers lock)
-      mockDb.query.mockResolvedValue({ rows: [mockUser] });
+      mockDb.query.mockResolvedValue([mockUser]);
       (argon2.verify as any).mockResolvedValue(false); // Wrong password
 
       // Act
@@ -239,7 +240,7 @@ describe('UserAuthenticationService', () => {
         .mockResolvedValueOnce(null) // IP rate limit
         .mockResolvedValueOnce(null) // User attempts
         .mockResolvedValueOnce({ reason: 'Too many attempts' }); // Account locked
-      mockDb.query.mockResolvedValue({ rows: [mockUser] });
+      mockDb.query.mockResolvedValue([mockUser]);
 
       // Act & Assert
       await expect(service.login(mockCredentials)).rejects.toThrow('Account is temporarily locked');
@@ -252,16 +253,16 @@ describe('UserAuthenticationService', () => {
         .mockResolvedValueOnce(null) // Failed attempts
         .mockResolvedValueOnce(null) // Account lock
         .mockResolvedValueOnce([]); // Known devices (empty = new device)
-      mockDb.query.mockResolvedValue({ rows: [mockUser] });
+      mockDb.query.mockResolvedValue([mockUser]);
       (argon2.verify as any).mockResolvedValue(true);
 
       // Act
       await service.login(mockCredentials);
 
       // Assert
-      expect(mockNotification.send).toHaveBeenCalledWith(
+      expect(mockNotification.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          recipientId: 'user-123',
+          userId: 'user-123',
           type: 'security_alert',
           title: 'New device login',
         })
@@ -312,7 +313,7 @@ describe('UserAuthenticationService', () => {
 
     it('should verify valid TOTP token', async () => {
       // Arrange
-      mockDb.query.mockResolvedValue({ rows: [mfaSettings] });
+      mockDb.query.mockResolvedValue([mfaSettings]);
       const mockValidate = vi.fn().mockReturnValue(0);
       (OTPAuth.TOTP as any).mockImplementation(() => ({
         validate: mockValidate,
@@ -329,7 +330,7 @@ describe('UserAuthenticationService', () => {
 
     it('should verify valid backup code and remove it', async () => {
       // Arrange
-      mockDb.query.mockResolvedValue({ rows: [mfaSettings] });
+      mockDb.query.mockResolvedValue([mfaSettings]);
       (OTPAuth.TOTP as any).mockImplementation(() => ({
         validate: vi.fn().mockReturnValue(null),
       }));
@@ -353,7 +354,7 @@ describe('UserAuthenticationService', () => {
         ...mfaSettings,
         backupCodes: ['hashed-code-1', 'hashed-code-2'], // Only 2 codes
       };
-      mockDb.query.mockResolvedValue({ rows: [lowBackupSettings] });
+      mockDb.query.mockResolvedValue([lowBackupSettings]);
       (OTPAuth.TOTP as any).mockImplementation(() => ({
         validate: vi.fn().mockReturnValue(null),
       }));
@@ -364,7 +365,7 @@ describe('UserAuthenticationService', () => {
       await service.verifyMFA('user-123', 'BACKUP1');
 
       // Assert
-      expect(mockNotification.send).toHaveBeenCalledWith(
+      expect(mockNotification.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
           type: 'security_warning',
           title: 'Low on backup codes',
@@ -375,7 +376,7 @@ describe('UserAuthenticationService', () => {
 
     it('should return false for invalid token', async () => {
       // Arrange
-      mockDb.query.mockResolvedValue({ rows: [mfaSettings] });
+      mockDb.query.mockResolvedValue([mfaSettings]);
       (OTPAuth.TOTP as any).mockImplementation(() => ({
         validate: vi.fn().mockReturnValue(null),
       }));
@@ -393,7 +394,7 @@ describe('UserAuthenticationService', () => {
   describe('setupMFA', () => {
     it('should setup TOTP with QR code and backup codes', async () => {
       // Arrange
-      mockDb.query.mockResolvedValue({ rows: [mockUser] });
+      mockDb.query.mockResolvedValue([mockUser]);
       const mockSecret = { base32: 'SECRET123' };
       (OTPAuth.Secret as any).mockImplementation(() => mockSecret);
       (OTPAuth.TOTP as any).mockImplementation(() => ({
@@ -416,7 +417,7 @@ describe('UserAuthenticationService', () => {
 
     it('should throw error for unsupported MFA type', async () => {
       // Arrange
-      mockDb.query.mockResolvedValue({ rows: [mockUser] });
+      mockDb.query.mockResolvedValue([mockUser]);
 
       // Act & Assert
       await expect(service.setupMFA('user-123', 'webauthn')).rejects.toThrow('MFA setup failed');
@@ -462,7 +463,7 @@ describe('UserAuthenticationService', () => {
       const result = await service.validatePassword('MyStr0ng!P@ssw0rd123');
 
       // Assert
-      expect(result.isValid).toBe(true);
+      expect(result.valid).toBe(true);
       expect(result.strength).toBe('strong');
       expect(result.errors).toHaveLength(0);
     });
@@ -472,7 +473,7 @@ describe('UserAuthenticationService', () => {
       const result = await service.validatePassword('password');
 
       // Assert
-      expect(result.isValid).toBe(false);
+      expect(result.valid).toBe(false);
       expect(result.errors).toContain('Password must be at least 12 characters');
       expect(result.errors).toContain('Password must contain at least one uppercase letter');
       expect(result.errors).toContain('Password must contain at least one number');
@@ -487,7 +488,7 @@ describe('UserAuthenticationService', () => {
       const strong = await service.validatePassword('MyVeryStr0ng!P@ssw0rd2024');
 
       expect(weak.strength).toBe('weak');
-      expect(medium.strength).toBe('medium');
+      expect(medium.strength).toBe('fair');
       expect(strong.strength).toBe('strong');
     });
   });
@@ -495,7 +496,7 @@ describe('UserAuthenticationService', () => {
   describe('lockAccount', () => {
     it('should lock account and invalidate sessions', async () => {
       // Arrange
-      mockDb.query.mockResolvedValue({ rows: [mockUser] });
+      mockDb.query.mockResolvedValue([mockUser]);
 
       // Act
       await service.lockAccount('user-123', 'Suspicious activity');
@@ -514,7 +515,7 @@ describe('UserAuthenticationService', () => {
         'user.sessions_invalidated',
         expect.any(Object)
       );
-      expect(mockNotification.send).toHaveBeenCalledWith(
+      expect(mockNotification.sendNotification).toHaveBeenCalledWith(
         expect.objectContaining({
           type: 'security_alert',
           title: 'Account locked',
@@ -528,7 +529,7 @@ describe('UserAuthenticationService', () => {
       // Test incremental rate limiting
       for (let i = 0; i < 9; i++) {
         mockCache.get.mockResolvedValueOnce(i); // Simulate increasing attempts
-        mockDb.query.mockResolvedValue({ rows: [mockUser] });
+        mockDb.query.mockResolvedValue([mockUser]);
         (argon2.verify as any).mockResolvedValue(false);
 
         await expect(service.login(mockCredentials)).rejects.toThrow('Invalid credentials');
@@ -547,7 +548,7 @@ describe('UserAuthenticationService', () => {
         .mockResolvedValueOnce(null) // isAccountLocked
         .mockResolvedValueOnce(2) // recordFailedAttempt: IP attempts
         .mockResolvedValueOnce(4); // recordFailedAttempt: user attempts
-      mockDb.query.mockResolvedValue({ rows: [mockUser] });
+      mockDb.query.mockResolvedValue([mockUser]);
       (argon2.verify as any).mockResolvedValue(false);
 
       // Act
@@ -567,7 +568,7 @@ describe('UserAuthenticationService', () => {
         .mockResolvedValueOnce(0) // checkRateLimit: IP attempts
         .mockResolvedValueOnce(3) // checkRateLimit: user attempts
         .mockResolvedValueOnce(null); // isAccountLocked
-      mockDb.query.mockResolvedValue({ rows: [mockUser] });
+      mockDb.query.mockResolvedValue([mockUser]);
       (argon2.verify as any).mockResolvedValue(true);
 
       // Act
@@ -584,7 +585,7 @@ describe('UserAuthenticationService', () => {
     it('should use constant-time password comparison', async () => {
       // Arrange
       mockCache.get.mockResolvedValue(null);
-      mockDb.query.mockResolvedValue({ rows: [mockUser] });
+      mockDb.query.mockResolvedValue([mockUser]);
 
       // Act
       await expect(service.login(mockCredentials)).rejects.toThrow('Invalid credentials');

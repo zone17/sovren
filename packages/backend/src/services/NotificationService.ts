@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * NotificationService Implementation
  * User Story: US-E5-008
@@ -6,25 +5,111 @@
  * Part of Epic 005 - Backend Service Layer Refactoring
  */
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { INotificationService } from '../interfaces/communication/INotificationService';
 import type { IEventBus } from '../interfaces/shared/IEventBus';
 import type { ILogger } from '../interfaces/shared/ILogger';
 import type { ICacheService } from '../interfaces/shared/ICacheService';
 import type { IEmailService } from '../interfaces/communication/IEmailService';
 import type { IQueueService } from '../interfaces/queue/IQueueService';
-import type {
-  Notification,
-  NotificationChannel,
-  NotificationPreferences,
-  NotificationTemplate,
-  NotificationDeliveryStatus,
-  NotificationPriority,
-  NotificationResult,
-  NotificationMetrics,
-  BulkNotificationRequest,
-  BulkNotificationResult,
-  NotificationHistory,
-} from '../types/notification';
+import type { NotificationPriority } from '../types/notification';
+
+/**
+ * Internal notification types used by this service.
+ * These extend the shared types with richer domain-specific fields.
+ */
+
+type InternalChannel = 'email' | 'push' | 'inApp' | 'sms';
+
+interface Notification {
+  id?: string;
+  userId: string;
+  type?: string;
+  title: string;
+  body: string;
+  email?: string;
+  channels?: InternalChannel[];
+  priority?: NotificationPriority;
+  templateId?: string;
+  data?: Record<string, unknown>;
+  retryOnFailure?: boolean;
+  [key: string]: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+}
+
+interface NotificationResult {
+  success: boolean;
+  error?: string;
+  channels: InternalChannel[];
+  messageId?: string;
+  deliveredAt?: Date;
+  queued?: boolean;
+}
+
+interface NotificationPreferences {
+  userId: string;
+  enabled: boolean;
+  channels: InternalChannel[];
+  quiet?: {
+    enabled: boolean;
+    start?: string;
+    end?: string;
+    timezone?: string;
+  };
+  types?: Record<string, boolean>;
+}
+
+interface NotificationTemplate {
+  id: string;
+  title: string;
+  body: string;
+  channels?: InternalChannel[];
+  priority?: NotificationPriority;
+}
+
+interface NotificationDeliveryStatus {
+  notificationId: string;
+  status: 'sent' | 'delivered' | 'failed';
+  deliveredAt?: Date;
+  channel: InternalChannel;
+  events: unknown[];
+}
+
+interface NotificationMetrics {
+  sent: number;
+  failed: number;
+  pending: number;
+  delivered: number;
+  opened: number;
+  clicked: number;
+  byChannel: Record<InternalChannel, { sent: number; failed: number }>;
+}
+
+interface BulkNotificationRequest {
+  notifications: Notification[];
+  batchSize?: number;
+  delayMs?: number;
+}
+
+interface BulkNotificationResult {
+  totalSent: number;
+  totalFailed: number;
+  totalQueued: number;
+  results: NotificationResult[];
+  duration: number;
+}
+
+interface NotificationHistory {
+  id: string;
+  userId: string;
+  title: string;
+  body: string;
+  channel: InternalChannel;
+  status: 'sent' | 'failed';
+  sentAt: Date;
+  type?: string;
+}
+
+type NotificationChannel = InternalChannel;
 
 // EventEmitter and webpush imported when push notification channel is implemented
 import { createHash } from 'crypto';
@@ -53,7 +138,7 @@ const NOTIFICATION_RATE_LIMIT_DURATION = parseInt(
 /**
  * Concrete implementation of NotificationService
  */
-export class NotificationService implements INotificationService {
+export class NotificationService {
   private readonly eventBus: IEventBus;
   private readonly logger: ILogger;
   private readonly cache?: ICacheService;
@@ -198,7 +283,7 @@ export class NotificationService implements INotificationService {
 
           results.push({
             success: false,
-            error: error.message,
+            error: (error as Error).message,
             channels: [channel],
           });
         }
@@ -237,7 +322,7 @@ export class NotificationService implements INotificationService {
 
       return {
         success: false,
-        error: error.message,
+        error: (error as Error).message,
         channels: [],
       };
     }
@@ -269,7 +354,7 @@ export class NotificationService implements INotificationService {
 
         // Send batch in parallel
         const batchResults = await Promise.allSettled(
-          batch.map((notification) => this.send(notification))
+          batch.map(notification => this.send(notification))
         );
 
         // Collect results
@@ -287,15 +372,15 @@ export class NotificationService implements INotificationService {
 
         // Delay between batches
         if (i + batchSize < notifications.length) {
-          await new Promise((resolve) => setTimeout(resolve, delayBetweenBatches));
+          await new Promise(resolve => setTimeout(resolve, delayBetweenBatches));
         }
       }
     }
 
     // Calculate summary
-    const successful = results.filter((r) => r.success).length;
-    const failed = results.filter((r) => !r.success).length;
-    const queued = results.filter((r) => r.queued).length;
+    const successful = results.filter(r => r.success).length;
+    const failed = results.filter(r => !r.success).length;
+    const queued = results.filter(r => r.queued).length;
 
     return {
       totalSent: successful,
@@ -316,23 +401,18 @@ export class NotificationService implements INotificationService {
     }
 
     // Get from memory store
-    let preferences = this.userPreferences.get(userId);
-
-    if (!preferences) {
-      // Return default preferences
-      preferences = {
-        userId,
-        enabled: true,
-        channels: ['email', 'push', 'inApp'],
-        quiet: {
-          enabled: false,
-          start: '22:00',
-          end: '08:00',
-          timezone: 'UTC',
-        },
-        types: {},
-      };
-    }
+    const preferences: NotificationPreferences = this.userPreferences.get(userId) ?? {
+      userId,
+      enabled: true,
+      channels: ['email', 'push', 'inApp'],
+      quiet: {
+        enabled: false,
+        start: '22:00',
+        end: '08:00',
+        timezone: 'UTC',
+      },
+      types: {},
+    };
 
     // Cache preferences
     if (this.cache) {
@@ -388,7 +468,7 @@ export class NotificationService implements INotificationService {
       notificationId,
       status: 'delivered',
       deliveredAt: new Date(),
-      channel: 'email',
+      channel: 'email' as InternalChannel,
       events: [],
     };
   }
@@ -428,7 +508,7 @@ export class NotificationService implements INotificationService {
   async getMetrics(): Promise<NotificationMetrics> {
     let pending = 0;
     if (this.queueService) {
-      const queue = this.queueService.getQueue(NOTIFICATION_QUEUE);
+      const queue = (this.queueService as any).getQueue(NOTIFICATION_QUEUE);
       if (queue) {
         pending = (await queue.getWaitingCount()) + (await queue.getActiveCount());
       }
@@ -442,7 +522,7 @@ export class NotificationService implements INotificationService {
 
   async retryFailed(): Promise<void> {
     if (this.queueService) {
-      const queue = this.queueService.getQueue(NOTIFICATION_QUEUE);
+      const queue = (this.queueService as any).getQueue(NOTIFICATION_QUEUE);
       if (queue) {
         const failed = await queue.getFailed();
         for (const job of failed) {
@@ -455,7 +535,7 @@ export class NotificationService implements INotificationService {
 
   async clearQueue(): Promise<void> {
     if (this.queueService) {
-      const queue = this.queueService.getQueue(NOTIFICATION_QUEUE);
+      const queue = (this.queueService as any).getQueue(NOTIFICATION_QUEUE);
       if (queue) {
         await queue.obliterate({ force: true });
         this.logger.info('Notification queue cleared');
@@ -475,12 +555,12 @@ export class NotificationService implements INotificationService {
     if (this.emailService) {
       const emailSvc = this.emailService;
       this.channelHandlers.set('email', {
-        send: async (notification) => {
-          const result = await emailSvc.send({
+        send: async notification => {
+          const result = await emailSvc.sendEmail({
             to: notification.email || '',
             subject: notification.title,
-            text: notification.body,
-            html: notification.data?.html,
+            body: notification.body,
+            html: notification.data?.html as string | undefined,
           });
 
           return {
@@ -497,7 +577,7 @@ export class NotificationService implements INotificationService {
 
     // Push notification handler
     this.channelHandlers.set('push', {
-      send: async (notification) => {
+      send: async notification => {
         // In production, would use web-push or FCM
         return {
           success: true,
@@ -511,7 +591,7 @@ export class NotificationService implements INotificationService {
 
     // In-app notification handler
     this.channelHandlers.set('inApp', {
-      send: async (notification) => {
+      send: async notification => {
         // Store in database/cache for retrieval by frontend
         if (this.cache) {
           await this.cache.set(
@@ -533,7 +613,7 @@ export class NotificationService implements INotificationService {
 
     // SMS handler (stub)
     this.channelHandlers.set('sms', {
-      send: async (_notification) => {
+      send: async _notification => {
         // Would integrate with Twilio or similar
         return {
           success: false,
@@ -565,16 +645,16 @@ export class NotificationService implements INotificationService {
     preferences: NotificationPreferences
   ): NotificationChannel[] {
     // Use specified channels or user preferences
-    let channels = notification.channels || preferences.channels || ['email'];
+    let channels: InternalChannel[] = notification.channels || preferences.channels || ['email'];
 
     // Check quiet hours
     if (preferences.quiet?.enabled && this.isQuietHours(preferences.quiet)) {
       // Filter out noisy channels during quiet hours
-      channels = channels.filter((c) => c === 'email' || c === 'inApp');
+      channels = channels.filter((c: InternalChannel) => c === 'email' || c === 'inApp');
     }
 
     // Sort by priority
-    return channels.sort((a, b) => {
+    return channels.sort((a: InternalChannel, b: InternalChannel) => {
       const handlerA = this.channelHandlers.get(a);
       const handlerB = this.channelHandlers.get(b);
       return (handlerA?.getPriority() || 999) - (handlerB?.getPriority() || 999);
@@ -801,7 +881,7 @@ export class NotificationService implements INotificationService {
           throw new Error(result.error || 'All channels failed');
         }
       },
-      onCompleted: async (job) => {
+      onCompleted: async job => {
         this.logger.info(`[NotificationService] Notification job ${job.id} completed`);
       },
       onFailed: async (job, error) => {

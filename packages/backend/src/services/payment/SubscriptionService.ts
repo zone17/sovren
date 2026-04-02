@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * SubscriptionService Implementation
  * User Story: US-E5-026
@@ -103,19 +102,19 @@ class InMemorySubscriptionRepository implements ISubscriptionRepository {
     let results = Array.from(this.subscriptions.values());
 
     if (query.userId) {
-      results = results.filter((s) => s.userId === query.userId);
+      results = results.filter(s => s.userId === query.userId);
     }
     if (query.status) {
-      results = results.filter((s) => s.status === query.status);
+      results = results.filter(s => s.status === query.status);
     }
     if (query.planId) {
-      results = results.filter((s) => s.planId === query.planId);
+      results = results.filter(s => s.planId === query.planId);
     }
     if (query.startDate) {
-      results = results.filter((s) => s.createdAt >= query.startDate!);
+      results = results.filter(s => s.createdAt >= query.startDate!);
     }
     if (query.endDate) {
-      results = results.filter((s) => s.createdAt <= query.endDate!);
+      results = results.filter(s => s.createdAt <= query.endDate!);
     }
 
     // Sort
@@ -152,9 +151,9 @@ class InMemorySubscriptionRepository implements ISubscriptionRepository {
   }
 
   async listPlans(tier?: SubscriptionTier): Promise<SubscriptionPlan[]> {
-    let plans = Array.from(this.plans.values()).filter((p) => p.active);
+    let plans = Array.from(this.plans.values()).filter(p => p.active);
     if (tier) {
-      plans = plans.filter((p) => p.tier === tier);
+      plans = plans.filter(p => p.tier === tier);
     }
     return plans;
   }
@@ -176,7 +175,7 @@ class InMemorySubscriptionRepository implements ISubscriptionRepository {
     limit = 100
   ): Promise<SubscriptionInvoice[]> {
     return Array.from(this.invoices.values())
-      .filter((inv) => inv.subscriptionId === subscriptionId)
+      .filter(inv => inv.subscriptionId === subscriptionId)
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
       .slice(0, limit);
   }
@@ -191,7 +190,7 @@ class InMemorySubscriptionRepository implements ISubscriptionRepository {
 
   async getEventHistory(subscriptionId: string, limit = 100): Promise<SubscriptionEvent[]> {
     return this.events
-      .filter((e) => e.subscriptionId === subscriptionId)
+      .filter(e => e.subscriptionId === subscriptionId)
       .sort((a, b) => b.occurredAt.getTime() - a.occurredAt.getTime())
       .slice(0, limit);
   }
@@ -327,8 +326,11 @@ export class SubscriptionService implements ISubscriptionService {
 
       // Audit log
       await this.auditLog.log({
-        actor: { type: 'user', id: params.userId, name: 'User' },
         action: 'subscription.create',
+        entityType: 'subscription',
+        entityId: subscription.id,
+        userId: params.userId,
+        actor: { type: 'user', id: params.userId, name: 'User' },
         resource: { type: 'subscription', id: subscription.id },
         outcome: 'success',
         details: { planId: params.planId, billingInterval: params.billingInterval, isTrialing },
@@ -405,8 +407,11 @@ export class SubscriptionService implements ISubscriptionService {
     }
 
     await this.auditLog.log({
-      actor: { type: 'user', id: subscription.userId, name: 'User' },
       action: 'subscription.update',
+      entityType: 'subscription',
+      entityId: subscriptionId,
+      userId: subscription.userId,
+      actor: { type: 'user', id: subscription.userId, name: 'User' },
       resource: { type: 'subscription', id: subscriptionId },
       outcome: 'success',
       details: params,
@@ -433,8 +438,10 @@ export class SubscriptionService implements ISubscriptionService {
     await this.repository.savePlan(plan);
 
     await this.auditLog.log({
-      actor: { type: 'system', id: 'subscription-service', name: 'Subscription Service' },
       action: 'plan.create',
+      entityType: 'subscription_plan',
+      entityId: plan.id,
+      actor: { type: 'system', id: 'subscription-service', name: 'Subscription Service' },
       resource: { type: 'subscription_plan', id: plan.id },
       outcome: 'success',
       details: { tier: plan.tier, monthlyPrice: plan.monthlyPrice },
@@ -518,8 +525,11 @@ export class SubscriptionService implements ISubscriptionService {
     await this.repository.updateSubscription(subscription);
 
     await this.auditLog.log({
-      actor: { type: 'user', id: subscription.userId, name: 'User' },
       action: 'subscription.cancel',
+      entityType: 'subscription',
+      entityId: subscriptionId,
+      userId: subscription.userId,
+      actor: { type: 'user', id: subscription.userId, name: 'User' },
       resource: { type: 'subscription', id: subscriptionId },
       outcome: 'success',
       details: { immediate: options.immediate, reason: options.reason },
@@ -724,7 +734,7 @@ export class SubscriptionService implements ISubscriptionService {
     });
     const cutoffDate = new Date(Date.now() + daysAhead * 86400000);
 
-    return allSubscriptions.filter((sub) => sub.trialEndDate && sub.trialEndDate <= cutoffDate);
+    return allSubscriptions.filter(sub => sub.trialEndDate && sub.trialEndDate <= cutoffDate);
   }
 
   /**
@@ -757,16 +767,15 @@ export class SubscriptionService implements ISubscriptionService {
       invoice = await this.createProrationInvoice(subscription, proration);
 
       // Process payment
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const paymentResult = await this.paymentService.processPayment({
-        userId: subscription.userId,
-        amount: proration.amountDue,
-        currency: subscription.currency as any,
-        description: `Upgrade to ${proration.newPlan.name}`,
-        metadata: { subscriptionId, invoiceId: invoice.id },
-      });
+        invoiceId: invoice.id,
+        method: 'lightning' as any,
+        metadata: { userId: subscription.userId, subscriptionId, amount: proration.amountDue },
+      } as any);
 
       if (paymentResult.success) {
-        await this.markInvoicePaid(invoice.id, paymentResult.transactionId);
+        await this.markInvoicePaid(invoice.id, paymentResult.transactionId!);
       } else {
         throw new Error(`Payment failed: ${paymentResult.error}`);
       }
@@ -951,17 +960,16 @@ export class SubscriptionService implements ISubscriptionService {
       const invoice = await this.createInvoice(subscriptionId, InvoiceType.RENEWAL);
 
       // Process payment
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const paymentResult = await this.paymentService.processPayment({
-        userId: subscription.userId,
-        amount: invoice.totalAmount,
-        currency: subscription.currency as any,
-        description: `Subscription renewal`,
-        metadata: { subscriptionId, invoiceId: invoice.id },
-      });
+        invoiceId: invoice.id,
+        method: 'lightning' as any,
+        metadata: { userId: subscription.userId, subscriptionId, amount: invoice.totalAmount },
+      } as any);
 
       if (paymentResult.success) {
         // Mark invoice paid
-        await this.markInvoicePaid(invoice.id, paymentResult.transactionId);
+        await this.markInvoicePaid(invoice.id, paymentResult.transactionId!);
 
         // Update subscription
         subscription.lastPaymentId = paymentResult.transactionId;
@@ -1008,7 +1016,10 @@ export class SubscriptionService implements ISubscriptionService {
         return {
           subscriptionId,
           success: false,
-          error: paymentResult.error,
+          error:
+            typeof paymentResult.error === 'string'
+              ? paymentResult.error
+              : (paymentResult.error?.message ?? 'Payment failed'),
           nextBillingDate: subscription.nextBillingDate,
           retryScheduled: retryDate,
         };
@@ -1034,7 +1045,7 @@ export class SubscriptionService implements ISubscriptionService {
     });
 
     const subscriptionsToBill = dueSubscriptions.filter(
-      (sub) => sub.autoRenew && sub.nextBillingDate <= targetDate
+      sub => sub.autoRenew && sub.nextBillingDate <= targetDate
     );
 
     const results: RenewalResult[] = [];
@@ -1054,8 +1065,8 @@ export class SubscriptionService implements ISubscriptionService {
       }
     }
 
-    const successful = results.filter((r) => r.success).length;
-    const failed = results.filter((r) => !r.success).length;
+    const successful = results.filter(r => r.success).length;
+    const failed = results.filter(r => !r.success).length;
 
     return {
       totalProcessed: results.length,
@@ -1233,7 +1244,7 @@ export class SubscriptionService implements ISubscriptionService {
     subscriptionId: string,
     metricName: string,
     quantity: number,
-    timestamp?: Date
+    _timestamp?: Date
   ): Promise<void> {
     let usage = await this.repository.getCurrentUsage(subscriptionId);
 
@@ -1336,8 +1347,8 @@ export class SubscriptionService implements ISubscriptionService {
 
   async getAnalytics(
     periodType: 'day' | 'week' | 'month' | 'year',
-    startDate: Date,
-    endDate: Date
+    _startDate: Date,
+    _endDate: Date
   ): Promise<SubscriptionAnalytics[]> {
     // This would typically query aggregated analytics data
     // For now, return a single period
@@ -1659,7 +1670,7 @@ export class SubscriptionService implements ISubscriptionService {
 
     // Publish to event bus (aligned with IEventBus.publish interface)
     const domainEvent = new DomainEventBuilder()
-      .withType(eventType as DomainEventType)
+      .withType(eventType as unknown as DomainEventType)
       .withAggregateId(subscription.id)
       .withAggregateType('subscription')
       .withPayload(event)

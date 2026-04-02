@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Payment Service Factory
  * Factory implementation for payment-related services
@@ -135,6 +134,19 @@ type PaymentStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'refund
 type SubscriptionStatus = 'active' | 'paused' | 'cancelled' | 'expired';
 type RefundStatus = 'pending' | 'approved' | 'processing' | 'completed' | 'rejected';
 
+// Type stubs for interface method signatures
+type InvoiceFilter = any;
+type SubscriptionData = any;
+type Subscription = any;
+type Refund = any;
+type RefundResult = any;
+type PaymentEvent = any;
+type TimePeriod = any;
+type PaymentMetrics = any;
+type ReportFilter = any;
+type RevenueReport = any;
+type WebhookEvent = any;
+
 // Factory Implementations
 
 /**
@@ -164,7 +176,7 @@ export class InvoiceServiceFactory extends SafeServiceFactory<IInvoiceService> {
     // For now, creating a mock implementation
     return {
       async createInvoice(data: InvoiceData): Promise<Invoice> {
-        logger.info('Creating invoice', data);
+        logger.info('Creating invoice', data as unknown as Record<string, unknown>);
 
         const invoice: Invoice = {
           id: `inv_${Date.now()}`,
@@ -247,7 +259,7 @@ export class PaymentProcessingServiceFactory extends SafeServiceFactory<IPayment
     return {
       async processPayment(payment: PaymentRequest): Promise<PaymentResult> {
         try {
-          logger.info('Processing payment', payment);
+          logger.info('Processing payment', payment as unknown as Record<string, unknown>);
 
           // Verify invoice exists
           const invoice = await invoiceService.getInvoice(payment.invoiceId);
@@ -296,7 +308,10 @@ export class PaymentProcessingServiceFactory extends SafeServiceFactory<IPayment
       },
 
       async verifyPayment(paymentId: string): Promise<boolean> {
-        const results = await db.query('SELECT status FROM payments WHERE id = ?', [paymentId]);
+        const results = await db.query<{ status: string }>(
+          'SELECT status FROM payments WHERE id = ?',
+          [paymentId]
+        );
         return results.length > 0 && results[0].status === 'completed';
       },
 

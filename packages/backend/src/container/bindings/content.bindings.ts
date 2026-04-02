@@ -1,5 +1,3 @@
-// @ts-nocheck
-// TypeScript strict mode enabled
 /**
  * Content Services Binding Module
  * Registers all Phase 3 content services in the DI container
@@ -8,6 +6,15 @@
  */
 
 import type { IServiceRegistry, IServiceModule } from '../../interfaces/shared/IServiceRegistry';
+import type {
+  IContentPublishingService,
+  IContentSearchService,
+  IContentRecommendationService,
+  IContentAnalyticsService,
+  IContentVersioningService,
+  IContentCreationService,
+} from '../../interfaces/content';
+import type { IContentModerationService } from '../../interfaces/content/IContentModerationService';
 import { TYPES } from '../types';
 
 // Import service implementations
@@ -23,94 +30,113 @@ import { ContentCreationService } from '../../services/content/ContentCreationSe
  * Content Services Module
  * Phase 3: Content Management, Publishing, Search, Analytics
  * Total Services: 7
+ *
+ * Note: Service constructors have complex signatures with dependencies not fully
+ * represented in TYPES tokens (typed as Record<string, unknown>). We cast through
+ * `unknown` to bridge concrete implementations to their DI token interfaces.
  */
 export class ContentServicesModule implements IServiceModule {
   name = 'ContentServicesModule';
 
   register(registry: IServiceRegistry): void {
-    // ===========================
-    // ContentPublishingService - SCOPED
-    // ===========================
-    // Content publishing workflow (per request)
-    registry.registerSingleton(TYPES.ContentPublishingService, (container) => {
-      const contentRepo = container.resolve(TYPES.ContentRepository);
-      const eventBus = container.resolve(TYPES.EventBusService);
+    // ContentPublishingService - SINGLETON
+    registry.registerSingletonFactory(TYPES.ContentPublishingService, container => {
+      const db = container.resolve(TYPES.Database);
       const cache = container.resolve(TYPES.CacheService);
-      const logger = container.resolve(TYPES.Logger);
-
-      return new ContentPublishingService(contentRepo, eventBus, cache, logger);
+      const eventBus = container.resolve(TYPES.EventBusService);
+      const notification = container.resolveOptional(TYPES.NotificationService);
+      return new ContentPublishingService(
+        db as any,
+        cache as any,
+        eventBus as any,
+        notification as any
+      ) as unknown as IContentPublishingService;
     });
 
-    // ===========================
-    // ContentModerationService - SCOPED
-    // ===========================
-    // Content moderation and filtering (per request)
-    registry.registerSingleton(TYPES.ContentModerationService, (container) => {
-      const contentRepo = container.resolve(TYPES.ContentRepository);
+    // ContentModerationService - SINGLETON
+    registry.registerSingletonFactory(TYPES.ContentModerationService, container => {
       const auditLog = container.resolve(TYPES.AuditLogService);
-      const logger = container.resolve(TYPES.Logger);
-
-      return new ContentModerationService(contentRepo, auditLog, logger);
-    });
-
-    // ===========================
-    // ContentSearchService - SCOPED
-    // ===========================
-    // Full-text content search (per request)
-    registry.registerSingleton(TYPES.ContentSearchService, (container) => {
-      const elasticsearch = container.resolve(TYPES.ElasticsearchService);
-      const cache = container.resolve(TYPES.CacheService);
-      const logger = container.resolve(TYPES.Logger);
-
-      return new ContentSearchService(elasticsearch, cache, logger);
-    });
-
-    // ===========================
-    // ContentRecommendationService - SCOPED
-    // ===========================
-    // AI-powered content recommendations (per request)
-    registry.registerSingleton(TYPES.ContentRecommendationService, (container) => {
-      const contentRepo = container.resolve(TYPES.ContentRepository);
-      const userActivity = container.resolve(TYPES.UserActivityService);
-      const cache = container.resolve(TYPES.CacheService);
-      const logger = container.resolve(TYPES.Logger);
-
-      return new ContentRecommendationService(contentRepo, userActivity, cache, logger);
-    });
-
-    // ===========================
-    // ContentAnalyticsService - SCOPED
-    // ===========================
-    // Content analytics and metrics (per request)
-    registry.registerSingleton(TYPES.ContentAnalyticsService, (container) => {
-      const contentRepo = container.resolve(TYPES.ContentRepository);
       const eventBus = container.resolve(TYPES.EventBusService);
       const logger = container.resolve(TYPES.Logger);
-
-      return new ContentAnalyticsService(contentRepo, eventBus, logger);
+      const cache = container.resolve(TYPES.CacheService);
+      const contentRepo = container.resolveOptional(TYPES.ContentRepository);
+      return new ContentModerationService(
+        auditLog as any,
+        eventBus as any,
+        logger as any,
+        cache as any,
+        undefined as any,
+        contentRepo as any,
+        undefined as any
+      ) as unknown as IContentModerationService;
     });
 
-    // ===========================
-    // ContentVersioningService - SCOPED
-    // ===========================
-    // Content version control (per request)
-    registry.registerSingleton(TYPES.ContentVersioningService, (container) => {
-      const contentRepo = container.resolve(TYPES.ContentRepository);
+    // ContentSearchService - SINGLETON
+    registry.registerSingletonFactory(TYPES.ContentSearchService, container => {
+      const cache = container.resolve(TYPES.CacheService);
       const logger = container.resolve(TYPES.Logger);
-
-      return new ContentVersioningService(contentRepo, logger);
+      const config = container.resolve(TYPES.Config) as Record<string, any>;
+      return new ContentSearchService(
+        cache as any,
+        logger as any,
+        config as any
+      ) as unknown as IContentSearchService;
     });
 
-    // ===========================
-    // ContentCreationService - SCOPED
-    // ===========================
-    // Content creation and editing (per request)
-    registry.registerSingleton(TYPES.ContentCreationService, (container) => {
-      const contentRepo = container.resolve(TYPES.ContentRepository);
-      const validation = container.resolve(TYPES.ValidationService);
+    // ContentRecommendationService - SINGLETON
+    registry.registerSingletonFactory(TYPES.ContentRecommendationService, container => {
       const logger = container.resolve(TYPES.Logger);
+      const cache = container.resolve(TYPES.CacheService);
+      const contentRepo = container.resolveOptional(TYPES.ContentRepository);
+      const userActivity = container.resolveOptional(TYPES.UserActivityService);
+      return new ContentRecommendationService(
+        logger as any,
+        cache as any,
+        contentRepo as any,
+        undefined as any,
+        userActivity as any
+      ) as unknown as IContentRecommendationService;
+    });
 
-      return new ContentCreationService(contentRepo, validation, logger);
+    // ContentAnalyticsService - SINGLETON
+    registry.registerSingletonFactory(TYPES.ContentAnalyticsService, container => {
+      const logger = container.resolve(TYPES.Logger);
+      const cache = container.resolve(TYPES.CacheService);
+      return new ContentAnalyticsService(
+        logger as any,
+        cache as any,
+        undefined as any
+      ) as unknown as IContentAnalyticsService;
+    });
+
+    // ContentVersioningService - SINGLETON
+    registry.registerSingletonFactory(TYPES.ContentVersioningService, container => {
+      const db = container.resolve(TYPES.Database);
+      const cache = container.resolve(TYPES.CacheService);
+      const eventBus = container.resolve(TYPES.EventBusService);
+      const auditLog = container.resolve(TYPES.AuditLogService);
+      return new ContentVersioningService(
+        db as any,
+        cache as any,
+        eventBus as any,
+        auditLog as any
+      ) as unknown as IContentVersioningService;
+    });
+
+    // ContentCreationService - SINGLETON
+    registry.registerSingletonFactory(TYPES.ContentCreationService, container => {
+      const db = container.resolve(TYPES.Database);
+      const cache = container.resolve(TYPES.CacheService);
+      const eventBus = container.resolve(TYPES.EventBusService);
+      const auditLog = container.resolve(TYPES.AuditLogService);
+      const notification = container.resolveOptional(TYPES.NotificationService);
+      return new ContentCreationService(
+        db as any,
+        cache as any,
+        eventBus as any,
+        auditLog as any,
+        notification as any
+      ) as unknown as IContentCreationService;
     });
   }
 

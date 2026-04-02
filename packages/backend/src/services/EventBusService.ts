@@ -76,6 +76,26 @@ export class EventBusService implements IEventBus {
   }
 
   /**
+   * Emit a simplified event by name and optional payload.
+   * Creates a lightweight DomainEvent and delegates to publish().
+   */
+  async emit(event: string, data?: unknown): Promise<void> {
+    const domainEvent: DomainEvent = {
+      id: `evt_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`,
+      type: event as DomainEventType,
+      aggregateId: 'system',
+      aggregateType: 'system',
+      payload: data,
+      metadata: {
+        timestamp: new Date(),
+        version: '1.0.0',
+        source: 'emit',
+      },
+    };
+    await this.publish(domainEvent);
+  }
+
+  /**
    * Publish multiple events in batch
    */
   async publishBatch<T = any>(events: DomainEvent<T>[]): Promise<void> {
@@ -246,7 +266,7 @@ export class EventBusService implements IEventBus {
    * Get a specific event by ID
    */
   async getEvent(eventId: string): Promise<DomainEvent | null> {
-    const stored = this.eventStore.find((s) => s.event.id === eventId);
+    const stored = this.eventStore.find(s => s.event.id === eventId);
     return stored?.event || null;
   }
 
@@ -254,27 +274,27 @@ export class EventBusService implements IEventBus {
    * Query events with filter
    */
   async queryEvents(filter: EventFilter, limit = 100, offset = 0): Promise<DomainEvent[]> {
-    let filtered = this.eventStore.map((s) => s.event);
+    let filtered = this.eventStore.map(s => s.event);
 
     // Apply filters
     if (filter.types && filter.types.length > 0) {
-      filtered = filtered.filter((e) => filter.types!.includes(e.type));
+      filtered = filtered.filter(e => filter.types!.includes(e.type));
     }
 
     if (filter.aggregateTypes && filter.aggregateTypes.length > 0) {
-      filtered = filtered.filter((e) => filter.aggregateTypes!.includes(e.aggregateType));
+      filtered = filtered.filter(e => filter.aggregateTypes!.includes(e.aggregateType));
     }
 
     if (filter.userId) {
-      filtered = filtered.filter((e) => e.metadata.userId === filter.userId);
+      filtered = filtered.filter(e => e.metadata.userId === filter.userId);
     }
 
     if (filter.after) {
-      filtered = filtered.filter((e) => e.metadata.timestamp >= filter.after!);
+      filtered = filtered.filter(e => e.metadata.timestamp >= filter.after!);
     }
 
     if (filter.before) {
-      filtered = filtered.filter((e) => e.metadata.timestamp <= filter.before!);
+      filtered = filtered.filter(e => e.metadata.timestamp <= filter.before!);
     }
 
     // Apply pagination
@@ -330,7 +350,7 @@ export class EventBusService implements IEventBus {
    * Get active subscriptions
    */
   getActiveSubscriptions(): EventSubscription[] {
-    return Array.from(this.subscriptions.values()).map((e) => e.subscription);
+    return Array.from(this.subscriptions.values()).map(e => e.subscription);
   }
 
   /**
@@ -597,7 +617,7 @@ export class EventBusService implements IEventBus {
    * Delay helper
    */
   private delay(ms: number): Promise<void> {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       const timer = setTimeout(() => {
         this.activeTimers.delete(timer);
         resolve();

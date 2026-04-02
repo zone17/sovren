@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Shared Service Factory
  * Factory implementation for shared/utility services
@@ -63,6 +62,22 @@ export interface ICacheService {
   flush(): Promise<void>;
   getStats(): Promise<CacheStats>;
 }
+
+// Type stubs for interface method signatures
+type EmailRecipient = any;
+type BulkEmailResult = any;
+type EmailTemplate = any;
+type EmailEvent = any;
+type EmailStatsFilter = any;
+type EmailStats = any;
+type NotificationResult = any;
+type BulkNotificationResult = any;
+type NotificationChannel = any;
+type NotificationPreferences = any;
+type AuditFilter = any;
+type TimePeriod = any;
+type ComplianceReport = any;
+type EmailAttachment = any;
 
 // Type definitions
 interface EmailOptions {
@@ -164,53 +179,53 @@ export class EmailServiceFactory extends SafeServiceFactory<IEmailService> {
   async create(): Promise<IEmailService> {
     const logger = this.resolve(SHARED_SERVICE_TOKENS.Logger);
     const db = this.resolve(SHARED_SERVICE_TOKENS.Database);
-    const eventBus = this.resolve(SHARED_SERVICE_TOKENS.EventBus);
+    void this.resolve(SHARED_SERVICE_TOKENS.EventBus);
+
+    const sendEmailFn = async (options: EmailOptions): Promise<EmailResult> => {
+      try {
+        logger.info('Sending email', {
+          to: options.to,
+          subject: options.subject,
+          templateId: options.templateId,
+        });
+
+        const messageId = `msg_${Date.now()}`;
+
+        await db.execute(
+          'INSERT INTO email_logs (message_id, recipient, subject, status, sent_at) VALUES (?, ?, ?, ?, ?)',
+          [
+            messageId,
+            Array.isArray(options.to) ? options.to.join(',') : options.to,
+            options.subject,
+            'sent',
+            new Date(),
+          ]
+        );
+
+        return {
+          success: true,
+          messageId,
+          timestamp: new Date(),
+        };
+      } catch (error) {
+        logger.error('Failed to send email', error as Error);
+        return {
+          success: false,
+          error: (error as Error).message,
+          timestamp: new Date(),
+        };
+      }
+    };
 
     return {
-      async sendEmail(options: EmailOptions): Promise<EmailResult> {
-        try {
-          logger.info('Sending email', {
-            to: options.to,
-            subject: options.subject,
-            templateId: options.templateId,
-          });
-
-          // Here would be actual email sending logic (SendGrid, SES, etc.)
-          const messageId = `msg_${Date.now()}`;
-
-          // Log email event
-          await db.execute(
-            'INSERT INTO email_logs (message_id, recipient, subject, status, sent_at) VALUES (?, ?, ?, ?, ?)',
-            [
-              messageId,
-              Array.isArray(options.to) ? options.to.join(',') : options.to,
-              options.subject,
-              'sent',
-              new Date(),
-            ]
-          );
-
-          return {
-            success: true,
-            messageId,
-            timestamp: new Date(),
-          };
-        } catch (error) {
-          logger.error('Failed to send email', error as Error);
-          return {
-            success: false,
-            error: (error as Error).message,
-            timestamp: new Date(),
-          };
-        }
-      },
+      sendEmail: sendEmailFn,
 
       async sendBulkEmails(recipients: any[]): Promise<any> {
         logger.info(`Sending bulk emails to ${recipients.length} recipients`);
 
         const results = await Promise.all(
-          recipients.map((recipient) =>
-            this.sendEmail({
+          recipients.map((recipient: any) =>
+            sendEmailFn({
               to: recipient.email,
               subject: recipient.subject,
               templateId: recipient.templateId,
@@ -221,8 +236,8 @@ export class EmailServiceFactory extends SafeServiceFactory<IEmailService> {
 
         return {
           total: recipients.length,
-          successful: results.filter((r) => r.success).length,
-          failed: results.filter((r) => !r.success).length,
+          successful: results.filter((r: any) => r.success).length,
+          failed: results.filter((r: any) => !r.success).length,
           results,
         };
       },
@@ -275,54 +290,54 @@ export class NotificationServiceFactory extends SafeServiceFactory<INotification
   async create(): Promise<INotificationService> {
     const logger = this.resolve(SHARED_SERVICE_TOKENS.Logger);
     const db = this.resolve(SHARED_SERVICE_TOKENS.Database);
-    const eventBus = this.resolve(SHARED_SERVICE_TOKENS.EventBus);
+    void this.resolve(SHARED_SERVICE_TOKENS.EventBus);
     const cache = this.resolve(SHARED_SERVICE_TOKENS.CacheService);
 
-    return {
-      async sendNotification(notification: Notification): Promise<any> {
-        logger.info('Sending notification', {
-          userId: notification.userId,
-          type: notification.type,
-          channel: notification.channel,
-        });
+    const sendNotificationFn = async (notification: Notification): Promise<any> => {
+      logger.info('Sending notification', {
+        userId: notification.userId,
+        type: notification.type,
+        channel: notification.channel,
+      });
 
-        const notificationId = notification.id || `notif_${Date.now()}`;
+      const notificationId = notification.id || `notif_${Date.now()}`;
 
-        // Store notification
-        await db.execute(
-          'INSERT INTO notifications (id, user_id, type, title, message, channel, priority, data, created_at, read_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-          [
-            notificationId,
-            notification.userId,
-            notification.type,
-            notification.title,
-            notification.message,
-            notification.channel,
-            notification.priority,
-            JSON.stringify(notification.data),
-            new Date(),
-            null,
-          ]
-        );
-
-        // Update unread count in cache
-        const countKey = `unread_count:${notification.userId}`;
-        await cache.delete(countKey);
-
-        return {
-          success: true,
+      await db.execute(
+        'INSERT INTO notifications (id, user_id, type, title, message, channel, priority, data, created_at, read_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [
           notificationId,
-          timestamp: new Date(),
-        };
-      },
+          notification.userId,
+          notification.type,
+          notification.title,
+          notification.message,
+          notification.channel,
+          notification.priority,
+          JSON.stringify(notification.data),
+          new Date(),
+          null,
+        ]
+      );
+
+      const countKey = `unread_count:${notification.userId}`;
+      await cache.delete(countKey);
+
+      return {
+        success: true,
+        notificationId,
+        timestamp: new Date(),
+      };
+    };
+
+    return {
+      sendNotification: sendNotificationFn,
 
       async sendBulkNotifications(notifications: Notification[]): Promise<any> {
-        const results = await Promise.all(notifications.map((n) => this.sendNotification(n)));
+        const results = await Promise.all(notifications.map(n => sendNotificationFn(n)));
 
         return {
           total: notifications.length,
-          successful: results.filter((r) => r.success).length,
-          failed: results.filter((r) => !r.success).length,
+          successful: results.filter((r: any) => r.success).length,
+          failed: results.filter((r: any) => !r.success).length,
         };
       },
 
@@ -334,7 +349,7 @@ export class NotificationServiceFactory extends SafeServiceFactory<INotification
         return results;
       },
 
-      async updateNotificationPreferences(userId: string, preferences: any): Promise<void> {
+      async updateNotificationPreferences(userId: string, _preferences: any): Promise<void> {
         logger.info(`Updating notification preferences for user ${userId}`);
         // Update preferences in database
       },
@@ -397,9 +412,39 @@ export class AuditLogServiceFactory extends SafeServiceFactory<IAuditLogService>
     const logger = this.resolve(SHARED_SERVICE_TOKENS.Logger);
     const db = this.resolve(SHARED_SERVICE_TOKENS.Database);
 
+    const queryFn = async (filter: any): Promise<AuditEntry[]> => {
+      let query = 'SELECT * FROM audit_logs WHERE 1=1';
+      const params: any[] = [];
+
+      if (filter.userId) {
+        query += ' AND user_id = ?';
+        params.push(filter.userId);
+      }
+      if (filter.action) {
+        query += ' AND action = ?';
+        params.push(filter.action);
+      }
+      if (filter.entityType) {
+        query += ' AND entity_type = ?';
+        params.push(filter.entityType);
+      }
+      if (filter.startDate) {
+        query += ' AND timestamp >= ?';
+        params.push(filter.startDate);
+      }
+      if (filter.endDate) {
+        query += ' AND timestamp <= ?';
+        params.push(filter.endDate);
+      }
+
+      query += ' ORDER BY timestamp DESC LIMIT 1000';
+
+      return db.query<AuditEntry>(query, params);
+    };
+
     return {
       async log(entry: AuditEntry): Promise<void> {
-        logger.debug('Audit log entry', entry);
+        logger.debug('Audit log entry', entry as unknown as Record<string, unknown>);
 
         await db.execute(
           `INSERT INTO audit_logs
@@ -420,52 +465,24 @@ export class AuditLogServiceFactory extends SafeServiceFactory<IAuditLogService>
         );
       },
 
-      async query(filter: any): Promise<AuditEntry[]> {
-        let query = 'SELECT * FROM audit_logs WHERE 1=1';
-        const params: any[] = [];
-
-        if (filter.userId) {
-          query += ' AND user_id = ?';
-          params.push(filter.userId);
-        }
-        if (filter.action) {
-          query += ' AND action = ?';
-          params.push(filter.action);
-        }
-        if (filter.entityType) {
-          query += ' AND entity_type = ?';
-          params.push(filter.entityType);
-        }
-        if (filter.startDate) {
-          query += ' AND timestamp >= ?';
-          params.push(filter.startDate);
-        }
-        if (filter.endDate) {
-          query += ' AND timestamp <= ?';
-          params.push(filter.endDate);
-        }
-
-        query += ' ORDER BY timestamp DESC LIMIT 1000';
-
-        return db.query<AuditEntry>(query, params);
-      },
+      query: queryFn,
 
       async export(filter: any, format: 'json' | 'csv'): Promise<string> {
-        const entries = await this.query(filter);
+        const entries = await queryFn(filter);
 
         if (format === 'json') {
           return JSON.stringify(entries, null, 2);
         } else {
           // CSV export logic
           const headers = ['timestamp', 'userId', 'action', 'entityType', 'entityId'];
-          const rows = entries.map((e) => [
+          const rows = entries.map((e: AuditEntry) => [
             e.timestamp,
             e.userId,
             e.action,
             e.entityType,
             e.entityId,
           ]);
-          return [headers, ...rows].map((r) => r.join(',')).join('\n');
+          return [headers, ...rows].map((r: any[]) => r.join(',')).join('\n');
         }
       },
 
@@ -477,7 +494,7 @@ export class AuditLogServiceFactory extends SafeServiceFactory<IAuditLogService>
       },
 
       async purgeOldLogs(beforeDate: Date): Promise<number> {
-        const result = await db.execute('DELETE FROM audit_logs WHERE timestamp < ?', [beforeDate]);
+        await db.execute('DELETE FROM audit_logs WHERE timestamp < ?', [beforeDate]);
         logger.info(`Purged audit logs before ${beforeDate}`);
         return 0; // Would return affected rows count
       },
@@ -554,7 +571,7 @@ export class CacheServiceFactory extends SafeServiceFactory<ICacheService> {
         if (redis) {
           const keys = await redis.keys(pattern);
           if (keys.length > 0) {
-            await Promise.all(keys.map((k) => redis.del(k)));
+            await Promise.all(keys.map(k => redis.del(k)));
           }
           return keys.length;
         } else {

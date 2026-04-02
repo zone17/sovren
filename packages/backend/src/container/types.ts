@@ -36,13 +36,11 @@ import type { ISubscriptionService } from '../interfaces/payment/ISubscriptionSe
 import type { IRefundService } from '../interfaces/payment/IRefundService';
 import type { IPaymentAnalyticsService } from '../interfaces/payment/IPaymentAnalyticsService';
 import type { IWebhookService } from '../interfaces/payment/IWebhookService';
-import type { IInvoiceService } from '../factories/payment/PaymentServiceFactory';
-import type {
-  IEmailService,
-  INotificationService,
-  IAuditLogService,
-} from '../factories/shared/SharedServiceFactory';
-import type { IUserAuthenticationService } from '../factories/user/UserServiceFactory';
+import type { IInvoiceService } from '../interfaces/payment';
+import type { IEmailService } from '../interfaces/communication/IEmailService';
+import type { INotificationService } from '../interfaces/communication/INotificationService';
+import type { IAuditLogService } from '../interfaces/shared/IAuditLogService';
+import type { IUserAuthenticationService } from '../interfaces/user/IUserAuthenticationService';
 import type { ContentController } from '../controllers/content/ContentController';
 import type { UserController } from '../controllers/user/UserController';
 import type { PaymentController } from '../controllers/payment/PaymentController';

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * WellnessService
  * Work pattern CRUD, pulse check-ins, data deletion
@@ -176,19 +175,24 @@ export class WellnessService implements IWellnessService {
     const heatmap: HeatmapEntry[] = [];
     const hourCounts: Map<string, number> = new Map();
 
-    for (const row of patterns || []) {
-      const date = new Date(row.date);
+    for (const rawRow of patterns || []) {
+      const row = rawRow as Record<string, unknown>;
+      const date = new Date(row.date as string);
       const dayOfWeek = (date.getDay() + 6) % 7; // 0=Monday
       const totalMins =
-        (row.content_time_mins || 0) +
-        (row.engagement_time_mins || 0) +
-        (row.management_time_mins || 0);
+        ((row.content_time_mins as number) || 0) +
+        ((row.engagement_time_mins as number) || 0) +
+        ((row.management_time_mins as number) || 0);
 
       if (totalMins === 0) continue;
 
       // Distribute activity across hours based on first/last activity
-      const firstHour = row.first_activity_at ? new Date(row.first_activity_at).getHours() : 9;
-      const lastHour = row.last_activity_at ? new Date(row.last_activity_at).getHours() : 17;
+      const firstHour = row.first_activity_at
+        ? new Date(row.first_activity_at as string).getHours()
+        : 9;
+      const lastHour = row.last_activity_at
+        ? new Date(row.last_activity_at as string).getHours()
+        : 17;
       const hourSpan = Math.max(1, lastHour - firstHour + 1);
       const minsPerHour = totalMins / hourSpan;
 
@@ -223,12 +227,12 @@ export class WellnessService implements IWellnessService {
     const avgHourTotal = hourTotals.reduce((s, v) => s + v, 0) / 24;
     const peakHours = hourTotals
       .map((v, i) => ({ hour: i, total: v }))
-      .filter((h) => h.total > avgHourTotal * 1.5)
-      .map((h) => h.hour);
+      .filter(h => h.total > avgHourTotal * 1.5)
+      .map(h => h.hour);
     const quietHours = hourTotals
       .map((v, i) => ({ hour: i, total: v }))
-      .filter((h) => h.total === 0)
-      .map((h) => h.hour);
+      .filter(h => h.total === 0)
+      .map(h => h.hour);
 
     return { period, heatmap, peak_hours: peakHours, quiet_hours: quietHours };
   }
@@ -257,13 +261,14 @@ export class WellnessService implements IWellnessService {
       throw error;
     }
 
+    const row = data as Record<string, unknown>;
     return {
-      id: data.id,
-      energy: data.energy,
-      motivation: data.motivation,
-      stress: data.stress,
-      composite_score: parseFloat(data.composite_score) || compositeScore,
-      created_at: data.created_at,
+      id: row.id as string,
+      energy: row.energy as number,
+      motivation: row.motivation as number,
+      stress: row.stress as number,
+      composite_score: parseFloat(String(row.composite_score)) || compositeScore,
+      created_at: row.created_at as string,
     };
   }
 
@@ -347,14 +352,17 @@ export class WellnessService implements IWellnessService {
       total,
       limit: boundedLimit,
       offset: boundedOffset,
-    };
+    } as unknown as PulseHistory;
   }
 
   async deletePulseHistory(creatorId: string): Promise<number> {
-    const { count, error } = await this.db
+    const { error, count } = (await this.db
       .from('wellness_snapshots')
-      .delete({ count: 'exact' })
-      .eq('creator_id', creatorId);
+      .delete()
+      .eq('creator_id', creatorId)) as unknown as {
+      error: { message: string } | null;
+      count: number | null;
+    };
 
     if (error) {
       this.logger.error('Failed to delete pulse history', { creatorId, error });
@@ -379,11 +387,12 @@ export class WellnessService implements IWellnessService {
     }
 
     // RPC returns JSONB with per-table counts
+    const rpcData = data as Record<string, unknown> | null;
     const results: Record<string, number> = {
-      wellness_snapshots: data?.wellness_snapshots ?? 0,
-      creator_work_patterns: data?.creator_work_patterns ?? 0,
-      burnout_risk_history: data?.burnout_risk_history ?? 0,
-      creator_boundaries: data?.creator_boundaries ?? 0,
+      wellness_snapshots: (rpcData?.wellness_snapshots as number) ?? 0,
+      creator_work_patterns: (rpcData?.creator_work_patterns as number) ?? 0,
+      burnout_risk_history: (rpcData?.burnout_risk_history as number) ?? 0,
+      creator_boundaries: (rpcData?.creator_boundaries as number) ?? 0,
     };
 
     this.logger.info('Atomically deleted all wellness data', { creatorId, results });
@@ -401,7 +410,8 @@ export class WellnessService implements IWellnessService {
     }
 
     // K-anonymity: require minimum 10 participants
-    if (data.sample_size < 10) {
+    const benchData = data as Record<string, unknown>;
+    if ((benchData.sample_size as number) < 10) {
       return null;
     }
 
@@ -412,29 +422,30 @@ export class WellnessService implements IWellnessService {
       this.logger.warn('Benchmark RPC failed, returning work-hours only', { error: rpcError });
     }
 
-    const row = Array.isArray(benchmarkData) ? benchmarkData[0] : benchmarkData;
-    const hasSufficientData = row && row.sample_count > 0;
+    const rawRow = Array.isArray(benchmarkData) ? benchmarkData[0] : benchmarkData;
+    const row = rawRow as Record<string, unknown> | null;
+    const hasSufficientData = row && (row.sample_count as number) > 0;
 
     return {
-      average_weekly_hours: parseFloat(data.avg_weekly_hours),
+      average_weekly_hours: parseFloat(String(benchData.avg_weekly_hours)),
       average_composite_score: hasSufficientData
-        ? Math.round(parseFloat(row.avg_score) * 10) / 10
+        ? Math.round(parseFloat(String(row.avg_score)) * 10) / 10
         : 0,
       percentile_breakdowns: {
         work_hours: {
-          p25: parseFloat(data.p25_hours),
-          p50: parseFloat(data.p50_hours),
-          p75: parseFloat(data.p75_hours),
+          p25: parseFloat(String(benchData.p25_hours)),
+          p50: parseFloat(String(benchData.p50_hours)),
+          p75: parseFloat(String(benchData.p75_hours)),
         },
         composite_score: hasSufficientData
           ? {
-              p25: Math.round(parseFloat(row.p25_score) * 10) / 10,
-              p50: Math.round(parseFloat(row.p50_score) * 10) / 10,
-              p75: Math.round(parseFloat(row.p75_score) * 10) / 10,
+              p25: Math.round(parseFloat(String(row.p25_score)) * 10) / 10,
+              p50: Math.round(parseFloat(String(row.p50_score)) * 10) / 10,
+              p75: Math.round(parseFloat(String(row.p75_score)) * 10) / 10,
             }
           : { p25: 0, p50: 0, p75: 0 },
       },
-      sample_size: data.sample_size,
+      sample_size: benchData.sample_size as number,
       updated_at: new Date().toISOString(),
     };
   }

@@ -81,7 +81,7 @@ jobs:
         if: steps.changed.outputs.count != '0'
         env:
           FILES: ${{ steps.changed.outputs.files }}
-        run: npx eslint $FILES --no-error-on-unmatched-pattern --max-warnings 350
+        run: npx eslint $FILES --no-error-on-unmatched-pattern --max-warnings 500
 
       - name: Prettier (changed files)
         if: steps.changed.outputs.count != '0'

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import type {
   IContentVersioningService,
   ContentVersion,
@@ -58,6 +57,18 @@ export class ContentVersioningService implements IContentVersioningService {
   }
 
   /**
+   * Extract rows from a db.query result, handling both { rows: [...] } (pg-style)
+   * and direct array returns (IDatabase interface).
+   */
+  private extractRows(result: unknown): Array<Record<string, unknown>> {
+    if (Array.isArray(result)) return result as Array<Record<string, unknown>>;
+    if (result && typeof result === 'object' && 'rows' in result) {
+      return (result as { rows: Array<Record<string, unknown>> }).rows;
+    }
+    return [];
+  }
+
+  /**
    * Creates a new version of the content
    * Implements efficient delta storage with periodic snapshots
    *
@@ -81,8 +92,8 @@ export class ContentVersioningService implements IContentVersioningService {
         [content.id]
       );
 
-      const nextVersionNumber =
-        latestVersionResult.rows.length > 0 ? latestVersionResult.rows[0].version_number + 1 : 1;
+      const rows = this.extractRows(latestVersionResult);
+      const nextVersionNumber = rows.length > 0 ? (rows[0].version_number as number) + 1 : 1;
 
       // Determine if this should be a snapshot or delta
       const isSnapshot = nextVersionNumber % this.snapshotInterval === 0;
@@ -160,12 +171,15 @@ export class ContentVersioningService implements IContentVersioningService {
       });
 
       // Emit event
-      await this.eventBus.emit('content.version.created', {
-        versionId: version.id,
-        contentId: content.id,
-        versionNumber: nextVersionNumber,
-        timestamp: Date.now(),
-      });
+      await (this.eventBus as unknown as { emit(e: string, d: unknown): Promise<void> }).emit(
+        'content.version.created',
+        {
+          versionId: version.id,
+          contentId: content.id,
+          versionNumber: nextVersionNumber,
+          timestamp: Date.now(),
+        }
+      );
 
       // Check if we need to prune old versions
       await this.autoPruneVersions(content.id);
@@ -202,7 +216,7 @@ export class ContentVersioningService implements IContentVersioningService {
         [contentId]
       );
 
-      const versions = result.rows.map((row) => this.mapRowToVersion(row));
+      const versions = this.extractRows(result).map(row => this.mapRowToVersion(row));
 
       this.logger.debug('Retrieved versions', {
         contentId,
@@ -240,13 +254,14 @@ export class ContentVersioningService implements IContentVersioningService {
         versionId,
       ]);
 
-      if (result.rows.length === 0) {
+      const versionRows = this.extractRows(result);
+      if (versionRows.length === 0) {
         throw new ServiceError('Version not found', {
           context: { versionId },
         });
       }
 
-      const version = this.mapRowToVersion(result.rows[0]);
+      const version = this.mapRowToVersion(versionRows[0]);
 
       // Cache it
       await this.cache.set(`${this.cachePrefix}${versionId}`, version, this.cacheTTL);
@@ -324,12 +339,15 @@ export class ContentVersioningService implements IContentVersioningService {
       });
 
       // Emit event
-      await this.eventBus.emit('content.reverted', {
-        contentId,
-        versionId,
-        newVersionNumber: newVersion.versionNumber,
-        timestamp: Date.now(),
-      });
+      await (this.eventBus as unknown as { emit(e: string, d: unknown): Promise<void> }).emit(
+        'content.reverted',
+        {
+          contentId,
+          versionId,
+          newVersionNumber: newVersion.versionNumber,
+          timestamp: Date.now(),
+        }
+      );
 
       // Invalidate cache
       await this.cache.delete(`content:${contentId}`);
@@ -478,8 +496,8 @@ export class ContentVersioningService implements IContentVersioningService {
       // Identify versions to delete (excluding snapshots)
       const toDelete = allVersions
         .slice(keepLast)
-        .filter((v) => v.versionNumber % this.snapshotInterval !== 0)
-        .map((v) => v.id);
+        .filter(v => v.versionNumber % this.snapshotInterval !== 0)
+        .map(v => v.id);
 
       if (toDelete.length === 0) {
         this.logger.debug('No versions to prune (all are snapshots or recent)');
@@ -600,13 +618,14 @@ export class ContentVersioningService implements IContentVersioningService {
       [contentId, targetVersion]
     );
 
-    if (snapshotResult.rows.length === 0) {
+    const snapRows = this.extractRows(snapshotResult);
+    if (snapRows.length === 0) {
       throw new ServiceError('No snapshot found for reconstruction', {
         context: { contentId, targetVersion },
       });
     }
 
-    const snapshotVersion = this.mapRowToVersion(snapshotResult.rows[0]);
+    const snapshotVersion = this.mapRowToVersion(snapRows[0]);
     let content = snapshotVersion.snapshot!;
 
     // If target is the snapshot, we're done
@@ -624,7 +643,7 @@ export class ContentVersioningService implements IContentVersioningService {
       [contentId, snapshotVersion.versionNumber, targetVersion]
     );
 
-    for (const row of deltasResult.rows) {
+    for (const row of this.extractRows(deltasResult)) {
       const version = this.mapRowToVersion(row);
       if (version.delta) {
         content = this.applyDelta(content, version.delta);

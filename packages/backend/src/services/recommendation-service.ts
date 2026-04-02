@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 🤖 RECOMMENDATION SERVICE
  *
@@ -68,7 +67,7 @@ export class RecommendationService {
         .select('creator_id')
         .eq('follower_id', params.user_id);
 
-      const followedCreatorIds = following?.map((f) => f.creator_id) || [];
+      const followedCreatorIds = following?.map(f => f.creator_id) || [];
 
       if (followedCreatorIds.length === 0) {
         // New user - return popular creators
@@ -82,7 +81,7 @@ export class RecommendationService {
         .in('id', followedCreatorIds);
 
       const userCategories = new Set<string>();
-      followedCreators?.forEach((creator) => {
+      followedCreators?.forEach(creator => {
         creator.categories?.forEach((cat: string) => userCategories.add(cat));
       });
 
@@ -96,7 +95,7 @@ export class RecommendationService {
         .neq('follower_id', params.user_id)
         .limit(100);
 
-      const similarUserIds = similarUsers?.map((u) => u.follower_id) || [];
+      const similarUserIds = similarUsers?.map(u => u.follower_id) || [];
 
       // Get creators followed by similar users
       const { data: recommendedCreators } = await supabase
@@ -110,9 +109,9 @@ export class RecommendationService {
       const creatorScores = new Map<string, number>();
       const creatorData = new Map<string, Record<string, unknown>>();
 
-      recommendedCreators?.forEach((rec) => {
+      recommendedCreators?.forEach(rec => {
         const creatorId = rec.creator_id;
-        const creator = rec.creators;
+        const creator = rec.creators as unknown as Record<string, unknown>;
 
         if (!creatorScores.has(creatorId)) {
           creatorScores.set(creatorId, 0);
@@ -123,9 +122,9 @@ export class RecommendationService {
         creatorScores.set(creatorId, (creatorScores.get(creatorId) ?? 0) + 1);
 
         // Bonus score for matching categories
-        const matchingCategories = creator.categories?.filter((cat: string) =>
-          userCategories.has(cat)
-        );
+        const creatorObj = creator as Record<string, unknown>;
+        const categories = (creatorObj?.categories as string[]) || [];
+        const matchingCategories = categories.filter((cat: string) => userCategories.has(cat));
         creatorScores.set(
           creatorId,
           (creatorScores.get(creatorId) ?? 0) + matchingCategories.length * 0.5
@@ -137,21 +136,21 @@ export class RecommendationService {
         .sort(([, a], [, b]) => b - a)
         .slice(0, params.limit)
         .map(([creatorId, score]) => {
-          const creator = creatorData.get(creatorId);
+          const creator = creatorData.get(creatorId) ?? {};
           return {
-            id: creator.id,
-            name: creator.name,
-            avatar_url: creator.avatar_url,
-            bio: creator.bio,
-            subscriber_count: creator.subscriber_count || 0,
-            content_count: creator.content_count || 0,
-            categories: creator.categories || [],
-            average_rating: creator.average_rating || 0,
+            id: creator.id as string,
+            name: creator.name as string,
+            avatar_url: creator.avatar_url as string,
+            bio: creator.bio as string,
+            subscriber_count: (creator.subscriber_count as number) || 0,
+            content_count: (creator.content_count as number) || 0,
+            categories: (creator.categories as string[]) || [],
+            average_rating: (creator.average_rating as number) || 0,
             similarity_score: score,
           };
         });
 
-      return sortedCreators;
+      return sortedCreators as unknown as Creator[];
     } catch (error) {
       this.logger.error('Failed to get creator recommendations', error);
       throw error;
@@ -175,7 +174,7 @@ export class RecommendationService {
         .order('viewed_at', { ascending: false })
         .limit(50);
 
-      const viewedContentIds = viewHistory?.map((v) => v.content_id) || [];
+      const viewedContentIds = viewHistory?.map(v => v.content_id) || [];
 
       if (viewedContentIds.length === 0) {
         // New user - return trending content
@@ -186,11 +185,15 @@ export class RecommendationService {
       const categoryCount = new Map<string, number>();
       const tagCount = new Map<string, number>();
 
-      viewHistory?.forEach((view) => {
-        const content = view.content;
+      viewHistory?.forEach(view => {
+        const content = view.content as unknown as Record<string, unknown> | null;
         if (content) {
-          categoryCount.set(content.category, (categoryCount.get(content.category) || 0) + 1);
-          content.tags?.forEach((tag: string) => {
+          const category = content.category as string;
+          if (category) {
+            categoryCount.set(category, (categoryCount.get(category) || 0) + 1);
+          }
+          const tags = content.tags as string[] | undefined;
+          tags?.forEach((tag: string) => {
             tagCount.set(tag, (tagCount.get(tag) || 0) + 1);
           });
         }
@@ -227,7 +230,7 @@ export class RecommendationService {
       if (error) throw error;
 
       // Score and rank recommendations
-      const recommendations = (data || []).map((content) => {
+      const recommendations = (data || []).map(content => {
         let score = content.engagement_score || 0;
 
         // Boost score for matching categories
@@ -335,7 +338,7 @@ export class RecommendationService {
 
       if (error) throw error;
 
-      return (data || []).map((creator) => ({
+      return (data || []).map(creator => ({
         id: creator.id,
         name: creator.name,
         avatar_url: creator.avatar_url,
@@ -365,7 +368,7 @@ export class RecommendationService {
 
       if (error) throw error;
 
-      return (data || []).map((content) => ({
+      return (data || []).map(content => ({
         id: content.id,
         title: content.title,
         description: content.description,
@@ -394,7 +397,7 @@ export class RecommendationService {
     let score = 0;
 
     // Category match
-    if (userCategories.includes(content.category)) {
+    if (content.category && userCategories.includes(content.category)) {
       score += 30;
       if (userCategories[0] === content.category) {
         score += 20; // Top category bonus

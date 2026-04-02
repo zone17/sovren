@@ -1,6 +1,5 @@
-// @ts-nocheck
 /**
- * 🤖 **AI-ENHANCED FEATURES SERVICE**
+ * AI-ENHANCED FEATURES SERVICE
  *
  * Elite implementation of US-103 through US-106
  * Complete AI-powered content enhancement system
@@ -97,9 +96,9 @@ export class AIEnhancedFeaturesService {
         modelVersion: '1.0.0',
         lastUpdated: new Date(),
       };
-    } catch (error) {
+    } catch (error: unknown) {
       throw new ContentTaggingError(
-        `Failed to generate content tags: ${error.message}`,
+        `Failed to generate content tags: ${(error as Error).message}`,
         'TAGGING_ERROR',
         contentId,
         { contentText: contentText.substring(0, 100) }
@@ -139,9 +138,9 @@ export class AIEnhancedFeaturesService {
 
       // Trigger learning algorithm update (async)
       this.updateTaggingModel(contentId, feedback).catch(console.error);
-    } catch (error) {
+    } catch (error: unknown) {
       throw new ContentTaggingError(
-        `Failed to process tag feedback: ${error.message}`,
+        `Failed to process tag feedback: ${(error as Error).message}`,
         'FEEDBACK_ERROR',
         contentId,
         { userId, feedback }
@@ -173,9 +172,9 @@ export class AIEnhancedFeaturesService {
       await this.storeContentTopics(contentId, hierarchicalTopics);
 
       return hierarchicalTopics;
-    } catch (error) {
+    } catch (error: unknown) {
       throw new TopicExtractionError(
-        `Failed to extract topics: ${error.message}`,
+        `Failed to extract topics: ${(error as Error).message}`,
         'EXTRACTION_ERROR',
         contentId,
         'hybrid'
@@ -202,9 +201,9 @@ export class AIEnhancedFeaturesService {
       if (error) throw error;
 
       return this.calculateTrendMetrics(data);
-    } catch (error) {
+    } catch (error: unknown) {
       throw new TopicExtractionError(
-        `Failed to analyze topic trends: ${error.message}`,
+        `Failed to analyze topic trends: ${(error as Error).message}`,
         'TREND_ANALYSIS_ERROR',
         topicId,
         'trend_analysis'
@@ -238,9 +237,9 @@ export class AIEnhancedFeaturesService {
       await this.storeClusters(clustersWithQuality);
 
       return clustersWithQuality;
-    } catch (error) {
+    } catch (error: unknown) {
       throw new ContentClusteringError(
-        `Failed to perform clustering: ${error.message}`,
+        `Failed to perform clustering: ${(error as Error).message}`,
         'CLUSTERING_ERROR',
         'kmeans'
       );
@@ -263,9 +262,9 @@ export class AIEnhancedFeaturesService {
       // Update if changed
       if (this.hasClusterAssignmentChanged(existingAssignments, newAssignments)) {
         await this.updateClusterAssignments(contentId, newAssignments);
-        await this.updateClusterQualityMetrics(newAssignments.map((a) => a.clusterId));
+        await this.updateClusterQualityMetrics(newAssignments.map(a => a.clusterId));
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to update clusters in real-time:', error);
     }
   }
@@ -318,9 +317,9 @@ export class AIEnhancedFeaturesService {
       await this.storeRelatedContentSuggestions(contentId, rankedSuggestions);
 
       return rankedSuggestions.slice(0, relatedConfig.maxSuggestions);
-    } catch (error) {
+    } catch (error: unknown) {
       throw new RelatedContentError(
-        `Failed to generate related content suggestions: ${error.message}`,
+        `Failed to generate related content suggestions: ${(error as Error).message}`,
         'SUGGESTION_ERROR',
         contentId,
         'hybrid'
@@ -347,9 +346,9 @@ export class AIEnhancedFeaturesService {
       if (error) throw error;
 
       return this.calculateRelatedContentMetrics(data);
-    } catch (error) {
+    } catch (error: unknown) {
       throw new RelatedContentError(
-        `Failed to analyze related content performance: ${error.message}`,
+        `Failed to analyze related content performance: ${(error as Error).message}`,
         'ANALYTICS_ERROR',
         contentId,
         'performance_analysis'
@@ -375,20 +374,20 @@ export class AIEnhancedFeaturesService {
     };
   }
 
-  private async extractAITags(text: string, config: AutoTaggingConfig): Promise<any[]> {
+  private async extractAITags(_text: string, _config: AutoTaggingConfig): Promise<any[]> {
     // AI-based tag extraction using OpenAI or local models
     // Implementation would connect to AI services
     return [];
   }
 
-  private async extractRuleBasedTags(text: string, config: AutoTaggingConfig): Promise<any[]> {
+  private async extractRuleBasedTags(_text: string, _config: AutoTaggingConfig): Promise<any[]> {
     // Rule-based tag extraction
     return [];
   }
 
   private async extractCollaborativeTags(
-    contentId: string,
-    config: AutoTaggingConfig
+    _contentId: string,
+    _config: AutoTaggingConfig
   ): Promise<any[]> {
     // Collaborative filtering for tags
     return [];
@@ -397,13 +396,13 @@ export class AIEnhancedFeaturesService {
   private consolidateTags(tags: any[], config: AutoTaggingConfig): any[] {
     // Consolidate and rank tags
     return tags
-      .filter((tag) => tag.confidence >= config.confidenceThreshold)
+      .filter(tag => tag.confidence >= config.confidenceThreshold)
       .slice(0, config.maxTagsPerCategory);
   }
 
   private async storeContentTags(contentId: string, tags: any[]): Promise<void> {
     // Store tags in database
-    const tagRecords = tags.map((tag) => ({
+    const tagRecords = tags.map(tag => ({
       content_id: contentId,
       tag: tag.tag,
       confidence: tag.confidence,
@@ -432,7 +431,9 @@ export class AIEnhancedFeaturesService {
     // Clean up cache if it gets too large
     if (this.cache.size > this.config.cacheConfig!.maxSize) {
       const oldestKey = this.cache.keys().next().value;
-      this.cache.delete(oldestKey);
+      if (oldestKey !== undefined) {
+        this.cache.delete(oldestKey);
+      }
     }
   }
 
@@ -497,7 +498,7 @@ export class AIEnhancedFeaturesService {
     };
   }
 
-  private async runTopicExtraction(text: string, config: any): Promise<ExtractedTopic[]> {
+  private async runTopicExtraction(_text: string, _config: any): Promise<ExtractedTopic[]> {
     // Implementation placeholder - would run actual topic extraction
     return [
       {
@@ -556,10 +557,10 @@ export class AIEnhancedFeaturesService {
 
   private async extractContentFeatures(contentIds: string[]): Promise<any[]> {
     // Implementation placeholder - would extract features from content
-    return contentIds.map((id) => ({ contentId: id, features: [] }));
+    return contentIds.map(id => ({ contentId: id, features: [] }));
   }
 
-  private async runClusteringAlgorithm(features: any[], config: any): Promise<ContentCluster[]> {
+  private async runClusteringAlgorithm(_features: any[], _config: any): Promise<ContentCluster[]> {
     // Implementation placeholder - would run actual clustering
     return [];
   }
@@ -574,24 +575,24 @@ export class AIEnhancedFeaturesService {
     console.log(`Storing ${clusters.length} clusters`);
   }
 
-  private async getContentClusterAssignments(contentId: string): Promise<any[]> {
+  private async getContentClusterAssignments(_contentId: string): Promise<any[]> {
     // Implementation placeholder
     return [];
   }
 
-  private async recalculateClusterAssignments(contentId: string): Promise<any[]> {
+  private async recalculateClusterAssignments(_contentId: string): Promise<any[]> {
     // Implementation placeholder
     return [];
   }
 
-  private hasClusterAssignmentChanged(existing: any[], newAssignments: any[]): boolean {
+  private hasClusterAssignmentChanged(_existing: any[], _newAssignments: any[]): boolean {
     // Implementation placeholder
     return false;
   }
 
-  private async updateClusterAssignments(contentId: string, assignments: any[]): Promise<void> {
+  private async updateClusterAssignments(_contentId: string, _assignments: any[]): Promise<void> {
     // Implementation placeholder
-    console.log(`Updating cluster assignments for content ${contentId}`);
+    console.log(`Updating cluster assignments for content ${_contentId}`);
   }
 
   private async updateClusterQualityMetrics(clusterIds: string[]): Promise<void> {
@@ -647,34 +648,34 @@ export class AIEnhancedFeaturesService {
   }
 
   private async generateContentBasedSuggestions(
-    contentId: string,
-    config: any
+    _contentId: string,
+    _config: any
   ): Promise<RelatedContentSuggestion[]> {
     // Implementation placeholder
     return [];
   }
 
   private async generateCollaborativeFilteringSuggestions(
-    contentId: string,
-    userId?: string,
-    config?: any
+    _contentId: string,
+    _userId?: string,
+    _config?: any
   ): Promise<RelatedContentSuggestion[]> {
     // Implementation placeholder
     return [];
   }
 
   private async generateBehavioralSuggestions(
-    contentId: string,
-    userId?: string,
-    config?: any
+    _contentId: string,
+    _userId?: string,
+    _config?: any
   ): Promise<RelatedContentSuggestion[]> {
     // Implementation placeholder
     return [];
   }
 
   private async generateGraphBasedSuggestions(
-    contentId: string,
-    config: any
+    _contentId: string,
+    _config: any
   ): Promise<RelatedContentSuggestion[]> {
     // Implementation placeholder
     return [];
@@ -682,7 +683,7 @@ export class AIEnhancedFeaturesService {
 
   private async rankAndDiversifySuggestions(
     suggestions: any[],
-    config: any
+    _config: any
   ): Promise<RelatedContentSuggestion[]> {
     // Implementation placeholder
     return suggestions;
@@ -728,16 +729,16 @@ export class AIEnhancedFeaturesService {
 
       if (error) throw error;
 
-      return data.map((tag) => ({
+      return data.map(tag => ({
         tag: tag.tag,
         confidence: tag.confidence,
         category: tag.category,
         source: tag.source,
         reasoning: tag.reasoning,
       }));
-    } catch (error) {
+    } catch (error: unknown) {
       throw new ContentTaggingError(
-        `Failed to get content tags: ${error.message}`,
+        `Failed to get content tags: ${(error as Error).message}`,
         'TAG_RETRIEVAL_ERROR',
         contentId
       );
@@ -747,7 +748,7 @@ export class AIEnhancedFeaturesService {
   /**
    * Get topic hierarchy from root topic
    */
-  async getTopicHierarchy(rootTopic?: string, maxDepth: number = 3): Promise<ExtractedTopic[]> {
+  async getTopicHierarchy(rootTopic?: string, _maxDepth: number = 3): Promise<ExtractedTopic[]> {
     try {
       let query = this.supabase.from('extracted_topics').select('*').eq('is_active', true);
 
@@ -762,7 +763,7 @@ export class AIEnhancedFeaturesService {
       if (error) throw error;
 
       // TODO: Implement recursive hierarchy building with maxDepth
-      return data.map((topic) => ({
+      return data.map(topic => ({
         id: topic.id,
         name: topic.name,
         displayName: topic.display_name,
@@ -775,9 +776,9 @@ export class AIEnhancedFeaturesService {
         isActive: topic.is_active,
         createdAt: new Date(topic.created_at),
       }));
-    } catch (error) {
+    } catch (error: unknown) {
       throw new TopicExtractionError(
-        `Failed to get topic hierarchy: ${error.message}`,
+        `Failed to get topic hierarchy: ${(error as Error).message}`,
         'HIERARCHY_ERROR',
         rootTopic || 'root',
         'hierarchy'
@@ -817,7 +818,7 @@ export class AIEnhancedFeaturesService {
 
       if (error) throw error;
 
-      return data.map((cluster) => ({
+      return data.map(cluster => ({
         id: cluster.id,
         name: cluster.name,
         description: cluster.description,
@@ -847,9 +848,9 @@ export class AIEnhancedFeaturesService {
         lastUpdated: new Date(cluster.last_updated),
         isActive: cluster.is_active,
       }));
-    } catch (error) {
+    } catch (error: unknown) {
       throw new ContentClusteringError(
-        `Failed to get clusters: ${error.message}`,
+        `Failed to get clusters: ${(error as Error).message}`,
         'CLUSTER_RETRIEVAL_ERROR',
         'unknown'
       );
@@ -879,15 +880,15 @@ export class AIEnhancedFeaturesService {
           totalContentCount: data.reduce((sum, item) => sum + (item.content_count || 0), 0),
           avgQualityScore:
             data.reduce((sum, item) => sum + (item.silhouette_score || 0), 0) / data.length,
-          engagementTrend: data.map((item) => ({
+          engagementTrend: data.map(item => ({
             timestamp: item.timestamp,
             engagement: item.avg_engagement_rate,
           })),
         },
       };
-    } catch (error) {
+    } catch (error: unknown) {
       throw new ContentClusteringError(
-        `Failed to get cluster analytics: ${error.message}`,
+        `Failed to get cluster analytics: ${(error as Error).message}`,
         'ANALYTICS_ERROR',
         'analytics'
       );
@@ -921,9 +922,9 @@ export class AIEnhancedFeaturesService {
       this.updateSuggestionMetrics(interaction.suggestionId, interaction.interactionType).catch(
         console.error
       );
-    } catch (error) {
+    } catch (error: unknown) {
       throw new RelatedContentError(
-        `Failed to track interaction: ${error.message}`,
+        `Failed to track interaction: ${(error as Error).message}`,
         'TRACKING_ERROR',
         interaction.contentId,
         'interaction_tracking'
@@ -987,11 +988,11 @@ export class AIEnhancedFeaturesService {
               );
               break;
           }
-        } catch (error) {
+        } catch (error: unknown) {
           results.errors.push({
             enhancement,
-            error: error.message,
-            code: error.code || 'UNKNOWN_ERROR',
+            error: (error as Error).message,
+            code: (error as any).code || 'UNKNOWN_ERROR',
           });
         }
       }
@@ -1009,8 +1010,8 @@ export class AIEnhancedFeaturesService {
       };
 
       return results;
-    } catch (error) {
-      throw new Error(`Content enhancement failed: ${error.message}`);
+    } catch (error: unknown) {
+      throw new Error(`Content enhancement failed: ${(error as Error).message}`);
     }
   }
 
@@ -1037,8 +1038,8 @@ export class AIEnhancedFeaturesService {
       }
 
       return services;
-    } catch (error) {
-      throw new Error(`Health check failed: ${error.message}`);
+    } catch (error: unknown) {
+      throw new Error(`Health check failed: ${(error as Error).message}`);
     }
   }
 

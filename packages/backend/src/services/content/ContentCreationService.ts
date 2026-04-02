@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   IContentCreationService,
   ContentDraft,
@@ -146,12 +145,15 @@ export class ContentCreationService implements IContentCreationService {
       });
 
       // Emit event
-      await this.eventBus.emit('content.created', {
-        contentId: content.id,
-        authorId: content.authorId,
-        title: content.title,
-        timestamp: Date.now(),
-      });
+      await (this.eventBus as unknown as { emit(e: string, d: unknown): Promise<void> }).emit(
+        'content.created',
+        {
+          contentId: content.id,
+          authorId: content.authorId,
+          title: content.title,
+          timestamp: Date.now(),
+        }
+      );
 
       // Notify collaborators if any
       if (draft.collaborators && draft.collaborators.length > 0) {
@@ -255,11 +257,14 @@ export class ContentCreationService implements IContentCreationService {
       });
 
       // Emit event
-      await this.eventBus.emit('media.uploaded', {
-        assetId: mediaAsset.id,
-        filename: mediaAsset.filename,
-        timestamp: Date.now(),
-      });
+      await (this.eventBus as unknown as { emit(e: string, d: unknown): Promise<void> }).emit(
+        'media.uploaded',
+        {
+          assetId: mediaAsset.id,
+          filename: mediaAsset.filename,
+          timestamp: Date.now(),
+        }
+      );
 
       this.logger.info('Media uploaded successfully', {
         assetId: mediaAsset.id,
@@ -289,7 +294,7 @@ export class ContentCreationService implements IContentCreationService {
       if (validation.error) {
         return {
           isValid: false,
-          errors: validation.error.details.map((detail) => ({
+          errors: validation.error.details.map(detail => ({
             field: detail.path.join('.'),
             message: detail.message,
             type: detail.type,
@@ -307,7 +312,7 @@ export class ContentCreationService implements IContentCreationService {
           'SELECT id FROM content WHERE slug = $1 AND id != $2',
           [slug, draft.id || '']
         );
-        if (existing.rows.length > 0) {
+        if ((existing as unknown[]).length > 0) {
           errors.push({
             field: 'title',
             message: 'A content with similar title already exists',
@@ -385,10 +390,13 @@ export class ContentCreationService implements IContentCreationService {
       );
 
       // Emit autosave event
-      await this.eventBus.emit('content.autosaved', {
-        contentId,
-        timestamp: Date.now(),
-      });
+      await (this.eventBus as unknown as { emit(e: string, d: unknown): Promise<void> }).emit(
+        'content.autosaved',
+        {
+          contentId,
+          timestamp: Date.now(),
+        }
+      );
 
       this.logger.debug('Content auto-saved', { contentId });
     } catch (error) {
@@ -422,7 +430,7 @@ export class ContentCreationService implements IContentCreationService {
     while (true) {
       const existing = await this.db.query('SELECT id FROM content WHERE slug = $1', [slug]);
 
-      if (existing.rows.length === 0) {
+      if ((existing as unknown[]).length === 0) {
         break;
       }
 
@@ -486,13 +494,14 @@ export class ContentCreationService implements IContentCreationService {
 
     const result = await this.db.query('SELECT * FROM content WHERE id = $1', [contentId]);
 
-    if (result.rows.length === 0) {
+    const contentRows = result as unknown as Array<Record<string, unknown>>;
+    if (contentRows.length === 0) {
       throw new ServiceError('Content not found', {
         context: { contentId },
       });
     }
 
-    const content = result.rows[0];
+    const content = contentRows[0] as unknown as Content;
     await this.cache.set(`content:${contentId}`, content, 300);
     return content;
   }
@@ -550,11 +559,14 @@ export class ContentCreationService implements IContentCreationService {
     await this.cache.delete(`content:${contentId}`);
 
     // Emit event
-    await this.eventBus.emit('content.updated', {
-      contentId,
-      updatedFields: Object.keys(updates),
-      timestamp: Date.now(),
-    });
+    await (this.eventBus as unknown as { emit(e: string, d: unknown): Promise<void> }).emit(
+      'content.updated',
+      {
+        contentId,
+        updatedFields: Object.keys(updates),
+        timestamp: Date.now(),
+      }
+    );
 
     return this.getContent(contentId);
   }
@@ -572,10 +584,13 @@ export class ContentCreationService implements IContentCreationService {
     await this.cache.delete(`content:${contentId}`);
 
     // Emit event
-    await this.eventBus.emit('content.deleted', {
-      contentId,
-      timestamp: Date.now(),
-    });
+    await (this.eventBus as unknown as { emit(e: string, d: unknown): Promise<void> }).emit(
+      'content.deleted',
+      {
+        contentId,
+        timestamp: Date.now(),
+      }
+    );
 
     this.logger.info('Content deleted', { contentId });
   }
@@ -652,7 +667,7 @@ export class ContentCreationService implements IContentCreationService {
    */
   private async notifyCollaborators(content: Content, collaborators: string[]): Promise<void> {
     for (const collaboratorId of collaborators) {
-      await this.notification.send({
+      await (this.notification as unknown as { send(d: unknown): Promise<void> }).send({
         recipientId: collaboratorId,
         type: 'content_collaboration',
         title: 'New collaborative content',

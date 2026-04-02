@@ -19,7 +19,7 @@
  */
 
 import crypto from 'crypto';
-import { injectable, inject } from 'inversify';
+
 import type { IPaymentAnalyticsService } from '../../interfaces/payment/IPaymentAnalyticsService';
 import type { IPaymentProcessingService } from '../../interfaces/payment/IPaymentProcessingService';
 import type { ICurrencyService } from '../../interfaces/payment/ICurrencyService';
@@ -70,7 +70,7 @@ export const TYPES = {
  * PaymentAnalyticsService
  * Provides comprehensive payment analytics and insights
  */
-@injectable()
+
 export class PaymentAnalyticsService implements IPaymentAnalyticsService {
   private baseCurrency: Currency = 'BTC' as Currency;
   private realtimeSubscriptions = new Map<
@@ -94,11 +94,11 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
   private exports = new Map<string, AnalyticsExportResult>();
 
   constructor(
-    @inject(TYPES.IPaymentProcessingService) private paymentService: IPaymentProcessingService,
-    @inject(TYPES.ICurrencyService) private currencyService: ICurrencyService,
-    @inject(TYPES.ICacheService) private cacheService: ICacheService,
-    @inject(TYPES.IEventBus) private eventBus: IEventBus,
-    @inject(TYPES.ILogger) private logger: ILogger
+    private paymentService: IPaymentProcessingService,
+    private currencyService: ICurrencyService,
+    private cacheService: ICacheService,
+    private eventBus: IEventBus,
+    private logger: ILogger
   ) {
     this.logger.info('PaymentAnalyticsService initialized');
     this.subscribeToPaymentEvents();

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Invoice Expiration Service
  *
@@ -15,7 +14,28 @@
 
 import { SupabaseClient } from '@supabase/supabase-js';
 import { PaymentStateMachine } from './PaymentStateMachine';
-import { PaymentState, Payment } from '@shared/types';
+import { PaymentState } from '@shared/types';
+
+/**
+ * Local interface matching actual Supabase payments table row shape (snake_case).
+ * The shared Payment type uses camelCase which doesn't match DB columns.
+ */
+interface PaymentRow {
+  id: string;
+  amount: number;
+  currency: string;
+  state: string;
+  user_id: string;
+  post_id: string;
+  description?: string;
+  expires_at: number;
+  payment_hash?: string;
+  retry_count?: number;
+  last_error?: string;
+  metadata?: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
 
 /**
  * Email Service Interface for sending expiration notifications
@@ -361,7 +381,7 @@ export class InvoiceExpirationService {
    * @private
    * @returns Promise resolving to array of expired payments
    */
-  private async findExpiredPayments(): Promise<Payment[]> {
+  private async findExpiredPayments(): Promise<PaymentRow[]> {
     const now = Math.floor(Date.now() / 1000); // Unix timestamp in seconds
 
     const { data, error } = await this.supabase
@@ -378,7 +398,7 @@ export class InvoiceExpirationService {
       throw new Error(`Failed to query expired payments: ${error.message}`);
     }
 
-    return (data || []) as Payment[];
+    return (data || []) as PaymentRow[];
   }
 
   /**
@@ -388,7 +408,7 @@ export class InvoiceExpirationService {
    * @param payments Array of expired payments to process
    * @returns Processing results
    */
-  private async processExpiredPayments(payments: Payment[]): Promise<{
+  private async processExpiredPayments(payments: PaymentRow[]): Promise<{
     expiredCount: number;
     failedCount: number;
     errors: Array<{ paymentId: string; error: string }>;
@@ -428,7 +448,7 @@ export class InvoiceExpirationService {
    * @param payment Payment to expire
    * @returns Promise that resolves when expiration is complete
    */
-  private async expirePayment(payment: Payment): Promise<void> {
+  private async expirePayment(payment: PaymentRow): Promise<void> {
     const now = Math.floor(Date.now() / 1000);
     const expiredDurationSeconds = now - payment.expires_at;
 
@@ -547,7 +567,7 @@ export class InvoiceExpirationService {
       throw new Error(`Payment is not in PENDING state: ${payment.state}`);
     }
 
-    await this.expirePayment(payment as Payment);
+    await this.expirePayment(payment as PaymentRow);
 
     this.logger?.info('Payment manually expired', { paymentId });
   }

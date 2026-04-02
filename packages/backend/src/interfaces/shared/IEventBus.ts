@@ -135,6 +135,12 @@ export interface IEventBus {
   publish<T = any>(event: DomainEvent<T>): Promise<void>;
   publishBatch<T = any>(events: DomainEvent<T>[]): Promise<void>;
 
+  /**
+   * Alias for publish — used by notification and content services.
+   * Accepts a string event name + payload for simpler event dispatch.
+   */
+  emit(event: string, data?: unknown): Promise<void>;
+
   // Subscribing
   subscribe(eventType: DomainEventType, handler: EventHandler): string;
   subscribeToMany(eventTypes: DomainEventType[], handler: EventHandler): string;
