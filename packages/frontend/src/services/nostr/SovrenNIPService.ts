@@ -1,5 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
 /**
  * 🎯 SOVREN NIP SERVICE
  *
@@ -167,7 +165,9 @@ export class SovrenNIPService {
   ): Promise<SovrenEventResult<CreatorProfileExtendedEvent>> {
     try {
       // Get current user's public key
-      const pubkey = await this.keyManager.getPublicKey();
+      const pubkey = await (
+        this.keyManager as unknown as { getPublicKey(): Promise<string | null> }
+      ).getPublicKey();
       if (!pubkey) {
         throw new Error('No public key available. User must be authenticated.');
       }
@@ -176,7 +176,7 @@ export class SovrenNIPService {
       const template = buildCreatorProfileExtendedTemplate(pubkey, profile);
 
       // Publish event
-      const publishResult = await this.publisher.publishEvent(template);
+      const publishResult = await this.publisher.createAndPublish(template);
 
       if (!publishResult.success) {
         return {
@@ -187,7 +187,7 @@ export class SovrenNIPService {
 
       // Cache the event
       if (this.config.enableCache) {
-        await this.cache.add(publishResult.event, {
+        await this.cache.set(publishResult.event, {
           ttl: this.config.cacheTTL,
         });
       }
@@ -253,7 +253,7 @@ export class SovrenNIPService {
 
       // Cache the event
       if (this.config.enableCache) {
-        await this.cache.add(latestEvent, {
+        await this.cache.set(latestEvent, {
           ttl: this.config.cacheTTL,
         });
       }
@@ -287,13 +287,15 @@ export class SovrenNIPService {
     settings: ContentMonetizationContent
   ): Promise<SovrenEventResult<ContentMonetizationEvent>> {
     try {
-      const pubkey = await this.keyManager.getPublicKey();
+      const pubkey = await (
+        this.keyManager as unknown as { getPublicKey(): Promise<string | null> }
+      ).getPublicKey();
       if (!pubkey) {
         throw new Error('No public key available');
       }
 
       const template = buildContentMonetizationTemplate(pubkey, contentId, settings);
-      const publishResult = await this.publisher.publishEvent(template);
+      const publishResult = await this.publisher.createAndPublish(template);
 
       if (!publishResult.success) {
         return {
@@ -303,7 +305,7 @@ export class SovrenNIPService {
       }
 
       if (this.config.enableCache) {
-        await this.cache.add(publishResult.event, {
+        await this.cache.set(publishResult.event, {
           ttl: this.config.cacheTTL,
         });
       }
@@ -384,13 +386,15 @@ export class SovrenNIPService {
     analyticsData: AnalyticsEventContent
   ): Promise<SovrenEventResult<AnalyticsEvent>> {
     try {
-      const pubkey = await this.keyManager.getPublicKey();
+      const pubkey = await (
+        this.keyManager as unknown as { getPublicKey(): Promise<string | null> }
+      ).getPublicKey();
       if (!pubkey) {
         throw new Error('No public key available');
       }
 
       const template = buildAnalyticsEventTemplate(pubkey, analyticsId, analyticsData);
-      const publishResult = await this.publisher.publishEvent(template);
+      const publishResult = await this.publisher.createAndPublish(template);
 
       if (!publishResult.success) {
         return {
@@ -401,7 +405,7 @@ export class SovrenNIPService {
 
       // Cache analytics with shorter TTL (analytics are time-sensitive)
       if (this.config.enableCache) {
-        await this.cache.add(publishResult.event, {
+        await this.cache.set(publishResult.event, {
           ttl: 1800, // 30 minutes
         });
       }
@@ -506,13 +510,15 @@ export class SovrenNIPService {
     subscriptionInfo: SubscriptionManagementContent
   ): Promise<SovrenEventResult<SubscriptionManagementEvent>> {
     try {
-      const pubkey = await this.keyManager.getPublicKey();
+      const pubkey = await (
+        this.keyManager as unknown as { getPublicKey(): Promise<string | null> }
+      ).getPublicKey();
       if (!pubkey) {
         throw new Error('No public key available');
       }
 
       const template = buildSubscriptionManagementTemplate(pubkey, subscriptionInfo);
-      const publishResult = await this.publisher.publishEvent(template);
+      const publishResult = await this.publisher.createAndPublish(template);
 
       if (!publishResult.success) {
         return {
@@ -522,7 +528,7 @@ export class SovrenNIPService {
       }
 
       if (this.config.enableCache) {
-        await this.cache.add(publishResult.event, {
+        await this.cache.set(publishResult.event, {
           ttl: this.config.cacheTTL,
         });
       }
@@ -597,14 +603,16 @@ export class SovrenNIPService {
     recommendations: ContentRecommendationsContent
   ): Promise<SovrenEventResult<ContentRecommendationsEvent>> {
     try {
-      const pubkey = await this.keyManager.getPublicKey();
+      const pubkey = await (
+        this.keyManager as unknown as { getPublicKey(): Promise<string | null> }
+      ).getPublicKey();
       if (!pubkey) {
         throw new Error('No public key available');
       }
 
       const template = buildContentRecommendationsTemplate(pubkey, targetPubkey, recommendations);
 
-      const publishResult = await this.publisher.publishEvent(template);
+      const publishResult = await this.publisher.createAndPublish(template);
 
       if (!publishResult.success) {
         return {
@@ -619,7 +627,7 @@ export class SovrenNIPService {
           recommendations.expiresAt - Math.floor(Date.now() / 1000),
           this.config.cacheTTL
         );
-        await this.cache.add(publishResult.event, { ttl });
+        await this.cache.set(publishResult.event, { ttl });
       }
 
       return {
@@ -702,24 +710,20 @@ export class SovrenNIPService {
       }, this.config.fetchTimeout);
 
       try {
-        const subscription = this.relayPool.subscribe([filter], {
-          onEvent: event => {
-            events.push(event);
-          },
-          onEose: () => {
-            clearTimeout(timeout);
-            resolve(events);
-          },
-          onError: error => {
-            clearTimeout(timeout);
-            reject(error);
-          },
+        const subscription = this.relayPool.subscribe([filter], (event: NostrEvent) => {
+          events.push(event);
         });
 
+        // Handle completion via timeout (SimplePool doesn't have onEose/onError callbacks)
         // Auto-cleanup after timeout
         setTimeout(() => {
           try {
-            this.relayPool.unsubscribe(subscription.id);
+            if (
+              subscription &&
+              typeof (subscription as unknown as Record<string, unknown>).close === 'function'
+            ) {
+              (subscription as unknown as { close(): void }).close();
+            }
           } catch (error) {
             // Ignore cleanup errors
           }
