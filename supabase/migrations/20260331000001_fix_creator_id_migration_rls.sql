@@ -96,13 +96,15 @@ END $$;
 CREATE INDEX IF NOT EXISTS idx_platform_connections_creator
   ON platform_connections(creator_id);
 
--- Step 3: Recreate RLS policies with UUID comparison
+-- Step 3: Recreate RLS policies with UUID comparison (idempotent — drop first)
 -- (creator_id is now UUID, auth.uid() returns UUID — no cast needed)
+DROP POLICY IF EXISTS "platform_connections_service_role" ON platform_connections;
 CREATE POLICY "platform_connections_service_role"
   ON platform_connections
   FOR ALL
   USING (auth.role() = 'service_role');
 
+DROP POLICY IF EXISTS "platform_connections_select_own" ON platform_connections;
 CREATE POLICY "platform_connections_select_own"
   ON platform_connections
   FOR SELECT
