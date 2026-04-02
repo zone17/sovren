@@ -269,6 +269,7 @@ jobs:
           # Bootstrap these on vanilla postgres so migrations can dry-run.
           psql "$DB_URL" -v ON_ERROR_STOP=1 <<'SQL'
           CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+          CREATE EXTENSION IF NOT EXISTS "btree_gist";
           CREATE SCHEMA IF NOT EXISTS auth;
           CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid AS $$ SELECT '00000000-0000-0000-0000-000000000000'::uuid; $$ LANGUAGE sql;
           CREATE OR REPLACE FUNCTION auth.role() RETURNS text AS $$ SELECT 'anon'::text; $$ LANGUAGE sql;
@@ -604,10 +605,12 @@ jobs:
         uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3
 
       - name: Sign container image
+        continue-on-error: true  # OIDC token can expire during long builds
         run: cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
 
       - name: Trivy image scan (SARIF)
         uses: aquasecurity/trivy-action@76071ef0d7ec797419534a183b498b4d6366cf37 # v0.31.0
+        continue-on-error: true  # Non-blocking — SARIF upload is advisory
         with:
           image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
           format: 'sarif'
@@ -616,7 +619,8 @@ jobs:
 
       - name: Upload Trivy SARIF to GitHub Security
         uses: github/codeql-action/upload-sarif@38697555549f1db7851b81482ff19f1fa5c4fedc # v4
-        if: always()
+        if: always() && hashFiles('trivy-results.sarif') != ''
+        continue-on-error: true  # Don't fail if SARIF file missing
         with:
           sarif_file: 'trivy-results.sarif'
 

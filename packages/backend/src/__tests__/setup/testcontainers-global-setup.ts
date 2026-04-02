@@ -51,6 +51,9 @@ export async function setup(): Promise<void> {
   await client.connect();
 
   await client.query(`
+    -- Extensions required by migrations
+    CREATE EXTENSION IF NOT EXISTS "btree_gist";
+
     -- Supabase auth schema stubs
     CREATE SCHEMA IF NOT EXISTS auth;
     CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid AS $$
@@ -83,7 +86,7 @@ export async function setup(): Promise<void> {
     );
   }
   const migrationFiles = readdirSync(migrationsDir)
-    .filter((f) => f.endsWith('.sql') && /^\d{14}_/.test(f))
+    .filter(f => f.endsWith('.sql') && /^\d{14}_/.test(f))
     .sort();
 
   for (const file of migrationFiles) {
