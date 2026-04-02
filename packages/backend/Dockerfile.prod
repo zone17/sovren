@@ -71,7 +71,8 @@ LABEL org.opencontainers.image.title="Sovren Backend Production" \
       org.opencontainers.image.vendor="Sovren" \
       org.opencontainers.image.licenses="MIT"
 
-RUN apk add --no-cache dumb-init curl ca-certificates && \
+RUN apk upgrade --no-cache && \
+    apk add --no-cache dumb-init curl ca-certificates && \
     rm -rf /tmp/* /var/cache/apk/*
 
 RUN addgroup -g 1001 -S nodejs && \
