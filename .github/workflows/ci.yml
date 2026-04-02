@@ -1022,12 +1022,25 @@ jobs:
             [e2e]="${{ needs.e2e.result }}"
             [docker]="${{ needs.docker.result }}"
           )
+
+          # On main, cancellation is caused by concurrency groups when multiple
+          # PRs merge in quick succession — not by code failures. Treat cancelled
+          # as acceptable on main so CI Complete doesn't block the merge queue.
+          IS_MAIN="${{ github.ref == 'refs/heads/main' }}"
+
           FAILED=0
           for job in "${!results[@]}"; do
             result="${results[$job]}"
-            if [[ "$result" == "failure" || "$result" == "cancelled" ]]; then
+            if [[ "$result" == "failure" ]]; then
               echo "::error::CI failed — job '$job' reported: $result"
               FAILED=1
+            elif [[ "$result" == "cancelled" ]]; then
+              if [[ "$IS_MAIN" == "true" ]]; then
+                echo "::warning::Job '$job' was cancelled (concurrency on main) — not treated as failure"
+              else
+                echo "::error::CI failed — job '$job' reported: $result"
+                FAILED=1
+              fi
             fi
           done
           if [[ "$FAILED" == "1" ]]; then
