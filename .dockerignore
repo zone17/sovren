@@ -78,5 +78,4 @@ packages/frontend/src
 packages/frontend/public
 packages/frontend/e2e
 packages/frontend/dist
-packages/testing/src
-packages/testing/dist
+packages/testing

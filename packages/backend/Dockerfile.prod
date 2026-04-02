@@ -21,7 +21,6 @@ COPY scripts/fix-express-path-to-regexp.js scripts/
 COPY packages/backend/package.json packages/backend/
 COPY packages/shared/package.json packages/shared/
 COPY packages/frontend/package.json packages/frontend/
-COPY packages/testing/package.json packages/testing/
 
 # Install all workspace deps (npm ci resolves the full workspace lockfile;
 # --workspace scoping can skip transitive hoisted deps like @types/node,
@@ -40,7 +39,6 @@ COPY --from=deps /app/package.json ./
 COPY --from=deps /app/packages/backend/package.json ./packages/backend/
 COPY --from=deps /app/packages/shared/package.json ./packages/shared/
 COPY --from=deps /app/packages/frontend/package.json ./packages/frontend/
-COPY --from=deps /app/packages/testing/package.json ./packages/testing/
 
 # Copy backend source and config for build
 COPY packages/backend/tsconfig*.json packages/backend/
