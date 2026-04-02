@@ -4,7 +4,14 @@
  * EPIC-008: Content Shield (US-E8-004b)
  */
 
-import type { ContentAlert, AlertDetail, AlertStatus, Pagination, MatchLevel, HashType } from '@shared/types/provenance';
+import type {
+  ContentAlert,
+  AlertDetail,
+  AlertStatus,
+  Pagination,
+  MatchLevel,
+  HashType,
+} from '@shared/types/provenance';
 import { ALERT_STATUS_TRANSITIONS } from '@shared/types/provenance';
 import type { IAlertService } from '../../interfaces/provenance/IAlertService';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
@@ -54,13 +61,13 @@ export class AlertService implements IAlertService {
       original_content_id: row.original_content_id as string,
       original_title: (row.original_title as string) || 'Untitled',
       detected_copy_url: row.detected_copy_url as string,
-      detected_author_pubkey: (row.detected_author_pubkey as string | null),
+      detected_author_pubkey: row.detected_author_pubkey as string | null,
       similarity_score: parseFloat(row.similarity_score as string),
       match_level: row.match_level as MatchLevel,
       hash_type: row.hash_type as HashType,
       status: row.status as AlertStatus,
       detected_at: row.detected_at as string,
-      relay: (row.relay as string | null),
+      relay: row.relay as string | null,
     }));
 
     return {

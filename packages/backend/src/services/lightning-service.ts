@@ -262,7 +262,7 @@ export class LightningService extends EventEmitter {
 
     const lookup = this.persistence
       .getInvoiceById(id)
-      .then((result) => {
+      .then(result => {
         this.pendingLookups.delete(id);
         if (result) {
           this.invoiceCache.set(result.id, result);
@@ -272,7 +272,7 @@ export class LightningService extends EventEmitter {
         }
         return result;
       })
-      .catch((err) => {
+      .catch(err => {
         this.pendingLookups.delete(id);
         throw err;
       });
@@ -793,7 +793,7 @@ export class LightningService extends EventEmitter {
       const totalAmount = payments.reduce((sum, payment) => sum + payment.amount, 0);
       const averageAmount = payments.length > 0 ? totalAmount / payments.length : 0;
       const successRate = invoices.length > 0 ? (payments.length / invoices.length) * 100 : 0;
-      const activeInvoices = invoices.filter((inv) => inv.status === 'pending').length;
+      const activeInvoices = invoices.filter(inv => inv.status === 'pending').length;
 
       return {
         success: true,
