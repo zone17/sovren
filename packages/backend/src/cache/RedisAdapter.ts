@@ -107,9 +107,7 @@ export class RedisAdapter implements CacheAdapter {
     this.config = {
       host: config.host ?? process.env.REDIS_HOST ?? 'localhost',
       port: config.port ?? parseInt(process.env.REDIS_PORT ?? '6379', 10),
-      ...(config.password || process.env.REDIS_PASSWORD
-        ? { password: config.password ?? process.env.REDIS_PASSWORD }
-        : {}),
+      password: config.password ?? process.env.REDIS_PASSWORD ?? '',
       db: config.db ?? parseInt(process.env.REDIS_DB ?? '0', 10),
       enableCluster: config.enableCluster ?? false,
       clusterNodes: config.clusterNodes ?? [],

@@ -22,6 +22,7 @@ import { businessMetrics } from '../../middleware/deployment-monitoring';
 import { Currency } from '../../types/currency';
 import { AnalyticsPeriod } from '../../types/payment-analytics';
 import { SubscriptionTier } from '../../types/subscription';
+import type { CreateRefundRequest } from '../../types/refund';
 
 /**
  * Zod schema for refund request validation.
@@ -199,7 +200,7 @@ export class PaymentController {
       }
     }
 
-    const refund = await this.refundService.createRefund(refundData);
+    const refund = await this.refundService.createRefund(refundData as CreateRefundRequest);
 
     res.status(201).json(createApiResponse(req, refund, startTime));
   });

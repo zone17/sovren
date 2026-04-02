@@ -56,14 +56,15 @@ export class UserController {
     const userId = req.params.id;
     const updates = req.body.preferences;
 
-    const updated = await this.preferencesService.updatePreferences(userId, updates);
+    const updated = await this.preferencesService.updatePreferences({ userId, ...updates });
     res.status(200).json(createApiResponse(req, updated, startTime));
   });
 
   public getActivity = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const startTime = Date.now();
     const userId = req.params.id;
-    const activity = await this.activityService.getUserActivity(userId, {
+    const activity = await this.activityService.getActivityFeed({
+      userId,
       limit: parseInt(req.query.limit as string) || 20,
       offset: parseInt(req.query.offset as string) || 0,
     });
@@ -75,7 +76,7 @@ export class UserController {
     const startTime = Date.now();
     const { followerId, followingId } = req.body;
 
-    const result = await this.relationshipService.followUser(followerId, followingId);
+    const result = await this.relationshipService.follow({ userId: followerId, targetUserId: followingId });
     res.status(201).json(createApiResponse(req, result, startTime));
   });
 
@@ -83,16 +84,18 @@ export class UserController {
     const startTime = Date.now();
     const { followerId, followingId } = req.body;
 
-    const result = await this.relationshipService.unfollowUser(followerId, followingId);
+    const result = await this.relationshipService.unfollow({ userId: followerId, targetUserId: followingId });
     res.status(200).json(createApiResponse(req, result, startTime));
   });
 
   public getUserAnalytics = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const startTime = Date.now();
     const userId = req.params.id;
-    const analytics = await this.analyticsService.getUserAnalytics(userId, {
-      startDate: req.query.start ? new Date(req.query.start as string) : undefined,
-      endDate: req.query.end ? new Date(req.query.end as string) : undefined,
+    const analytics = await this.analyticsService.queryAnalytics({
+      timeRange: {
+        startDate: req.query.start ? new Date(req.query.start as string) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+        endDate: req.query.end ? new Date(req.query.end as string) : new Date(),
+      },
     });
 
     res.status(200).json(createApiResponse(req, analytics, startTime));
@@ -105,7 +108,7 @@ export class UserController {
     const targetId = req.params.id;
     const userId = getAuthUser(req).nostr_pubkey;
 
-    const result = await this.relationshipService.block({ userId, targetId });
+    const result = await this.relationshipService.block({ userId, targetUserId: targetId });
     res.status(201).json(createApiResponse(req, result, startTime));
   });
 
@@ -114,7 +117,7 @@ export class UserController {
     const targetId = req.params.id;
     const userId = getAuthUser(req).nostr_pubkey;
 
-    const result = await this.relationshipService.unblock({ userId, targetId });
+    const result = await this.relationshipService.unblock({ userId, targetUserId: targetId });
     res.status(200).json(createApiResponse(req, result, startTime));
   });
 
@@ -123,7 +126,7 @@ export class UserController {
     const targetId = req.params.id;
     const userId = getAuthUser(req).nostr_pubkey;
 
-    const result = await this.relationshipService.mute({ userId, targetId });
+    const result = await this.relationshipService.mute({ userId, targetUserId: targetId });
     res.status(201).json(createApiResponse(req, result, startTime));
   });
 
@@ -132,7 +135,7 @@ export class UserController {
     const targetId = req.params.id;
     const userId = getAuthUser(req).nostr_pubkey;
 
-    const result = await this.relationshipService.unmute({ userId, targetId });
+    const result = await this.relationshipService.unmute({ userId, targetUserId: targetId });
     res.status(200).json(createApiResponse(req, result, startTime));
   });
 
@@ -141,8 +144,9 @@ export class UserController {
     const userId = req.params.id;
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 20;
+    const offset = (page - 1) * limit;
 
-    const result = await this.relationshipService.getFollowers(userId, { page, limit });
+    const result = await this.relationshipService.getFollowers(userId, { offset, limit });
     res.status(200).json(createApiResponse(req, result, startTime));
   });
 
@@ -151,8 +155,9 @@ export class UserController {
     const userId = req.params.id;
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 20;
+    const offset = (page - 1) * limit;
 
-    const result = await this.relationshipService.getFollowing(userId, { page, limit });
+    const result = await this.relationshipService.getFollowing(userId, { offset, limit });
     res.status(200).json(createApiResponse(req, result, startTime));
   });
 
