@@ -50,8 +50,12 @@ COPY packages/shared/tsconfig*.json packages/shared/
 COPY packages/shared/src/ packages/shared/src/
 
 # Build the backend
+# Create a local node_modules/@types symlink so tsc finds typeRoots
+# (tsconfig.json sets typeRoots to ./node_modules/@types but npm hoists to /app/node_modules)
 WORKDIR /app/packages/backend
-RUN npm run build
+RUN mkdir -p node_modules && \
+    ln -s /app/node_modules/@types node_modules/@types && \
+    npm run build
 
 # Prune devDependencies from the root (where npm workspaces hoists everything)
 WORKDIR /app
