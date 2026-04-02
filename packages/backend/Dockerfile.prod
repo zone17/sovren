@@ -1,17 +1,30 @@
 # Production Dockerfile for Sovren Backend
-# Multi-stage build with Node.js 20 Alpine runtime
+# Multi-stage workspace-aware build with Node.js 20 Alpine runtime
+#
+# Build context must be the monorepo root so the workspace lockfile resolves
+# correctly. Invoke with:
+#   docker build -f packages/backend/Dockerfile.prod .
 
-# Stage 1: Dependency installation
+# Stage 1: Dependency installation (workspace-aware)
 FROM node:20-alpine AS deps
 WORKDIR /app
 
 RUN apk add --no-cache python3 make g++ && \
     rm -rf /var/cache/apk/*
 
-COPY package*.json ./
-COPY package-lock.json ./
-COPY tsconfig*.json ./
+# Copy workspace root manifests and postinstall script
+COPY package.json package-lock.json ./
+COPY scripts/fix-express-path-to-regexp.js scripts/
 
+# Copy all workspace package.json files (npm ci needs the full workspace
+# structure to resolve the lockfile, even for packages we won't build)
+COPY packages/backend/package.json packages/backend/
+COPY packages/shared/package.json packages/shared/
+COPY packages/frontend/package.json packages/frontend/
+
+# Install all workspace deps (npm ci resolves the full workspace lockfile;
+# --workspace scoping can skip transitive hoisted deps like @types/node,
+# so we install everything and rely on .dockerignore to exclude frontend/testing source)
 RUN npm ci --include=dev && \
     npm cache clean --force && \
     rm -rf ~/.npm /tmp/*
@@ -20,15 +33,33 @@ RUN npm ci --include=dev && \
 FROM node:20-alpine AS builder
 WORKDIR /app
 
+# Reproduce workspace structure so npm and tsc resolve correctly
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/package*.json ./
-COPY --from=deps /app/tsconfig*.json ./
-COPY src/ ./src/
-COPY *.json ./
-COPY *.js ./
+COPY --from=deps /app/package.json ./
+COPY --from=deps /app/packages/backend/package.json ./packages/backend/
+COPY --from=deps /app/packages/shared/package.json ./packages/shared/
+COPY --from=deps /app/packages/frontend/package.json ./packages/frontend/
 
-RUN npm run build && \
-    npm prune --production && \
+# Copy backend source and config for build
+COPY packages/backend/tsconfig*.json packages/backend/
+COPY packages/backend/src/ packages/backend/src/
+COPY packages/backend/*.js packages/backend/
+
+# Copy shared source (backend may reference shared types/utils)
+COPY packages/shared/tsconfig*.json packages/shared/
+COPY packages/shared/src/ packages/shared/src/
+
+# Build the backend
+# Create a local node_modules/@types symlink so tsc finds typeRoots
+# (tsconfig.json sets typeRoots to ./node_modules/@types but npm hoists to /app/node_modules)
+WORKDIR /app/packages/backend
+RUN mkdir -p node_modules && \
+    ln -s /app/node_modules/@types node_modules/@types && \
+    npm run build
+
+# Prune devDependencies from the root (where npm workspaces hoists everything)
+WORKDIR /app
+RUN npm prune --omit=dev && \
     npm cache clean --force
 
 # Stage 3: Production runtime
@@ -49,9 +80,10 @@ RUN addgroup -g 1001 -S nodejs && \
 WORKDIR /app
 RUN chown -R backend:nodejs /app
 
+# Copy only production node_modules (hoisted at root) and built output
 COPY --from=builder --chown=backend:nodejs /app/node_modules ./node_modules
-COPY --from=builder --chown=backend:nodejs /app/dist ./dist
-COPY --chown=backend:nodejs package*.json ./
+COPY --from=builder --chown=backend:nodejs /app/packages/backend/dist ./dist
+COPY --from=builder --chown=backend:nodejs /app/packages/backend/package.json ./
 
 USER backend
 
