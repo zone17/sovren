@@ -58,6 +58,7 @@ LICENSE
 .storybook
 storybook-static
 scripts
+!scripts/fix-express-path-to-regexp.js
 *.test.ts
 *.test.tsx
 *.spec.ts

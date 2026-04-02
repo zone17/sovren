@@ -12,8 +12,9 @@ WORKDIR /app
 RUN apk add --no-cache python3 make g++ && \
     rm -rf /var/cache/apk/*
 
-# Copy workspace root manifests
+# Copy workspace root manifests and postinstall script
 COPY package.json package-lock.json ./
+COPY scripts/fix-express-path-to-regexp.js scripts/
 
 # Copy only the workspace package.json files the backend needs
 COPY packages/backend/package.json packages/backend/
