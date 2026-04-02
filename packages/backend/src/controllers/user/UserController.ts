@@ -76,7 +76,10 @@ export class UserController {
     const startTime = Date.now();
     const { followerId, followingId } = req.body;
 
-    const result = await this.relationshipService.follow({ userId: followerId, targetUserId: followingId });
+    const result = await this.relationshipService.follow({
+      userId: followerId,
+      targetUserId: followingId,
+    });
     res.status(201).json(createApiResponse(req, result, startTime));
   });
 
@@ -84,16 +87,20 @@ export class UserController {
     const startTime = Date.now();
     const { followerId, followingId } = req.body;
 
-    const result = await this.relationshipService.unfollow({ userId: followerId, targetUserId: followingId });
+    const result = await this.relationshipService.unfollow({
+      userId: followerId,
+      targetUserId: followingId,
+    });
     res.status(200).json(createApiResponse(req, result, startTime));
   });
 
   public getUserAnalytics = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const startTime = Date.now();
-    const userId = req.params.id;
     const analytics = await this.analyticsService.queryAnalytics({
       timeRange: {
-        startDate: req.query.start ? new Date(req.query.start as string) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+        startDate: req.query.start
+          ? new Date(req.query.start as string)
+          : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
         endDate: req.query.end ? new Date(req.query.end as string) : new Date(),
       },
     });
