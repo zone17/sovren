@@ -1,6 +1,5 @@
-// @ts-nocheck
 /**
- * ✏️ **UNIFIED CONTENT EDITOR - CONSOLIDATED EDITING INTERFACE**
+ * UNIFIED CONTENT EDITOR - CONSOLIDATED EDITING INTERFACE
  *
  * Elite Engineering Standards:
  * ✅ Single content editor consolidating all duplicates
@@ -42,6 +41,11 @@ import {
   Sparkles,
 } from 'lucide-react';
 
+/** Editor-local content state that extends ContentItem with a plain-text body field. */
+interface EditorContentState extends Partial<ContentItem> {
+  body?: string;
+}
+
 interface ContentEditorProps {
   contentId?: string;
   contentType: ContentType;
@@ -63,18 +67,17 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
   const featureFlags = useFeatureFlags();
 
   // Redux State
-  const { isLoading, error, autoSaveStatus } = useAppSelector((state) => (state as any).unifiedCms);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { isLoading, error, autoSaveStatus } = useAppSelector(state => (state as any).unifiedCms);
 
   // Local State
-  const [content, setContent] = useState<Partial<ContentItem>>(initialContent || {});
+  const [content, setContent] = useState<EditorContentState>(initialContent || {});
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [editorFocus, setEditorFocus] = useState<'title' | 'description' | 'body' | null>(null);
 
   // Refs
   const titleRef = useRef<HTMLInputElement>(null);
-  const descriptionRef = useRef<HTMLTextAreaElement>(null);
-  const bodyRef = useRef<HTMLTextAreaElement>(null);
   const autoSaveTimeoutRef = useRef<number>();
 
   // Auto-save configuration
@@ -82,8 +85,8 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
 
   // Handle content changes
   const handleContentChange = useCallback(
-    (field: keyof ContentItem, value: any) => {
-      setContent((prev) => ({ ...prev, [field]: value }));
+    (field: keyof EditorContentState, value: string) => {
+      setContent(prev => ({ ...prev, [field]: value }));
       setHasUnsavedChanges(true);
 
       // Trigger auto-save
@@ -92,12 +95,12 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
       }
 
       autoSaveTimeoutRef.current = window.setTimeout(() => {
-        if (featureFlags.contentAutoSave && contentId) {
+        if (featureFlags.flags?.contentAutoSave && contentId) {
           dispatch(autoSaveContent({ contentId, content: { ...content, [field]: value } }));
         }
       }, AUTO_SAVE_DELAY);
     },
-    [content, contentId, dispatch, featureFlags.contentAutoSave]
+    [content, contentId, dispatch, featureFlags.flags?.contentAutoSave]
   );
 
   // Handle save
@@ -139,7 +142,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
       // Ctrl/Cmd + P to toggle preview
       if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
         e.preventDefault();
-        setIsPreviewMode((prev) => !prev);
+        setIsPreviewMode(prev => !prev);
       }
     },
     [handleSave]
@@ -156,23 +159,23 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
 
   // Auto-save status indicator
   const AutoSaveIndicator = useMemo(() => {
-    if (!featureFlags.contentAutoSave) return null;
+    if (!featureFlags.flags?.contentAutoSave) return null;
 
     const getStatusIcon = () => {
       switch (autoSaveStatus) {
         case 'saving':
-          return <Clock className="h-3 w-3 animate-spin" />;
+          return <Clock className='h-3 w-3 animate-spin' />;
         case 'saved':
-          return <CheckCircle className="h-3 w-3 text-green-500" />;
+          return <CheckCircle className='h-3 w-3 text-green-500' />;
         case 'error':
-          return <AlertCircle className="h-3 w-3 text-red-500" />;
+          return <AlertCircle className='h-3 w-3 text-red-500' />;
         default:
           return null;
       }
     };
 
     return (
-      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+      <div className='flex items-center gap-1 text-xs text-muted-foreground'>
         {getStatusIcon()}
         <span>
           {autoSaveStatus === 'saving' && 'Saving...'}
@@ -181,61 +184,61 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
         </span>
       </div>
     );
-  }, [autoSaveStatus, featureFlags.contentAutoSave]);
+  }, [autoSaveStatus, featureFlags.flags?.contentAutoSave]);
 
   // Toolbar Component
   const EditorToolbar = useMemo(
     () => (
-      <div className="flex items-center justify-between p-2 border-b">
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handleSave} disabled={isLoading}>
-            <Save className="h-4 w-4" />
+      <div className='flex items-center justify-between p-2 border-b'>
+        <div className='flex items-center gap-2'>
+          <Button variant='outline' size='sm' onClick={handleSave} disabled={isLoading}>
+            <Save className='h-4 w-4' />
             Save
           </Button>
 
-          <Button variant="outline" size="sm" onClick={() => setIsPreviewMode((prev) => !prev)}>
-            {isPreviewMode ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          <Button variant='outline' size='sm' onClick={() => setIsPreviewMode(prev => !prev)}>
+            {isPreviewMode ? <EyeOff className='h-4 w-4' /> : <Eye className='h-4 w-4' />}
             {isPreviewMode ? 'Edit' : 'Preview'}
           </Button>
 
-          <div className="h-6 w-px bg-border mx-2" />
+          <div className='h-6 w-px bg-border mx-2' />
 
           {/* Rich Text Formatting */}
-          <Button variant="ghost" size="sm" disabled={isPreviewMode}>
-            <Bold className="h-4 w-4" />
+          <Button variant='ghost' size='sm' disabled={isPreviewMode}>
+            <Bold className='h-4 w-4' />
           </Button>
-          <Button variant="ghost" size="sm" disabled={isPreviewMode}>
-            <Italic className="h-4 w-4" />
+          <Button variant='ghost' size='sm' disabled={isPreviewMode}>
+            <Italic className='h-4 w-4' />
           </Button>
-          <Button variant="ghost" size="sm" disabled={isPreviewMode}>
-            <List className="h-4 w-4" />
+          <Button variant='ghost' size='sm' disabled={isPreviewMode}>
+            <List className='h-4 w-4' />
           </Button>
-          <Button variant="ghost" size="sm" disabled={isPreviewMode}>
-            <Link className="h-4 w-4" />
+          <Button variant='ghost' size='sm' disabled={isPreviewMode}>
+            <Link className='h-4 w-4' />
           </Button>
-          <Button variant="ghost" size="sm" disabled={isPreviewMode}>
-            <Image className="h-4 w-4" />
+          <Button variant='ghost' size='sm' disabled={isPreviewMode}>
+            <Image className='h-4 w-4' />
           </Button>
 
-          {featureFlags.aiWritingAssistant && (
+          {featureFlags.flags?.aiWritingAssistant && (
             <>
-              <div className="h-6 w-px bg-border mx-2" />
-              <Button variant="ghost" size="sm" disabled={isPreviewMode}>
-                <Sparkles className="h-4 w-4" />
+              <div className='h-6 w-px bg-border mx-2' />
+              <Button variant='ghost' size='sm' disabled={isPreviewMode}>
+                <Sparkles className='h-4 w-4' />
                 AI Assist
               </Button>
             </>
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className='flex items-center gap-2'>
           {AutoSaveIndicator}
           {hasUnsavedChanges && (
-            <Badge variant="outline" className="text-orange-600">
+            <Badge variant='outline' className='text-orange-600'>
               Unsaved Changes
             </Badge>
           )}
-          <Badge variant="outline">{contentType}</Badge>
+          <Badge variant='outline'>{contentType}</Badge>
         </div>
       </div>
     ),
@@ -246,7 +249,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
       AutoSaveIndicator,
       hasUnsavedChanges,
       contentType,
-      featureFlags.aiWritingAssistant,
+      featureFlags.flags?.aiWritingAssistant,
     ]
   );
 
@@ -254,39 +257,37 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
   const EditorContent = useMemo(() => {
     if (isPreviewMode) {
       return (
-        <div className="p-6 prose prose-sm max-w-none">
-          <h1 className="text-2xl font-bold mb-4">{content.title || 'Untitled'}</h1>
+        <div className='p-6 prose prose-sm max-w-none'>
+          <h1 className='text-2xl font-bold mb-4'>{content.title || 'Untitled'}</h1>
           {content.description && (
-            <p className="text-muted-foreground mb-6">{content.description}</p>
+            <p className='text-muted-foreground mb-6'>{content.description}</p>
           )}
-          <div className="whitespace-pre-wrap">{content.body || 'No content yet...'}</div>
+          <div className='whitespace-pre-wrap'>{content.body || 'No content yet...'}</div>
         </div>
       );
     }
 
     return (
-      <div className="flex flex-col h-full">
+      <div className='flex flex-col h-full'>
         {/* Title */}
-        <div className="p-4 border-b">
+        <div className='p-4 border-b'>
           <Input
-            ref={titleRef}
             value={content.title || ''}
-            onChange={(e) => handleContentChange('title', e.target.value)}
-            placeholder="Enter title..."
-            className="text-xl font-semibold border-none p-0 focus-visible:ring-0"
+            onChange={e => handleContentChange('title', e.target.value)}
+            placeholder='Enter title...'
+            className='text-xl font-semibold border-none p-0 focus-visible:ring-0'
             onFocus={() => setEditorFocus('title')}
             onBlur={() => setEditorFocus(null)}
           />
         </div>
 
         {/* Description */}
-        <div className="p-4 border-b">
+        <div className='p-4 border-b'>
           <Textarea
-            ref={descriptionRef}
             value={content.description || ''}
-            onChange={(e) => handleContentChange('description', e.target.value)}
-            placeholder="Enter description..."
-            className="border-none p-0 focus-visible:ring-0 resize-none"
+            onChange={e => handleContentChange('description', e.target.value)}
+            placeholder='Enter description...'
+            className='border-none p-0 focus-visible:ring-0 resize-none'
             rows={2}
             onFocus={() => setEditorFocus('description')}
             onBlur={() => setEditorFocus(null)}
@@ -294,13 +295,12 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
         </div>
 
         {/* Body */}
-        <div className="flex-1 p-4">
+        <div className='flex-1 p-4'>
           <Textarea
-            ref={bodyRef}
             value={content.body || ''}
-            onChange={(e) => handleContentChange('body', e.target.value)}
-            placeholder="Start writing your content..."
-            className="h-full border-none p-0 focus-visible:ring-0 resize-none"
+            onChange={e => handleContentChange('body', e.target.value)}
+            placeholder='Start writing your content...'
+            className='h-full border-none p-0 focus-visible:ring-0 resize-none'
             onFocus={() => setEditorFocus('body')}
             onBlur={() => setEditorFocus(null)}
           />
@@ -311,34 +311,34 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
 
   return (
     <Card className={`h-full flex flex-col ${className}`} onKeyDown={handleKeyDown}>
-      <CardHeader className="p-0">{EditorToolbar}</CardHeader>
+      <CardHeader className='p-0'>{EditorToolbar}</CardHeader>
 
-      <CardContent className="flex-1 p-0 overflow-hidden">
+      <CardContent className='flex-1 p-0 overflow-hidden'>
         {error && (
-          <div className="p-4 bg-red-50 text-red-700 border-b">
-            <div className="flex items-center gap-2">
-              <AlertCircle className="h-4 w-4" />
+          <div className='p-4 bg-red-50 text-red-700 border-b'>
+            <div className='flex items-center gap-2'>
+              <AlertCircle className='h-4 w-4' />
               <span>Error: {error}</span>
             </div>
           </div>
         )}
 
-        <div className="h-full overflow-auto">{EditorContent}</div>
+        <div className='h-full overflow-auto'>{EditorContent}</div>
       </CardContent>
 
       {/* Action Buttons */}
-      <div className="p-4 border-t bg-muted/20">
-        <div className="flex justify-between">
-          <Button variant="outline" onClick={onCancel}>
+      <div className='p-4 border-t bg-muted/20'>
+        <div className='flex justify-between'>
+          <Button variant='outline' onClick={onCancel}>
             Cancel
           </Button>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setContent(initialContent || {})}>
-              <RotateCcw className="h-4 w-4" />
+          <div className='flex gap-2'>
+            <Button variant='outline' onClick={() => setContent(initialContent || {})}>
+              <RotateCcw className='h-4 w-4' />
               Reset
             </Button>
             <Button onClick={handleSave} disabled={isLoading || !hasUnsavedChanges}>
-              <Save className="h-4 w-4" />
+              <Save className='h-4 w-4' />
               {isLoading ? 'Saving...' : 'Save'}
             </Button>
           </div>
