@@ -18,23 +18,6 @@ The production setup wrapper is at:
 3. **`NOSTR_KEY_ENCRYPTION_KEY`** -- a 64-character hex string (32 bytes)
    Generate one with: `openssl rand -hex 32`
 
-## Known Issue: Env Var Name Mismatch
-
-The shell script (`production-setup.sh`) passes the encryption key as
-`NOSTR_ENCRYPTION_KEY`, but the TypeScript migration script reads
-`NOSTR_KEY_ENCRYPTION_KEY`.
-
-The shell script line:
-
-    NOSTR_ENCRYPTION_KEY="$ENCRYPTION_KEY" npx ts-node packages/backend/src/scripts/encrypt-nostr-keys-migration.ts
-
-should be:
-
-    NOSTR_KEY_ENCRYPTION_KEY="$ENCRYPTION_KEY" npx ts-node packages/backend/src/scripts/encrypt-nostr-keys-migration.ts
-
-**Fix this before running in production.** The mismatch means the migration
-will fail with "NOSTR_KEY_ENCRYPTION_KEY must be a 64-character hex string".
-
 ## Steps to Run
 
 1. Generate an encryption key:
@@ -63,4 +46,4 @@ will fail with "NOSTR_KEY_ENCRYPTION_KEY must be a 64-character hex string".
 
 - Run this script without database backups
 - Store the encryption key in source control
-- Use the `--all` flag in `production-setup.sh` without first fixing the env var name
+- Use the `--all` flag in `production-setup.sh` without verifying env vars are set

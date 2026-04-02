@@ -82,21 +82,21 @@ encrypt_nostr_keys() {
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
   if [ -z "${ENCRYPTION_KEY:-}" ]; then
-    echo "  ⚠️  ENCRYPTION_KEY not set. Using NOSTR_ENCRYPTION_KEY from environment."
-    if [ -z "${NOSTR_ENCRYPTION_KEY:-}" ]; then
-      echo "  ❌ Neither ENCRYPTION_KEY nor NOSTR_ENCRYPTION_KEY is set."
-      echo "     Run --rotate first, or: export NOSTR_ENCRYPTION_KEY=\$(openssl rand -hex 32)"
+    echo "  ⚠️  ENCRYPTION_KEY not set. Using NOSTR_KEY_ENCRYPTION_KEY from environment."
+    if [ -z "${NOSTR_KEY_ENCRYPTION_KEY:-}" ]; then
+      echo "  ❌ Neither ENCRYPTION_KEY nor NOSTR_KEY_ENCRYPTION_KEY is set."
+      echo "     Run --rotate first, or: export NOSTR_KEY_ENCRYPTION_KEY=\$(openssl rand -hex 32)"
       return 1
     fi
-    export ENCRYPTION_KEY="$NOSTR_ENCRYPTION_KEY"
+    export ENCRYPTION_KEY="$NOSTR_KEY_ENCRYPTION_KEY"
   fi
 
   echo "  Running encryption migration..."
-  NOSTR_ENCRYPTION_KEY="$ENCRYPTION_KEY" npx ts-node packages/backend/src/scripts/encrypt-nostr-keys-migration.ts
+  NOSTR_KEY_ENCRYPTION_KEY="$ENCRYPTION_KEY" npx ts-node packages/backend/src/scripts/encrypt-nostr-keys-migration.ts
   echo "  ✅ NOSTR keys encrypted"
 
   # Store encryption key in GitHub secrets for runtime decryption
-  gh secret set NOSTR_ENCRYPTION_KEY --body "$ENCRYPTION_KEY" && echo "  ✅ NOSTR_ENCRYPTION_KEY → GitHub"
+  gh secret set NOSTR_KEY_ENCRYPTION_KEY --body "$ENCRYPTION_KEY" && echo "  ✅ NOSTR_KEY_ENCRYPTION_KEY → GitHub"
   echo ""
 }
 
