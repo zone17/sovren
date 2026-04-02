@@ -191,7 +191,7 @@ jobs:
         # Tracked in docs/legal/compliance-checklist-2026-03-28.md
 
       - name: Trivy filesystem scan
-        uses: aquasecurity/trivy-action@76071ef0d7ec797419534a183b498b4d6366cf37 # v0.31.0
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
         continue-on-error: true
         with:
           scan-type: 'fs'
@@ -200,6 +200,7 @@ jobs:
           exit-code: '1'
           format: 'table'
           trivyignores: '.trivyignore'
+          version: 'v0.69.3'
 
   # ===========================================
   # Stage 2b: DB Migration Validation (P1-INFRA-003)
@@ -609,13 +610,14 @@ jobs:
         run: cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
 
       - name: Trivy image scan (SARIF)
-        uses: aquasecurity/trivy-action@76071ef0d7ec797419534a183b498b4d6366cf37 # v0.31.0
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
         continue-on-error: true  # Non-blocking — SARIF upload is advisory
         with:
           image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
+          version: 'v0.69.3'
 
       - name: Upload Trivy SARIF to GitHub Security
         uses: github/codeql-action/upload-sarif@38697555549f1db7851b81482ff19f1fa5c4fedc # v4
@@ -625,11 +627,12 @@ jobs:
           sarif_file: 'trivy-results.sarif'
 
       - name: Trivy image scan (fail on CRITICAL)
-        uses: aquasecurity/trivy-action@76071ef0d7ec797419534a183b498b4d6366cf37 # v0.31.0
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
         with:
           image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
           exit-code: '1'
           severity: 'CRITICAL'
+          version: 'v0.69.3'
 
   # ===========================================
   # Stage 5b: Database Migration (main branch only)

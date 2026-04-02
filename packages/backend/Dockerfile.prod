@@ -58,8 +58,16 @@ RUN mkdir -p node_modules && \
     npm run build
 
 # Prune devDependencies from the root (where npm workspaces hoists everything)
+# Also explicitly remove build tools that npm prune may miss in workspaces
 WORKDIR /app
 RUN npm prune --omit=dev && \
+    rm -rf node_modules/esbuild node_modules/@esbuild \
+           node_modules/tsx node_modules/typescript \
+           node_modules/ts-node node_modules/tsc-alias \
+           node_modules/vitest node_modules/@vitest \
+           node_modules/eslint node_modules/@eslint \
+           node_modules/nodemon node_modules/supertest \
+           node_modules/testcontainers && \
     npm cache clean --force
 
 # Stage 3: Production runtime
@@ -71,7 +79,8 @@ LABEL org.opencontainers.image.title="Sovren Backend Production" \
       org.opencontainers.image.vendor="Sovren" \
       org.opencontainers.image.licenses="MIT"
 
-RUN apk add --no-cache dumb-init curl ca-certificates && \
+RUN apk upgrade --no-cache && \
+    apk add --no-cache dumb-init curl ca-certificates && \
     rm -rf /tmp/* /var/cache/apk/*
 
 RUN addgroup -g 1001 -S nodejs && \
