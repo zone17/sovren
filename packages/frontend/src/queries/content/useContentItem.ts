@@ -34,6 +34,7 @@ export const useContentItem = (
     queryFn: () => fetchContentItem(contentId),
     staleTime: 1 * 60 * 1000, // 1 minute
     gcTime: 5 * 60 * 1000, // 5 minutes
+    retry: 1,
     enabled: !!contentId,
     ...options,
   });
