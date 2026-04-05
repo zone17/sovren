@@ -36,7 +36,48 @@ let server: any = null;
 let isShuttingDown = false;
 
 /**
- * 🏁 Start Server
+ * Validate environment variables at startup and log actionable warnings.
+ * Catches the most common .env misconfigurations before they surface as
+ * cryptic runtime errors.
+ */
+function validateStartupEnvironment(): void {
+  const jwtSecret = process.env.JWT_SECRET;
+  if (jwtSecret) {
+    if (jwtSecret.includes('<') || jwtSecret.includes('>')) {
+      logger.error(
+        'JWT_SECRET appears malformed (contains angle brackets). ' +
+          'This looks like an unedited placeholder. ' +
+          'Fix: openssl rand -base64 48 and set the result in packages/backend/.env'
+      );
+    }
+    const UUID_RE = /^<?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}>?$/i;
+    if (UUID_RE.test(jwtSecret)) {
+      logger.error(
+        'JWT_SECRET is a UUID, which has insufficient entropy for signing tokens. ' +
+          'Fix: openssl rand -base64 48 and set the result in packages/backend/.env'
+      );
+    }
+  }
+
+  // Detect SUPABASE_SERVICE_KEY vs SUPABASE_SERVICE_ROLE_KEY mismatch.
+  // The codebase uses SUPABASE_SERVICE_ROLE_KEY (Supabase standard).
+  // If only the old name is set, warn the developer.
+  if (process.env.SUPABASE_SERVICE_KEY && !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    logger.warn(
+      'SUPABASE_SERVICE_KEY is set but SUPABASE_SERVICE_ROLE_KEY is not. ' +
+        'The codebase reads SUPABASE_SERVICE_ROLE_KEY (Supabase standard). ' +
+        'Rename the variable in packages/backend/.env.'
+    );
+  }
+
+  // Warn if critical DB env vars are missing
+  if (!process.env.SUPABASE_URL) {
+    logger.warn('SUPABASE_URL is not set — database features will not work');
+  }
+}
+
+/**
+ * Start Server
  * WHY: Centralized startup logic with validation and error handling
  */
 async function startServer(): Promise<void> {
@@ -48,6 +89,9 @@ async function startServer(): Promise<void> {
     if (AppConfig.isProduction && !process.env.JWT_SECRET) {
       throw new Error('JWT_SECRET environment variable is required in production');
     }
+
+    // Startup validation: detect common .env misconfigurations early
+    validateStartupEnvironment();
 
     // Connect Redis eagerly (fail-fast if unavailable)
     try {

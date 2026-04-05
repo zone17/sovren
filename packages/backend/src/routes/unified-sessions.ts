@@ -35,7 +35,7 @@ const router = express.Router();
 // Session management requires cross-user write access (e.g. expiry enforcement, device revocation).
 const sessionManager = new DatabaseSessionManager({
   supabaseUrl: process.env.SUPABASE_URL || '',
-  supabaseKey: process.env.SUPABASE_SERVICE_KEY || '',
+  supabaseKey: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
   defaultTTL: 7 * 24 * 60 * 60 * 1000, // 7 days
   maxSessionsPerUser: 5,
   enableActivityLogging: true,
