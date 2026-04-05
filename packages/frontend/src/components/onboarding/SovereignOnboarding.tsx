@@ -20,6 +20,7 @@ import {
   Zap,
 } from 'lucide-react';
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import SovrenIconPNG from '../../assets/icons/Sovren-icon.png';
 import { useAuth } from '../../features/auth';
@@ -1021,10 +1022,36 @@ const SovereignOnboarding: React.FC = () => {
               <div className='text-center'>
                 <p className='mb-4 text-muted-foreground'>Share your sovereignty journey:</p>
                 <div className='flex justify-center space-x-4'>
-                  <Button variant='outline' size='sm'>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() =>
+                      window.open(
+                        'https://njump.me/?text=' +
+                          encodeURIComponent(
+                            'I just claimed my sovereign identity on Sovren! Join me: ' +
+                              window.location.origin
+                          ),
+                        '_blank'
+                      )
+                    }
+                  >
                     Share on NOSTR
                   </Button>
-                  <Button variant='outline' size='sm'>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(
+                          'Join me on Sovren! ' + window.location.origin
+                        );
+                        toast.success('Invite link copied to clipboard!');
+                      } catch {
+                        toast.error('Failed to copy link');
+                      }
+                    }}
+                  >
                     Tell Friends
                   </Button>
                 </div>

@@ -1,4 +1,5 @@
 import React, { Suspense } from 'react';
+import { Toaster } from 'react-hot-toast';
 import { Route, Routes } from 'react-router-dom';
 import Layout from './components/ui/Layout';
 import { AuthProvider, ProtectedRoute } from './features/auth';
@@ -148,6 +149,16 @@ function App(): React.ReactElement {
   return (
     <ErrorBoundary level='page' name='Application'>
       <AuthProvider>
+        <Toaster
+          position='bottom-right'
+          toastOptions={{
+            style: {
+              background: '#1e1e2e',
+              color: '#e0e0e0',
+              border: '1px solid rgba(255,255,255,0.1)',
+            },
+          }}
+        />
         <Routes>
           {/* Pages with their own layout (no duplicates) */}
           <Route
