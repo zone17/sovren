@@ -114,13 +114,21 @@ describe('useDiscovery', () => {
   });
 
   it('handles API errors', async () => {
-    fetchSpy.mockResolvedValueOnce(
-      mockResponse({ error: 'Server Error', code: 'INTERNAL_ERROR' }, 500)
-    );
+    // The hook sets retry: 1, so we need to mock both the initial call and the retry.
+    // React Query uses exponential backoff delays between retries, so we must
+    // advance fake timers past the retry delay for the error state to settle.
+    fetchSpy.mockRejectedValue(new Error('Server Error'));
 
     const { result } = renderHook(() => useDiscovery(), { wrapper });
 
-    await waitFor(() => expect(result.current.error).toBeTruthy());
+    // Advance timers repeatedly to allow retry backoff to complete
+    for (let i = 0; i < 5; i++) {
+      await act(async () => {
+        vi.advanceTimersByTime(2000);
+      });
+    }
+
+    await waitFor(() => expect(result.current.error).toBeTruthy(), { timeout: 5000 });
 
     expect(result.current.creators).toEqual([]);
   });
