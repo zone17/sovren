@@ -17,6 +17,7 @@ import v1Routes from './routes/v1';
 import v2Routes from './routes/v2';
 import contentDiscoveryRoutes from './routes/content-discovery';
 import subscriptionTiersRoutes from './routes/subscription-tiers';
+import analyticsRoutes from './routes/analytics';
 import { csrfProtection } from './middleware/csrf';
 import { deploymentMonitoring, getPrometheusMetrics } from './middleware/deployment-monitoring';
 import { correlationIdMiddleware, getCorrelationId } from './middleware/correlation-id';
@@ -230,6 +231,9 @@ export function createApp(): Express {
   app.use('/api/discovery', contentDiscoveryRoutes);
   app.use('/api/subscription-tiers', subscriptionTiersRoutes);
 
+  // Analytics routes (creator dashboard)
+  app.use('/api/analytics', analyticsRoutes);
+
   // OpenAPI / Swagger UI — available at /api/docs
   // Helmet's strict CSP blocks Swagger UI inline styles/scripts, so we disable
   // contentSecurityPolicy only for this path by applying a permissive override
@@ -300,6 +304,7 @@ export function createApp(): Express {
           content: '/api/v1/content',
           payments: '/api/v1/payments',
           lightning: '/api/lightning',
+          analytics: '/api/analytics',
           health: '/health',
           ready: '/ready',
           live: '/live',
