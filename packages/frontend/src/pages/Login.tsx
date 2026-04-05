@@ -75,7 +75,11 @@ const Login: React.FC = () => {
       const { generateSecretKey, getPublicKey } = await import('nostr-tools/pure');
       const privateKey = generateSecretKey();
       const publicKey = getPublicKey(privateKey);
-      setPrivateKeyInput(Buffer.from(privateKey).toString('hex'));
+      setPrivateKeyInput(
+        Array.from(new Uint8Array(privateKey))
+          .map(b => b.toString(16).padStart(2, '0'))
+          .join('')
+      );
       privateKey.fill(0); // Zero key material after hex conversion
       setPublicKeyInput(publicKey);
       setError(null);
@@ -178,10 +182,14 @@ const Login: React.FC = () => {
         const decoded = nip19Decode(privateKeyInput);
         if (decoded.type !== 'nsec') throw new Error('Invalid nsec key');
         privateKeyBytes = decoded.data as Uint8Array;
-        hexPrivate = Buffer.from(privateKeyBytes).toString('hex');
+        hexPrivate = Array.from(privateKeyBytes)
+          .map(b => b.toString(16).padStart(2, '0'))
+          .join('');
       } else {
         hexPrivate = privateKeyInput;
-        privateKeyBytes = new Uint8Array(Buffer.from(hexPrivate, 'hex'));
+        privateKeyBytes = new Uint8Array(
+          hexPrivate.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16))
+        );
       }
 
       // Decode public key — support npub and hex

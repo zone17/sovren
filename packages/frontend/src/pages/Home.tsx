@@ -649,7 +649,7 @@ const Home: React.FC = () => {
                 </li>
                 <li>
                   <a
-                    href='/faq'
+                    href='/help'
                     className='text-sm text-white/40 hover:text-white/70 transition-colors no-underline inline-flex items-center min-h-[44px]'
                   >
                     FAQ

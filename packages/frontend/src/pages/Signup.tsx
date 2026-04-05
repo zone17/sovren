@@ -86,7 +86,12 @@ const Signup: React.FC = () => {
       const privateKey = generateSecretKey();
       const publicKey = getPublicKey(privateKey);
 
-      setNostrKeys({ privateKey: Buffer.from(privateKey).toString('hex'), publicKey });
+      setNostrKeys({
+        privateKey: Array.from(new Uint8Array(privateKey))
+          .map(b => b.toString(16).padStart(2, '0'))
+          .join(''),
+        publicKey,
+      });
       setError(null);
     } catch (err) {
       setError('Failed to generate NOSTR keys. Please try again.');
@@ -125,7 +130,9 @@ const Signup: React.FC = () => {
         content: challengeResult.challenge,
       };
 
-      const privateKeyBytes = new Uint8Array(Buffer.from(nostrKeys.privateKey, 'hex'));
+      const privateKeyBytes = new Uint8Array(
+        nostrKeys.privateKey.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16))
+      );
       const signedEvent = finalizeEvent(event, privateKeyBytes);
 
       // Step 3: Authenticate with signed challenge

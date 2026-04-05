@@ -34,11 +34,12 @@ export function useDiscovery() {
       }),
     placeholderData: isPageChange ? keepPreviousData : undefined,
     staleTime: 60_000,
+    retry: 1,
     enabled: !debouncedQuery || debouncedQuery.length >= 2,
   });
 
   const updateFilters = (patch: Partial<DiscoveryFilters>) => {
-    setFilters((prev) => ({ ...prev, ...patch }));
+    setFilters(prev => ({ ...prev, ...patch }));
     setPage(1);
   };
 
