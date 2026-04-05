@@ -1,23 +1,59 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { useAuthStatus } from '../features/auth';
 
 const Settings: React.FC = () => {
   useDocumentTitle('Settings');
   const { user } = useAuthStatus();
+  const navigate = useNavigate();
 
   const [displayName, setDisplayName] = useState(user?.name || '');
   const [bio, setBio] = useState('');
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [paymentNotifications, setPaymentNotifications] = useState(true);
   const [contentNotifications, setContentNotifications] = useState(true);
-  const [saved, setSaved] = useState(false);
+
+  // Load persisted notification preferences on mount
+  useEffect(() => {
+    const savedEmail = localStorage.getItem('notif_email');
+    const savedPayment = localStorage.getItem('notif_payment');
+    const savedContent = localStorage.getItem('notif_content');
+    const savedBio = localStorage.getItem('sovren_user_bio');
+    const savedName = localStorage.getItem('sovren_user_name');
+
+    if (savedEmail !== null) setEmailNotifications(savedEmail === 'true');
+    if (savedPayment !== null) setPaymentNotifications(savedPayment === 'true');
+    if (savedContent !== null) setContentNotifications(savedContent === 'true');
+    if (savedBio !== null) setBio(savedBio);
+    if (savedName !== null) setDisplayName(savedName);
+  }, []);
+
+  const handleEmailToggle = (checked: boolean) => {
+    setEmailNotifications(checked);
+    localStorage.setItem('notif_email', String(checked));
+    toast.success(`Email notifications ${checked ? 'enabled' : 'disabled'}`);
+  };
+
+  const handlePaymentToggle = (checked: boolean) => {
+    setPaymentNotifications(checked);
+    localStorage.setItem('notif_payment', String(checked));
+    toast.success(`Payment notifications ${checked ? 'enabled' : 'disabled'}`);
+  };
+
+  const handleContentToggle = (checked: boolean) => {
+    setContentNotifications(checked);
+    localStorage.setItem('notif_content', String(checked));
+    toast.success(`Content notifications ${checked ? 'enabled' : 'disabled'}`);
+  };
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    // In production, this would call an API to save the profile
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+    // Persist to localStorage (wire to API when backend endpoint exists)
+    localStorage.setItem('sovren_user_name', displayName);
+    localStorage.setItem('sovren_user_bio', bio);
+    toast.success('Profile saved successfully');
   };
 
   return (
@@ -28,15 +64,6 @@ const Settings: React.FC = () => {
           Manage your profile, wallet configuration, and notification preferences.
         </p>
       </div>
-
-      {saved && (
-        <div
-          role='alert'
-          className='rounded-lg bg-green-500/10 border border-green-500/20 p-4 text-sm text-green-400'
-        >
-          Settings saved successfully.
-        </div>
-      )}
 
       {/* Profile Section */}
       <section aria-labelledby='profile-heading'>
@@ -115,9 +142,12 @@ const Settings: React.FC = () => {
                   Configure your Lightning wallet for receiving payments
                 </p>
               </div>
-              <span className='text-xs px-2.5 py-1 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'>
+              <button
+                onClick={() => navigate('/onboarding/lightning')}
+                className='text-xs px-2.5 py-1 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 hover:bg-yellow-500/20 transition-colors cursor-pointer'
+              >
                 Configure
-              </span>
+              </button>
             </div>
           </div>
         </div>
@@ -138,7 +168,7 @@ const Settings: React.FC = () => {
               <input
                 type='checkbox'
                 checked={emailNotifications}
-                onChange={e => setEmailNotifications(e.target.checked)}
+                onChange={e => handleEmailToggle(e.target.checked)}
                 className='w-4 h-4 rounded border-border text-purple-500 focus:ring-purple-500'
               />
             </label>
@@ -153,7 +183,7 @@ const Settings: React.FC = () => {
               <input
                 type='checkbox'
                 checked={paymentNotifications}
-                onChange={e => setPaymentNotifications(e.target.checked)}
+                onChange={e => handlePaymentToggle(e.target.checked)}
                 className='w-4 h-4 rounded border-border text-purple-500 focus:ring-purple-500'
               />
             </label>
@@ -168,7 +198,7 @@ const Settings: React.FC = () => {
               <input
                 type='checkbox'
                 checked={contentNotifications}
-                onChange={e => setContentNotifications(e.target.checked)}
+                onChange={e => handleContentToggle(e.target.checked)}
                 className='w-4 h-4 rounded border-border text-purple-500 focus:ring-purple-500'
               />
             </label>
