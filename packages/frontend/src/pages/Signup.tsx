@@ -257,7 +257,7 @@ const Signup: React.FC = () => {
                       setAuthMode('nostr');
                       setError(null);
                     }}
-                    className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all duration-150 ${
+                    className={`flex-1 min-h-[44px] py-2 px-3 rounded-md text-sm font-medium transition-all duration-150 ${
                       authMode === 'nostr'
                         ? 'bg-purple-500/20 text-purple-400 shadow-sm border border-purple-500/30'
                         : 'text-muted-foreground hover:text-foreground'
@@ -272,7 +272,7 @@ const Signup: React.FC = () => {
                       setAuthMode('email');
                       setError(null);
                     }}
-                    className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all duration-150 ${
+                    className={`flex-1 min-h-[44px] py-2 px-3 rounded-md text-sm font-medium transition-all duration-150 ${
                       authMode === 'email'
                         ? 'bg-purple-500/20 text-purple-400 shadow-sm border border-purple-500/30'
                         : 'text-muted-foreground hover:text-foreground'
@@ -308,7 +308,7 @@ const Signup: React.FC = () => {
                     <div className='flex space-x-1 bg-card/50 p-1 rounded-lg border border-border/50'>
                       <button
                         onClick={() => setUserRole('supporter')}
-                        className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all duration-150 ${
+                        className={`flex-1 min-h-[44px] py-2 px-3 rounded-md text-sm font-medium transition-all duration-150 ${
                           userRole === 'supporter'
                             ? 'bg-purple-500/20 text-purple-400 shadow-sm border border-purple-500/30'
                             : 'text-muted-foreground hover:text-foreground'
@@ -318,7 +318,7 @@ const Signup: React.FC = () => {
                       </button>
                       <button
                         onClick={() => setUserRole('creator')}
-                        className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all duration-150 ${
+                        className={`flex-1 min-h-[44px] py-2 px-3 rounded-md text-sm font-medium transition-all duration-150 ${
                           userRole === 'creator'
                             ? 'bg-purple-500/20 text-purple-400 shadow-sm border border-purple-500/30'
                             : 'text-muted-foreground hover:text-foreground'
@@ -456,7 +456,7 @@ const Signup: React.FC = () => {
                     <div className='flex space-x-1 bg-card/50 p-1 rounded-lg border border-border/50'>
                       <button
                         onClick={() => setUserRole('supporter')}
-                        className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all duration-150 ${
+                        className={`flex-1 min-h-[44px] py-2 px-3 rounded-md text-sm font-medium transition-all duration-150 ${
                           userRole === 'supporter'
                             ? 'bg-purple-500/20 text-purple-400 shadow-sm border border-purple-500/30'
                             : 'text-muted-foreground hover:text-foreground'
@@ -466,7 +466,7 @@ const Signup: React.FC = () => {
                       </button>
                       <button
                         onClick={() => setUserRole('creator')}
-                        className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all duration-150 ${
+                        className={`flex-1 min-h-[44px] py-2 px-3 rounded-md text-sm font-medium transition-all duration-150 ${
                           userRole === 'creator'
                             ? 'bg-purple-500/20 text-purple-400 shadow-sm border border-purple-500/30'
                             : 'text-muted-foreground hover:text-foreground'
