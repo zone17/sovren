@@ -217,7 +217,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </div>
 
           {/* Nav items */}
-          <nav className='flex-1 py-4 px-2 space-y-1 overflow-y-auto'>
+          <nav aria-label='Main navigation' className='flex-1 py-4 px-2 space-y-1 overflow-y-auto'>
             {visibleNavItems.map(item => (
               <Link
                 key={item.path}
@@ -289,6 +289,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       >
         {/* Top bar — mobile + non-auth */}
         <header
+          role='banner'
           className='lg:hidden sticky top-0 z-30 border-b border-white/5'
           style={{ background: 'hsl(var(--background) / 0.8)', backdropFilter: 'blur(20px)' }}
         >
@@ -297,7 +298,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               {isAuthenticated && (
                 <button
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className='p-2 text-white/40 hover:text-white/80 -ml-2'
+                  className='p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-white/40 hover:text-white/80 -ml-2'
+                  aria-label='Open navigation menu'
                 >
                   <MenuIcon />
                 </button>
@@ -314,7 +316,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <div className='flex items-center gap-2'>
                 <button
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className='p-2 text-white/40 hover:text-white/80 -ml-2 md:hidden'
+                  className='p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-white/40 hover:text-white/80 -ml-2 md:hidden'
+                  aria-label='Open navigation menu'
                 >
                   <MenuIcon />
                 </button>
@@ -348,11 +351,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             >
               <div className='flex items-center justify-between h-14 px-4 border-b border-white/5'>
                 <span className='text-sm font-semibold text-foreground font-display'>Menu</span>
-                <button onClick={() => setMobileMenuOpen(false)} className='p-2 text-white/40'>
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
+                  className='p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-white/40'
+                  aria-label='Close navigation menu'
+                >
                   <CloseIcon />
                 </button>
               </div>
-              <nav className='p-3 space-y-1'>
+              <nav aria-label='Mobile navigation' className='p-3 space-y-1'>
                 {isAuthenticated ? (
                   <>
                     {visibleNavItems.map(item => (
