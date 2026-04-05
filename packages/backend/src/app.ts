@@ -378,21 +378,37 @@ export const AppConfig = {
       return 'development-only-secret-key-not-for-production';
     }
 
+    // Malformation check: angle brackets indicate an unedited placeholder
+    if (secret.includes('<') || secret.includes('>')) {
+      const msg =
+        'JWT_SECRET contains angle brackets — looks like an unedited placeholder. ' +
+        'Run: openssl rand -base64 48 and set the result in packages/backend/.env';
+      if (isProduction) {
+        throw new Error(msg);
+      }
+      logger.error(msg);
+    }
+
     // Strength validation: must be >= 32 chars and not a UUID (too weak / low entropy)
     const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    // Strip angle brackets before UUID check so <uuid> is also caught
+    const strippedSecret = secret.replace(/^<|>$/g, '');
     if (secret.length < 32) {
       if (isProduction) {
         throw new Error('JWT_SECRET must be at least 32 characters in production/staging');
       }
       logger.warn('JWT_SECRET is shorter than 32 characters — weak secret for development only');
     }
-    if (UUID_PATTERN.test(secret)) {
+    if (UUID_PATTERN.test(secret) || UUID_PATTERN.test(strippedSecret)) {
       if (isProduction) {
         throw new Error(
           'JWT_SECRET must not be a UUID — use a high-entropy random string (>=32 chars)'
         );
       }
-      logger.warn('JWT_SECRET appears to be a UUID — use a stronger secret');
+      logger.warn(
+        'JWT_SECRET appears to be a UUID — use a stronger secret. ' +
+          'Run: openssl rand -base64 48'
+      );
     }
 
     return secret;
