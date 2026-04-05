@@ -17,7 +17,6 @@ import { z } from 'zod';
 import { authenticate } from '../middleware/auth';
 import { supabase } from '../config/supabase';
 import { asyncHandler } from '../utils/asyncHandler';
-import logger from '../lib/logger';
 
 const router = express.Router();
 
@@ -31,23 +30,6 @@ router.use(authenticate);
 type Period = '24h' | '7d' | '30d' | '90d' | '1y' | 'all';
 
 const PeriodSchema = z.enum(['24h', '7d', '30d', '90d', '1y', 'all']).default('7d');
-
-function periodToInterval(period: Period): string {
-  switch (period) {
-    case '24h':
-      return '1 day';
-    case '7d':
-      return '7 days';
-    case '30d':
-      return '30 days';
-    case '90d':
-      return '90 days';
-    case '1y':
-      return '365 days';
-    case 'all':
-      return '100 years'; // effectively no filter
-  }
-}
 
 /**
  * Resolve the internal UUID for a user given the userId query param.
@@ -89,7 +71,6 @@ router.get(
       return res.status(404).json({ message: 'User not found' });
     }
 
-    const interval = periodToInterval(period);
     const now = new Date();
     const startDate = new Date(now.getTime());
     // Subtract interval manually (approximate for query; the DB filter is authoritative)
@@ -116,10 +97,7 @@ router.get(
     const totalSats = paidPayments.reduce((sum, p) => sum + (p.amount_sats ?? 0), 0);
     const totalInvoices = paidPayments.length;
     const avgPayment = totalInvoices > 0 ? Math.round(totalSats / totalInvoices) : 0;
-    const largestPayment = paidPayments.reduce(
-      (max, p) => Math.max(max, p.amount_sats ?? 0),
-      0,
-    );
+    const largestPayment = paidPayments.reduce((max, p) => Math.max(max, p.amount_sats ?? 0), 0);
     const hoursInPeriod = msMap[period] / 3600000;
     const paymentVelocity =
       hoursInPeriod > 0 ? parseFloat((totalInvoices / hoursInPeriod).toFixed(4)) : 0;
@@ -133,30 +111,31 @@ router.get(
 
     const allContent = contentRows ?? [];
     const premiumPosts = allContent.filter(
-      (c) => c.visibility === 'paid' || c.visibility === 'supporters_only',
+      c => c.visibility === 'paid' || c.visibility === 'supporters_only'
     ).length;
     const totalEngagement =
       allContent.reduce(
         (sum, c) =>
-          sum + (c.view_count ?? 0) + (c.like_count ?? 0) + (c.comment_count ?? 0) + (c.share_count ?? 0),
-        0,
+          sum +
+          (c.view_count ?? 0) +
+          (c.like_count ?? 0) +
+          (c.comment_count ?? 0) +
+          (c.share_count ?? 0),
+        0
       ) || 1;
     const avgEngagement = Math.min(
       100,
       Math.round(
-        (allContent.reduce(
-          (sum, c) => sum + (c.like_count ?? 0) + (c.comment_count ?? 0),
-          0,
-        ) /
+        (allContent.reduce((sum, c) => sum + (c.like_count ?? 0) + (c.comment_count ?? 0), 0) /
           totalEngagement) *
-          100,
-      ),
+          100
+      )
     );
 
     const topContent = allContent
       .sort((a, b) => (b.view_count ?? 0) - (a.view_count ?? 0))
       .slice(0, 5)
-      .map((c) => c.title);
+      .map(c => c.title);
 
     // Subscriber (follower) stats
     const { count: totalFollowers } = await supabase
@@ -174,7 +153,10 @@ router.get(
     const newSubs = newFollowers ?? 0;
     const churnRate = 0; // Cannot compute without unfollow events
     const retentionRate = 100 - churnRate;
-    const subscriberGrowth = subscriberCount > 0 ? parseFloat(((newSubs / Math.max(subscriberCount, 1)) * 100).toFixed(1)) : 0;
+    const subscriberGrowth =
+      subscriberCount > 0
+        ? parseFloat(((newSubs / Math.max(subscriberCount, 1)) * 100).toFixed(1))
+        : 0;
 
     // Geography from content_analytics
     const { data: geoRows } = await supabase
@@ -182,13 +164,13 @@ router.get(
       .select('country')
       .in(
         'content_id',
-        allContent.map((c) => c.id),
+        allContent.map(c => c.id)
       )
       .not('country', 'is', null)
       .limit(500);
 
     const geoCounts: Record<string, number> = {};
-    (geoRows ?? []).forEach((row) => {
+    (geoRows ?? []).forEach(row => {
       const country = row.country ?? 'XX';
       geoCounts[country] = (geoCounts[country] ?? 0) + 1;
     });
@@ -240,7 +222,7 @@ router.get(
     };
 
     return res.json(earnings);
-  }),
+  })
 );
 
 // ---------------------------------------------------------------------------
@@ -313,7 +295,7 @@ router.get(
       const bucketEnd = new Date(bucketStart.getTime() + bucketMs);
       const ts = bucketStart.toISOString();
 
-      const bucketPayments = (payments ?? []).filter((p) => {
+      const bucketPayments = (payments ?? []).filter(p => {
         const d = new Date(p.paid_at);
         return d >= bucketStart && d < bucketEnd;
       });
@@ -328,7 +310,7 @@ router.get(
         value: bucketPayments.length,
       });
 
-      const bucketFollowers = (followersData ?? []).filter((f) => {
+      const bucketFollowers = (followersData ?? []).filter(f => {
         const d = new Date(f.created_at);
         return d >= bucketStart && d < bucketEnd;
       });
@@ -337,7 +319,7 @@ router.get(
         value: bucketFollowers.length,
       });
 
-      const bucketEngagement = (analyticsData ?? []).filter((a) => {
+      const bucketEngagement = (analyticsData ?? []).filter(a => {
         const d = new Date(a.created_at);
         return d >= bucketStart && d < bucketEnd;
       });
@@ -348,7 +330,7 @@ router.get(
     }
 
     return res.json({ earnings, subscribers, engagement, payments: paymentsSeries });
-  }),
+  })
 );
 
 // ---------------------------------------------------------------------------
@@ -387,7 +369,10 @@ router.get(
         ? Math.min(100, Math.round(((totalLikes + totalComments + totalShares) / totalViews) * 100))
         : 0;
 
-    const contentQualityScore = Math.min(100, Math.round((content.length * 10 + engagementRate) / 2));
+    const contentQualityScore = Math.min(
+      100,
+      Math.round((content.length * 10 + engagementRate) / 2)
+    );
     const engagementScore = engagementRate;
 
     // Monetization — earnings vs content count
@@ -401,7 +386,7 @@ router.get(
     const recentEarnings = (payments30d ?? []).reduce((s, p) => s + (p.amount_sats ?? 0), 0);
     const monetizationEfficiency = Math.min(
       100,
-      content.length > 0 ? Math.round(Math.min(recentEarnings / (content.length * 100), 100)) : 0,
+      content.length > 0 ? Math.round(Math.min(recentEarnings / (content.length * 100), 100)) : 0
     );
 
     // Subscriber satisfaction — retention proxy
@@ -413,7 +398,7 @@ router.get(
     const subscriberSatisfaction = Math.min(100, (followerCount ?? 0) * 10);
 
     const performanceScore = Math.round(
-      (contentQualityScore + engagementScore + monetizationEfficiency + subscriberSatisfaction) / 4,
+      (contentQualityScore + engagementScore + monetizationEfficiency + subscriberSatisfaction) / 4
     );
 
     // Determine trends based on recent vs older period
@@ -473,7 +458,7 @@ router.get(
       engagement_trend: engagementTrend,
       recommendations,
     });
-  }),
+  })
 );
 
 // ---------------------------------------------------------------------------
@@ -528,15 +513,13 @@ router.get(
     // Recent payments (last 3)
     const { data: recentPaymentsRaw } = await supabase
       .from('payments')
-      .select(
-        'id, amount_sats, description, paid_at, payer_id, content_id, payment_hash, fee_sats',
-      )
+      .select('id, amount_sats, description, paid_at, payer_id, content_id, payment_hash, fee_sats')
       .eq('recipient_id', userId)
       .eq('status', 'paid')
       .order('paid_at', { ascending: false })
       .limit(3);
 
-    const recentPayments = (recentPaymentsRaw ?? []).map((p) => ({
+    const recentPayments = (recentPaymentsRaw ?? []).map(p => ({
       id: p.id,
       amount_sats: p.amount_sats,
       description: p.description ?? '',
@@ -562,7 +545,7 @@ router.get(
         { label: 'Settings', action: '/settings', icon: 'settings', color: '#8b5cf6' },
       ],
     });
-  }),
+  })
 );
 
 // ---------------------------------------------------------------------------
@@ -585,7 +568,9 @@ router.post(
   asyncHandler(async (req: Request, res: Response) => {
     const parsed = ExportSchema.safeParse(req.body);
     if (!parsed.success) {
-      return res.status(400).json({ message: 'Invalid export configuration', errors: parsed.error.errors });
+      return res
+        .status(400)
+        .json({ message: 'Invalid export configuration', errors: parsed.error.errors });
     }
 
     const { format, data_types, date_range, userId: userIdParam } = parsed.data;
@@ -613,7 +598,9 @@ router.post(
     if (data_types.includes('content')) {
       const { data: contentData } = await supabase
         .from('content')
-        .select('id, title, content_type, visibility, view_count, like_count, comment_count, created_at')
+        .select(
+          'id, title, content_type, visibility, view_count, like_count, comment_count, created_at'
+        )
         .eq('creator_id', userId)
         .eq('status', 'published')
         .gte('created_at', date_range.start)
@@ -645,7 +632,7 @@ router.post(
         allRows.push(headers.join(','));
         for (const row of rows) {
           const record = row as Record<string, unknown>;
-          allRows.push(headers.map((h) => String(record[h] ?? '')).join(','));
+          allRows.push(headers.map(h => String(record[h] ?? '')).join(','));
         }
         allRows.push('');
       }
@@ -659,7 +646,7 @@ router.post(
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Content-Disposition', 'attachment; filename=analytics-export.json');
     return res.json(exportData);
-  }),
+  })
 );
 
 export default router;
