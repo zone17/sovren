@@ -150,3 +150,5 @@ supabase/.branches/
 
 # CE Metrics monitoring data
 monitoring/grafana/data/
+.claude/worktrees/
+qa-screenshots/
