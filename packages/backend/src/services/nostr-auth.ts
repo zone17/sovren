@@ -151,7 +151,8 @@ export class NostrAuthService {
         if (raw) {
           return JSON.parse(raw) as NostrChallenge;
         }
-        return undefined;
+        // Redis returned null — challenge might be in-memory (stored there if Redis set failed)
+        // Fall through to in-memory check below
       } catch (err) {
         logger.warn('[NostrAuth] Redis challenge get failed — falling back to in-memory', {
           error: (err as Error).message,

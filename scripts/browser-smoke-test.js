@@ -57,6 +57,10 @@ const CONSOLE_ERROR_IGNORE = [
   /downloadable font/i,
   /Failed to load resource.*favicon/i,
   /net::ERR_/i, // Network errors from external resources in dev
+  /Auth verification failed/i, // Expected 401 on unauthenticated page loads
+  /Authentication required/i, // Expected 401 response from /api/auth/verify
+  /Failed to load resource.*401/i, // Expected 401 network errors for unauth'd visitors
+  /session.expired/i, // Auth session events are handled gracefully by the frontend
 ];
 
 // ---------------------------------------------------------------------------

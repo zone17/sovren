@@ -69,7 +69,7 @@ router.post(
     if (!verification.valid) {
       return res.status(401).json({
         success: false,
-        error: 'Challenge expired or invalid',
+        error: verification.error || 'Authentication failed',
         code: 'AUTHENTICATION_ERROR',
       });
     }

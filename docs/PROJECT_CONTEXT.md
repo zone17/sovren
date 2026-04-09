@@ -248,6 +248,18 @@ rm ~/.claude/metrics/.disabled             # Re-enable metrics collection
 | `packages/frontend/e2e/`                 | Playwright E2E (POM pattern)               |
 | `packages/frontend/playwright.config.ts` | 3-tier test config (setup → auth → public) |
 
+### AI Services (Migration in Progress — 2026-04-09)
+
+| File | What it covers | Status |
+|------|---------------|--------|
+| `docs/plans/ai-provider-migration-plan.md` | Full migration plan: OpenAI → Anthropic Claude API | **Ready for impl** |
+| `packages/backend/src/services/ai-recommendation-service.ts` | US-095–098: Recommendations (12 stub methods) | Stubs only |
+| `packages/backend/src/services/ai-enhanced-features-service.ts` | US-103–106: Tagging, topics, clustering, related content (10+ stubs) | Stubs only |
+| `packages/backend/src/services/ai/` | New: Anthropic client, content-tagger, topic-extractor, recommendation-engine, batch-processor | **To be created** |
+| `packages/shared/src/config/environment.ts` | Env config — needs `AI_PROVIDER`, `ANTHROPIC_API_KEY` | Needs update |
+
+**Key decisions**: Haiku 4.5 for classification/extraction ($1/$5), Sonnet 4.6 for reasoning ($3/$15). Prompt caching on system prompts. Batch API for clustering/backfill. Structured outputs (GA) on all calls.
+
 ### DevOps / Infrastructure
 
 | File                                       | What it covers                               |
