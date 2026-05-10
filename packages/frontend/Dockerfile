@@ -2,7 +2,7 @@
 # Following elite engineering standards with Nginx optimization
 
 # Stage 1: Build React application
-FROM node:20-alpine AS builder
+FROM node:26-alpine AS builder
 
 # Install build dependencies
 RUN apk add --no-cache python3 make g++
