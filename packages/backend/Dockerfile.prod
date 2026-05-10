@@ -6,7 +6,7 @@
 #   docker build -f packages/backend/Dockerfile.prod .
 
 # Stage 1: Dependency installation (workspace-aware)
-FROM node:20-alpine AS deps
+FROM node:26-alpine AS deps
 WORKDIR /app
 
 RUN apk add --no-cache python3 make g++ && \
@@ -30,7 +30,7 @@ RUN npm ci --include=dev && \
     rm -rf ~/.npm /tmp/*
 
 # Stage 2: Application build
-FROM node:20-alpine AS builder
+FROM node:26-alpine AS builder
 WORKDIR /app
 
 # Reproduce workspace structure so npm and tsc resolve correctly
@@ -71,7 +71,7 @@ RUN npm prune --omit=dev && \
     npm cache clean --force
 
 # Stage 3: Production runtime
-FROM node:20-alpine AS runtime
+FROM node:26-alpine AS runtime
 
 LABEL org.opencontainers.image.title="Sovren Backend Production" \
       org.opencontainers.image.description="Lightning Network and NOSTR backend service" \
