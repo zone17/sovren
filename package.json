@@ -138,7 +138,7 @@
   "devDependencies": {
     "@storybook/addon-actions": "^9.0.6",
     "@storybook/addon-controls": "^9.0.6",
-    "@testcontainers/postgresql": "^11.13.0",
+    "@testcontainers/postgresql": "^11.14.0",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
