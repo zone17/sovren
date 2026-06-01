@@ -484,7 +484,7 @@ jobs:
           fi
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: frontend-dist
           path: packages/frontend/dist
@@ -541,7 +541,7 @@ jobs:
           E2E_SIGNUP_PASSWORD: ${{ secrets.E2E_SIGNUP_PASSWORD }}
 
       - name: Upload test results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: playwright-report
