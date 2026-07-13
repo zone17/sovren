@@ -17,7 +17,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "nostr-tools": "^2.23.3",
+    "nostr-tools": "^2.23.9",
     "zod": "^3.22.4"
   },
   "devDependencies": {
